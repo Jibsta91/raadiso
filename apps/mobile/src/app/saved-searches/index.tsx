@@ -6,6 +6,7 @@ import { FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-nativ
 import { Status } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad, usePullToRefresh } from '../../lib/api';
+import { SwipeRow } from '../../components/swipe-row';
 import { useAuth } from '../../lib/auth/context';
 import { fonts, radius, space, useTheme } from '../../theme';
 
@@ -47,37 +48,52 @@ function Row({ search, onDeleted }: { search: SavedSearch; onDeleted: () => void
   };
 
   return (
-    <View style={[styles.row, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-      <Pressable
-        role="link"
-        testID="saved-search"
-        style={styles.grow}
-        onPress={() => openSavedSearch(api, search)}
+    <SwipeRow
+      actions={[
+        {
+          key: 'delete',
+          label: m.swipe.delete,
+          icon: 'trash-outline',
+          color: theme.danger,
+          onPress: () => void remove(),
+        },
+      ]}
+    >
+      <View
+        style={[styles.row, { backgroundColor: theme.surface, borderColor: theme.border }]}
+        accessible={false}
       >
-        <Text numberOfLines={2} style={[styles.name, { color: theme.text }]}>
-          {search.name}
-        </Text>
-        {search.newCount > 0 ? (
-          <Text style={[styles.new, { color: theme.accent }]}>
-            {fill(m.savedSearches.new, { count: search.newCount })}
+        <Pressable
+          role="link"
+          testID="saved-search"
+          style={styles.grow}
+          onPress={() => openSavedSearch(api, search)}
+        >
+          <Text numberOfLines={2} style={[styles.name, { color: theme.text }]}>
+            {search.name}
           </Text>
-        ) : null}
-      </Pressable>
-      <Switch
-        accessibilityLabel={m.savedSearches.alerts}
-        value={notify}
-        onValueChange={(next) => void toggle(next)}
-        trackColor={{ true: theme.accent }}
-      />
-      <Pressable
-        role="button"
-        aria-label={m.savedSearches.delete}
-        hitSlop={8}
-        onPress={() => void remove()}
-      >
-        <Icon name="trash-outline" size={20} color={theme.muted} />
-      </Pressable>
-    </View>
+          {search.newCount > 0 ? (
+            <Text style={[styles.new, { color: theme.accent }]}>
+              {fill(m.savedSearches.new, { count: search.newCount })}
+            </Text>
+          ) : null}
+        </Pressable>
+        <Switch
+          accessibilityLabel={m.savedSearches.alerts}
+          value={notify}
+          onValueChange={(next) => void toggle(next)}
+          trackColor={{ true: theme.accent }}
+        />
+        <Pressable
+          role="button"
+          aria-label={m.savedSearches.delete}
+          hitSlop={8}
+          onPress={() => void remove()}
+        >
+          <Icon name="trash-outline" size={20} color={theme.muted} />
+        </Pressable>
+      </View>
+    </SwipeRow>
   );
 }
 

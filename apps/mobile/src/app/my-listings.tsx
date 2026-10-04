@@ -6,6 +6,8 @@ import { Badge, Status } from '../components/ui';
 import { NoPhoto } from '../components/no-photo';
 import { useI18n } from '../i18n';
 import { unwrap, useApi, usePaged, usePullToRefresh } from '../lib/api';
+import { confirm } from '../lib/confirm';
+import { SwipeRow } from '../components/swipe-row';
 import { useAuth } from '../lib/auth/context';
 import { config } from '../lib/config';
 import { formatPrice } from '../lib/format';
@@ -14,45 +16,85 @@ import { fonts, radius, space, useTheme } from '../theme';
 
 const PAGE_SIZE = 50;
 
-function Row({ listing }: { listing: Listing }) {
+function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }) {
   const { m, locale } = useI18n();
+  const api = useApi();
   const theme = useTheme();
   const image = listing.images[0];
+  const path = { params: { path: { id: listing.id } } };
+  const markSold = () =>
+    void api.listings
+      .PATCH('/api/v1/listings/{id}', { ...path, body: { status: 'sold' } })
+      .then(onChanged, () => undefined);
+  const remove = async () => {
+    const sure = await confirm(
+      m.swipe.deleteTitle,
+      m.swipe.deleteBody,
+      m.swipe.delete,
+      m.swipe.cancel,
+    );
+    if (!sure) return;
+    await api.listings.DELETE('/api/v1/listings/{id}', path).catch(() => undefined);
+    onChanged();
+  };
   return (
-    <Link href={`/listings/${listing.id}`} asChild>
-      {/* Link asChild merges props by spreading: a style array would reach the DOM as {0: …}. */}
-      <Pressable
-        testID="my-listing"
-        role="link"
-        aria-label={[
-          listing.title,
-          formatPrice(listing.priceNok, locale, m.common.noPrice),
-          listing.status === 'sold' ? m.listing.sold : undefined,
-        ]
-          .filter(Boolean)
-          .join(', ')}
-        style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
-      >
-        {image ? (
-          <Image
-            source={{ uri: absoluteUrl(image.urls.thumb, config.apiBaseUrl) }}
-            // expo-image hands styles to the DOM on the web: pass one object, not an array.
-            style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
-          />
-        ) : (
-          <NoPhoto category={listing.category} size={24} style={styles.thumb} />
-        )}
-        <View style={styles.text}>
-          <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>
-            {listing.title}
-          </Text>
-          <Text style={[styles.price, { color: theme.muted }]}>
-            {formatPrice(listing.priceNok, locale, m.common.noPrice)}
-          </Text>
-          {listing.status === 'sold' ? <Badge label={m.listing.sold} tone="neutral" /> : null}
-        </View>
-      </Pressable>
-    </Link>
+    <SwipeRow
+      actions={[
+        ...(listing.status === 'active'
+          ? [
+              {
+                key: 'sold',
+                label: m.swipe.markSold,
+                icon: 'pricetag-outline' as const,
+                color: theme.accent,
+                onPress: markSold,
+              },
+            ]
+          : []),
+        {
+          key: 'delete',
+          label: m.swipe.delete,
+          icon: 'trash-outline',
+          color: theme.danger,
+          onPress: () => void remove(),
+        },
+      ]}
+    >
+      <Link href={`/listings/${listing.id}`} asChild>
+        {/* Link asChild merges props by spreading: a style array would reach the DOM as {0: …}. */}
+        <Pressable
+          testID="my-listing"
+          role="link"
+          aria-label={[
+            listing.title,
+            formatPrice(listing.priceNok, locale, m.common.noPrice),
+            listing.status === 'sold' ? m.listing.sold : undefined,
+          ]
+            .filter(Boolean)
+            .join(', ')}
+          style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
+        >
+          {image ? (
+            <Image
+              source={{ uri: absoluteUrl(image.urls.thumb, config.apiBaseUrl) }}
+              // expo-image hands styles to the DOM on the web: pass one object, not an array.
+              style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
+            />
+          ) : (
+            <NoPhoto category={listing.category} size={24} style={styles.thumb} />
+          )}
+          <View style={styles.text}>
+            <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>
+              {listing.title}
+            </Text>
+            <Text style={[styles.price, { color: theme.muted }]}>
+              {formatPrice(listing.priceNok, locale, m.common.noPrice)}
+            </Text>
+            {listing.status === 'sold' ? <Badge label={m.listing.sold} tone="neutral" /> : null}
+          </View>
+        </Pressable>
+      </Link>
+    </SwipeRow>
   );
 }
 
@@ -80,7 +122,7 @@ export default function MyListings() {
       contentContainerStyle={styles.list}
       data={mine.items}
       keyExtractor={(l) => l.id}
-      renderItem={({ item }) => <Row listing={item} />}
+      renderItem={({ item }) => <Row listing={item} onChanged={mine.reload} />}
       onEndReached={mine.more}
       onEndReachedThreshold={0.5}
       ListEmptyComponent={

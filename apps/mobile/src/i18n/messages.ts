@@ -5,6 +5,14 @@ import { taxonomyMessages } from './taxonomy';
 
 const en = {
   tabs: { home: 'Home', search: 'Search', messages: 'Messages', account: 'Account' },
+  swipe: {
+    markRead: 'Mark as read',
+    markSold: 'Mark as sold',
+    delete: 'Delete',
+    deleteTitle: 'Delete this listing?',
+    deleteBody: 'It disappears from search and from your listings. This cannot be undone.',
+    cancel: 'Cancel',
+  },
   common: {
     error: 'Something went wrong. Please try again.',
     retry: 'Try again',
@@ -200,6 +208,14 @@ export type Messages = typeof en;
 
 const nb: Messages = {
   tabs: { home: 'Hjem', search: 'Søk', messages: 'Meldinger', account: 'Konto' },
+  swipe: {
+    markRead: 'Merk som lest',
+    markSold: 'Merk som solgt',
+    delete: 'Slett',
+    deleteTitle: 'Slette annonsen?',
+    deleteBody: 'Den forsvinner fra søk og fra annonsene dine. Dette kan ikke angres.',
+    cancel: 'Avbryt',
+  },
   common: {
     error: 'Noe gikk galt. Prøv igjen.',
     retry: 'Prøv igjen',
@@ -387,6 +403,14 @@ const nb: Messages = {
 
 const so: Messages = {
   tabs: { home: 'Bogga hore', search: 'Raadi', messages: 'Fariimaha', account: 'Akoon' },
+  swipe: {
+    markRead: 'Calaamadee in la akhriyey',
+    markSold: 'Calaamadee in la iibiyey',
+    delete: 'Tirtir',
+    deleteTitle: 'Ma tirtirtaa xayeysiiskan?',
+    deleteBody: 'Wuu ka baxayaa raadinta iyo xayeysiisyadaada. Dib looma celin karo.',
+    cancel: 'Jooji',
+  },
   common: {
     error: 'Wax baa khaldamay. Fadlan isku day mar kale.',
     retry: 'Isku day mar kale',

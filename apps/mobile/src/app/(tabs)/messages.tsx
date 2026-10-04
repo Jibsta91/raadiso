@@ -7,6 +7,7 @@ import { NoPhoto } from '../../components/no-photo';
 import { Body, Button, LargeTitle, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { unwrap, useApi, usePaged, usePullToRefresh } from '../../lib/api';
+import { SwipeRow } from '../../components/swipe-row';
 import { useAuth } from '../../lib/auth/context';
 import { config } from '../../lib/config';
 import { formatAge } from '../../lib/format';
@@ -16,67 +17,94 @@ import { fonts, radius, space, tabBarSpace, useTheme } from '../../theme';
 
 const PAGE_SIZE = 20;
 
-function Row({ conversation }: { conversation: Conversation }) {
-  const { locale } = useI18n();
+function Row({ conversation, onChanged }: { conversation: Conversation; onChanged: () => void }) {
+  const { m, locale } = useI18n();
+  const api = useApi();
   const theme = useTheme();
   const unread = conversation.unread > 0;
+  const markRead = () =>
+    void api.messaging
+      .POST('/api/v1/messaging/conversations/{id}/read', {
+        params: { path: { id: conversation.id } },
+      })
+      .then(onChanged, () => undefined);
   return (
-    <Link href={`/messages/${conversation.id}`} asChild>
-      {/* Link asChild spreads props: one style object, not an array (see listing-card.tsx). */}
-      <Pressable
-        testID="conversation"
-        role="link"
-        aria-label={[
-          conversation.counterpart.name,
-          conversation.listing.title,
-          conversation.lastMessage?.body,
-          conversation.lastMessage ? formatAge(conversation.lastMessage.sentAt, locale) : undefined,
-        ]
-          .filter(Boolean)
-          .join(', ')}
-        style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
-      >
-        {conversation.listing.image ? (
-          <Image
-            source={{ uri: absoluteUrl(conversation.listing.image.thumb, config.apiBaseUrl) }}
-            style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
-          />
-        ) : (
-          <NoPhoto size={24} style={styles.thumb} />
-        )}
-        <View style={styles.text}>
-          <View style={styles.line}>
-            <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
-              {conversation.counterpart.name}
+    <SwipeRow
+      actions={
+        unread
+          ? [
+              {
+                key: 'read',
+                label: m.swipe.markRead,
+                icon: 'mail-open-outline',
+                color: theme.accent,
+                onPress: markRead,
+              },
+            ]
+          : []
+      }
+    >
+      <Link href={`/messages/${conversation.id}`} asChild>
+        {/* Link asChild spreads props: one style object, not an array (see listing-card.tsx). */}
+        <Pressable
+          testID="conversation"
+          role="link"
+          aria-label={[
+            conversation.counterpart.name,
+            conversation.listing.title,
+            conversation.lastMessage?.body,
+            conversation.lastMessage
+              ? formatAge(conversation.lastMessage.sentAt, locale)
+              : undefined,
+          ]
+            .filter(Boolean)
+            .join(', ')}
+          style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
+        >
+          {conversation.listing.image ? (
+            <Image
+              source={{ uri: absoluteUrl(conversation.listing.image.thumb, config.apiBaseUrl) }}
+              style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
+            />
+          ) : (
+            <NoPhoto size={24} style={styles.thumb} />
+          )}
+          <View style={styles.text}>
+            <View style={styles.line}>
+              <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
+                {conversation.counterpart.name}
+              </Text>
+              {conversation.lastMessage ? (
+                <Text style={[styles.time, { color: theme.muted }]}>
+                  {formatAge(conversation.lastMessage.sentAt, locale)}
+                </Text>
+              ) : null}
+            </View>
+            <Text numberOfLines={1} style={[styles.listing, { color: theme.muted }]}>
+              {conversation.listing.title}
             </Text>
             {conversation.lastMessage ? (
-              <Text style={[styles.time, { color: theme.muted }]}>
-                {formatAge(conversation.lastMessage.sentAt, locale)}
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.preview,
+                  { color: theme.text, fontFamily: unread ? fonts.semibold : fonts.body },
+                ]}
+              >
+                {conversation.lastMessage.body}
               </Text>
             ) : null}
           </View>
-          <Text numberOfLines={1} style={[styles.listing, { color: theme.muted }]}>
-            {conversation.listing.title}
-          </Text>
-          {conversation.lastMessage ? (
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.preview,
-                { color: theme.text, fontFamily: unread ? fonts.semibold : fonts.body },
-              ]}
-            >
-              {conversation.lastMessage.body}
-            </Text>
+          {unread ? (
+            <View testID="unread" style={[styles.dot, { backgroundColor: theme.accent }]}>
+              <Text style={[styles.dotText, { color: theme.accentText }]}>
+                {conversation.unread}
+              </Text>
+            </View>
           ) : null}
-        </View>
-        {unread ? (
-          <View testID="unread" style={[styles.dot, { backgroundColor: theme.accent }]}>
-            <Text style={[styles.dotText, { color: theme.accentText }]}>{conversation.unread}</Text>
-          </View>
-        ) : null}
-      </Pressable>
-    </Link>
+        </Pressable>
+      </Link>
+    </SwipeRow>
   );
 }
 
@@ -100,7 +128,7 @@ function Inbox({ top }: { top: number }) {
       contentContainerStyle={[styles.list, { paddingTop: top, paddingBottom: tabBarSpace }]}
       data={inbox.items}
       keyExtractor={(c) => c.id}
-      renderItem={({ item }) => <Row conversation={item} />}
+      renderItem={({ item }) => <Row conversation={item} onChanged={inbox.reload} />}
       {...refresh}
       onEndReached={inbox.more}
       onEndReachedThreshold={0.5}
