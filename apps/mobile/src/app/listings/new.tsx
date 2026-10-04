@@ -5,7 +5,7 @@ import { PLACES, type Place } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,6 +15,8 @@ import {
   StyleSheet,
   Text,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { Body, Button, Chip, Field, Status, Title } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
@@ -125,10 +127,22 @@ function Tile({
   );
 }
 
-function PickCategory({ onPick }: { onPick: (c: CategoryId) => void }) {
+/** Step 1: the category tiles. Also the Sell tab's content, with its own heading and insets. */
+export function PickCategory({
+  onPick,
+  heading,
+  contentStyle,
+  testID = 'pick-category',
+}: {
+  onPick: (c: CategoryId) => void;
+  heading?: ReactNode;
+  contentStyle?: StyleProp<ViewStyle>;
+  testID?: string;
+}) {
   const { m } = useI18n();
   return (
-    <ScrollView contentContainerStyle={styles.page} testID="pick-category">
+    <ScrollView contentContainerStyle={[styles.page, contentStyle]} testID={testID}>
+      {heading}
       <Title>{m.sell.pickCategory}</Title>
       <View style={styles.grid}>
         {CATEGORIES.map((c) => (

@@ -16,6 +16,7 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
 const ICONS: Record<string, [IconName, IconName]> = {
   index: ['home', 'home-outline'],
   search: ['search', 'search-outline'],
+  sell: ['add-circle', 'add-circle-outline'],
   messages: ['chatbubbles', 'chatbubbles-outline'],
   account: ['person-circle', 'person-circle-outline'],
 };
@@ -173,6 +174,7 @@ export function TabLayout() {
     >
       <Tabs.Screen name="index" options={{ title: m.tabs.home }} />
       <Tabs.Screen name="search" options={{ title: m.tabs.search }} />
+      <Tabs.Screen name="sell" options={{ title: m.sell.cta }} />
       <Tabs.Screen
         name="messages"
         options={{ title: m.tabs.messages, tabBarBadge: unread > 0 ? unread : undefined }}

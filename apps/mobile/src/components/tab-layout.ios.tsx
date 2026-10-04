@@ -18,9 +18,13 @@ export function TabLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} />
         <NativeTabs.Trigger.Label>{m.tabs.home}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="search" role="search" contentStyle={scene} testID="tab-search">
+      <NativeTabs.Trigger name="search" contentStyle={scene} testID="tab-search">
         <NativeTabs.Trigger.Icon sf="magnifyingglass" />
         <NativeTabs.Trigger.Label>{m.tabs.search}</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="sell" contentStyle={scene} testID="tab-sell">
+        <NativeTabs.Trigger.Icon sf={{ default: 'plus.circle', selected: 'plus.circle.fill' }} />
+        <NativeTabs.Trigger.Label>{m.sell.cta}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="messages" contentStyle={scene} testID="tab-messages">
         <NativeTabs.Trigger.Icon
