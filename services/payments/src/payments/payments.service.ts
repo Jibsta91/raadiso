@@ -41,7 +41,8 @@ const revenue = meter.createCounter('raadi.payments.captured_ore', {
   description: 'Captured amount in øre, by product',
 });
 
-const ADMINS = ['admin'];
+/** Keycloak realm role of the people who may refund (see deploy/keycloak/realm-raadi.json). */
+const ADMINS = ['platform-admin'];
 
 @Injectable()
 export class PaymentsService {

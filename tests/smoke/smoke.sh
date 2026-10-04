@@ -587,6 +587,12 @@ req POST "$PUBLIC/api/v1/payments/webhooks/vipps" -H 'content-type: application/
 expect_status 401 "unsigned webhooks are refused"
 mock_api=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 --connect-to "::${GW}" "${pay_url%/pay/*}/epayment/v1/payments/$order_id")
 [[ "$mock_api" == "404" ]] && ok "the mock provider's API is not exposed (only its payment page)" || fail "mock API exposed" "HTTP $mock_api"
+req POST "$PUBLIC/api/v1/payments/orders/$order_id/refund" -H "origin: $ORIGIN"
+expect_status 403 "a seller cannot refund their own order"
+login_as "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as admin"
+req POST "$PUBLIC/api/v1/payments/orders/$order_id/refund" -H "origin: $ORIGIN"
+[[ "$status" == "200" && "$(json '.status')" == "refunded" ]] \
+  && ok "a platform admin refunds the order (role platform-admin)" || fail "refund" "HTTP $status $(head -c 200 "$BODY")"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Operations"

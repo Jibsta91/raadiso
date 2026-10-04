@@ -70,7 +70,8 @@ export class PaymentsController {
   }
 
   @Post('orders/:id/refund')
-  @Roles('admin')
+  @Roles('platform-admin')
+  @HttpCode(200)
   refund(@Req() req: AuthenticatedRequest, @Param('id', uuidPipe) id: string) {
     return this.payments.refund(req.principal!, id);
   }

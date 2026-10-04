@@ -266,7 +266,9 @@ describe('webhooks and reconciliation', () => {
 
   it('stack promotions, and refunds revoke them (admins only)', async () => {
     const seller = person();
-    const admin = person(['user', 'admin']);
+    // Real realm roles: a moderator may not refund, a platform admin may.
+    const moderator = person(['user', 'moderator']);
+    const admin = person(['user', 'moderator', 'platform-admin']);
     const listingId = listingOf(seller);
     const first = (
       await service.createOrder(seller, 't', 'key-00000007', {
@@ -297,6 +299,7 @@ describe('webhooks and reconciliation', () => {
     );
 
     assert.equal(await status(service.refund(seller, second.id)), 403);
+    assert.equal(await status(service.refund(moderator, second.id)), 403);
     const refunded = await service.refund(admin, second.id);
     assert.equal(refunded.status, 'refunded');
     const promo = await events(listingId);
