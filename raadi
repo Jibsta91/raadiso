@@ -84,10 +84,12 @@ case "$cmd" in
     ;;
   otp)
     # RFC 6238 (HMAC-SHA256, 6 digits, 30 s) with DEMO_OTP_SECRET, as smoke computes it (ADR-0028).
+    # The script runs inside the container, so nothing in it may expand here.
+    # shellcheck disable=SC2016
     "${DC[@]}" --progress quiet run --rm --no-deps -T --entrypoint bash secrets-init -c '
       c=$(( $(date +%s) / 30 )); b=""
       for i in 7 6 5 4 3 2 1 0; do b+=$(printf "\\\\x%02x" $(( (c >> (i * 8)) & 255 ))); done
-      m=$(printf "$b" | openssl dgst -sha256 -mac HMAC -macopt "key:${DEMO_OTP_SECRET:?}" -r | cut -d" " -f1)
+      m=$(printf "%b" "$b" | openssl dgst -sha256 -mac HMAC -macopt "key:${DEMO_OTP_SECRET:?}" -r | cut -d" " -f1)
       o=$(( 16#${m:63:1} )); printf "%06d (valid for %ss)\n" $(( (16#${m:$((o * 2)):8} & 0x7fffffff) % 1000000 )) $(( 30 - $(date +%s) % 30 ))'
     ;;
   secret-set)

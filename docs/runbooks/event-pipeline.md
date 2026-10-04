@@ -5,8 +5,8 @@
 **Severity:** warning/critical. **Dashboard:** Grafana → Raadi → _Marketplace_.
 
 Background: [ADR-0012](../adr/0012-event-backbone.md). Services write events to their `outbox` table, Debezium
-publishes them to `raadi.<aggregate>.events`, and the consumers (`search-indexer`, `media-listing-sync`)
-process them. Events a consumer can never process go to `raadi.dlq`.
+publishes them to `raadi.<aggregate>.events`, and the consumers process them: search (`search-indexer`),
+media (`media-listing-sync`), notifications, trust, saved, audit and listings. Events a consumer can never process go to `raadi.dlq`.
 
 1. **Admin credentials for the Kafka CLI** (written to the container's tmpfs, gone on restart):
    ```bash
@@ -15,7 +15,7 @@ process them. Events a consumer can never process go to `raadi.dlq`.
 2. **Consumer lag and members** (`ConsumerLagHigh`, `ConsumerGroupEmpty`):
    ```bash
    docker compose exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
-     --command-config /tmp/admin.properties --describe --all-groups | grep -E '^(GROUP|search|media)'
+     --command-config /tmp/admin.properties --describe --all-groups | grep -vE '^$'
    ```
    No members: the consuming service is down or crash-looping. Follow [service-down.md](service-down.md).
    Members but growing lag: the consumer is retrying a transient error (it retries in place to keep ordering).

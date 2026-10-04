@@ -309,6 +309,33 @@ describe('reviews', () => {
     await service.removeReview(moderator, other.id);
     const { rows } = await pool.query('SELECT removed_by FROM reviews WHERE id = $1', [other.id]);
     assert.equal(rows[0]?.removed_by, 'moderator');
+
+    // The moderator's removal is audited (ADR-0028); the author's withdrawal is not.
+    const audited = await pool.query<{
+      aggregate_id: string;
+      payload: { data: { action: string; targetId: string; actorRoles: string[] } };
+    }>(`SELECT aggregate_id, payload FROM outbox WHERE aggregate_type = 'audit'`);
+    const entries = audited.rows.filter((r) => r.payload.data.action === 'review.remove');
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0]!.aggregate_id, moderator.sub);
+    assert.equal(entries[0]!.payload.data.targetId, other.id);
+    assert.deepEqual(entries[0]!.payload.data.actorRoles, ['moderator']);
+  });
+
+  it('lets platform admins remove reviews too', async () => {
+    const seller = person('Siri');
+    const buyer = person('Per');
+    const admin = person('Ada', ['user', 'platform-admin']);
+    const listingId = await deal(seller, buyer);
+    const review = await service.createReview(buyer, 'token', {
+      listingId,
+      subjectId: seller.sub,
+      rating: 1,
+      comment: 'Svindel',
+    });
+    await service.removeReview(admin, review.id);
+    const { rows } = await pool.query('SELECT removed_by FROM reviews WHERE id = $1', [review.id]);
+    assert.equal(rows[0]?.removed_by, 'moderator');
   });
 });
 

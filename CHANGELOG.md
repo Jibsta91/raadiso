@@ -29,6 +29,12 @@ Each release also has generated notes on GitHub.
 
 - The app's search has each category's own filters (makes, fuel, body type, ranges for year, mileage, area
   and price) in a filter sheet.
+- Operations for the Phase 3 features: Marketplace dashboard panels for pushes, the moderation backlog,
+  reports, blocks, favourite and saved-search alerts, staff actions, promotion revenue and image clean-up;
+  alerts `PushQueueBacklog`, `PushesGivenUp`, `SavedSearchChecksFailing`, `ModerationQueueStale`,
+  `ReportsSpike` and `WebSocketOriginRejected`; runbooks for notifications (push), moderation, saved,
+  messaging and the audit log. Listings reports the moderation backlog (`raadi.listings.reports_open`,
+  `raadi.listings.reports_oldest_age`).
 
 ### Changed
 
@@ -38,11 +44,16 @@ Each release also has generated notes on GitHub.
 - The app shows no push banner for the conversation that is already open.
 - The e2e suite signs each demo user in once per run and reuses the sessions, and tests delete the listings
   they create.
+- The README, threat model and runbook index cover the Phase 3 services (payments, saved, audit, the admin
+  console, push).
 
 ### Fixed
 
 - Refunds asked for a role (`admin`) that did not exist, so nobody could refund. They now need
   `platform-admin` and answer 200.
+- Removing a review had the same mistake: platform admins could not remove reviews. A moderator's removal is
+  now also written to the audit log (`review.remove`).
+- `./raadi lint` failed on two shellcheck findings in `./raadi otp` and the smoke test.
 
 ## [0.3.0] — 2026-10-04
 

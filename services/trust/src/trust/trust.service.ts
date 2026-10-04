@@ -43,7 +43,7 @@ const verificationsCounter = meter.createCounter('raadi.trust.verifications', {
 const REQUEST_TTL_MS = 10 * 60_000;
 
 /** Roles that may remove other people's reviews. */
-const MODERATORS = ['moderator', 'admin'];
+const MODERATORS = ['moderator', 'platform-admin'];
 
 @Injectable()
 export class TrustService {
@@ -167,7 +167,8 @@ export class TrustService {
     const isModerator = principal.roles.some((r) => MODERATORS.includes(r));
     if (!isAuthor && !isModerator) throw new ForbiddenException('Not your review');
     const by = isAuthor ? 'author' : 'moderator';
-    await this.repo.removeReview(id, by);
+    // A moderator's removal is a staff action: audited in the same transaction (ADR-0028).
+    await this.repo.removeReview(id, by, isAuthor ? undefined : principal);
     reviewsCounter.add(1, { outcome: `removed_by_${by}` });
     if (!isAuthor)
       this.logger.log({ reviewId: id, moderator: principal.sub }, 'review removed by moderator');

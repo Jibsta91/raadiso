@@ -92,26 +92,31 @@ The C4 context and container diagrams, the request flow and the startup graph ar
 Only the gateway publishes host ports (`127.0.0.1:80` and `:443` in development). Internal ports are on the
 Compose network.
 
-| Service                            | Internal port           | URL (development)                                               |
-| ---------------------------------- | ----------------------- | --------------------------------------------------------------- |
-| Web app (Next.js)                  | 3000                    | http://raadi.localhost                                          |
-| identity-bff (NestJS)              | 4000                    | http://raadi.localhost/auth/\*, /api/v1/identity/\*             |
-| listings · search · media (NestJS) | 4000 each               | /api/v1/listings · /api/v1/search · /api/v1/media               |
-| messaging (NestJS)                 | 4000                    | /api/v1/messaging/\* (REST), /api/v1/messaging/ws (WebSocket)   |
-| notifications (NestJS)             | 4000                    | /api/v1/notifications/\* (in-app, preferences); e-mail via SMTP |
-| trust (NestJS)                     | 4000                    | /api/v1/trust/\* (reviews, profiles, BankID verification)       |
-| imgproxy (listing images)          | 8080                    | http://raadi.localhost/img/… (signed URLs only)                 |
-| Keycloak                           | 8080, 9000              | http://auth.raadi.localhost (admin console: `/admin/`)          |
-| Grafana                            | 3000                    | http://grafana.raadi.localhost (SSO as `admin@raadi.localhost`) |
-| Prometheus / Alertmanager          | 9090 / 9093             | http://prometheus.raadi.localhost                               |
-| Traefik dashboard                  | — (`api@internal`)      | http://traefik.raadi.localhost/dashboard/                       |
-| OpenBao                            | 8200                    | http://bao.raadi.localhost/ui/                                  |
-| Mailpit (all e-mail in dev)        | 1025 / 8025             | http://mail.raadi.localhost                                     |
-| PostgreSQL · Valkey                | 5432 · 6379             | internal only                                                   |
-| Kafka · Kafka Connect · Apicurio   | 9092 · 8083 · 8080      | internal only                                                   |
-| OpenSearch · SeaweedFS · ClamAV    | 9200 · 8333 · 3310      | internal only                                                   |
-| OpenFGA · OPA                      | 8080 · 8181             | internal only                                                   |
-| OTel Collector · Loki · Tempo      | 4317/4318 · 3100 · 3200 | internal only (via Grafana)                                     |
+| Service                            | Internal port           | URL (development)                                                       |
+| ---------------------------------- | ----------------------- | ----------------------------------------------------------------------- |
+| Web app (Next.js)                  | 3000                    | http://raadi.localhost                                                  |
+| identity-bff (NestJS)              | 4000                    | http://raadi.localhost/auth/\*, /api/v1/identity/\*                     |
+| listings · search · media (NestJS) | 4000 each               | /api/v1/listings · /api/v1/search · /api/v1/media                       |
+| messaging (NestJS)                 | 4000                    | /api/v1/messaging/\* (REST), /api/v1/messaging/ws (WebSocket)           |
+| notifications (NestJS)             | 4000                    | /api/v1/notifications/\* (in-app, preferences); e-mail via SMTP         |
+| trust (NestJS)                     | 4000                    | /api/v1/trust/\* (reviews, profiles, BankID verification)               |
+| payments (NestJS)                  | 4000                    | /api/v1/payments/\* (promoted listings, provider webhooks)              |
+| saved · audit (NestJS)             | 4000 each               | /api/v1/saved/\* (favourites, saved searches) · /api/v1/audit           |
+| Admin console (web + admin-bff)    | 3000 · 4000             | http://admin.raadi.localhost (staff, one-time code)                     |
+| payments-mock · push-mock (dev)    | 4000 each               | http://pay.raadi.localhost/pay/… · http://push.raadi.localhost/messages |
+| Expo dev server (Metro)            | 8081                    | `./raadi phone` (Expo Go on the same Wi-Fi, docs/mobile.md)             |
+| imgproxy (listing images)          | 8080                    | http://raadi.localhost/img/… (signed URLs only)                         |
+| Keycloak                           | 8080, 9000              | http://auth.raadi.localhost (admin console: `/admin/`)                  |
+| Grafana                            | 3000                    | http://grafana.raadi.localhost (SSO as `admin@raadi.localhost`)         |
+| Prometheus / Alertmanager          | 9090 / 9093             | http://prometheus.raadi.localhost                                       |
+| Traefik dashboard                  | — (`api@internal`)      | http://traefik.raadi.localhost/dashboard/                               |
+| OpenBao                            | 8200                    | http://bao.raadi.localhost/ui/                                          |
+| Mailpit (all e-mail in dev)        | 1025 / 8025             | http://mail.raadi.localhost                                             |
+| PostgreSQL · Valkey                | 5432 · 6379             | internal only                                                           |
+| Kafka · Kafka Connect · Apicurio   | 9092 · 8083 · 8080      | internal only                                                           |
+| OpenSearch · SeaweedFS · ClamAV    | 9200 · 8333 · 3310      | internal only                                                           |
+| OpenFGA · OPA                      | 8080 · 8181             | internal only                                                           |
+| OTel Collector · Loki · Tempo      | 4317/4318 · 3100 · 3200 | internal only (via Grafana)                                             |
 
 The full table, including the services that later phases add, is in
 [docs/architecture/c4-container.md](docs/architecture/c4-container.md#services-and-ports).
@@ -152,9 +157,14 @@ workflow, Let's Encrypt, backups and the "zero to live in 15 minutes" guide arri
 
 ## Project status
 
-Phases 1 (foundation) and 2 (listings, search, media, web) are complete. You can browse and search about 500
-demo listings (full text, facets, geo radius), and sign in to create, edit, sell and delete listings with
-virus-scanned images. Listing changes reach search through the outbox, Debezium and Kafka. Phase 3 is under way: buyers and sellers can message each other, with live delivery over WebSockets, get e-mail and in-app notifications, review each other after a sale, verify their identity with BankID (mocked in development), and promote listings with payments (a Vipps-compatible test provider in development). See the
+Phases 1 (foundation), 2 (listings, search, media, web) and 3 (messaging, notifications, mobile) are
+complete. You can browse and search about 500 demo listings (full text, facets, geo radius), and sign in to
+create, edit, sell and delete listings with virus-scanned images. Buyers and sellers message each other with
+live delivery over WebSockets, get e-mail, in-app and push notifications, review each other after a sale,
+verify their identity with BankID (mocked in development), promote listings with payments (a
+Vipps-compatible test provider in development), keep favourites and saved searches, and report listings or
+block people. Staff work in an admin console with one-time codes and an append-only audit log. The Raadiso
+app (Expo) runs on iPhone and Android. Phase 4 (the AI pillars) is next; see the
 [roadmap](docs/roadmap.md) for later phases.
 
 ## Documentation

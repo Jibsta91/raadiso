@@ -12,3 +12,8 @@ Commands assume the repository root (development) or `DEPLOY_DIR` (production, `
 | [event-pipeline.md](event-pipeline.md)   | `DeadLettersGrowing`, `ConsumerLagHigh`, `ConsumerGroupEmpty`, `SearchIndexLagHigh`, `EmailQueueBacklog`, `EmailsGivenUp` |
 | [trust.md](trust.md)                     | BankID verification failing, "taken" identities, review moderation, review eligibility questions                          |
 | [payments.md](payments.md)               | `PaymentsStuckOpen`, `PaymentWebhooksRejected`, refunds, test payments                                                    |
+| [notifications.md](notifications.md)     | `PushQueueBacklog`, `PushesGivenUp`, a user gets no pushes                                                                |
+| [moderation.md](moderation.md)           | `ModerationQueueStale`, `ReportsSpike`, blocks, removing reviews                                                          |
+| [saved.md](saved.md)                     | `SavedSearchChecksFailing`, favourites not following price changes                                                        |
+| [messaging.md](messaging.md)             | `WebSocketOriginRejected`, messages arriving only after a reload, closed conversations                                    |
+| [audit.md](audit.md)                     | A staff action missing from the audit log, "who did this?"                                                                |

@@ -773,6 +773,7 @@
       "actions": {
         "listing_remove": "Annonse fjernet",
         "reports_dismiss": "Rapporter avvist",
+        "review_remove": "Omtale fjernet",
         "payment_refund": "Betaling refundert"
       },
       "targets": {
