@@ -144,7 +144,10 @@ export function Chip({
           : { backgroundColor: theme.surface, borderColor: theme.border },
       ]}
     >
-      <Text style={[styles.chipText, { color: selected ? theme.inkText : theme.text }]}>
+      <Text
+        maxFontSizeMultiplier={1.5}
+        style={[styles.chipText, { color: selected ? theme.inkText : theme.text }]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -304,7 +307,10 @@ export function Badge({
       testID={testID}
       style={[styles.badge, { backgroundColor: neutral ? theme.surfaceAlt : theme.badge }]}
     >
-      <Text style={[styles.badgeText, { color: neutral ? theme.subtle : theme.badgeText }]}>
+      <Text
+        maxFontSizeMultiplier={1.5}
+        style={[styles.badgeText, { color: neutral ? theme.subtle : theme.badgeText }]}
+      >
         {label}
       </Text>
     </View>

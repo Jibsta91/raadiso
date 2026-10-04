@@ -41,7 +41,19 @@ export function ListingTile({ hit }: { hit: TileListing }) {
   const theme = useTheme();
   return (
     <Link href={`/listings/${hit.id}`} asChild>
-      <Pressable testID="listing-card" style={styles.tile}>
+      <Pressable
+        testID="listing-card"
+        role="link"
+        aria-label={[
+          hit.title,
+          formatPrice(hit.priceNok, locale, m.common.noPrice),
+          hit.location.name,
+          hit.sold ? m.listing.sold : hit.promoted ? m.listing.promoted : undefined,
+        ]
+          .filter(Boolean)
+          .join(', ')}
+        style={styles.tile}
+      >
         <View style={styles.tilePhoto}>
           <Photo hit={hit} style={styles.fill} />
           {hit.sold ? (
@@ -54,7 +66,7 @@ export function ListingTile({ hit }: { hit: TileListing }) {
             </View>
           ) : null}
           <Glass style={styles.priceChip}>
-            <Text style={[styles.price, { color: theme.text }]}>
+            <Text maxFontSizeMultiplier={1.5} style={[styles.price, { color: theme.text }]}>
               {formatPrice(hit.priceNok, locale, m.common.noPrice)}
             </Text>
           </Glass>
@@ -76,7 +88,16 @@ export function ListingFeature({ hit }: { hit: SearchHit }) {
   const theme = useTheme();
   return (
     <Link href={`/listings/${hit.id}`} asChild>
-      <Pressable testID="listing-feature" style={styles.feature}>
+      <Pressable
+        testID="listing-feature"
+        role="link"
+        aria-label={[
+          hit.title,
+          formatPrice(hit.priceNok, locale, m.common.noPrice),
+          m.listing.promoted,
+        ].join(', ')}
+        style={styles.feature}
+      >
         <Photo hit={hit} style={styles.fill} />
         <View style={styles.badgeSpot}>
           <Badge label={m.listing.promoted} />
@@ -85,7 +106,7 @@ export function ListingFeature({ hit }: { hit: SearchHit }) {
           <Text numberOfLines={1} style={[styles.stripTitle, { color: theme.text }]}>
             {hit.title}
           </Text>
-          <Text style={[styles.price, { color: theme.text }]}>
+          <Text maxFontSizeMultiplier={1.5} style={[styles.price, { color: theme.text }]}>
             {formatPrice(hit.priceNok, locale, m.common.noPrice)}
           </Text>
         </Glass>

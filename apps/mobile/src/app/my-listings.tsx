@@ -23,6 +23,14 @@ function Row({ listing }: { listing: Listing }) {
       {/* Link asChild merges props by spreading: a style array would reach the DOM as {0: …}. */}
       <Pressable
         testID="my-listing"
+        role="link"
+        aria-label={[
+          listing.title,
+          formatPrice(listing.priceNok, locale, m.common.noPrice),
+          listing.status === 'sold' ? m.listing.sold : undefined,
+        ]
+          .filter(Boolean)
+          .join(', ')}
         style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
       >
         {image ? (

@@ -213,6 +213,8 @@ export default function ConversationScreen() {
       <Link href={`/listings/${conversation.listing.id}`} asChild>
         {/* Link asChild spreads props: one style object, not an array (see listing-card.tsx). */}
         <Pressable
+          role="link"
+          aria-label={conversation.listing.title}
           style={{ ...styles.header, backgroundColor: theme.surface, borderColor: theme.border }}
         >
           {conversation.listing.image ? (

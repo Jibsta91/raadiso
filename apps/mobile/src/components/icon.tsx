@@ -74,7 +74,8 @@ export function Icon({
   size?: number;
   color?: string;
 }) {
-  const fallback = <Ionicons name={name} size={size} color={color} />;
+  // Decorative: the button or row around an icon carries the label for VoiceOver.
+  const fallback = <Ionicons name={name} size={size} color={color} aria-hidden />;
   const symbol = Platform.OS === 'ios' ? SF_SYMBOLS[name] : undefined;
   if (!symbol) return fallback;
   return (
@@ -85,6 +86,8 @@ export function Icon({
       resizeMode="scaleAspectFit"
       style={{ width: size, height: size }}
       fallback={fallback}
+      accessible={false}
+      aria-hidden
     />
   );
 }

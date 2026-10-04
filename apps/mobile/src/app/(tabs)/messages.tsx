@@ -25,6 +25,15 @@ function Row({ conversation }: { conversation: Conversation }) {
       {/* Link asChild spreads props: one style object, not an array (see listing-card.tsx). */}
       <Pressable
         testID="conversation"
+        role="link"
+        aria-label={[
+          conversation.counterpart.name,
+          conversation.listing.title,
+          conversation.lastMessage?.body,
+          conversation.lastMessage ? formatAge(conversation.lastMessage.sentAt, locale) : undefined,
+        ]
+          .filter(Boolean)
+          .join(', ')}
         style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
       >
         {conversation.listing.image ? (
