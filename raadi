@@ -37,6 +37,7 @@ Secrets & TLS
   secret <name>      print a generated secret (e.g. keycloak_admin_password,
                      grafana_admin_password, openbao_root_token)
   secret-set <name>  store a secret you supply (input hidden), e.g. godaddy_pat
+  otp                the demo staff users' current one-time code for the admin console
   ca-cert            export the dev CA to deploy/certs/raadi-dev-ca.crt
 Domain (raadiso.com via GoDaddy, docs/domain.md)
   dns <server-ip> [domain] [--dry-run]
@@ -80,6 +81,14 @@ case "$cmd" in
     path="/secrets/_master/${name}"
     [[ "$name" == openbao_root_token ]] && path=/secrets/_openbao/root_token
     "${DC[@]}" run --rm --no-deps -T --entrypoint cat secrets-init "$path"; echo
+    ;;
+  otp)
+    # RFC 6238 (HMAC-SHA256, 6 digits, 30 s) with DEMO_OTP_SECRET, as smoke computes it (ADR-0028).
+    "${DC[@]}" --progress quiet run --rm --no-deps -T --entrypoint bash secrets-init -c '
+      c=$(( $(date +%s) / 30 )); b=""
+      for i in 7 6 5 4 3 2 1 0; do b+=$(printf "\\\\x%02x" $(( (c >> (i * 8)) & 255 ))); done
+      m=$(printf "$b" | openssl dgst -sha256 -mac HMAC -macopt "key:${DEMO_OTP_SECRET:?}" -r | cut -d" " -f1)
+      o=$(( 16#${m:63:1} )); printf "%06d (valid for %ss)\n" $(( (16#${m:$((o * 2)):8} & 0x7fffffff) % 1000000 )) $(( 30 - $(date +%s) % 30 ))'
     ;;
   secret-set)
     name="${1:?usage: ./raadi secret-set <name>}"

@@ -24,7 +24,8 @@ don't always cross Docker Desktop's file sharing.
 ```
 apps/web                 Next.js 16 (App Router, RSC), next-intl (nb/en/so), Tailwind 4, shadcn/ui-style components
 apps/mobile              Expo app (Phase 3, docs/mobile.md)
-services/identity-bff    NestJS: OIDC login, encrypted sessions, token handler, /api/v1/identity
+services/identity-bff    NestJS: OIDC login, encrypted sessions, token handler, /api/v1/identity (also runs as
+                         admin-bff, the admin console's own session, ADR-0028)
 services/listings        NestJS: listings CRUD, OPA marketplace rules, OpenFGA ownership, outbox events
 services/search          NestJS: OpenSearch indexer (Kafka consumer) and search/suggest API
 services/media           NestJS: image uploads (ClamAV, imgproxy re-encode), attachment sync, orphan GC
@@ -34,6 +35,7 @@ services/trust           NestJS: reviews after a sale (event-fed eligibility) an
 services/payments        NestJS: promoted listings; Vipps/Stripe adapters, idempotent orders, webhooks, reconciliation
 services/payments-mock   NestJS: Vipps ePayment-compatible test PSP with a hosted approve page (development only)
 services/saved          NestJS: favourites and saved searches; alerts (price drop, sold, new matches) as events
+services/audit           NestJS: append-only audit log of staff actions (outbox events from every service)
 services/push-mock      Node: Expo push API-compatible stand-in with an inbox for tests (development only)
 services/*               further domain services (Phase 3)
 ai/*                     Python AI pillars (Phase 4)

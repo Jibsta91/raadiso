@@ -21,6 +21,12 @@ Each release also has generated notes on GitHub.
 - Block someone from a conversation: no more messages either way, in any conversation; the blocked person only
   sees that the conversation is closed. Unblock at any time (ADR-0027).
 
+- The admin console at `admin.raadiso.com` (`admin.raadi.localhost` in development), with its own sign-in
+  and session (ADR-0028). Staff need a one-time code from an authenticator app. New staff roles `support` and
+  `operator` with demo users; moderation moved from the website's `/moderation` into the console.
+- An append-only audit log of staff actions (removals, dismissed reports, refunds), readable by platform
+  admins in the console. New services: `audit`, and `admin-bff` (the identity-bff image).
+
 - The app's search has each category's own filters (makes, fuel, body type, ranges for year, mileage, area
   and price) in a filter sheet.
 
@@ -32,6 +38,11 @@ Each release also has generated notes on GitHub.
 - The app shows no push banner for the conversation that is already open.
 - The e2e suite signs each demo user in once per run and reuses the sessions, and tests delete the listings
   they create.
+
+### Fixed
+
+- Refunds asked for a role (`admin`) that did not exist, so nobody could refund. They now need
+  `platform-admin` and answer 200.
 
 ## [0.3.0] — 2026-10-04
 

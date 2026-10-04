@@ -53,6 +53,8 @@ C4Container
 
   System_Boundary(domain, "Domain services (NestJS)") {
     Container(bff, "identity-bff", "NestJS", "OIDC login, encrypted sessions, token handler")
+    Container(adminbff, "admin-bff", "NestJS (identity-bff image)", "Admin console sessions: own client, cookie, one-time codes")
+    Container(audit, "audit", "NestJS", "Append-only audit log of staff actions")
     Container(listings, "listings", "NestJS", "Listings, taxonomy, OPA rules, OpenFGA ownership")
     Container(search, "search", "NestJS", "Event-fed index; full-text, facets, geo (semantic search later)")
     Container(media, "media", "NestJS", "Uploads: ClamAV scan, re-encode, EXIF strip, orphan GC")
@@ -104,6 +106,8 @@ C4Container
   Rel(messaging, listings, "Seller lookup (internal API)")
   Rel(kafka, notifications, "message and listing events")
   Rel(notifications, keycloak, "E-mail address + language (view-users)")
+  Rel(traefik, adminbff, "admin.<domain>/auth/*")
+  Rel(kafka, audit, "Audit events (from every service's outbox)")
   Rel(kafka, saved, "listing events")
   Rel(saved, search, "Re-runs saved searches (new listings in a time window)")
   Rel(saved, kafka, "Alert events (outbox)")
@@ -229,6 +233,8 @@ reachable only on the internal Docker network.
 | notifications                          | 3                    | 4000                                  | `/api/v1/notifications/*`; SMTP out                                |
 | payments / payments-mock               | 3                    | 4000 / 4000                           | `/api/v1/payments/*`; `pay.raadi.localhost/pay/` (mock, dev)       |
 | saved                                  | 3                    | 4000                                  | `/api/v1/saved/*`                                                  |
+| audit                                  | 3                    | 4000                                  | `/api/v1/audit/*` (platform admins)                                |
+| admin-bff                              | 3                    | 4000                                  | `admin.raadi.localhost/auth/*`; console at `admin.raadi.localhost` |
 | push-mock                              | 3                    | 4000                                  | `push.raadi.localhost/messages` (read-only, dev)                   |
 | trust                                  | 3                    | 4000                                  | `/api/v1/trust/*`; BankID OIDC (mock realm in dev)                 |
 | mobile (Expo dev server)               | 3                    | 8081                                  | LAN / tunnel                                                       |

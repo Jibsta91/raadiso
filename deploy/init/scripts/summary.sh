@@ -62,6 +62,7 @@ cat <<BANNER
     support@${E}         customer service (admin console)
     operator@${E}        platform operations (admin console, Grafana editor)
     admin@${E}           platform admin (Grafana, admin APIs)
+  Staff also need a one-time code: ./raadi otp prints the current one (development authenticator).
 
   HTTPS works too (https://${D}) with a locally generated dev CA:
   trust it optionally with ./raadi ca-cert. Plain HTTP needs nothing.
