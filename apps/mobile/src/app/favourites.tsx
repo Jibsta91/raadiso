@@ -2,7 +2,7 @@ import { FlatList, StyleSheet } from 'react-native';
 import { ListingTile } from '../components/listing-card';
 import { Status } from '../components/ui';
 import { useI18n } from '../i18n';
-import { unwrap, useApi, usePaged } from '../lib/api';
+import { unwrap, useApi, usePaged, usePullToRefresh } from '../lib/api';
 import { useAuth } from '../lib/auth/context';
 import { space } from '../theme';
 
@@ -25,9 +25,11 @@ export default function Favourites() {
     [api, auth.status],
   );
 
+  const refresh = usePullToRefresh(favourites.loading, favourites.reload);
   return (
     <FlatList
       contentInsetAdjustmentBehavior="automatic"
+      {...refresh}
       testID="favourites"
       contentContainerStyle={styles.list}
       data={favourites.items}

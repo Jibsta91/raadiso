@@ -22,6 +22,13 @@ const config: ExpoConfig = {
   // Registered with Apple (permanent): the brand's domain, reversed.
   ios: {
     bundleIdentifier: 'com.raadiso.app',
+    // Home screen appearances (iOS 18+): the dark icon is the mark on the system's dark backdrop,
+    // the tinted one a greyscale mark that iOS colours in.
+    icon: {
+      light: './assets/icon.png',
+      dark: './assets/icon-dark.png',
+      tinted: './assets/icon-tinted.png',
+    },
     supportsTablet: true,
     // Only HTTPS/TLS from the OS: no export compliance documents needed for TestFlight.
     config: { usesNonExemptEncryption: false },

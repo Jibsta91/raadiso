@@ -3,7 +3,7 @@ import type { FacetValue } from '@raadi/api-client';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Body, Button, LargeTitle, Status, Title } from '../../components/ui';
+import { Body, Button, glassBar, LargeTitle, Status, Title } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi } from '../../lib/api';
 import {
@@ -22,7 +22,7 @@ export default function CategoryScreen() {
   if (!isCategory(id)) return <Status error onRetry={() => router.replace('/')} />;
   return (
     <>
-      <Stack.Screen options={{ title: m.categories[id] }} />
+      <Stack.Screen options={{ title: m.categories[id], ...glassBar }} />
       <Category id={id} />
     </>
   );
@@ -55,7 +55,11 @@ function Category({ id }: { id: CategoryId }) {
   }, [api, id, nonce]);
 
   return (
-    <ScrollView contentContainerStyle={styles.page} testID="category-screen">
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.page}
+      testID="category-screen"
+    >
       <View style={styles.hero}>
         <View style={[styles.heroIcon, { backgroundColor: theme.ink }]}>
           <Icon name={CATEGORY_ICONS[id]} size={30} color={theme.inkText} aria-hidden />

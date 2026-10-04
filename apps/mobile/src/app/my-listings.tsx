@@ -5,7 +5,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Badge, Status } from '../components/ui';
 import { NoPhoto } from '../components/no-photo';
 import { useI18n } from '../i18n';
-import { unwrap, useApi, usePaged } from '../lib/api';
+import { unwrap, useApi, usePaged, usePullToRefresh } from '../lib/api';
 import { useAuth } from '../lib/auth/context';
 import { config } from '../lib/config';
 import { formatPrice } from '../lib/format';
@@ -64,9 +64,11 @@ export default function MyListings() {
     [api, auth.status],
   );
 
+  const refresh = usePullToRefresh(mine.loading, mine.reload);
   return (
     <FlatList
       contentInsetAdjustmentBehavior="automatic"
+      {...refresh}
       contentContainerStyle={styles.list}
       data={mine.items}
       keyExtractor={(l) => l.id}

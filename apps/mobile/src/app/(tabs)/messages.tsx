@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoPhoto } from '../../components/no-photo';
 import { Body, Button, LargeTitle, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
-import { unwrap, useApi, usePaged } from '../../lib/api';
+import { unwrap, useApi, usePaged, usePullToRefresh } from '../../lib/api';
 import { useAuth } from '../../lib/auth/context';
 import { config } from '../../lib/config';
 import { formatAge } from '../../lib/format';
@@ -85,16 +85,16 @@ function Inbox({ top }: { top: number }) {
   );
   useRealtime((event) => event.type !== 'hello' && inbox.reload());
 
+  const refresh = usePullToRefresh(inbox.loading, inbox.reload);
   return (
     <FlatList
       contentContainerStyle={[styles.list, { paddingTop: top, paddingBottom: tabBarSpace }]}
       data={inbox.items}
       keyExtractor={(c) => c.id}
       renderItem={({ item }) => <Row conversation={item} />}
-      onRefresh={inbox.reload}
+      {...refresh}
       onEndReached={inbox.more}
       onEndReachedThreshold={0.5}
-      refreshing={false}
       ListHeaderComponent={<LargeTitle>{m.messages.title}</LargeTitle>}
       ListEmptyComponent={
         <Status

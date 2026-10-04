@@ -130,6 +130,7 @@ export default function Search() {
   return (
     <FlatList
       testID="search-results"
+      keyboardDismissMode="on-drag"
       contentContainerStyle={[
         styles.list,
         { paddingTop: insets.top + space.lg, paddingBottom: tabBarSpace + insets.bottom },

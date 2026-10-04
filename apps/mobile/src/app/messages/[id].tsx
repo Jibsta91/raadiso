@@ -237,6 +237,7 @@ export default function ConversationScreen() {
       <FlatList
         ref={list}
         testID="thread"
+        keyboardDismissMode="interactive"
         contentContainerStyle={styles.thread}
         data={messages}
         keyExtractor={(message) => message.id}

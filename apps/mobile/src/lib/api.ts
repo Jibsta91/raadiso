@@ -143,3 +143,19 @@ export function unwrap<T>(result: {
   }
   return result.data;
 }
+
+/**
+ * Pull to refresh for a list: the spinner shows from the pull until the reload has finished (iOS and
+ * Android keep it visible), never on the first load or on later pages.
+ */
+export function usePullToRefresh(loading: boolean, reload: () => void) {
+  const [pulled, setPulled] = useState(false);
+  useEffect(() => {
+    if (pulled && !loading) setPulled(false);
+  }, [pulled, loading]);
+  const onRefresh = useCallback(() => {
+    setPulled(true);
+    reload();
+  }, [reload]);
+  return { refreshing: pulled && loading, onRefresh };
+}

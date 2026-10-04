@@ -392,6 +392,7 @@ function ListingForm({
       <ScrollView
         contentContainerStyle={styles.page}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         testID="listing-form"
       >
         <Picked

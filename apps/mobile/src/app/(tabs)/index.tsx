@@ -7,7 +7,7 @@ import { ListingFeature, ListingTile } from '../../components/listing-card';
 import { Chip, Field, Status, Title } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { CATEGORIES } from '../../lib/categories';
-import { unwrap, useApi, useLoad } from '../../lib/api';
+import { unwrap, useApi, useLoad, usePullToRefresh } from '../../lib/api';
 import { fonts, radius, space, tabBarSpace, useTheme } from '../../theme';
 
 export default function Home() {
@@ -33,6 +33,7 @@ export default function Home() {
     router.push(query ? { pathname: '/search', params: { q: query } } : '/search');
   };
 
+  const refresh = usePullToRefresh(latest.loading, latest.reload);
   return (
     <FlatList
       contentContainerStyle={[
@@ -44,8 +45,7 @@ export default function Home() {
       columnWrapperStyle={styles.row}
       keyExtractor={(hit) => hit.id}
       renderItem={({ item }) => <ListingTile hit={item} />}
-      onRefresh={latest.reload}
-      refreshing={false}
+      {...refresh}
       ListHeaderComponent={
         <View style={styles.header}>
           <View style={styles.top}>

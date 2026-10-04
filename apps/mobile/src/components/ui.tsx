@@ -238,6 +238,13 @@ export function Glass({
 /** iOS 26 and later, where Apple's Liquid Glass and its native controls are available. */
 export const liquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
 
+/**
+ * Screen options for a transparent navigation bar on iOS 26: content scrolls under it with the
+ * system's scroll edge effect, as Apple's guidelines ask. The screen's list or scroll view must inset
+ * itself with contentInsetAdjustmentBehavior="automatic".
+ */
+export const glassBar = liquidGlass ? { headerTransparent: true } : {};
+
 /** Loading, error (with retry) and empty states share one centred layout. */
 export function Status({
   loading,

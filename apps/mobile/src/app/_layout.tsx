@@ -14,6 +14,7 @@ import { I18nProvider, useI18n } from '../i18n';
 import { AuthProvider } from '../lib/auth/provider';
 import { PushRegistration } from '../lib/push';
 import { RealtimeProvider } from '../lib/realtime';
+import { glassBar } from '../components/ui';
 import { fonts, ThemeProvider, useTheme } from '../theme';
 
 /**
@@ -86,15 +87,15 @@ function Screens() {
         <Stack.Screen name="messages/[id]" options={{ title: m.messages.title }} />
         <Stack.Screen
           name="my-listings"
-          options={{ title: m.account.myListings, headerLargeTitle: true }}
+          options={{ title: m.account.myListings, headerLargeTitle: true, ...glassBar }}
         />
         <Stack.Screen
           name="favourites"
-          options={{ title: m.favourites.title, headerLargeTitle: true }}
+          options={{ title: m.favourites.title, headerLargeTitle: true, ...glassBar }}
         />
         <Stack.Screen
           name="saved-searches/index"
-          options={{ title: m.savedSearches.title, headerLargeTitle: true }}
+          options={{ title: m.savedSearches.title, headerLargeTitle: true, ...glassBar }}
         />
         <Stack.Screen name="saved-searches/[id]" options={{ title: m.savedSearches.title }} />
       </Stack>

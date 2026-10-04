@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Status } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
-import { unwrap, useApi, useLoad } from '../../lib/api';
+import { unwrap, useApi, useLoad, usePullToRefresh } from '../../lib/api';
 import { useAuth } from '../../lib/auth/context';
 import { fonts, radius, space, useTheme } from '../../theme';
 
@@ -94,9 +94,11 @@ export default function SavedSearches() {
     [api, auth.status],
   );
 
+  const refresh = usePullToRefresh(searches.loading, searches.reload);
   return (
     <FlatList
       contentInsetAdjustmentBehavior="automatic"
+      {...refresh}
       testID="saved-searches"
       contentContainerStyle={styles.list}
       data={searches.data ?? []}
