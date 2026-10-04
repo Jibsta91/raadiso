@@ -1,4 +1,5 @@
 import { BlurView } from 'expo-blur';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -191,12 +192,30 @@ export function Glass({
   children,
   style,
   testID,
+  interactive,
 }: {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   testID?: string;
+  /** Glass that reacts to touch (iOS 26), for buttons. */
+  interactive?: boolean;
 }) {
   const theme = useTheme();
+  // iOS 26 and later: Apple's Liquid Glass. It follows the app's own Light/Dark choice, not only the
+  // system's. Elsewhere (older iOS, Android, web) a blur with a translucent fill stands in.
+  if (liquidGlass) {
+    return (
+      <GlassView
+        testID={testID}
+        glassEffectStyle="regular"
+        isInteractive={interactive}
+        colorScheme={theme.scheme}
+        style={style}
+      >
+        {children}
+      </GlassView>
+    );
+  }
   return (
     <View
       testID={testID}
@@ -215,6 +234,8 @@ export function Glass({
     </View>
   );
 }
+
+const liquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
 
 /** Loading, error (with retry) and empty states share one centred layout. */
 export function Status({

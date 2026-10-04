@@ -67,7 +67,7 @@ function GlassIcon({
       onPress={onPress}
       hitSlop={6}
     >
-      <Glass style={styles.iconButton}>
+      <Glass style={styles.iconButton} interactive>
         <Ionicons name={icon} size={20} color={color ?? theme.text} />
       </Glass>
     </Pressable>

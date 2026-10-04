@@ -76,8 +76,11 @@ export const fonts = {
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
 export const radius = { sm: 12, md: 18, lg: 24, xl: 32, pill: 999 } as const;
 
-/** Bottom padding that keeps scrolling content clear of the floating tab bar. */
-export const tabBarSpace = 120;
+/**
+ * Bottom padding that keeps scrolling content clear of the tab bar: iOS's native (Liquid Glass) bar,
+ * or the floating bar elsewhere.
+ */
+export const tabBarSpace = Platform.OS === 'ios' ? 96 : 120;
 
 const PREFERENCE_KEY = 'raadi.theme';
 
