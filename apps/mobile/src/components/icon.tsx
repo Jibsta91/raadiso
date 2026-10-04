@@ -1,0 +1,90 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { SymbolView, type SFSymbol } from 'expo-symbols';
+import { Platform } from 'react-native';
+
+export type IconName = keyof typeof Ionicons.glyphMap;
+
+// The app names its icons after Ionicons; on iOS each one is drawn as the closest SF Symbol, so icons
+// match the system's (weights, optical sizes, the tab bar). Names without a symbol stay Ionicons.
+const SF_SYMBOLS: Partial<Record<IconName, SFSymbol>> = {
+  add: 'plus',
+  'airplane-outline': 'airplane',
+  'arrow-up': 'arrow.up',
+  'bag-handle-outline': 'bag',
+  'ban-outline': 'nosign',
+  'bed-outline': 'bed.double',
+  'bicycle-outline': 'bicycle',
+  'bonfire-outline': 'flame',
+  'bookmark-outline': 'bookmark',
+  'briefcase-outline': 'briefcase',
+  'build-outline': 'wrench.adjustable',
+  'bus-outline': 'bus',
+  'business-outline': 'building.2',
+  'camera-outline': 'camera',
+  'car-outline': 'car',
+  'car-sport-outline': 'car.side',
+  'cart-outline': 'cart',
+  'chatbubble-ellipses-outline': 'ellipsis.bubble',
+  chatbubbles: 'bubble.left.and.bubble.right.fill',
+  'chatbubbles-outline': 'bubble.left.and.bubble.right',
+  'chevron-back': 'chevron.backward',
+  'chevron-forward': 'chevron.forward',
+  close: 'xmark',
+  'color-palette-outline': 'paintpalette',
+  'construct-outline': 'wrench.and.screwdriver',
+  'earth-outline': 'globe.europe.africa',
+  'ellipse-outline': 'circle',
+  'hammer-outline': 'hammer',
+  'happy-outline': 'face.smiling',
+  heart: 'heart.fill',
+  'heart-outline': 'heart',
+  home: 'house.fill',
+  'home-outline': 'house',
+  'image-outline': 'photo',
+  'images-outline': 'photo.on.rectangle',
+  'key-outline': 'key',
+  'laptop-outline': 'laptopcomputer',
+  'leaf-outline': 'leaf',
+  'location-outline': 'mappin.and.ellipse',
+  'map-outline': 'map',
+  'medkit-outline': 'cross.case',
+  'musical-notes-outline': 'music.note.list',
+  'paw-outline': 'pawprint',
+  'person-circle': 'person.crop.circle.fill',
+  'person-circle-outline': 'person.crop.circle',
+  'phone-portrait-outline': 'iphone',
+  'restaurant-outline': 'fork.knife',
+  'school-outline': 'graduationcap',
+  search: 'magnifyingglass',
+  'search-outline': 'magnifyingglass',
+  'share-outline': 'square.and.arrow.up',
+  'shield-outline': 'shield',
+  'shirt-outline': 'tshirt',
+  'speedometer-outline': 'speedometer',
+  'trail-sign-outline': 'signpost.right',
+  'trash-outline': 'trash',
+};
+
+export function Icon({
+  name,
+  size = 22,
+  color,
+}: {
+  name: IconName;
+  size?: number;
+  color?: string;
+}) {
+  const fallback = <Ionicons name={name} size={size} color={color} />;
+  const symbol = Platform.OS === 'ios' ? SF_SYMBOLS[name] : undefined;
+  if (!symbol) return fallback;
+  return (
+    <SymbolView
+      name={symbol}
+      size={size}
+      tintColor={color}
+      resizeMode="scaleAspectFit"
+      style={{ width: size, height: size }}
+      fallback={fallback}
+    />
+  );
+}

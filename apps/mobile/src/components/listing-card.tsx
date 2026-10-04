@@ -1,13 +1,9 @@
 import type { SearchHit } from '@raadi/api-client';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
-import type { ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useI18n } from '../i18n';
-import { useApi } from '../lib/api';
-import { useAuth } from '../lib/auth/context';
 import { config } from '../lib/config';
-import { shareListing } from '../lib/share';
 import { formatPrice } from '../lib/format';
 import { absoluteUrl } from '../lib/urls';
 import { NoPhoto } from './no-photo';
@@ -39,59 +35,12 @@ function Photo({ hit, style }: { hit: TileListing; style: object }) {
   );
 }
 
-/**
- * Opens the listing. On iOS, pressing and holding shows a preview of the listing with a native menu
- * (save as favourite, share), like Safari and Photos. Elsewhere it is a plain link.
- */
-function ListingLink({
-  hit,
-  favouriteAction = true,
-  children,
-}: {
-  hit: Pick<TileListing, 'id' | 'title'>;
-  favouriteAction?: boolean;
-  children: ReactElement;
-}) {
-  const { m, locale } = useI18n();
-  const api = useApi();
-  const auth = useAuth();
-  const saveFavourite = () => {
-    if (auth.status !== 'signedIn') return void auth.signIn();
-    void api.saved
-      .PUT('/api/v1/saved/favourites/{listingId}', { params: { path: { listingId: hit.id } } })
-      .catch(() => undefined);
-  };
-  return (
-    <Link href={`/listings/${hit.id}`} asChild>
-      <Link.Trigger>{children}</Link.Trigger>
-      <Link.Preview />
-      <Link.Menu>
-        {favouriteAction ? (
-          <Link.MenuAction title={m.favourites.add} icon="heart" onPress={saveFavourite} />
-        ) : null}
-        <Link.MenuAction
-          title={m.common.share}
-          icon="square.and.arrow.up"
-          onPress={() => shareListing(hit, locale)}
-        />
-      </Link.Menu>
-    </Link>
-  );
-}
-
 /** Square tile for two-column grids: photo with a glass price chip, title below. */
-export function ListingTile({
-  hit,
-  favouriteAction,
-}: {
-  hit: TileListing;
-  /** Offer "Save as favourite" in the long-press menu (not on the Favourites page itself). */
-  favouriteAction?: boolean;
-}) {
+export function ListingTile({ hit }: { hit: TileListing }) {
   const { m, locale } = useI18n();
   const theme = useTheme();
   return (
-    <ListingLink hit={hit} favouriteAction={favouriteAction}>
+    <Link href={`/listings/${hit.id}`} asChild>
       <Pressable testID="listing-card" style={styles.tile}>
         <View style={styles.tilePhoto}>
           <Photo hit={hit} style={styles.fill} />
@@ -117,7 +66,7 @@ export function ListingTile({
           {hit.location.name}
         </Text>
       </Pressable>
-    </ListingLink>
+    </Link>
   );
 }
 
@@ -126,7 +75,7 @@ export function ListingFeature({ hit }: { hit: SearchHit }) {
   const { m, locale } = useI18n();
   const theme = useTheme();
   return (
-    <ListingLink hit={hit}>
+    <Link href={`/listings/${hit.id}`} asChild>
       <Pressable testID="listing-feature" style={styles.feature}>
         <Photo hit={hit} style={styles.fill} />
         <View style={styles.badgeSpot}>
@@ -141,7 +90,7 @@ export function ListingFeature({ hit }: { hit: SearchHit }) {
           </Text>
         </Glass>
       </Pressable>
-    </ListingLink>
+    </Link>
   );
 }
 

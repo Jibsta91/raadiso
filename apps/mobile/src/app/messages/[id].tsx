@@ -1,5 +1,6 @@
 import type { Message } from '@raadi/api-client';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon } from '../../components/icon';
+import { haptics } from '../../lib/haptics';
 import { Image } from 'expo-image';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -132,6 +133,7 @@ export default function ConversationScreen() {
         body: { body },
       });
       if (res.data) {
+        haptics.success();
         atBottom.current = true;
         append(res.data);
         setDraft('');
@@ -203,7 +205,7 @@ export default function ConversationScreen() {
                 hitSlop={8}
                 onPress={() => void setBlocked(true, conversation.counterpart.name)}
               >
-                <Ionicons name="ban-outline" size={22} color={theme.muted} />
+                <Icon name="ban-outline" size={22} color={theme.muted} />
               </Pressable>
             ),
         }}
@@ -229,7 +231,7 @@ export default function ConversationScreen() {
               {conversation.role === 'buyer' ? m.messages.roleBuyer : m.messages.roleSeller}
             </Body>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.muted} />
+          <Icon name="chevron-forward" size={18} color={theme.muted} />
         </Pressable>
       </Link>
       <FlatList
@@ -324,7 +326,7 @@ export default function ConversationScreen() {
               { backgroundColor: theme.accent, opacity: sending || !draft.trim() ? 0.5 : 1 },
             ]}
           >
-            <Ionicons name="arrow-up" size={22} color={theme.accentText} />
+            <Icon name="arrow-up" size={22} color={theme.accentText} />
           </Pressable>
         </Glass>
       )}

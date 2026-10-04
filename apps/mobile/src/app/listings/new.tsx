@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon, type IconName } from '../../components/icon';
 import type { Media } from '@raadi/api-client';
 import { ATTRIBUTE_FIELDS, attributePayload, priceRequired } from '@raadi/catalog/attributes';
 import { PLACES, type Place } from '@raadi/catalog/places';
@@ -95,7 +95,7 @@ function Tile({
   onPress,
   testID,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   label: string;
   onPress: () => void;
   testID: string;
@@ -116,7 +116,7 @@ function Tile({
       ]}
     >
       <View style={[styles.tileIcon, { backgroundColor: theme.surfaceAlt }]}>
-        <Ionicons name={icon} size={22} color={theme.text} aria-hidden />
+        <Icon name={icon} size={22} color={theme.text} aria-hidden />
       </View>
       <Text numberOfLines={2} style={[styles.tileText, { color: theme.text }]}>
         {label}
@@ -180,7 +180,7 @@ function Picked({
   onChange,
 }: {
   label: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   onChange: () => void;
 }) {
   const { m } = useI18n();
@@ -191,7 +191,7 @@ function Picked({
       style={[styles.picked, { backgroundColor: theme.surface, borderColor: theme.border }]}
     >
       <View style={[styles.pickedIcon, { backgroundColor: theme.ink }]}>
-        <Ionicons name={icon} size={18} color={theme.inkText} aria-hidden />
+        <Icon name={icon} size={18} color={theme.inkText} aria-hidden />
       </View>
       <Text numberOfLines={1} style={[styles.pickedText, { color: theme.text }]}>
         {label}
@@ -426,7 +426,7 @@ function ListingForm({
                     { backgroundColor: theme.surface, borderColor: theme.border },
                   ]}
                 >
-                  <Ionicons name="close" size={14} color={theme.text} />
+                  <Icon name="close" size={14} color={theme.text} />
                 </Pressable>
               </View>
             ))}
@@ -442,7 +442,7 @@ function ListingForm({
                 testID="add-photos"
                 variant="secondary"
                 label={m.sell.addPhotos}
-                icon={<Ionicons name="images-outline" size={18} color={theme.text} />}
+                icon={<Icon name="images-outline" size={18} color={theme.text} />}
                 onPress={() => void pick('library')}
               />
               {Platform.OS !== 'web' ? (
@@ -450,7 +450,7 @@ function ListingForm({
                   testID="take-photo"
                   variant="secondary"
                   label={m.sell.takePhoto}
-                  icon={<Ionicons name="camera-outline" size={18} color={theme.text} />}
+                  icon={<Icon name="camera-outline" size={18} color={theme.text} />}
                   onPress={() => void pick('camera')}
                 />
               ) : null}
@@ -545,7 +545,7 @@ function ListingForm({
                 onChangeText={setPlaceQuery}
                 placeholder={m.sell.placeSearch}
                 accessibilityLabel={m.sell.place}
-                icon={<Ionicons name="location-outline" size={18} color={theme.muted} />}
+                icon={<Icon name="location-outline" size={18} color={theme.muted} />}
               />
               <View style={styles.options}>
                 {places.map((p) => (

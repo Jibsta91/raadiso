@@ -1,4 +1,4 @@
-import type Ionicons from '@expo/vector-icons/Ionicons';
+import type { IconName } from '../components/icon';
 import {
   CATEGORIES as TAXONOMY,
   CATEGORY_KEYS,
@@ -11,8 +11,6 @@ import {
 export const CATEGORIES = CATEGORY_KEYS;
 export type CategoryId = Category;
 export type SubcategoryId = Subcategory;
-
-type IconName = keyof typeof Ionicons.glyphMap;
 
 export function isCategory(value: string | undefined): value is CategoryId {
   return (CATEGORIES as readonly string[]).includes(value ?? '');

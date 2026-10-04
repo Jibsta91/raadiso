@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon } from '../../components/icon';
 import type { FacetValue } from '@raadi/api-client';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -58,7 +58,7 @@ function Category({ id }: { id: CategoryId }) {
     <ScrollView contentContainerStyle={styles.page} testID="category-screen">
       <View style={styles.hero}>
         <View style={[styles.heroIcon, { backgroundColor: theme.ink }]}>
-          <Ionicons name={CATEGORY_ICONS[id]} size={30} color={theme.inkText} aria-hidden />
+          <Icon name={CATEGORY_ICONS[id]} size={30} color={theme.inkText} aria-hidden />
         </View>
         <LargeTitle>{m.categories[id]}</LargeTitle>
         {total !== undefined ? (
@@ -90,7 +90,7 @@ function Category({ id }: { id: CategoryId }) {
               ]}
             >
               <View style={[styles.tileIcon, { backgroundColor: theme.surfaceAlt }]}>
-                <Ionicons name={SUBCATEGORY_ICONS[sub]} size={22} color={theme.text} aria-hidden />
+                <Icon name={SUBCATEGORY_ICONS[sub]} size={22} color={theme.text} aria-hidden />
               </View>
               <Text numberOfLines={2} style={[styles.tileName, { color: theme.text }]}>
                 {m.taxonomy.subcategories[sub]}

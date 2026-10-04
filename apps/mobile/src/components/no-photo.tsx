@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon } from './icon';
 import { View } from 'react-native';
 import { CATEGORY_ICONS, isCategory } from '../lib/categories';
 import { useTheme } from '../theme';
@@ -28,7 +28,7 @@ export function NoPhoto({
         justifyContent: 'center',
       }}
     >
-      <Ionicons
+      <Icon
         name={isCategory(category) ? CATEGORY_ICONS[category] : 'image-outline'}
         size={size}
         color={theme.muted}

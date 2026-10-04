@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon, type IconName } from '../../components/icon';
 import { COUNTIES, type County } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -27,6 +27,7 @@ import { useAuth } from '../../lib/auth/context';
 import { isCategory, isSubcategoryOf } from '../../lib/categories';
 import { useKeyboardLift } from '../../lib/keyboard';
 import { config } from '../../lib/config';
+import { haptics } from '../../lib/haptics';
 import { shareListing } from '../../lib/share';
 import { formatAge, formatPrice, intlLocale } from '../../lib/format';
 import { absoluteUrl } from '../../lib/urls';
@@ -50,7 +51,7 @@ function GlassIcon({
   pressed,
   testID,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   label: string;
   onPress: () => void;
   color?: string;
@@ -68,7 +69,7 @@ function GlassIcon({
       hitSlop={6}
     >
       <Glass style={styles.iconButton} interactive>
-        <Ionicons name={icon} size={20} color={color ?? theme.text} />
+        <Icon name={icon} size={20} color={color ?? theme.text} />
       </Glass>
     </Pressable>
   );
@@ -90,6 +91,7 @@ function Compose({ listingId, onCancel }: { listingId: string; onCancel: () => v
         body: { listingId, body: body.trim() },
       });
       if (res.data) {
+        haptics.success();
         router.push(`/messages/${res.data.conversation.id}`);
       } else {
         setError(res.response.status === 429 ? 'rate_limited' : problemCode(res.error));
@@ -297,7 +299,7 @@ export default function ListingScreen() {
             {formatPrice(item.priceNok, locale, m.common.noPrice)}
           </Text>
           <View style={styles.place}>
-            <Ionicons name="location-outline" size={16} color={theme.muted} />
+            <Icon name="location-outline" size={16} color={theme.muted} />
             <Body muted style={styles.small}>
               {item.location.name},{' '}
               {COUNTIES[item.location.county as County] ?? item.location.county} ·{' '}
@@ -320,7 +322,7 @@ export default function ListingScreen() {
               </Text>
               {seller.data ? (
                 <View style={styles.place}>
-                  <Ionicons
+                  <Icon
                     name={seller.data.verification ? 'shield-checkmark' : 'shield-outline'}
                     size={14}
                     color={seller.data.verification ? theme.accent : theme.muted}
@@ -405,7 +407,7 @@ export default function ListingScreen() {
                 testID={auth.status === 'signedIn' ? 'contact-open' : 'contact-login'}
                 label={auth.status === 'signedIn' ? m.contact.title : m.contact.login}
                 icon={
-                  <Ionicons name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
+                  <Icon name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
                 }
                 onPress={() =>
                   auth.status === 'signedIn' ? setComposing(true) : void auth.signIn()

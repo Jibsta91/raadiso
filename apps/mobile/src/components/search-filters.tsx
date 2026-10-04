@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon } from './icon';
 import type { FacetValue } from '@raadi/api-client';
 import { ATTRIBUTE_FIELDS, FACET_ATTRIBUTES, RANGE_ATTRIBUTES } from '@raadi/catalog/attributes';
 import { useEffect, useState } from 'react';
@@ -103,7 +103,7 @@ export function SearchFilters({
               hitSlop={8}
               onPress={() => setOpen(false)}
             >
-              <Ionicons name="close" size={24} color={theme.text} />
+              <Icon name="close" size={24} color={theme.text} />
             </Pressable>
           </View>
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">

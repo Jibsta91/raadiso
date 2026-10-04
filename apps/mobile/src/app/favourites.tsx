@@ -45,7 +45,6 @@ export default function Favourites() {
             location: item.listing.location,
             sold: item.listing.status === 'sold',
           }}
-          favouriteAction={false}
         />
       )}
       onEndReached={favourites.more}

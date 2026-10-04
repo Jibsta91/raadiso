@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon } from '../../components/icon';
 import type { FacetValue, SearchHit } from '@raadi/api-client';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -42,7 +42,7 @@ function SaveSearch({ params, name }: { params: Record<string, string>; name: st
       onPress={() => void save()}
       style={[styles.save, { borderColor: theme.border, backgroundColor: theme.surface }]}
     >
-      <Ionicons
+      <Icon
         name={state === 'saved' ? 'bookmark' : 'bookmark-outline'}
         size={16}
         color={theme.text}
@@ -152,7 +152,7 @@ export default function Search() {
             accessibilityLabel={m.search.placeholder}
             returnKeyType="search"
             onSubmitEditing={() => router.setParams({ q: text.trim() })}
-            icon={<Ionicons name="search" size={20} color={theme.muted} />}
+            icon={<Icon name="search" size={20} color={theme.muted} />}
           />
           <ScrollView
             horizontal

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useApi } from './api';
 import { useAuth } from './auth/context';
+import { haptics } from './haptics';
 
 /** Heart state for one listing: loads whether it is a favourite, toggles it optimistically. */
 export function useFavourite(listingId: string | undefined) {
@@ -26,6 +27,7 @@ export function useFavourite(listingId: string | undefined) {
     if (!listingId || busy) return;
     if (auth.status !== 'signedIn') return void auth.signIn();
     const next = !saved;
+    haptics.tap();
     setSaved(next);
     setBusy(true);
     const path = { params: { path: { listingId } } };

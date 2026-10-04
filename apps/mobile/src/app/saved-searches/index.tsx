@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon } from '../../components/icon';
 import type { SavedSearch } from '@raadi/api-client';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -75,7 +75,7 @@ function Row({ search, onDeleted }: { search: SavedSearch; onDeleted: () => void
         hitSlop={8}
         onPress={() => void remove()}
       >
-        <Ionicons name="trash-outline" size={20} color={theme.muted} />
+        <Icon name="trash-outline" size={20} color={theme.muted} />
       </Pressable>
     </View>
   );

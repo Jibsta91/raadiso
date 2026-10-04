@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import { Icon } from '../../components/icon';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -58,7 +58,7 @@ export default function Home() {
               onPress={() => router.push('/listings/new')}
               style={[styles.sell, { backgroundColor: theme.ink }]}
             >
-              <Ionicons name="add" size={18} color={theme.inkText} />
+              <Icon name="add" size={18} color={theme.inkText} />
               <Text style={[styles.sellText, { color: theme.inkText }]}>{m.sell.cta}</Text>
             </Pressable>
           </View>
@@ -70,7 +70,7 @@ export default function Home() {
             accessibilityLabel={m.search.placeholder}
             returnKeyType="search"
             onSubmitEditing={submit}
-            icon={<Ionicons name="search" size={20} color={theme.muted} />}
+            icon={<Icon name="search" size={20} color={theme.muted} />}
           />
           <ScrollView
             horizontal
