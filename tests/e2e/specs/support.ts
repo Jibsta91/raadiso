@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -5,6 +6,33 @@ import { expect, type Locator, type Page } from '@playwright/test';
 
 export const domain = process.env.RAADI_DOMAIN ?? 'raadi.localhost';
 export const password = process.env.DEMO_USER_PASSWORD ?? 'raadi-demo-pass';
+/**
+ * The demo staff users' current one-time code for the admin console (RFC 6238 TOTP: HMAC-SHA256,
+ * 6 digits, 30 s, the key being DEMO_OTP_SECRET's bytes as Keycloak stores it).
+ */
+export function totp(secret = process.env.DEMO_OTP_SECRET ?? 'raadi-demo-otp-secret'): string {
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30_000)));
+  const mac = createHmac('sha256', Buffer.from(secret, 'utf8')).update(counter).digest();
+  const offset = mac[mac.length - 1]! & 0x0f;
+  return String((mac.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, '0');
+}
+
+/**
+ * Answers Keycloak's one-time code step, if it is showing. Keycloak accepts each code once, and
+ * parallel workers sign staff in at the same time, so a rejected code is retried in the next window.
+ */
+export async function enterOtp(page: Page): Promise<void> {
+  const otp = page.locator('#otp');
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (!(await otp.isVisible().catch(() => false))) return;
+    if (attempt > 0) await page.waitForTimeout(31_000 - (Date.now() % 30_000));
+    await otp.fill(totp());
+    await page.locator('#kc-login').click();
+    await page.waitForLoadState();
+  }
+}
+
 /** The admin console's own host (ADR-0028). */
 export const adminBase = process.env.ADMIN_BASE_URL ?? `http://admin.${domain}`;
 
@@ -36,6 +64,8 @@ export async function adminLogin(page: Page, email: string): Promise<void> {
     if (await page.locator('#username').isVisible()) await page.locator('#username').fill(email);
     await page.locator('#password').fill(password);
     await page.locator('#kc-login').click();
+    await page.locator('#otp').or(page.getByTestId('admin-console')).waitFor();
+    await enterOtp(page);
   }
   await expect(page.getByTestId('admin-console')).toBeVisible();
 }
@@ -65,6 +95,7 @@ export async function signIn(page: Page, email: string): Promise<void> {
   await page.locator('#username').fill(email);
   await page.locator('#password').fill(password);
   await page.locator('#kc-login').click();
+  await enterOtp(page);
   await expect(page.getByTestId('nav-account')).toBeVisible();
 }
 

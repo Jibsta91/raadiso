@@ -4,6 +4,7 @@ import {
   adminBase,
   adminSessionFile,
   domain,
+  enterOtp,
   password,
   SESSION_DIR,
   sessionFile,
@@ -21,6 +22,8 @@ for (const user of users) {
     await page.locator('#username').fill(`${user}@${domain}`);
     await page.locator('#password').fill(password);
     await page.locator('#kc-login').click();
+    // Staff have an authenticator, so Keycloak asks them for a code on the website too.
+    await enterOtp(page);
     // Right after a cold start, a demo user's first login goes through the welcome page.
     const welcome = page.getByTestId('welcome-continue');
     await expect(page.getByTestId('nav-account').or(welcome)).toBeVisible();
@@ -38,6 +41,9 @@ for (const user of ['moderator', 'support', 'admin']) {
     await page.locator('#username').fill(`${user}@${domain}`);
     await page.locator('#password').fill(password);
     await page.locator('#kc-login').click();
+    // The console requires a one-time code (ADR-0028); the demo users have a known authenticator.
+    await expect(page.locator('#otp')).toBeVisible();
+    await enterOtp(page);
     await expect(page.getByTestId('admin-console')).toBeVisible();
     mkdirSync(SESSION_DIR, { recursive: true });
     await page.context().storageState({ path: adminSessionFile(`${user}@${domain}`) });

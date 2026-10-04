@@ -53,12 +53,31 @@ login_as() { # <email> [base URL: the website, or the admin console's host]
     | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')
   [[ -n "$action" ]] || return 1
   req POST "$action" --data-urlencode "username=$1" --data-urlencode "password=$PASSWORD" --data-urlencode "credentialId="
+  # Staff are asked for a one-time code after the password (ADR-0028). Keycloak accepts each code
+  # once, so a code already used in this 30 s window is retried with the next window's code.
+  local otp_action try
+  for try in 1 2; do
+    otp_action=$(grep -o '<form[^>]*id="kc-otp-login-form"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 \
+      | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')
+    [[ -n "$otp_action" ]] || break
+    (( try == 1 )) || sleep $(( 31 - $(date +%s) % 30 ))
+    req POST "$otp_action" --data-urlencode "otp=$(totp)"
+  done
   local cb; cb="$(header location)"
   [[ "$cb" == "$base/auth/callback?"* ]] || return 1
   req GET "$cb"
   [[ "$status" == "302" ]]
 }
 json() { jq -r "$1" "$BODY" 2>/dev/null; }
+# totp — the demo staff users' current one-time code (RFC 6238: HMAC-SHA256, 6 digits, 30 s; the key
+# is DEMO_OTP_SECRET's bytes, as Keycloak stores it).
+totp() {
+  local c=$(( $(date +%s) / 30 )) bytes="" i
+  for i in 7 6 5 4 3 2 1 0; do bytes+=$(printf '\\x%02x' $(( (c >> (i * 8)) & 255 ))); done
+  local mac; mac=$(printf "$bytes" | openssl dgst -sha256 -mac HMAC -macopt "key:${DEMO_OTP_SECRET:?}" -r | cut -d' ' -f1)
+  local off=$(( 16#${mac:63:1} ))
+  printf '%06d' $(( ((16#${mac:$((off * 2)):8}) & 0x7fffffff) % 1000000 ))
+}
 expect_status() { [[ "$status" == "$1" ]] && ok "$2" || fail "$2" "expected HTTP $1, got $status: $(head -c 400 "$BODY")"; }
 q() { curl -sf --max-time 10 --get --data-urlencode "query=$1" http://prometheus:9090/api/v1/query | jq -e "$2"; }
 eventually() { # <description> <seconds> <command...>
@@ -623,6 +642,15 @@ req GET "$PUBLIC/nb/admin"
 expect_status 404 "the website has no admin pages"
 req GET "$ADMIN/api/v1/listings/moderation/reports"
 [[ "$status" != "200" ]] && ok "no API routes on the admin host" || fail "admin API exposed"
+# The console asks for a one-time code after the password (Keycloak flow raadi-admin-browser).
+: > "$JAR"
+req GET "$ADMIN/auth/login?returnTo=/en/admin&locale=en"; req GET "$(header location)"
+mfa_action=$(grep -o '<form[^>]*id="kc-form-login"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')
+req POST "$mfa_action" --data-urlencode "username=moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" --data-urlencode "password=$PASSWORD" --data-urlencode "credentialId="
+grep -q 'kc-otp-login-form' "$BODY" && ok "the console requires a one-time code (MFA)" || fail "admin MFA" "HTTP $status"
+req POST "$(grep -o '<form[^>]*id="kc-otp-login-form"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')" --data-urlencode "otp=000000"
+grep -q 'kc-otp-login-form' "$BODY" && [[ "$(header location)" != *"/auth/callback"* ]] \
+  && ok "a wrong one-time code is refused" || fail "wrong OTP accepted"
 login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" "$ADMIN" || fail "admin console login"
 req GET "$ADMIN/auth/session"
 [[ "$(json '.user.roles | index("moderator") != null')" == "true" ]] && ok "staff sign in to the console through admin-bff" || fail "admin session" "$(head -c 200 "$BODY")"

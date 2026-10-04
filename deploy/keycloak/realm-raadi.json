@@ -392,6 +392,12 @@
           "type": "password",
           "value": "${DEMO_USER_PASSWORD}",
           "temporary": false
+        },
+        {
+          "type": "otp",
+          "userLabel": "Demo authenticator (development only)",
+          "secretData": "{\"value\":\"${DEMO_OTP_SECRET}\"}",
+          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA256\"}"
         }
       ],
       "realmRoles": ["user", "moderator"]
@@ -412,6 +418,12 @@
           "type": "password",
           "value": "${DEMO_USER_PASSWORD}",
           "temporary": false
+        },
+        {
+          "type": "otp",
+          "userLabel": "Demo authenticator (development only)",
+          "secretData": "{\"value\":\"${DEMO_OTP_SECRET}\"}",
+          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA256\"}"
         }
       ],
       "realmRoles": ["user", "support"]
@@ -432,6 +444,12 @@
           "type": "password",
           "value": "${DEMO_USER_PASSWORD}",
           "temporary": false
+        },
+        {
+          "type": "otp",
+          "userLabel": "Demo authenticator (development only)",
+          "secretData": "{\"value\":\"${DEMO_OTP_SECRET}\"}",
+          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA256\"}"
         }
       ],
       "realmRoles": ["user", "operator"]
@@ -452,6 +470,12 @@
           "type": "password",
           "value": "${DEMO_USER_PASSWORD}",
           "temporary": false
+        },
+        {
+          "type": "otp",
+          "userLabel": "Demo authenticator (development only)",
+          "secretData": "{\"value\":\"${DEMO_OTP_SECRET}\"}",
+          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA256\"}"
         }
       ],
       "realmRoles": ["user", "moderator", "support", "operator", "platform-admin"]

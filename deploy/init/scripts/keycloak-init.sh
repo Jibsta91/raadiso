@@ -20,11 +20,11 @@ export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL ADMIN_BASE_URL AUTH_BASE_URL GRAFANA_BA
   REGISTRY_INIT_CLIENT_SECRET NOTIFICATIONS_CLIENT_SECRET \
   SMTP_HOST="${SMTP_HOST:-mailpit}" SMTP_PORT="${SMTP_PORT:-1025}" \
   SMTP_FROM="${SMTP_FROM:-no-reply@${RAADI_DOMAIN}}" \
-  DEMO_USER_PASSWORD="${DEMO_USER_PASSWORD:-}"
+  DEMO_USER_PASSWORD="${DEMO_USER_PASSWORD:-}" DEMO_OTP_SECRET="${DEMO_OTP_SECRET:-}"
 
 # envsubst only replaces this explicit list (Keycloak's own ${...} keys stay intact).
 # shellcheck disable=SC2016
-vars='$PUBLIC_BASE_URL $ADMIN_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $ADMIN_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET'
+vars='$DEMO_OTP_SECRET $PUBLIC_BASE_URL $ADMIN_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $ADMIN_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET'
 realm="$(envsubst "$vars" < /opt/raadi/keycloak/realm-raadi.json)"
 if [[ "${SEED_DEMO_DATA:-false}" != "true" ]]; then
   realm="$(jq 'del(.users)' <<<"$realm")"
@@ -53,14 +53,19 @@ else
     | api -X POST "$KC/admin/realms/$REALM/partialImport" --data-binary @- >/dev/null
   # Demo users have fixed ids (seed data references them). Recreate any demo
   # user that an older realm created with a random id.
-  while IFS=$'\t' read -r want username; do
+  while IFS=$'\t' read -r want username otp; do
     have="$(api -G "$KC/admin/realms/$REALM/users" --data-urlencode "username=$username" --data-urlencode exact=true \
       | jq -r '.[0].id // empty')"
     if [[ -n "$have" && "$have" != "$want" ]]; then
       api -X DELETE "$KC/admin/realms/$REALM/users/$have" >/dev/null
       info "recreating demo user ${username} with its fixed id"
+    elif [[ -n "$have" && "$otp" == "true" ]] \
+      && ! api "$KC/admin/realms/$REALM/users/$have/credentials" | jq -e 'any(.[]; .type == "otp")' >/dev/null; then
+      # The admin console needs an authenticator (ADR-0028); credentials can only be imported.
+      api -X DELETE "$KC/admin/realms/$REALM/users/$have" >/dev/null
+      info "recreating demo user ${username} with its development authenticator"
     fi
-  done < <(jq -r '.users // [] | .[] | [.id, .username] | @tsv' <<<"$realm")
+  done < <(jq -r '.users // [] | .[] | [.id, .username, (any(.credentials[]?; .type == "otp") | tostring)] | @tsv' <<<"$realm")
   jq '{ifResourceExists: "SKIP", roles: .roles, groups: (.groups // []), users: (.users // [])}' <<<"$realm" \
     | api -X POST "$KC/admin/realms/$REALM/partialImport" --data-binary @- >/dev/null
   info "realm ${REALM} updated"
@@ -87,6 +92,28 @@ while IFS=$'\t' read -r id roles; do
   api -X POST "$KC/admin/realms/$REALM/users/$id/role-mappings/realm" --data-binary "$mapping" >/dev/null
 done < <(jq -r '.users // [] | .[] | [.id, (.realmRoles // [] | join(" "))] | @tsv' <<<"$realm")
 info "demo users have their realm roles"
+
+# The admin console (client raadi-admin) requires a one-time code for everyone (ADR-0028): a copy
+# of the browser flow whose OTP step is required instead of conditional, bound to that client
+# only. Staff without an authenticator are asked to set one up at their first sign-in.
+FLOW=raadi-admin-browser
+if ! api "$KC/admin/realms/$REALM/authentication/flows" | jq -e --arg a "$FLOW" 'any(.[]; .alias == $a)' >/dev/null; then
+  api -X POST "$KC/admin/realms/$REALM/authentication/flows/browser/copy" --data-binary "{\"newName\":\"$FLOW\"}" >/dev/null
+  info "flow ${FLOW} created"
+fi
+executions="$(api "$KC/admin/realms/$REALM/authentication/flows/$FLOW/executions")"
+while read -r change; do
+  api -X PUT "$KC/admin/realms/$REALM/authentication/flows/$FLOW/executions" --data-binary "$change" >/dev/null
+done < <(jq -c '.[]
+  | if (.displayName | test("Conditional OTP")) and .requirement != "REQUIRED" then .requirement = "REQUIRED"
+    elif .displayName == "Condition - user configured" and .requirement != "DISABLED" then .requirement = "DISABLED"
+    else empty end' <<<"$executions")
+flow_id="$(api "$KC/admin/realms/$REALM/authentication/flows" | jq -r --arg a "$FLOW" '.[] | select(.alias == $a) | .id')"
+admin_client="$(api -G "$KC/admin/realms/$REALM/clients" --data-urlencode clientId=raadi-admin | jq -r '.[0].id')"
+api "$KC/admin/realms/$REALM/clients/$admin_client" \
+  | jq -c --arg f "$flow_id" '.authenticationFlowBindingOverrides = {browser: $f}' \
+  | api -X PUT "$KC/admin/realms/$REALM/clients/$admin_client" --data-binary @- >/dev/null
+info "admin console requires a one-time code (flow ${FLOW})"
 
 # Service accounts get their client roles here (the realm import cannot express
 # them, and overwriting a client recreates its service-account user).
