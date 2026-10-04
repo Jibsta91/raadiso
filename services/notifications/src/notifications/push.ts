@@ -81,6 +81,8 @@ export interface PushMessage {
   body: string;
   data: { url: string };
   sound: 'default';
+  /** The app's notification category: "message" lets iOS offer Reply on the notification itself. */
+  categoryId?: string;
 }
 
 const ticketSchema = z.union([

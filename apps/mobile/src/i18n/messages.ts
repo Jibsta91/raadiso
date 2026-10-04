@@ -157,6 +157,7 @@ const en = {
   },
   messages: {
     title: 'Messages',
+    reply: 'Reply',
     empty: 'No messages yet',
     login: 'Log in to see your messages',
     compose: 'Write a message…',
@@ -345,6 +346,7 @@ const nb: Messages = {
   },
   messages: {
     title: 'Meldinger',
+    reply: 'Svar',
     empty: 'Ingen meldinger ennå',
     login: 'Logg inn for å se meldingene dine',
     compose: 'Skriv en melding…',
@@ -537,6 +539,7 @@ const so: Messages = {
   },
   messages: {
     title: 'Fariimaha',
+    reply: 'Jawaab',
     empty: 'Weli fariin ma jirto',
     login: 'Gal si aad u aragto fariimahaaga',
     compose: 'Qor fariin…',

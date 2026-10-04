@@ -423,6 +423,8 @@ eventually "new-message push reaches the seller's phone (Expo-compatible mock)" 
 push=$(pushes | jq -c --arg u "/messages/$conversation" '[.messages[] | select(.data.url == $u)][0]')
 [[ "$push" != "null" && "$(jq -r '.title' <<<"$push")" != "" ]] && ! grep -qF "$hello" <<<"$push" \
   && ok "push opens the conversation and contains no message text" || fail "push content" "$push"
+[[ "$(jq -r '.categoryId' <<<"$push")" == "message" ]] \
+  && ok "message pushes can be answered from the notification (category message)" || fail "push category" "$push"
 
 login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
 removed() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" "$PUBLIC/api/v1/notifications" \

@@ -15,6 +15,7 @@ export const messageSchema = z.object({
   sound: z.union([z.literal('default'), z.null()]).optional(),
   badge: z.number().int().min(0).optional(),
   channelId: z.string().max(100).optional(),
+  categoryId: z.string().max(100).optional(),
   ttl: z.number().int().min(0).optional(),
   priority: z.enum(['default', 'normal', 'high']).optional(),
 });
@@ -31,6 +32,7 @@ export interface Delivered {
   title?: string;
   body?: string;
   data?: Record<string, unknown>;
+  categoryId?: string;
   receivedAt: string;
 }
 
@@ -80,6 +82,7 @@ export class PushInbox {
           title: m.title,
           body: m.body,
           data: m.data,
+          categoryId: m.categoryId,
           receivedAt: new Date().toISOString(),
         });
         if (this.items.length > this.capacity) this.items.shift();

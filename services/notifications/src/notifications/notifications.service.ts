@@ -299,7 +299,14 @@ export class NotificationsService {
       const copy = renderPush(push.kind, locale, push.params);
       const url = pushPath(push.kind, push.ref_id);
       const result = await this.pusher.send(
-        tokens.map((to) => ({ to, ...copy, data: { url }, sound: 'default' as const })),
+        tokens.map((to) => ({
+          to,
+          ...copy,
+          data: { url },
+          sound: 'default' as const,
+          // New messages can be answered from the notification (Reply with a text field).
+          ...(push.kind === 'new_message' ? { categoryId: 'message' } : {}),
+        })),
       );
       if (result.unregistered.length) {
         await this.repo.forgetTokens(result.unregistered);

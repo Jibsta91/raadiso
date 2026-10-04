@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { isCurrentScreen, safeAppPath } from '../src/lib/push-path.ts';
+import { conversationOf, isCurrentScreen, safeAppPath } from '../src/lib/push-path.ts';
 
 describe('safeAppPath', () => {
   it('follows plain app paths', () => {
@@ -38,5 +38,18 @@ describe('isCurrentScreen', () => {
     assert.equal(isCurrentScreen('/messages/abc', '/'), false);
     assert.equal(isCurrentScreen('https://evil.example', 'https://evil.example'), false);
     assert.equal(isCurrentScreen(undefined, '/messages/abc'), false);
+  });
+});
+
+describe('conversationOf', () => {
+  it('reads the conversation from a message push', () => {
+    const id = '0d7c1f3e-9a51-4c47-8f0e-1c2b3a4d5e6f';
+    assert.equal(conversationOf(`/messages/${id}`), id);
+    assert.equal(conversationOf(`/messages/${id}/`), id);
+  });
+
+  it('ignores other pushes and junk', () => {
+    for (const url of ['/my-listings', '/messages', '/messages/a/b', 'https://x/messages/1', 7])
+      assert.equal(conversationOf(url), null, String(url));
   });
 });

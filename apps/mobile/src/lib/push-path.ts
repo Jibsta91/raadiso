@@ -14,3 +14,10 @@ export function isCurrentScreen(url: unknown, currentPath: string): boolean {
   const path = safeAppPath(url);
   return !!path && !!currentPath && path.replace(/\/$/, '') === currentPath.replace(/\/$/, '');
 }
+
+/** The conversation a push about a new message points at ("/messages/<id>"), or null. */
+export function conversationOf(url: unknown): string | null {
+  const path = safeAppPath(url);
+  const match = path ? /^\/messages\/([A-Za-z0-9-]+)\/?$/.exec(path) : null;
+  return match?.[1] ?? null;
+}
