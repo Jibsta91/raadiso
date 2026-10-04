@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { routing } from '@/i18n/routing';
+import { isAdminHost } from '@/lib/host';
 import { parseTheme, THEME_COOKIE, themeAttribute } from '@/lib/theme';
 
 export function generateStaticParams() {
@@ -36,7 +37,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const [t, jar] = await Promise.all([getTranslations('nav'), cookies()]);
+  const [t, jar, admin] = await Promise.all([getTranslations('nav'), cookies(), isAdminHost()]);
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
 
   return (
@@ -49,11 +50,18 @@ export default async function LocaleLayout({
           {t('skip')}
         </a>
         <NextIntlClientProvider>
-          <Header locale={locale} />
-          <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-8">
-            {children}
-          </main>
-          <Footer theme={theme} />
+          {admin ? (
+            // The admin console brings its own frame (app/[locale]/admin/layout.tsx).
+            children
+          ) : (
+            <>
+              <Header locale={locale} />
+              <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-8">
+                {children}
+              </main>
+              <Footer theme={theme} />
+            </>
+          )}
         </NextIntlClientProvider>
       </body>
     </html>

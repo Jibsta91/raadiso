@@ -2,11 +2,22 @@ import { createIdentityClient, type Me, type Session } from '@raadi/api-client';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { env } from './env';
+import { isAdminHost } from './host';
 import { logger } from './logger';
 
+/**
+ * The session service and cookie for this request's host: the admin console (admin.<domain>)
+ * has its own session at admin-bff, separate from the website's (ADR-0028).
+ */
+async function sessionSource(): Promise<{ bff: string; cookie: string }> {
+  return (await isAdminHost())
+    ? { bff: env.adminBffUrl, cookie: env.adminSessionCookie }
+    : { bff: env.identityBffUrl, cookie: env.sessionCookie };
+}
+
 async function cookieHeader(): Promise<string | null> {
-  const jar = await cookies();
-  return jar.has(env.sessionCookie) ? jar.toString() : null;
+  const [jar, { cookie }] = await Promise.all([cookies(), sessionSource()]);
+  return jar.has(cookie) ? jar.toString() : null;
 }
 
 /** Current session (from identity-bff). Cached per request. */
@@ -14,7 +25,7 @@ export const getSession = cache(async (): Promise<Session> => {
   const cookie = await cookieHeader();
   if (!cookie) return { authenticated: false };
   try {
-    const client = createIdentityClient({ baseUrl: env.identityBffUrl });
+    const client = createIdentityClient({ baseUrl: (await sessionSource()).bff });
     const { data } = await client.GET('/auth/session', {
       headers: { cookie },
       signal: AbortSignal.timeout(2000),
@@ -36,7 +47,7 @@ export const getSession = cache(async (): Promise<Session> => {
 export const accessToken = cache(async (): Promise<string | null> => {
   const cookie = await cookieHeader();
   if (!cookie) return null;
-  const res = await fetch(`${env.identityBffUrl}/auth/forward`, {
+  const res = await fetch(`${(await sessionSource()).bff}/auth/forward`, {
     headers: { cookie, 'x-forwarded-method': 'GET' },
     cache: 'no-store',
     signal: AbortSignal.timeout(3000),
@@ -47,7 +58,7 @@ export const accessToken = cache(async (): Promise<string | null> => {
 export const getMe = cache(async (): Promise<Me | null> => {
   const token = await accessToken();
   if (!token) return null;
-  const client = createIdentityClient({ baseUrl: env.identityBffUrl });
+  const client = createIdentityClient({ baseUrl: (await sessionSource()).bff });
   const { data, error } = await client.GET('/api/v1/identity/me', {
     headers: { authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(3000),

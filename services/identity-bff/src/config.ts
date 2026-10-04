@@ -24,6 +24,20 @@ export const envSchema = baseEnvSchema.extend({
     .regex(/^[\w-]+$/)
     .default('raadi_sid'),
   SESSION_MAX_AGE_SEC: z.coerce.number().int().min(300).default(36_000),
+  /**
+   * The same image also runs as admin-bff for the admin console (its own host, Keycloak client,
+   * cookie and secrets, ADR-0028). These keep the two instances' sessions and secrets apart.
+   */
+  SESSION_KEY_PREFIX: z
+    .string()
+    .regex(/^[a-z]+$/)
+    .default('bff'),
+  /** OIDC `prompt` on every sign-in; `login` makes Keycloak ask again despite single sign-on. */
+  OIDC_PROMPT: z.enum(['login']).optional(),
+  OPENBAO_SECRET_PATH: z
+    .string()
+    .regex(/^raadi\/[a-z-]+$/)
+    .default('raadi/identity-bff'),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -71,7 +85,7 @@ export async function loadAppConfig(): Promise<AppConfig> {
   });
   await bao.login();
   const [own, valkey] = await Promise.all([
-    bao.readKv('raadi/identity-bff'),
+    bao.readKv(env.OPENBAO_SECRET_PATH),
     bao.readKv('raadi/shared/valkey'),
   ]);
   bao.close();

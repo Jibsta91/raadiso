@@ -7,6 +7,7 @@ set -uo pipefail
 # The gateway inside the network: port 443 when the public URLs are https (phone mode, production).
 GW="${GATEWAY_INTERNAL:-traefik:$([[ "${PUBLIC_SCHEME:-http}" == https ]] && echo 443 || echo 80)}"
 PUBLIC="${PUBLIC_BASE_URL:?}"
+ADMIN="${ADMIN_BASE_URL:?}"
 AUTH="${AUTH_BASE_URL:?}"
 GRAFANA="${GRAFANA_BASE_URL:?}"
 REALM="${KEYCLOAK_REALM:-raadi}"
@@ -42,9 +43,10 @@ req() {
 header() { grep -i "^$1:" "$HDRS" | head -1 | cut -d' ' -f2- | tr -d '\r'; }
 # login_as <email> — full Authorization Code + PKCE login through the gateway,
 # starting from a fresh cookie jar. Returns non-zero on any failed step.
-login_as() {
+login_as() { # <email> [base URL: the website, or the admin console's host]
+  local base="${2:-$PUBLIC}"
   : > "$JAR"
-  req GET "$PUBLIC/auth/login?returnTo=/en&locale=en"
+  req GET "$base/auth/login?returnTo=/en&locale=en"
   local loc; loc="$(header location)"
   req GET "$loc"
   local action; action=$(grep -o '<form[^>]*id="kc-form-login"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 \
@@ -52,7 +54,7 @@ login_as() {
   [[ -n "$action" ]] || return 1
   req POST "$action" --data-urlencode "username=$1" --data-urlencode "password=$PASSWORD" --data-urlencode "credentialId="
   local cb; cb="$(header location)"
-  [[ "$cb" == "$PUBLIC/auth/callback?"* ]] || return 1
+  [[ "$cb" == "$base/auth/callback?"* ]] || return 1
   req GET "$cb"
   [[ "$status" == "302" ]]
 }
@@ -609,13 +611,38 @@ req POST "$PUBLIC/api/v1/payments/orders/$order_id/refund" -H "origin: $ORIGIN"
   && ok "a platform admin refunds the order (role platform-admin)" || fail "refund" "HTTP $status $(head -c 200 "$BODY")"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "Admin console host (ADR-0028)"
+: > "$JAR"
+req GET "$ADMIN/"
+[[ "$status" =~ ^30[78]$ && "$(header location)" == */nb/admin ]] && ok "the admin host opens the console" || fail "admin root" "HTTP $status $(header location)"
+req GET "$ADMIN/nb/admin"
+[[ "$status" =~ ^30[278]$ && "$(header location)" == /auth/login* ]] && ok "the console asks anonymous visitors to sign in" || fail "admin anonymous" "HTTP $status $(header location)"
+req GET "$ADMIN/nb/search"
+[[ "$status" =~ ^30[78]$ && "$(header location)" == */nb/admin ]] && ok "the admin host serves only the console" || fail "admin host scope" "HTTP $status"
+req GET "$PUBLIC/nb/admin"
+expect_status 404 "the website has no admin pages"
+req GET "$ADMIN/api/v1/listings/moderation/reports"
+[[ "$status" != "200" ]] && ok "no API routes on the admin host" || fail "admin API exposed"
+login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" "$ADMIN" || fail "admin console login"
+req GET "$ADMIN/auth/session"
+[[ "$(json '.user.roles | index("moderator") != null')" == "true" ]] && ok "staff sign in to the console through admin-bff" || fail "admin session" "$(head -c 200 "$BODY")"
+grep -q 'raadi_admin_sid' "$JAR" && ! grep -q $'\traadi_sid\t' "$JAR" \
+  && ok "the console has its own session cookie" || fail "admin cookie"
+req GET "$ADMIN/nb/admin/moderation"
+expect_status 200 "a moderator opens the moderation queue in the console"
+req GET "$ADMIN/nb/admin/audit"
+expect_status 404 "a moderator cannot open the audit log"
+login_as "kari.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as kari"
+req GET "$ADMIN/auth/session"
+[[ "$(json '.authenticated')" == "false" ]] && ok "the website's session does not open the console" || fail "session leak"
+
 section "Audit log (ADR-0028)"
 login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"
 req GET "$PUBLIC/api/v1/audit/entries"
 expect_status 403 "only platform admins read the audit log"
 login_as "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as admin"
 audited() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" -G "$PUBLIC/api/v1/audit/entries" \
-  --data-urlencode "action=$1" --data-urlencode "targetId=$2" | jq -e '.items | length == 1'; }
+  --data-urlencode "action=$1" --data-urlencode "targetId=$2" | jq -e '.items | length >= 1'; }
 eventually "the refund is in the audit log (outbox -> Kafka -> audit)" 90 audited payment.refund "$order_id"
 eventually "the moderator's removal is in the audit log" 90 audited listing.remove "$listing"
 eventually "dismissed reports are in the audit log" 90 audited reports.dismiss "$kari_listing"

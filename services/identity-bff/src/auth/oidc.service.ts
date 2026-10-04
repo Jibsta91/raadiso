@@ -83,8 +83,11 @@ export class OidcService {
     uiLocale: string,
     signup = false,
   ): Promise<URL> {
+    // admin-bff sets OIDC_PROMPT=login: the console always asks for the password again, even with
+    // a Keycloak session from the website (ADR-0028).
+    const prompt = signup ? 'create' : this.cfg.env.OIDC_PROMPT;
     return oidc.buildAuthorizationUrl(this.config, {
-      ...(signup ? { prompt: 'create' } : {}),
+      ...(prompt ? { prompt } : {}),
       redirect_uri: this.redirectUri,
       scope: 'openid profile email',
       response_type: 'code',

@@ -118,6 +118,48 @@ services:
         limits: { memory: 256M, cpus: '1.0' }
 
   # Demo listings (SEED_DEMO_DATA=true only); idempotent, runs on every `up`.
+  # The admin console's session service (ADR-0028): the identity-bff image with its own host,
+  # Keycloak client (raadi-admin), cookie, shorter sessions and secrets.
+  admin-bff:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/identity-bff:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: identity-bff }
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: admin-bff
+      PORT: '4000'
+      PUBLIC_BASE_URL: ${ADMIN_BASE_URL}
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      OIDC_CLIENT_ID: raadi-admin
+      OIDC_PROMPT: login
+      SESSION_COOKIE_NAME: raadi_admin_sid
+      SESSION_MAX_AGE_SEC: '28800'
+      SESSION_KEY_PREFIX: admin
+      OPENBAO_SECRET_PATH: raadi/admin-bff
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/openbao
+        read_only: true
+        volume: { subpath: approle/admin-bff }
+    depends_on:
+      openbao-bootstrap: { condition: service_completed_successfully }
+      db-init: { condition: service_completed_successfully }
+      keycloak-init: { condition: service_completed_successfully }
+      valkey: { condition: service_healthy }
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 192M, cpus: '0.5' }
+
   listings-seed:
     <<: *node-service
     image: ${RAADI_IMAGE_PREFIX}/listings:${RAADI_VERSION}
@@ -532,6 +574,9 @@ services:
       TRUST_URL: http://trust:4000
       PAYMENTS_URL: http://payments:4000
       SAVED_URL: http://saved:4000
+      AUDIT_URL: http://audit:4000
+      ADMIN_BFF_URL: http://admin-bff:4000
+      ADMIN_BASE_URL: ${ADMIN_BASE_URL}
     depends_on:
       identity-bff: { condition: service_healthy }
     healthcheck:

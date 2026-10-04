@@ -148,6 +148,61 @@
       ]
     },
     {
+      "clientId": "raadi-admin",
+      "name": "Raadiso admin console",
+      "description": "Admin console (admin.<domain>): staff only, its own session (ADR-0028)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${ADMIN_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": false,
+      "rootUrl": "${PUBLIC_BASE_URL}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "${ADMIN_BASE_URL}/auth/callback",
+        "https://admin.${RAADI_DOMAIN}/auth/callback"
+      ],
+      "webOrigins": ["${ADMIN_BASE_URL}", "https://admin.${RAADI_DOMAIN}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${ADMIN_BASE_URL}/*##https://admin.${RAADI_DOMAIN}/*",
+        "access.token.lifespan": "300",
+        "use.refresh.tokens": "true"
+      },
+      "defaultClientScopes": ["web-origins", "acr", "basic", "profile", "roles", "email"],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "audience-raadi-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "raadi-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "locale",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "locale",
+            "claim.name": "locale",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
       "clientId": "raadi-mobile",
       "name": "Raadi mobile app",
       "description": "Public client for the Expo app (Authorization Code + PKCE, no client secret).",

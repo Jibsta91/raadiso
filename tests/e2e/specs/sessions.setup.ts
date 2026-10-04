@@ -1,6 +1,13 @@
 import { mkdirSync } from 'node:fs';
 import { expect, test as setup } from '@playwright/test';
-import { domain, password, SESSION_DIR, sessionFile } from './support.js';
+import {
+  adminBase,
+  adminSessionFile,
+  domain,
+  password,
+  SESSION_DIR,
+  sessionFile,
+} from './support.js';
 
 // Signs every demo user in once and keeps the session cookies. Specs reuse them through
 // login(), so the suite stays under identity-bff's sign-in limit (20 a minute per address, and
@@ -21,5 +28,18 @@ for (const user of users) {
     await expect(page.getByTestId('nav-account')).toBeVisible();
     mkdirSync(SESSION_DIR, { recursive: true });
     await page.context().storageState({ path: sessionFile(`${user}@${domain}`) });
+  });
+}
+
+// Staff also get a session on the admin host (admin-bff, its own cookie and Keycloak client).
+for (const user of ['moderator', 'support', 'admin']) {
+  setup(`sign in ${user} to the admin console`, async ({ page }) => {
+    await page.goto(`${adminBase}/en/admin`);
+    await page.locator('#username').fill(`${user}@${domain}`);
+    await page.locator('#password').fill(password);
+    await page.locator('#kc-login').click();
+    await expect(page.getByTestId('admin-console')).toBeVisible();
+    mkdirSync(SESSION_DIR, { recursive: true });
+    await page.context().storageState({ path: adminSessionFile(`${user}@${domain}`) });
   });
 }

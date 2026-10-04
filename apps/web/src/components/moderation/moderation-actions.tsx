@@ -3,25 +3,24 @@
 import { Button } from '@raadi/ui';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useRouter } from '@/i18n/navigation';
+import { dismissReports, removeListing } from '@/app/[locale]/admin/moderation/actions';
 
 /** Remove the listing (the owner is told; its reports are resolved) or dismiss its reports. */
 export function ModerationActions({ listingId, removed }: { listingId: string; removed: boolean }) {
   const t = useTranslations('moderation');
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   async function act(kind: 'remove' | 'dismiss') {
     if (kind === 'remove' && !window.confirm(t('confirmRemove'))) return;
     setBusy(true);
-    const res = await fetch(
-      kind === 'remove'
-        ? `/api/v1/listings/${listingId}`
-        : `/api/v1/listings/moderation/reports/${listingId}/dismiss`,
-      { method: kind === 'remove' ? 'DELETE' : 'POST' },
-    ).catch(() => null);
+    setFailed(false);
+    // Server actions: they run with the admin session; the page refreshes when they succeed.
+    const ok = await (
+      kind === 'remove' ? removeListing(listingId) : dismissReports(listingId)
+    ).catch(() => false);
     setBusy(false);
-    if (res?.ok) router.refresh();
+    setFailed(!ok);
   }
 
   return (
@@ -46,6 +45,11 @@ export function ModerationActions({ listingId, removed }: { listingId: string; r
       >
         {t('dismiss')}
       </Button>
+      {failed ? (
+        <p role="alert" className="w-full text-sm text-destructive">
+          {t('failed')}
+        </p>
+      ) : null}
     </div>
   );
 }

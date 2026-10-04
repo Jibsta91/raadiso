@@ -22,7 +22,8 @@
     "categories": "Qaybaha",
     "favourites": "Kuwa aan jeclahay",
     "savedSearches": "Raadinta la keydiyay",
-    "moderation": "Maamul"
+    "moderation": "Maamul",
+    "admin": "Maamul"
   },
   "home": {
     "heroTitle": "<brand>Raadiso.</brand> Hel. Iibi.",
@@ -712,6 +713,77 @@
       "deleted": "la saaray",
       "active": "firfircoon"
     },
-    "unavailable": "Maamulku hadda ma shaqeynayo."
+    "unavailable": "Maamulku hadda ma shaqeynayo.",
+    "failed": "Ficilku wuu fashilmay. Isku day mar kale."
+  },
+  "admin": {
+    "title": "Maamul",
+    "nav": "Liiska maamulka",
+    "logout": "Ka bax",
+    "sections": {
+      "overview": "Guudmar",
+      "moderation": "Kormeer",
+      "audit": "Diiwaanka hubinta"
+    },
+    "roles": {
+      "moderator": "Kormeere",
+      "support": "Adeegga macaamiisha",
+      "operator": "Hawlgal",
+      "platform-admin": "Maamule"
+    },
+    "noAccess": {
+      "title": "Ogolaansho ma lihid",
+      "body": "{email} ma laha door u oggolaanaya maamulka. Weydii maamule."
+    },
+    "overview": {
+      "title": "Guudmar",
+      "intro": "Waxa hadda u baahan fiiro gaar ah, doorarkaaga.",
+      "openReports": "Warbixino furan",
+      "listings": "{count, plural, one {# xayeysiis} other {# xayeysiis}}",
+      "latestAction": "Ficilkii ugu dambeeyay",
+      "auditHint": "Arag diiwaanka hubinta oo dhan",
+      "tools": "Qalab",
+      "toolNames": {
+        "grafana": "Grafana (la socod)",
+        "keycloak": "Keycloak (isticmaalayaal iyo doorar)"
+      }
+    },
+    "audit": {
+      "title": "Diiwaanka hubinta",
+      "intro": "Wax kasta oo shaqaaluhu ku sameeyaan xayeysiisyada, isticmaalayaasha iyo lacag bixinta, kuwa ugu cusub marka hore. Diiwaanka lama beddeli karo.",
+      "empty": "Ficil ku habboon shaandhada ma jiro.",
+      "older": "Kuwii hore",
+      "unavailable": "Diiwaanka hubinta hadda lama heli karo.",
+      "filters": {
+        "action": "Ficil",
+        "targetType": "Ku saabsan",
+        "targetId": "Aqoonsi",
+        "actor": "Waxaa sameeyay (aqoonsi)",
+        "any": "Dhammaan",
+        "apply": "Shaandhee",
+        "clear": "Nadiifi"
+      },
+      "columns": {
+        "at": "Waqtiga",
+        "action": "Ficil",
+        "target": "Ku saabsan",
+        "actor": "Waxaa sameeyay",
+        "reason": "Sababta"
+      },
+      "actions": {
+        "listing_remove": "Xayeysiis la saaray",
+        "reports_dismiss": "Warbixino la diiday",
+        "payment_refund": "Lacag la celiyay"
+      },
+      "targets": {
+        "listing": "Xayeysiis",
+        "order": "Dalab",
+        "user": "Isticmaale",
+        "review": "Faallo",
+        "report": "Warbixin",
+        "conversation": "Wadahadal",
+        "system": "Nidaam"
+      }
+    }
   }
 }

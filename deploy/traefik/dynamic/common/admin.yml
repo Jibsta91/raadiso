@@ -1,0 +1,47 @@
+# The admin console's own host (ADR-0028): admin.<domain>. Sign-in goes to admin-bff (its own
+# Keycloak client, cookie and sessions); every page is the web app's /<locale>/admin area, which
+# runs its actions on the server with the admin session's token, so no API routes are exposed here
+# (only signed listing images, for the moderation queue).
+{{ $d := env "RAADI_DOMAIN" }}
+http:
+  routers:
+    admin-auth:
+      rule: Host(`admin.{{ $d }}`) && PathPrefix(`/auth/`) && !Path(`/auth/forward`)
+      entryPoints: [web, websecure]
+      service: admin-bff
+      middlewares: [security-headers, admin-headers, ratelimit-auth]
+      priority: 100
+    admin-web-static:
+      rule: Host(`admin.{{ $d }}`) && PathPrefix(`/_next/static/`)
+      entryPoints: [web, websecure]
+      service: web
+      middlewares: [security-headers, ratelimit-assets, compress]
+      priority: 100
+    # Listing images in the moderation queue: the same signed imgproxy URLs as the website.
+    admin-images:
+      rule: Host(`admin.{{ $d }}`) && PathPrefix(`/img/`)
+      entryPoints: [web, websecure]
+      service: imgproxy
+      middlewares: [security-headers, ratelimit-assets, strip-img]
+      priority: 100
+    admin-web:
+      rule: Host(`admin.{{ $d }}`)
+      entryPoints: [web, websecure]
+      service: web
+      middlewares: [security-headers, admin-headers, web-csp, ratelimit-default, compress]
+      priority: 1
+
+  middlewares:
+    # Staff pages: never indexed, never cached, no device features.
+    admin-headers:
+      headers:
+        permissionsPolicy: 'camera=(), microphone=(), geolocation=(), payment=()'
+        customResponseHeaders:
+          X-Robots-Tag: 'noindex, nofollow'
+          Cache-Control: 'no-store'
+
+  services:
+    admin-bff:
+      loadBalancer:
+        servers: [{ url: "http://admin-bff:4000" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }

@@ -50,8 +50,11 @@ export const reportSchema = z
 
 const queueQuerySchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50) });
 
-/** At most this many reports per person a day (abuse of the queue). */
-const DAILY_LIMIT = 20;
+/**
+ * At most this many open reports per person (flooding the queue). Reports a moderator has handled
+ * no longer count.
+ */
+const OPEN_LIMIT = 20;
 
 const meter = metrics.getMeter('listings');
 const reported = meter.createCounter('raadi.listings.reports', {
@@ -101,14 +104,15 @@ export class ReportsService {
         errors: [{ path: 'listingId', message: 'own listing', code: 'own_listing' }],
       });
     }
-    const today = await this.pool.query<{ n: string }>(
-      `SELECT count(*) AS n FROM reports WHERE reporter_id = $1 AND created_at > now() - interval '1 day'`,
-      [reporterId],
+    const open = await this.pool.query<{ n: string }>(
+      `SELECT count(*) AS n FROM reports
+        WHERE reporter_id = $1 AND status = 'open' AND listing_id <> $2`,
+      [reporterId, listingId],
     );
-    if (Number(today.rows[0]!.n) >= DAILY_LIMIT) {
+    if (Number(open.rows[0]!.n) >= OPEN_LIMIT) {
       throw new UnprocessableEntityException({
-        message: 'You have sent many reports today. Try again tomorrow.',
-        errors: [{ path: 'reason', message: 'daily limit', code: 'too_many_reports' }],
+        message: 'You have many open reports. Try again when the moderators have handled them.',
+        errors: [{ path: 'reason', message: 'open limit', code: 'too_many_reports' }],
       });
     }
     const { rows: written } = await this.pool.query<{ created: boolean }>(

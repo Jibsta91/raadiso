@@ -18,6 +18,19 @@ export const env = {
   get trustUrl() {
     return process.env.TRUST_URL ?? 'http://trust:4000';
   },
+  get auditUrl() {
+    return process.env.AUDIT_URL ?? 'http://audit:4000';
+  },
+  /** The admin console's session service and host (ADR-0028). */
+  get adminBffUrl() {
+    return process.env.ADMIN_BFF_URL ?? 'http://admin-bff:4000';
+  },
+  get adminBaseUrl() {
+    return process.env.ADMIN_BASE_URL ?? 'http://admin.raadi.localhost';
+  },
+  get adminSessionCookie() {
+    return process.env.ADMIN_SESSION_COOKIE_NAME ?? 'raadi_admin_sid';
+  },
   get savedUrl() {
     return process.env.SAVED_URL ?? 'http://saved:4000';
   },

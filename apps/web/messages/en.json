@@ -22,7 +22,8 @@
     "categories": "Categories",
     "favourites": "Favourites",
     "savedSearches": "Saved searches",
-    "moderation": "Moderation"
+    "moderation": "Moderation",
+    "admin": "Admin"
   },
   "home": {
     "heroTitle": "Find it. Sell it. <brand>Raadiso.</brand>",
@@ -712,6 +713,77 @@
       "deleted": "removed",
       "active": "active"
     },
-    "unavailable": "Moderation is temporarily unavailable."
+    "unavailable": "Moderation is temporarily unavailable.",
+    "failed": "The action failed. Please try again."
+  },
+  "admin": {
+    "title": "Admin",
+    "nav": "Admin menu",
+    "logout": "Log out",
+    "sections": {
+      "overview": "Overview",
+      "moderation": "Moderation",
+      "audit": "Audit log"
+    },
+    "roles": {
+      "moderator": "Moderator",
+      "support": "Support",
+      "operator": "Operations",
+      "platform-admin": "Administrator"
+    },
+    "noAccess": {
+      "title": "No access",
+      "body": "{email} has no role that gives access to the admin console. Ask an administrator."
+    },
+    "overview": {
+      "title": "Overview",
+      "intro": "What needs attention now, for your roles.",
+      "openReports": "Open reports",
+      "listings": "{count, plural, one {# listing} other {# listings}}",
+      "latestAction": "Latest action",
+      "auditHint": "See the full audit log",
+      "tools": "Tools",
+      "toolNames": {
+        "grafana": "Grafana (monitoring)",
+        "keycloak": "Keycloak (users and roles)"
+      }
+    },
+    "audit": {
+      "title": "Audit log",
+      "intro": "Everything staff do to listings, users and payments, newest first. The log cannot be changed.",
+      "empty": "No actions match the filter.",
+      "older": "Older",
+      "unavailable": "The audit log is temporarily unavailable.",
+      "filters": {
+        "action": "Action",
+        "targetType": "Concerns",
+        "targetId": "Id",
+        "actor": "Done by (id)",
+        "any": "Any",
+        "apply": "Filter",
+        "clear": "Clear"
+      },
+      "columns": {
+        "at": "Time",
+        "action": "Action",
+        "target": "Concerns",
+        "actor": "Done by",
+        "reason": "Reason"
+      },
+      "actions": {
+        "listing_remove": "Listing removed",
+        "reports_dismiss": "Reports dismissed",
+        "payment_refund": "Payment refunded"
+      },
+      "targets": {
+        "listing": "Listing",
+        "order": "Order",
+        "user": "User",
+        "review": "Review",
+        "report": "Report",
+        "conversation": "Conversation",
+        "system": "System"
+      }
+    }
   }
 }

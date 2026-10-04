@@ -14,7 +14,7 @@ governance (review queues, fraud detection) builds on them.
 - **Reports belong to listings**, next to moderation. Users report a listing with a reason (fraud,
   prohibited, offensive, wrong category, other) and an optional comment of up to 500 characters
   (`POST /api/v1/listings/{id}/reports`, 202). Each person has one open report per listing; reporting again
-  updates it. Owners cannot report their own listings, and each person can send at most 20 reports a day.
+  updates it. Owners cannot report their own listings, and each person can have at most 20 open reports at a time (handled reports no longer count).
 - **Moderators work a queue grouped by listing** (`GET /api/v1/listings/moderation/reports`, role
   `moderator`), most reported first, with counts per reason and the five most recent comments. Reporters'
   ids are not shown. Two outcomes:

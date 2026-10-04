@@ -14,7 +14,9 @@ import {
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { unreadCount, unreadNotifications } from '@/lib/api';
+import { env } from '@/lib/env';
 import { getSession } from '@/lib/session';
+import { isStaff } from '@/lib/staff';
 import { AccountMenu } from './account-menu';
 
 const CATEGORIES = ['torget', 'bil', 'eiendom', 'jobb', 'reise'] as const;
@@ -158,16 +160,16 @@ export async function Header({ locale }: { locale: string }) {
                 <Bookmark aria-hidden />
                 {t('savedSearches')}
               </Link>
-              {session.user.roles.includes('moderator') ? (
-                <Link
-                  href="/moderation"
-                  prefetch={false}
-                  data-testid="nav-moderation"
+              {isStaff(session.user.roles) ? (
+                // The admin console lives on its own host with its own sign-in (ADR-0028).
+                <a
+                  href={`${env.adminBaseUrl}/${locale}/admin`}
+                  data-testid="nav-admin"
                   className={menuItem}
                 >
                   <ShieldCheck aria-hidden />
-                  {t('moderation')}
-                </Link>
+                  {t('admin')}
+                </a>
               ) : null}
               <form action="/auth/logout" method="post" className="mt-1 border-t pt-1">
                 <button type="submit" data-testid="nav-logout" className={menuItem}>

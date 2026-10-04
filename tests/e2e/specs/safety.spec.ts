@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { domain, login, openAccountMenu } from './support.js';
+import { adminBase, adminLogin, domain, login, openAccountMenu } from './support.js';
 
 test('a buyer reports a listing; a moderator removes it from the queue', async ({ browser }) => {
   // Amina's listing, made through the API with her browser session.
@@ -34,27 +34,27 @@ test('a buyer reports a listing; a moderator removes it from the queue', async (
   await expect(buyer.getByTestId('report-sent')).toBeVisible();
   await buyer.close();
 
+  // The moderator works the queue in the admin console (its own host and session).
   const moderator = await browser.newPage();
-  await login(moderator, `moderator@${domain}`);
-  await openAccountMenu(moderator);
-  await moderator.getByTestId('nav-moderation').click();
-  await expect(moderator).toHaveURL(/\/en\/moderation$/);
+  await adminLogin(moderator, `moderator@${domain}`);
+  await moderator.getByTestId('admin-nav-moderation').click();
+  await expect(moderator).toHaveURL(new RegExp(`${adminBase}/en/admin/moderation$`));
   const item = moderator.getByTestId('moderation-item').filter({ hasText: title });
   await expect(item).toContainText('Fraud or a scam attempt');
   await expect(item).toContainText('Wants payment up front.');
   moderator.once('dialog', (dialog) => void dialog.accept());
   await item.getByTestId('moderation-remove').click();
   await expect(moderator.getByTestId('moderation-item').filter({ hasText: title })).toHaveCount(0);
-  await moderator.goto(`/en/listings/${id}`);
-  await expect(moderator.getByTestId('listing-detail')).toBeVisible();
   await moderator.close();
 });
 
-test('people without the moderator role do not get the queue', async ({ page }) => {
+test('people without a staff role get no admin link, and the website has no admin pages', async ({
+  page,
+}) => {
   await login(page, `kari.nordmann@${domain}`);
   await openAccountMenu(page);
-  await expect(page.getByTestId('nav-moderation')).toHaveCount(0);
-  const res = await page.goto('/en/moderation');
+  await expect(page.getByTestId('nav-admin')).toHaveCount(0);
+  const res = await page.goto('/en/admin');
   expect(res?.status()).toBe(404);
 });
 

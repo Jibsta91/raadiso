@@ -5,6 +5,8 @@ import { expect, type Locator, type Page } from '@playwright/test';
 
 export const domain = process.env.RAADI_DOMAIN ?? 'raadi.localhost';
 export const password = process.env.DEMO_USER_PASSWORD ?? 'raadi-demo-pass';
+/** The admin console's own host (ADR-0028). */
+export const adminBase = process.env.ADMIN_BASE_URL ?? `http://admin.${domain}`;
 
 /**
  * Where sessions.setup.ts keeps a demo user's signed-in session: the e2e container's temp
@@ -12,6 +14,31 @@ export const password = process.env.DEMO_USER_PASSWORD ?? 'raadi-demo-pass';
  */
 export const SESSION_DIR = join(tmpdir(), 'raadi-e2e-sessions');
 export const sessionFile = (email: string) => join(SESSION_DIR, `${email.split('@')[0]}.json`);
+/** The same for the admin host's own session (admin-bff). */
+export const adminSessionFile = (email: string) =>
+  join(SESSION_DIR, `admin-${email.split('@')[0]}.json`);
+
+/**
+ * Opens the admin console as a staff member: with the admin-host session sessions.setup.ts made,
+ * or by signing in there.
+ */
+export async function adminLogin(page: Page, email: string): Promise<void> {
+  const file = adminSessionFile(email);
+  if (existsSync(file)) {
+    const state = JSON.parse(readFileSync(file, 'utf8')) as {
+      cookies: Parameters<ReturnType<Page['context']>['addCookies']>[0];
+    };
+    await page.context().addCookies(state.cookies);
+  }
+  await page.goto(`${adminBase}/en/admin`);
+  // Keycloak's sign-in form, or its "re-authenticate" form (e-mail already known).
+  if (await page.locator('#password').isVisible()) {
+    if (await page.locator('#username').isVisible()) await page.locator('#username').fill(email);
+    await page.locator('#password').fill(password);
+    await page.locator('#kc-login').click();
+  }
+  await expect(page.getByTestId('admin-console')).toBeVisible();
+}
 
 /**
  * Signs in as a demo user: with the session sessions.setup.ts made (one sign-in per user for

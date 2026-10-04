@@ -60,8 +60,12 @@ test('favourites: heart a listing, find it under Favourites, remove it', async (
   await expect(page).toHaveURL(/\/en\/listings\/[0-9a-f-]{36}$/);
   const inline = page.getByTestId('listing-detail').getByTestId('favourite-toggle');
   await expect(inline).toHaveAttribute('aria-pressed', 'true');
+  const removed = page.waitForResponse(
+    (r) => r.url().includes('/api/v1/saved/favourites/') && r.request().method() === 'DELETE',
+  );
   await inline.click();
   await expect(inline).toHaveAttribute('aria-pressed', 'false');
+  expect((await removed).status()).toBe(204);
   await page.goto('/en/my/favourites');
   await expect(page.getByTestId('favourites').getByText(title, { exact: true })).toHaveCount(0);
   await page.close();

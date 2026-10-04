@@ -22,7 +22,8 @@
     "categories": "Kategorier",
     "favourites": "Favoritter",
     "savedSearches": "Lagrede søk",
-    "moderation": "Moderering"
+    "moderation": "Moderering",
+    "admin": "Admin"
   },
   "home": {
     "heroTitle": "Finn det. Selg det. <brand>Raadiso.</brand>",
@@ -712,6 +713,77 @@
       "deleted": "fjernet",
       "active": "aktiv"
     },
-    "unavailable": "Moderering er midlertidig utilgjengelig."
+    "unavailable": "Moderering er midlertidig utilgjengelig.",
+    "failed": "Handlingen feilet. Prøv igjen."
+  },
+  "admin": {
+    "title": "Admin",
+    "nav": "Admin-meny",
+    "logout": "Logg ut",
+    "sections": {
+      "overview": "Oversikt",
+      "moderation": "Moderering",
+      "audit": "Revisjonslogg"
+    },
+    "roles": {
+      "moderator": "Moderator",
+      "support": "Kundeservice",
+      "operator": "Drift",
+      "platform-admin": "Administrator"
+    },
+    "noAccess": {
+      "title": "Ingen tilgang",
+      "body": "{email} har ikke en rolle som gir tilgang til admin. Spør en administrator."
+    },
+    "overview": {
+      "title": "Oversikt",
+      "intro": "Det som trenger oppmerksomhet nå, for rollene dine.",
+      "openReports": "Åpne rapporter",
+      "listings": "{count, plural, one {# annonse} other {# annonser}}",
+      "latestAction": "Siste handling",
+      "auditHint": "Se hele revisjonsloggen",
+      "tools": "Verktøy",
+      "toolNames": {
+        "grafana": "Grafana (overvåking)",
+        "keycloak": "Keycloak (brukere og roller)"
+      }
+    },
+    "audit": {
+      "title": "Revisjonslogg",
+      "intro": "Alt ansatte gjør med annonser, brukere og betalinger, nyeste først. Loggen kan ikke endres.",
+      "empty": "Ingen handlinger passer filteret.",
+      "older": "Eldre",
+      "unavailable": "Revisjonsloggen er midlertidig utilgjengelig.",
+      "filters": {
+        "action": "Handling",
+        "targetType": "Gjelder",
+        "targetId": "Id",
+        "actor": "Utført av (id)",
+        "any": "Alle",
+        "apply": "Filtrer",
+        "clear": "Nullstill"
+      },
+      "columns": {
+        "at": "Tidspunkt",
+        "action": "Handling",
+        "target": "Gjelder",
+        "actor": "Utført av",
+        "reason": "Begrunnelse"
+      },
+      "actions": {
+        "listing_remove": "Annonse fjernet",
+        "reports_dismiss": "Rapporter avvist",
+        "payment_refund": "Betaling refundert"
+      },
+      "targets": {
+        "listing": "Annonse",
+        "order": "Ordre",
+        "user": "Bruker",
+        "review": "Omtale",
+        "report": "Rapport",
+        "conversation": "Samtale",
+        "system": "System"
+      }
+    }
   }
 }

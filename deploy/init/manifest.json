@@ -11,6 +11,8 @@
     "identity_db_password",
     "bff_oidc_client_secret",
     "bff_session_key",
+    "admin_oidc_client_secret",
+    "admin_session_key",
     "kafka_admin_password",
     "kafka_connect_password",
     "kafka_search_password",
@@ -188,6 +190,15 @@
       },
       "shared": ["valkey"],
       "outbox": true
+    },
+    "admin-bff": {
+      "uid": 65532,
+      "openbao": {
+        "db_password": "identity_db_password",
+        "oidc_client_secret": "admin_oidc_client_secret",
+        "session_key": "admin_session_key"
+      },
+      "shared": ["valkey"]
     },
     "listings": {
       "uid": 65532,

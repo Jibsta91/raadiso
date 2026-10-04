@@ -26,6 +26,7 @@ x-init: &init
     PUBLIC_SCHEME: ${PUBLIC_SCHEME}
     PUBLIC_PORT_SUFFIX: ${PUBLIC_PORT_SUFFIX}
     PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+    ADMIN_BASE_URL: ${ADMIN_BASE_URL}
     AUTH_BASE_URL: ${AUTH_BASE_URL}
     GRAFANA_BASE_URL: ${GRAFANA_BASE_URL}
     KEYCLOAK_REALM: ${KEYCLOAK_REALM}
@@ -168,6 +169,7 @@ services:
       web: { condition: service_healthy }
       mobile-web: { condition: service_healthy }
       identity-bff: { condition: service_healthy }
+      admin-bff: { condition: service_healthy }
       keycloak-init: { condition: service_completed_successfully }
       grafana: { condition: service_healthy }
       prometheus: { condition: service_healthy }

@@ -106,7 +106,7 @@ export class SessionStore {
   }
 
   private key(id: string): string {
-    return `bff:sess:${createHash('sha256').update(id).digest('hex')}`;
+    return `${this.cfg.env.SESSION_KEY_PREFIX}:sess:${createHash('sha256').update(id).digest('hex')}`;
   }
 
   encrypt(plaintext: string, aad: string): string {
