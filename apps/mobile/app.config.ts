@@ -19,14 +19,22 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'automatic',
   // The brand mark (the same shapes as the website's favicon): white "r", blue dot, ink ground.
   icon: './assets/icon.png',
-  ios: { bundleIdentifier: 'no.raadi.app', supportsTablet: true },
+  // Registered with Apple (permanent): the brand's domain, reversed.
+  ios: {
+    bundleIdentifier: 'com.raadiso.app',
+    supportsTablet: true,
+    // Only HTTPS/TLS from the OS: no export compliance documents needed for TestFlight.
+    config: { usesNonExemptEncryption: false },
+  },
   android: {
-    package: 'no.raadi.app',
+    package: 'com.raadiso.app',
     adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', backgroundColor: '#0e1116' },
   },
   web: { bundler: 'metro', output: 'single', favicon: './assets/favicon.png' },
   plugins: [
     'expo-router',
+    // Development builds (EAS, eas.json): our own app with the dev menu, loading code from Metro.
+    'expo-dev-client',
     'expo-secure-store',
     'expo-localization',
     'expo-web-browser',

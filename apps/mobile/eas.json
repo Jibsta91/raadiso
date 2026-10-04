@@ -1,0 +1,15 @@
+{
+  "cli": { "version": ">= 18.0.0", "appVersionSource": "remote" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_OWNER": "jibstas-team",
+        "EXPO_SLUG": "jibsta",
+        "EAS_PROJECT_ID": "d70f34f3-837b-44e0-a917-1bcf8c1c0653"
+      },
+      "ios": { "resourceClass": "default" }
+    }
+  }
+}
