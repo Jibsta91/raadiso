@@ -94,7 +94,7 @@ export type Device = z.infer<typeof deviceSchema>;
  * Where a push opens in the app (an Expo Router path). The app only follows
  * paths that start with a single slash.
  */
-export function pushPath(kind: PushKind, refId: string): string {
+export function pushPath(kind: PushKind, refId: string, userId: string): string {
   switch (kind) {
     case 'new_message':
       return `/messages/${refId}`;
@@ -103,7 +103,8 @@ export function pushPath(kind: PushKind, refId: string): string {
     case 'listing_promoted':
       return `/listings/${refId}`;
     case 'review_received':
-      return '/account';
+      // The recipient's own trust profile, where the new review is listed (as on the website).
+      return `/users/${userId}`;
     case 'favourite_price_drop':
     case 'favourite_sold':
       return `/listings/${refId}`;

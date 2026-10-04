@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { conversationOf, isCurrentScreen, safeAppPath } from '../src/lib/push-path.ts';
+import {
+  conversationOf,
+  isCurrentScreen,
+  notificationPath,
+  safeAppPath,
+} from '../src/lib/push-path.ts';
 
 describe('safeAppPath', () => {
   it('follows plain app paths', () => {
@@ -51,5 +56,23 @@ describe('conversationOf', () => {
   it('ignores other pushes and junk', () => {
     for (const url of ['/my-listings', '/messages', '/messages/a/b', 'https://x/messages/1', 7])
       assert.equal(conversationOf(url), null, String(url));
+  });
+});
+
+describe('notificationPath', () => {
+  const id = '0d7c1f3e-9a51-4c47-8f0e-1c2b3a4d5e6f';
+
+  it("maps the website's links to app screens", () => {
+    assert.equal(notificationPath('/my/listings'), '/my-listings');
+    assert.equal(notificationPath(`/users/${id}`), `/users/${id}`);
+    assert.equal(notificationPath(`/listings/${id}`), `/listings/${id}`);
+    assert.equal(notificationPath(`/my/saved-searches?open=${id}`), `/saved-searches/${id}`);
+    assert.equal(notificationPath('/my/saved-searches'), '/saved-searches');
+  });
+
+  it('refuses links the app has no screen for, and odd ids', () => {
+    for (const link of ['/payments/x', '//evil.example', 'https://evil.example', '/listings/a/b'])
+      assert.equal(notificationPath(link), null);
+    assert.equal(notificationPath('/my/saved-searches?open=../x'), '/saved-searches');
   });
 });

@@ -242,8 +242,12 @@ export default function ListingScreen() {
             </Body>
           </View>
 
-          <View
+          <Pressable
             testID="seller"
+            role="link"
+            aria-label={`${m.profile.seeProfile}: ${seller.data?.name ?? item.seller.name}`}
+            disabled={!seller.data}
+            onPress={() => seller.data && router.push(`/users/${seller.data.userId}`)}
             style={[styles.seller, { backgroundColor: theme.surface, borderColor: theme.border }]}
           >
             <View style={[styles.avatar, { backgroundColor: theme.placeholder }]}>
@@ -271,7 +275,8 @@ export default function ListingScreen() {
                 </View>
               ) : null}
             </View>
-          </View>
+            {seller.data ? <Icon name="chevron-forward" size={18} color={theme.muted} /> : null}
+          </Pressable>
 
           {details.length > 0 ? (
             <View
