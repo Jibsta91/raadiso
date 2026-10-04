@@ -2,9 +2,7 @@ import { Host, Menu, Picker, Text } from '@expo/ui/swift-ui';
 import { tag } from '@expo/ui/swift-ui/modifiers';
 import { useI18n } from '../i18n';
 import { useTheme } from '../theme';
-import { SORTS, type Sort } from './sort-menu';
-
-export type { Sort };
+import { SORTS, type Sort } from '../lib/sort';
 
 /** iOS: a SwiftUI pull-down menu with the orders, the current one ticked (as in Mail and Files). */
 export function SortMenu({ value, onChange }: { value: Sort; onChange: (sort: Sort) => void }) {
