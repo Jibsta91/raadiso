@@ -95,5 +95,5 @@ A full reset (wipes data): `docker compose down -v --remove-orphans`.
 
 ## Demo logins
 
-All seeded users (`kari.nordmann@`, `ola.nordmann@`, `amina.hassan@`, `moderator@`, `admin@` at
-`raadi.localhost`) use the password `raadi-demo-pass`. Read infrastructure secrets with `./raadi secret <name>`.
+All seeded users (`kari.nordmann@`, `ola.nordmann@`, `amina.hassan@`, `moderator@`, `support@`, `operator@`,
+`admin@` at `raadi.localhost`) use the password `raadi-demo-pass`. Read infrastructure secrets with `./raadi secret <name>`.

@@ -79,6 +79,14 @@ while read -r id; do
 done < <(jq -r '.users // [] | .[].id' <<<"$realm")
 info "demo users have the default role"
 
+# Existing demo users keep their old role mappings (the import skips existing users), so roles added
+# to the realm file later (support, operator) are granted here too. Granting again is harmless.
+while IFS=$'\t' read -r id roles; do
+  mapping="$(for r in $roles; do api "$KC/admin/realms/$REALM/roles/$r"; done | jq -s -c '.')"
+  api -X POST "$KC/admin/realms/$REALM/users/$id/role-mappings/realm" --data-binary "$mapping" >/dev/null
+done < <(jq -r '.users // [] | .[] | [.id, (.realmRoles // [] | join(" "))] | @tsv' <<<"$realm")
+info "demo users have their realm roles"
+
 # Service accounts get their client roles here (the realm import cannot express
 # them, and overwriting a client recreates its service-account user).
 grant_client_role() { # <service-account client> <resource client> <role>

@@ -69,8 +69,16 @@
         "description": "Reviews flagged listings, messages and AI decisions"
       },
       {
+        "name": "support",
+        "description": "Customer service: finds users and their listings and orders, suspends accounts (no message contents)"
+      },
+      {
+        "name": "operator",
+        "description": "Runs the platform: system health, queues, failed events, reindexing (no access to user data)"
+      },
+      {
         "name": "platform-admin",
-        "description": "Operates the platform (Grafana admin, admin APIs)"
+        "description": "Administers the platform: roles, refunds, settings, audit log (and everything the other staff roles can do)"
       }
     ],
     "client": {
@@ -334,6 +342,46 @@
       "realmRoles": ["user", "moderator"]
     },
     {
+      "id": "9e4f6a8c-0d2b-4f5e-b7a9-4c1d2e6f8b77",
+      "username": "support@${DEMO_EMAIL_DOMAIN}",
+      "email": "support@${DEMO_EMAIL_DOMAIN}",
+      "firstName": "Siri",
+      "lastName": "Support",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "locale": ["nb"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user", "support"]
+    },
+    {
+      "id": "7c2d4f6a-8b1e-4d3c-a5f7-2e9b0c4d6a66",
+      "username": "operator@${DEMO_EMAIL_DOMAIN}",
+      "email": "operator@${DEMO_EMAIL_DOMAIN}",
+      "firstName": "Olav",
+      "lastName": "Operatør",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "locale": ["nb"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user", "operator"]
+    },
+    {
       "id": "5e7b9d1f-3a4c-4b6e-9d2a-0c8f6e1b3d55",
       "username": "admin@${DEMO_EMAIL_DOMAIN}",
       "email": "admin@${DEMO_EMAIL_DOMAIN}",
@@ -351,7 +399,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["user", "moderator", "platform-admin"]
+      "realmRoles": ["user", "moderator", "support", "operator", "platform-admin"]
     }
   ],
   "loginTheme": "raadi",

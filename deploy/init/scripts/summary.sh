@@ -59,6 +59,8 @@ cat <<BANNER
     ola.nordmann@${E}    buyer/seller (nb)
     amina.hassan@${E}    buyer/seller (en)
     moderator@${E}       content moderator
+    support@${E}         customer service (admin console)
+    operator@${E}        platform operations (admin console, Grafana editor)
     admin@${E}           platform admin (Grafana, admin APIs)
 
   HTTPS works too (https://${D}) with a locally generated dev CA:

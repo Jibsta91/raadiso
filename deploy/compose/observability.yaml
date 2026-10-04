@@ -192,7 +192,8 @@ services:
       GF_AUTH_GENERIC_OAUTH_EMAIL_ATTRIBUTE_PATH: email
       GF_AUTH_GENERIC_OAUTH_LOGIN_ATTRIBUTE_PATH: preferred_username
       GF_AUTH_GENERIC_OAUTH_NAME_ATTRIBUTE_PATH: name
-      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(roles[*], 'platform-admin') && 'Admin' || contains(roles[*], 'moderator') && 'Viewer'"
+      # Operators run the platform day to day: they may edit dashboards and silence alerts (Editor).
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(roles[*], 'platform-admin') && 'Admin' || contains(roles[*], 'operator') && 'Editor' || contains(roles[*], 'moderator') && 'Viewer'"
       GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_STRICT: 'true'
       GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN: 'true'
       GF_AUTH_SIGNOUT_REDIRECT_URL: ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=${GRAFANA_BASE_URL}/login

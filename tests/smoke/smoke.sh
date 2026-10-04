@@ -396,10 +396,11 @@ text=$(curl -sf "http://mailpit:8025/api/v1/message/$id" | jq -r .Text)
 grep -q "/nb/messages/" <<<"$text" && ! grep -qF "$hello" <<<"$text" \
   && ok "e-mail links to the conversation and contains no message text" || fail "e-mail content"
 pushes() { curl -sf --max-time 10 --get --data-urlencode "to=$push_token" 'http://push-mock:4000/messages'; }
-pushed() { pushes | jq -e '.messages | length > 0'; }
+pushed() { pushes | jq -e --arg u "/messages/$conversation" 'any(.messages[]; .data.url == $u)'; }
 eventually "new-message push reaches the seller's phone (Expo-compatible mock)" 90 pushed
-push=$(pushes | jq -c '.messages[0]')
-[[ "$(jq -r '.data.url' <<<"$push")" == "/messages/$conversation" ]] && ! grep -qF "$hello" <<<"$push" \
+# Other pushes can reach the same phone (a late listing-removed notice): pick this conversation's.
+push=$(pushes | jq -c --arg u "/messages/$conversation" '[.messages[] | select(.data.url == $u)][0]')
+[[ "$push" != "null" && "$(jq -r '.title' <<<"$push")" != "" ]] && ! grep -qF "$hello" <<<"$push" \
   && ok "push opens the conversation and contains no message text" || fail "push content" "$push"
 
 login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
@@ -473,6 +474,19 @@ expect_status 204 "a favourite can be removed"
 req DELETE "$PUBLIC/api/v1/saved/searches/$search_id" -H "origin: $ORIGIN"
 expect_status 204 "a saved search can be deleted"
 login_as "$USER_EMAIL" && req DELETE "$PUBLIC/api/v1/listings/$fav_listing" -H "origin: $ORIGIN"
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
+
+section "Staff roles (admin and operator plan)"
+staff_roles() { # <user> — the realm roles of a demo user's session ("," around each for matching)
+  login_as "$1@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || return 1
+  req GET "$PUBLIC/auth/session"
+  echo ",$(json '.user.roles | sort | join(",")'),"
+}
+[[ "$(staff_roles support)" == *",support,"* ]] && ok "support has the support role" || fail "support role"
+[[ "$(staff_roles operator)" == *",operator,"* ]] && ok "operator has the operator role" || fail "operator role"
+admin_roles="$(staff_roles admin)"
+[[ "$admin_roles" == *"moderator"* && "$admin_roles" == *"operator"* && "$admin_roles" == *"platform-admin"* && "$admin_roles" == *"support"* ]] \
+  && ok "the platform admin holds every staff role" || fail "admin roles" "$admin_roles"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Reports and blocking (ADR-0027)"
