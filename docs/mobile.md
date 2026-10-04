@@ -85,6 +85,10 @@ build is needed only when native modules or `app.config.ts` change.
   "Integrity could not be verified" on install means the phone is not in the profile.
 - **Running it:** turn on Developer Mode (Settings → Privacy & Security), start `./raadi phone`, open
   Raadiso and enter `http://<laptop LAN address>:8081` under "Enter URL manually".
+- **Widget:** the "Saved searches" widget is a second bundle, `com.raadiso.app.widget`, sharing the
+  App Group `group.com.raadiso.app` with the app ([ADR-0029](adr/0029-ios-native-look.md)). After a
+  change to its entitlements or a new device, run the credentials command again: it sets up both
+  targets. Its code is SwiftUI in `apps/mobile/targets/widget`.
 - TestFlight needs a `production` profile, an App Store Connect app record and a public backend, so it
   waits for the Phase 5 server.
 
