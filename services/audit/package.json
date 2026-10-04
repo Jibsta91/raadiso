@@ -1,0 +1,49 @@
+{
+  "name": "audit",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Audit log: an append-only record of staff actions (moderators, support, operators, platform admins), fed by audit events from every service.",
+  "type": "module",
+  "files": [
+    "dist",
+    "openapi.yaml"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json && (tsc -p tsconfig.build.json --watch --preserveWatchOutput & node --watch-path=dist --watch-path=../../packages/service-kit/dist --watch-path=../../packages/events/dist --import ./dist/telemetry.js dist/main.js)",
+    "start": "node --import ./dist/telemetry.js dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "tsc -p tsconfig.json && node --test --test-reporter=spec '.build/test/unit/**/*.test.js'",
+    "test:integration": "tsc -p tsconfig.json && node --test --test-reporter=spec --test-concurrency=1 '.build/test/integration/**/*.test.js'"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.1.2",
+    "@nestjs/core": "12.1.2",
+    "@nestjs/platform-fastify": "12.1.2",
+    "@nestjs/throttler": "6.7.1",
+    "@opentelemetry/api": "1.9.1",
+    "@raadi/events": "workspace:*",
+    "@raadi/service-kit": "workspace:*",
+    "fastify": "5.12.5",
+    "nestjs-pino": "5.3.0",
+    "pg": "8.23.1",
+    "pino": "10.3.1",
+    "pino-http": "11.0.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@raadi/config": "workspace:*",
+    "@testcontainers/postgresql": "12.2.0",
+    "@types/node": "24.19.1",
+    "@types/pg": "8.23.1",
+    "ajv": "8.20.0",
+    "eslint": "10.11.0",
+    "testcontainers": "12.2.0",
+    "typescript": "6.0.3",
+    "yaml": "2.9.1"
+  }
+}

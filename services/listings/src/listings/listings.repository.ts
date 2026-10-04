@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { findPlace } from '@raadi/catalog';
 import { buildEvent, type EventData, type EventType } from '@raadi/events';
-import { appendToOutbox, withTransaction } from '@raadi/service-kit';
+import { appendToOutbox, audit, type Principal, withTransaction } from '@raadi/service-kit';
 import type pg from 'pg';
 import { PG_POOL } from '../tokens.js';
 import {
@@ -173,16 +173,15 @@ export class ListingsRepository {
    * Soft delete; emits `listing.deleted` so search and media can clean up and
    * the owner can be told when a moderator removed it.
    */
-  /** Marks a removed listing's open reports as resolved by the moderator (ADR-0027). */
-  async resolveReports(listingId: string, moderatorId: string): Promise<void> {
-    await this.pool.query(
-      `UPDATE reports SET status = 'resolved', handled_by = $2, handled_at = now()
-        WHERE listing_id = $1 AND status = 'open'`,
-      [listingId, moderatorId],
-    );
-  }
-
-  async softDelete(id: string, reason: 'owner' | 'moderation'): Promise<ListingRow | null> {
+  /**
+   * Removes a listing. A moderator's removal (pass `moderator`) also resolves the listing's open
+   * reports and writes an audit entry, in the same transaction (ADR-0027, ADR-0028).
+   */
+  async softDelete(
+    id: string,
+    reason: 'owner' | 'moderation',
+    moderator?: Principal,
+  ): Promise<ListingRow | null> {
     return withTransaction(this.pool, async (client) => {
       const { rows } = await client.query<ListingRow>(
         `UPDATE listings SET status = 'deleted', version = version + 1, updated_at = now()
@@ -199,6 +198,18 @@ export class ListingsRepository {
         title: row.title,
         reason,
       });
+      if (moderator) {
+        await client.query(
+          `UPDATE reports SET status = 'resolved', handled_by = $2, handled_at = now()
+            WHERE listing_id = $1 AND status = 'open'`,
+          [row.id, moderator.sub],
+        );
+        await audit(client, 'urn:raadi:listings', moderator, {
+          action: 'listing.remove',
+          targetType: 'listing',
+          targetId: row.id,
+        });
+      }
       return row;
     });
   }

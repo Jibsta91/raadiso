@@ -38,6 +38,7 @@
     "notifications_db_password",
     "kafka_notifications_password",
     "notifications_kc_client_secret",
+    "audit_db_password",
     "saved_db_password",
     "trust_db_password",
     "kafka_trust_password",
@@ -48,7 +49,8 @@
     "payments_vipps_subscription_key",
     "payments_vipps_webhook_secret",
     "kafka_listings_password",
-    "kafka_saved_password"
+    "kafka_saved_password",
+    "kafka_audit_password"
   ],
   "fileConsumers": {
     "postgres": {
@@ -91,7 +93,8 @@
         "kafka_notifications_password",
         "kafka_trust_password",
         "kafka_listings_password",
-        "kafka_saved_password"
+        "kafka_saved_password",
+        "kafka_audit_password"
       ]
     },
     "kafka-connect": {
@@ -265,6 +268,15 @@
         "kafka_password": "kafka_saved_password"
       },
       "shared": ["imgproxy"]
+    },
+    "audit": {
+      "uid": 65532,
+      "database": "audit",
+      "migrations": "audit",
+      "openbao": {
+        "db_password": "audit_db_password",
+        "kafka_password": "kafka_audit_password"
+      }
     },
     "payments": {
       "uid": 65532,

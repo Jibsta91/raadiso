@@ -171,9 +171,12 @@ export class ListingsService {
     if (!(await this.can(principal, 'can_delete', id)))
       throw new ForbiddenException('You cannot delete this listing');
     const byOwner = current.owner_id === principal.sub;
-    await this.repo.softDelete(id, byOwner ? 'owner' : 'moderation');
-    // A moderator's removal settles the listing's open reports (ADR-0027).
-    if (!byOwner) await this.repo.resolveReports(id, principal.sub);
+    // A moderator's removal settles the listing's open reports and is audited (ADR-0027, ADR-0028).
+    await this.repo.softDelete(
+      id,
+      byOwner ? 'owner' : 'moderation',
+      byOwner ? undefined : principal,
+    );
     listingsWritten.add(1, { action: 'delete', category: current.category });
   }
 

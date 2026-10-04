@@ -21,10 +21,12 @@ import type {
   components as PaymentsComponents,
   paths as PaymentsPaths,
 } from './generated/payments';
+import type { components as AuditComponents, paths as AuditPaths } from './generated/audit';
 import type { components as SavedComponents, paths as SavedPaths } from './generated/saved';
 import type { components as TrustComponents, paths as TrustPaths } from './generated/trust';
 
 export type {
+  AuditPaths,
   IdentityPaths,
   ListingsPaths,
   MediaPaths,
@@ -87,6 +89,9 @@ export type FavouritePage = SavedComponents['schemas']['FavouritePage'];
 export type SavedSearch = SavedComponents['schemas']['SavedSearch'];
 export type SavedSearchInput = SavedComponents['schemas']['SavedSearchInput'];
 
+// Audit (staff actions)
+export type AuditEntry = AuditComponents['schemas']['AuditEntry'];
+
 // Payments (promoted listings)
 export type PaymentProduct = PaymentsComponents['schemas']['Product'];
 export type PaymentOrder = PaymentsComponents['schemas']['Order'];
@@ -111,3 +116,4 @@ export const createTrustClient = (options: ClientOptions) => createClient<TrustP
 export const createPaymentsClient = (options: ClientOptions) =>
   createClient<PaymentsPaths>(options);
 export const createSavedClient = (options: ClientOptions) => createClient<SavedPaths>(options);
+export const createAuditClient = (options: ClientOptions) => createClient<AuditPaths>(options);

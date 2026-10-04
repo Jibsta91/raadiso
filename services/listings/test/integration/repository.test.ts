@@ -175,9 +175,9 @@ describe('reports (ADR-0027)', () => {
     await reports.report(randomUUID(), fine.id, { reason: 'other', comment: '' });
     await reports.report(randomUUID(), bad.id, { reason: 'fraud', comment: '' });
 
-    assert.equal(await reports.close(fine.id, moderator, 'dismissed'), 1);
-    await repo.softDelete(bad.id, 'moderation');
-    await repo.resolveReports(bad.id, moderator);
+    const staff = { sub: moderator, roles: ['user', 'moderator'] } as never;
+    assert.equal(await reports.dismiss(fine.id, staff), 1);
+    await repo.softDelete(bad.id, 'moderation', staff);
 
     const open = (await reports.queue(100)).items.map((i) => i.listing.id);
     assert.ok(!open.includes(fine.id) && !open.includes(bad.id));
@@ -188,6 +188,18 @@ describe('reports (ADR-0027)', () => {
     assert.deepEqual(
       rows.map((r) => r.status),
       ['resolved'],
+    );
+    // Both staff actions are in the audit trail (outbox, keyed by the moderator).
+    const audited = await pool.query<{ payload: { data: { action: string; targetId: string } } }>(
+      `SELECT payload FROM outbox WHERE aggregate_type = 'audit' AND aggregate_id = $1 ORDER BY created_at`,
+      [moderator],
+    );
+    assert.deepEqual(
+      audited.rows.map((r) => [r.payload.data.action, r.payload.data.targetId]),
+      [
+        ['reports.dismiss', fine.id],
+        ['listing.remove', bad.id],
+      ],
     );
     // A new report after a dismissal opens a fresh one.
     assert.deepEqual(

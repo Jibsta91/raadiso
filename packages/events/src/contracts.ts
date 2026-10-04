@@ -137,6 +137,27 @@ export const contracts = {
     previousPriceNok: z.number().int().min(0).optional(),
     priceNok: z.number().int().min(0).optional(),
   }),
+  /**
+   * A privileged action by staff (moderator, support, operator, platform admin): who did what to
+   * which object, and why. Written to the acting service's outbox with the change itself, so no
+   * action skips the audit log (ADR-0028). Ids only: no names, no message text.
+   */
+  'no.raadi.audit.action.v1': z.object({
+    actionId: uuid,
+    actorId: uuid,
+    /** The actor's staff roles at the time. */
+    actorRoles: z.array(z.enum(['moderator', 'support', 'operator', 'platform-admin'])),
+    /** Dotted verb, e.g. listing.remove, reports.dismiss, payment.refund, user.suspend. */
+    action: z
+      .string()
+      .regex(/^[a-z]+(\.[a-z_]+)+$/)
+      .max(60),
+    targetType: z.enum(['listing', 'user', 'order', 'review', 'report', 'conversation', 'system']),
+    targetId: z.string().min(1).max(100),
+    /** Why, in the actor's words (shown to other admins only). */
+    reason: z.string().max(500).optional(),
+    at: timestamp,
+  }),
 } as const;
 
 export type EventType = keyof typeof contracts;

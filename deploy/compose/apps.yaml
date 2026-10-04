@@ -383,6 +383,39 @@ services:
       resources:
         limits: { memory: 256M, cpus: '1.0' }
 
+  # Append-only audit log of staff actions (ADR-0028).
+  audit:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/audit:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: audit }
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: audit
+      PORT: '4000'
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/openbao
+        read_only: true
+        volume: { subpath: approle/audit }
+    depends_on:
+      openbao-bootstrap: { condition: service_completed_successfully }
+      db-init: { condition: service_completed_successfully }
+      kafka-init: { condition: service_completed_successfully }
+      keycloak-init: { condition: service_completed_successfully }
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 192M, cpus: '0.5' }
+
   payments:
     <<: *node-service
     image: ${RAADI_IMAGE_PREFIX}/payments:${RAADI_VERSION}

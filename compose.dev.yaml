@@ -38,6 +38,7 @@ x-dev: &dev
     - nm-payments-mock:/workspace/services/payments-mock/node_modules
     - nm-push-mock:/workspace/services/push-mock/node_modules
     - nm-saved:/workspace/services/saved/node_modules
+    - nm-audit:/workspace/services/audit/node_modules
     - nm-service-kit:/workspace/packages/service-kit/node_modules
     - nm-ui:/workspace/packages/ui/node_modules
     - nm-api-client:/workspace/packages/api-client/node_modules
@@ -197,6 +198,24 @@ services:
       resources:
         limits: { memory: 640M }
 
+  audit:
+    <<: *dev
+    command: ['pnpm', '--filter', 'audit', 'dev']
+    depends_on:
+      dev-packages: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/readyz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      start_period: 90s
+    deploy:
+      resources:
+        limits: { memory: 640M }
+
   saved:
     <<: *dev
     command: ['pnpm', '--filter', 'saved', 'dev']
@@ -332,6 +351,7 @@ volumes:
   nm-payments-mock: {}
   nm-push-mock: {}
   nm-saved: {}
+  nm-audit: {}
   nm-service-kit: {}
   nm-ui: {}
   nm-api-client: {}

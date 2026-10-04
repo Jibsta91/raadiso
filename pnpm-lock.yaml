@@ -329,6 +329,9 @@ importers:
       '@platformatic/kafka':
         specifier: 2.13.0
         version: 2.13.0
+      '@raadi/events':
+        specifier: workspace:*
+        version: link:../events
       jose:
         specifier: 6.2.12
         version: 6.2.12
@@ -409,6 +412,82 @@ importers:
       typescript:
         specifier: 6.0.3
         version: 6.0.3
+
+  services/audit:
+    dependencies:
+      '@nestjs/common':
+        specifier: 12.1.2
+        version: 12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: 12.1.2
+        version: 12.1.2(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/platform-fastify':
+        specifier: 12.1.2
+        version: 12.1.2(@fastify/multipart@10.1.2)(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.2(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@nestjs/throttler':
+        specifier: 6.7.1
+        version: 6.7.1(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.2(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)
+      '@opentelemetry/api':
+        specifier: 1.9.1
+        version: 1.9.1
+      '@raadi/events':
+        specifier: workspace:*
+        version: link:../../packages/events
+      '@raadi/service-kit':
+        specifier: workspace:*
+        version: link:../../packages/service-kit
+      fastify:
+        specifier: 5.12.5
+        version: 5.12.5
+      nestjs-pino:
+        specifier: 5.3.0
+        version: 5.3.0(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.2(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(pino-http@11.0.0)(pino@10.3.1)(rxjs@7.8.2)
+      pg:
+        specifier: 8.23.1
+        version: 8.23.1
+      pino:
+        specifier: 10.3.1
+        version: 10.3.1
+      pino-http:
+        specifier: 11.0.0
+        version: 11.0.0
+      reflect-metadata:
+        specifier: 0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: 7.8.2
+        version: 7.8.2
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@raadi/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@testcontainers/postgresql':
+        specifier: 12.2.0
+        version: 12.2.0
+      '@types/node':
+        specifier: 24.19.1
+        version: 24.19.1
+      '@types/pg':
+        specifier: 8.23.1
+        version: 8.23.1
+      ajv:
+        specifier: 8.20.0
+        version: 8.20.0
+      eslint:
+        specifier: 10.11.0
+        version: 10.11.0(jiti@2.7.0)
+      testcontainers:
+        specifier: 12.2.0
+        version: 12.2.0
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      yaml:
+        specifier: 2.9.1
+        version: 2.9.1
 
   services/identity-bff:
     dependencies:

@@ -302,6 +302,14 @@ describe('webhooks and reconciliation', () => {
     assert.equal(await status(service.refund(moderator, second.id)), 403);
     const refunded = await service.refund(admin, second.id);
     assert.equal(refunded.status, 'refunded');
+    const audited = await pool.query<{ payload: { data: { action: string; targetId: string } } }>(
+      `SELECT payload FROM outbox WHERE aggregate_type = 'audit' AND aggregate_id = $1`,
+      [admin.sub],
+    );
+    assert.deepEqual(
+      audited.rows.map((r) => [r.payload.data.action, r.payload.data.targetId]),
+      [['payment.refund', second.id]],
+    );
     const promo = await events(listingId);
     const last = promo.at(-1)!.payload.data;
     assert.equal(last.reason, 'refunded');

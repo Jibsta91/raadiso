@@ -18,10 +18,13 @@ import {
 import { metrics } from '@opentelemetry/api';
 import { Throttle } from '@nestjs/throttler';
 import {
+  audit,
   type AuthenticatedRequest,
   imageUrls,
   type ImgproxySigner,
+  type Principal,
   Roles,
+  withTransaction,
   ZodValidationPipe,
 } from '@raadi/service-kit';
 import type pg from 'pg';
@@ -172,20 +175,24 @@ export class ReportsService {
     };
   }
 
-  /** Closes a listing's open reports: resolved (listing removed) or dismissed. */
-  async close(
-    listingId: string,
-    moderatorId: string,
-    status: 'resolved' | 'dismissed',
-    db: pg.Pool | pg.PoolClient = this.pool,
-  ): Promise<number> {
-    const { rowCount } = await db.query(
-      `UPDATE reports SET status = $3, handled_by = $2, handled_at = now()
-        WHERE listing_id = $1 AND status = 'open'`,
-      [listingId, moderatorId, status],
-    );
-    if (rowCount) reported.add(rowCount, { outcome: status });
-    return rowCount ?? 0;
+  /** Dismisses a listing's open reports (the listing is fine), with an audit entry (ADR-0028). */
+  async dismiss(listingId: string, moderator: Principal): Promise<number> {
+    return withTransaction(this.pool, async (db) => {
+      const { rowCount } = await db.query(
+        `UPDATE reports SET status = 'dismissed', handled_by = $2, handled_at = now()
+          WHERE listing_id = $1 AND status = 'open'`,
+        [listingId, moderator.sub],
+      );
+      if (rowCount) {
+        reported.add(rowCount, { outcome: 'dismissed' });
+        await audit(db, 'urn:raadi:listings', moderator, {
+          action: 'reports.dismiss',
+          targetType: 'listing',
+          targetId: listingId,
+        });
+      }
+      return rowCount ?? 0;
+    });
   }
 }
 
@@ -220,7 +227,7 @@ export class ReportsController {
   @Roles('moderator')
   @HttpCode(204)
   async dismiss(@Req() req: AuthenticatedRequest, @Param('id', uuid) id: string): Promise<void> {
-    const closed = await this.reports.close(id, req.principal!.sub, 'dismissed');
+    const closed = await this.reports.dismiss(id, req.principal!);
     if (!closed) throw new BadRequestException('No open reports for this listing');
   }
 }

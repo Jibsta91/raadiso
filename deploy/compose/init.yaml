@@ -189,6 +189,7 @@ services:
       notifications: { condition: service_healthy }
       trust: { condition: service_healthy }
       saved: { condition: service_healthy }
+      audit: { condition: service_healthy }
       payments: { condition: service_healthy }
       payments-mock: { condition: service_healthy }
       push-mock: { condition: service_healthy }

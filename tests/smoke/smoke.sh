@@ -609,6 +609,18 @@ req POST "$PUBLIC/api/v1/payments/orders/$order_id/refund" -H "origin: $ORIGIN"
   && ok "a platform admin refunds the order (role platform-admin)" || fail "refund" "HTTP $status $(head -c 200 "$BODY")"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "Audit log (ADR-0028)"
+login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"
+req GET "$PUBLIC/api/v1/audit/entries"
+expect_status 403 "only platform admins read the audit log"
+login_as "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as admin"
+audited() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" -G "$PUBLIC/api/v1/audit/entries" \
+  --data-urlencode "action=$1" --data-urlencode "targetId=$2" | jq -e '.items | length == 1'; }
+eventually "the refund is in the audit log (outbox -> Kafka -> audit)" 90 audited payment.refund "$order_id"
+eventually "the moderator's removal is in the audit log" 90 audited listing.remove "$listing"
+eventually "dismissed reports are in the audit log" 90 audited reports.dismiss "$kari_listing"
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
+
 section "Operations"
 req GET "$GRAFANA/api/health"
 expect_status 200 "Grafana healthy via gateway"

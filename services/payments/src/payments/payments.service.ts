@@ -10,7 +10,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { metrics } from '@opentelemetry/api';
-import type { Principal } from '@raadi/service-kit';
+import { audit, type Principal } from '@raadi/service-kit';
 import type { AppConfig } from '../config.js';
 import { APP_CONFIG } from '../tokens.js';
 import { ListingsClient } from './listings.client.js';
@@ -244,7 +244,15 @@ export class PaymentsService {
     if (row.status !== 'captured' || !row.provider_ref)
       throw new ConflictException(`Order is ${row.status}`);
     await this.provider.refund(row.provider_ref, row.amount_ore, `refund-${row.id}`);
-    await this.repo.locked(id, (tx, r) => this.apply(tx, r, 'refunded', 'admin'));
+    await this.repo.locked(id, async (tx, r) => {
+      await this.apply(tx, r, 'refunded', 'admin');
+      // In the same transaction as the refund (ADR-0028).
+      await audit(tx.client, 'urn:raadi:payments', principal, {
+        action: 'payment.refund',
+        targetType: 'order',
+        targetId: id,
+      });
+    });
     this.logger.log({ orderId: id, admin: principal.sub }, 'order refunded');
     return this.view((await this.repo.get(id))!);
   }
