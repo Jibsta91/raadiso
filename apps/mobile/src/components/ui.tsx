@@ -235,7 +235,8 @@ export function Glass({
   );
 }
 
-const liquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
+/** iOS 26 and later, where Apple's Liquid Glass and its native controls are available. */
+export const liquidGlass = Platform.OS === 'ios' && isLiquidGlassAvailable();
 
 /** Loading, error (with retry) and empty states share one centred layout. */
 export function Status({

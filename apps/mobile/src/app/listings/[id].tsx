@@ -1,13 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { COUNTIES, type County } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   Animated,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -18,7 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoPhoto } from '../../components/no-photo';
 import { ReportListing } from '../../components/report-listing';
-import { Badge, Body, Button, Field, Glass, Status } from '../../components/ui';
+import { Badge, Body, Button, Field, Glass, liquidGlass, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import type { Messages } from '../../i18n/messages';
 import { unwrap, useApi, useLoad } from '../../lib/api';
@@ -28,6 +27,7 @@ import { useAuth } from '../../lib/auth/context';
 import { isCategory, isSubcategoryOf } from '../../lib/categories';
 import { useKeyboardLift } from '../../lib/keyboard';
 import { config } from '../../lib/config';
+import { shareListing } from '../../lib/share';
 import { formatAge, formatPrice, intlLocale } from '../../lib/format';
 import { absoluteUrl } from '../../lib/urls';
 import { fonts, radius, space, useTheme } from '../../theme';
@@ -159,8 +159,54 @@ export default function ListingScreen() {
 
   const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
+  // iOS 26: the system navigation bar over the photo. Back (with the swipe), favourite and share are
+  // native bar buttons with SF Symbols, which iOS draws in Liquid Glass. Elsewhere: our glass buttons.
+  const nativeBar = (actions: NonNullable<typeof listing.data> | null) =>
+    liquidGlass ? (
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTransparent: true,
+          title: '',
+          headerBackButtonDisplayMode: 'minimal',
+          unstable_headerRightItems: () =>
+            actions
+              ? [
+                  ...(actions.viewer?.isOwner
+                    ? []
+                    : [
+                        {
+                          type: 'button' as const,
+                          label: favourite.saved ? m.favourites.remove : m.favourites.add,
+                          icon: {
+                            type: 'sfSymbol' as const,
+                            name: favourite.saved ? ('heart.fill' as const) : ('heart' as const),
+                          },
+                          tintColor: favourite.saved ? '#f43f5e' : undefined,
+                          identifier: 'favourite-toggle',
+                          onPress: () => void favourite.toggle(),
+                        },
+                      ]),
+                  {
+                    type: 'button' as const,
+                    label: m.common.share,
+                    icon: { type: 'sfSymbol' as const, name: 'square.and.arrow.up' as const },
+                    identifier: 'share',
+                    onPress: () => shareListing(actions, locale),
+                  },
+                ]
+              : [],
+        }}
+      />
+    ) : null;
+
   if (listing.loading || listing.error) {
-    return <Status loading={listing.loading} error={listing.error} onRetry={listing.reload} />;
+    return (
+      <>
+        {nativeBar(null)}
+        <Status loading={listing.loading} error={listing.error} onRetry={listing.reload} />
+      </>
+    );
   }
   const item = listing.data;
   if (!item || item.status === 'deleted') {
@@ -182,6 +228,7 @@ export default function ListingScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
+      {nativeBar(item)}
       <ScrollView testID="listing" contentContainerStyle={{ paddingBottom: 140 + insets.bottom }}>
         <View style={{ height: photoHeight, backgroundColor: theme.placeholder }}>
           {item.images.length > 0 ? (
@@ -318,32 +365,30 @@ export default function ListingScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.topBar, { top: insets.top + space.sm }]} pointerEvents="box-none">
-        <GlassIcon icon="chevron-back" label={m.common.back} onPress={back} />
-        <View style={styles.topActions}>
-          {item.viewer?.isOwner ? null : (
+      {liquidGlass ? null : (
+        <View style={[styles.topBar, { top: insets.top + space.sm }]} pointerEvents="box-none">
+          <GlassIcon icon="chevron-back" label={m.common.back} onPress={back} />
+          <View style={styles.topActions}>
+            {item.viewer?.isOwner ? null : (
+              <GlassIcon
+                icon={favourite.saved ? 'heart' : 'heart-outline'}
+                color={favourite.saved ? '#f43f5e' : undefined}
+                label={favourite.saved ? m.favourites.remove : m.favourites.add}
+                pressed={favourite.saved}
+                testID="favourite-toggle"
+                onPress={() => void favourite.toggle()}
+              />
+            )}
             <GlassIcon
-              icon={favourite.saved ? 'heart' : 'heart-outline'}
-              color={favourite.saved ? '#f43f5e' : undefined}
-              label={favourite.saved ? m.favourites.remove : m.favourites.add}
-              pressed={favourite.saved}
-              testID="favourite-toggle"
-              onPress={() => void favourite.toggle()}
+              icon="share-outline"
+              label={m.common.share}
+              onPress={() => {
+                shareListing(item, locale);
+              }}
             />
-          )}
-          <GlassIcon
-            icon="share-outline"
-            label={m.common.share}
-            onPress={() => {
-              // Share the website's page: it opens for anyone, app or not.
-              const origin = config.apiBaseUrl || window.location.origin;
-              void Share.share({
-                message: `${item.title} — ${origin}/${locale}/listings/${item.id}`,
-              });
-            }}
-          />
+          </View>
         </View>
-      </View>
+      )}
 
       {canContact ? (
         <Animated.View

@@ -66,6 +66,7 @@ export default function MyListings() {
 
   return (
     <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.list}
       data={mine.items}
       keyExtractor={(l) => l.id}

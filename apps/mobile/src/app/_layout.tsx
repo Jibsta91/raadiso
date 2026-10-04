@@ -74,6 +74,9 @@ function Screens() {
           headerTintColor: theme.text,
           headerTitleStyle: { color: theme.text, fontFamily: fonts.semibold },
           headerBackTitle: m.common.back,
+          // iOS: large titles (where a screen asks for them) in the brand's display face.
+          headerLargeTitleStyle: { color: theme.text, fontFamily: fonts.display },
+          headerLargeTitleShadowVisible: false,
           contentStyle: { backgroundColor: theme.background },
         }}
       >
@@ -81,9 +84,18 @@ function Screens() {
         <Stack.Screen name="listings/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="listings/new" options={{ title: m.sell.title }} />
         <Stack.Screen name="messages/[id]" options={{ title: m.messages.title }} />
-        <Stack.Screen name="my-listings" options={{ title: m.account.myListings }} />
-        <Stack.Screen name="favourites" options={{ title: m.favourites.title }} />
-        <Stack.Screen name="saved-searches/index" options={{ title: m.savedSearches.title }} />
+        <Stack.Screen
+          name="my-listings"
+          options={{ title: m.account.myListings, headerLargeTitle: true }}
+        />
+        <Stack.Screen
+          name="favourites"
+          options={{ title: m.favourites.title, headerLargeTitle: true }}
+        />
+        <Stack.Screen
+          name="saved-searches/index"
+          options={{ title: m.savedSearches.title, headerLargeTitle: true }}
+        />
         <Stack.Screen name="saved-searches/[id]" options={{ title: m.savedSearches.title }} />
       </Stack>
     </>

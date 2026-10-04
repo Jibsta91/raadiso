@@ -96,6 +96,7 @@ export default function SavedSearches() {
 
   return (
     <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       testID="saved-searches"
       contentContainerStyle={styles.list}
       data={searches.data ?? []}

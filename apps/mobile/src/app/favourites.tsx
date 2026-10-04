@@ -27,6 +27,7 @@ export default function Favourites() {
 
   return (
     <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       testID="favourites"
       contentContainerStyle={styles.list}
       data={favourites.items}
@@ -44,6 +45,7 @@ export default function Favourites() {
             location: item.listing.location,
             sold: item.listing.status === 'sold',
           }}
+          favouriteAction={false}
         />
       )}
       onEndReached={favourites.more}
