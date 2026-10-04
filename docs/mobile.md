@@ -57,6 +57,37 @@ Notes:
 - Metro runs in a container, where file changes on the host don't always arrive. After editing app code,
   reload in Expo Go (shake → Reload) or run `./raadi restart expo`.
 
+## Development build (iPhone)
+
+Instead of Expo Go, the iPhone can run our own app: **Raadiso (Development Build)**, bundle ID
+`com.raadiso.app`, built in Expo's cloud from the `development` profile in `apps/mobile/eas.json`. It
+loads code from Metro like Expo Go, but has its own icon, push setup and any native modules. A new
+build is needed only when native modules or `app.config.ts` change.
+
+- **Builds** start from GitHub (repository linked to the Expo project `@jibstas-team/jibsta`, base
+  directory `apps/mobile`), so push to `main` first. They cannot sign in to Apple, so the signing
+  credentials must already be on Expo.
+- **Signing credentials** (distribution certificate and ad hoc provisioning profile) are created once,
+  from your own terminal, signing in to Apple when asked. Run it to the end; nothing is saved if you stop
+  it halfway:
+
+  ```bash
+  LAN_IP=127.0.0.1 docker compose -f compose.yaml -f compose.phone.yaml run --rm --no-deps \
+    --entrypoint sh expo -c 'cd apps/mobile && npx -y eas-cli@24.10.0 credentials --platform ios'
+  ```
+
+  Choose `development` → Build Credentials → All: Set up all the required credentials.
+
+- **Devices:** the profile lists every iPhone that may install the build. Register a device by opening
+  expo.dev's "Register device" link in Safari on that phone, check its UDID with
+  `eas device:list` (an iPhone XS or newer has a UDID like `00008140-…`; with the phone on USB,
+  `cat /sys/bus/usb/devices/*/serial` shows it too), then run the credentials command again and build.
+  "Integrity could not be verified" on install means the phone is not in the profile.
+- **Running it:** turn on Developer Mode (Settings → Privacy & Security), start `./raadi phone`, open
+  Raadiso and enter `http://<laptop LAN address>:8081` under "Enter URL manually".
+- TestFlight needs a `production` profile, an App Store Connect app record and a public backend, so it
+  waits for the Phase 5 server.
+
 ## Selling from the app
 
 "Selg" on the home screen (or "Ny annonse" on the account screen) opens the same flow as the website:
