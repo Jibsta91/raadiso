@@ -14,7 +14,7 @@ import { I18nProvider, useI18n } from '../i18n';
 import { AuthProvider } from '../lib/auth/provider';
 import { PushRegistration } from '../lib/push';
 import { RealtimeProvider } from '../lib/realtime';
-import { glassBar } from '../components/ui';
+import { glassBar, liquidGlass } from '../components/ui';
 import { fonts, ThemeProvider, useTheme } from '../theme';
 
 /**
@@ -84,6 +84,17 @@ function Screens() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="listings/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="listings/new" options={{ title: m.sell.title }} />
+        <Stack.Screen
+          name="contact/[listingId]"
+          options={{
+            presentation: 'formSheet',
+            sheetAllowedDetents: 'fitToContents',
+            sheetGrabberVisible: true,
+            headerShown: false,
+            // iOS 26 draws sheets in Liquid Glass when the content leaves the background clear.
+            contentStyle: { backgroundColor: liquidGlass ? 'transparent' : theme.background },
+          }}
+        />
         <Stack.Screen name="messages/[id]" options={{ title: m.messages.title }} />
         <Stack.Screen
           name="my-listings"

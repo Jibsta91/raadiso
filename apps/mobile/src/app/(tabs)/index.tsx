@@ -64,6 +64,10 @@ export default function Home() {
           </View>
           <Field
             testID="home-search"
+            inputMode="search"
+            autoCorrect={false}
+            clearButtonMode="while-editing"
+            enablesReturnKeyAutomatically
             value={q}
             onChangeText={setQ}
             placeholder={m.home.searchPlaceholder}

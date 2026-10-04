@@ -482,6 +482,9 @@ function ListingForm({
           <Label text={m.sell.titleLabel} />
           <Field
             testID="field-title"
+            autoCapitalize="sentences"
+            returnKeyType="next"
+            clearButtonMode="while-editing"
             value={title}
             onChangeText={setTitle}
             maxLength={120}
@@ -532,6 +535,7 @@ function ListingForm({
               <Label text={m.sell.price} />
               <Field
                 testID="field-price"
+                inputMode="numeric"
                 value={price}
                 onChangeText={(v) => setPrice(v.replace(/\D/g, ''))}
                 keyboardType="number-pad"
@@ -556,6 +560,11 @@ function ListingForm({
             <>
               <Field
                 testID="field-place"
+                // The keyboard suggests towns from Contacts and recent places.
+                textContentType="addressCity"
+                autoComplete="postal-address-locality"
+                autoCorrect={false}
+                clearButtonMode="while-editing"
                 value={placeQuery}
                 onChangeText={setPlaceQuery}
                 placeholder={m.sell.placeSearch}

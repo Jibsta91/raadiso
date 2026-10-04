@@ -138,6 +138,7 @@ export function SearchFilters({
                           setDraft((d) => ({ ...d, [`${r.param}${which}`]: t.replace(/\D/g, '') }))
                         }
                         keyboardType="number-pad"
+                        inputMode="numeric"
                         maxLength={10}
                         placeholder={which === 'Min' ? m.filters.from : m.filters.to}
                         accessibilityLabel={`${r.label} ${which === 'Min' ? m.filters.from : m.filters.to}`}

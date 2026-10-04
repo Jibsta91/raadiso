@@ -5,6 +5,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   Animated,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,10 +17,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoPhoto } from '../../components/no-photo';
+import { ContactCompose } from '../../components/contact-compose';
 import { ReportListing } from '../../components/report-listing';
-import { Badge, Body, Button, Field, Glass, liquidGlass, Status } from '../../components/ui';
+import { Badge, Body, Button, Glass, liquidGlass, Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
-import type { Messages } from '../../i18n/messages';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { attributeRows } from '../../lib/attributes';
 import { useFavourite } from '../../lib/saved';
@@ -27,20 +28,10 @@ import { useAuth } from '../../lib/auth/context';
 import { isCategory, isSubcategoryOf } from '../../lib/categories';
 import { useKeyboardLift } from '../../lib/keyboard';
 import { config } from '../../lib/config';
-import { haptics } from '../../lib/haptics';
 import { shareListing } from '../../lib/share';
 import { formatAge, formatPrice, intlLocale } from '../../lib/format';
 import { absoluteUrl } from '../../lib/urls';
 import { fonts, radius, space, useTheme } from '../../theme';
-
-type ErrorKey = keyof Messages['messages']['errors'];
-
-function problemCode(body: unknown): ErrorKey {
-  const code = (body as { errors?: { code?: string }[] } | undefined)?.errors?.[0]?.code;
-  return code === 'own_listing' || code === 'listing_unavailable' || code === 'rate_limited'
-    ? code
-    : 'generic';
-}
 
 /** Round glass button over the photo. */
 function GlassIcon({
@@ -72,62 +63,6 @@ function GlassIcon({
         <Icon name={icon} size={20} color={color ?? theme.text} />
       </Glass>
     </Pressable>
-  );
-}
-
-function Compose({ listingId, onCancel }: { listingId: string; onCancel: () => void }) {
-  const { m } = useI18n();
-  const api = useApi();
-  const theme = useTheme();
-  const [body, setBody] = useState(m.contact.defaultText);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState<ErrorKey>();
-
-  const send = async () => {
-    setSending(true);
-    setError(undefined);
-    try {
-      const res = await api.messaging.POST('/api/v1/messaging/conversations', {
-        body: { listingId, body: body.trim() },
-      });
-      if (res.data) {
-        haptics.success();
-        router.push(`/messages/${res.data.conversation.id}`);
-      } else {
-        setError(res.response.status === 429 ? 'rate_limited' : problemCode(res.error));
-      }
-    } catch {
-      setError('generic');
-    } finally {
-      setSending(false);
-    }
-  };
-
-  return (
-    <View style={styles.compose}>
-      <Field
-        testID="contact-body"
-        value={body}
-        onChangeText={setBody}
-        placeholder={m.contact.placeholder}
-        accessibilityLabel={m.contact.placeholder}
-        multiline
-        maxLength={2000}
-        autoFocus
-      />
-      {error ? <Body style={{ color: theme.danger }}>{m.messages.errors[error]}</Body> : null}
-      <View style={styles.composeActions}>
-        <View style={styles.grow}>
-          <Button
-            testID="contact-send"
-            label={sending ? m.messages.sending : m.contact.send}
-            disabled={sending || body.trim().length === 0}
-            onPress={() => void send()}
-          />
-        </View>
-        <Button variant="secondary" label={m.common.back} onPress={onCancel} />
-      </View>
-    </View>
   );
 }
 
@@ -401,7 +336,11 @@ export default function ListingScreen() {
         >
           <Glass style={styles.bottomBarGlass}>
             {composing && auth.status === 'signedIn' ? (
-              <Compose listingId={item.id} onCancel={() => setComposing(false)} />
+              <ContactCompose
+                listingId={item.id}
+                onCancel={() => setComposing(false)}
+                onSent={(conversation) => router.push(`/messages/${conversation}`)}
+              />
             ) : (
               <Button
                 testID={auth.status === 'signedIn' ? 'contact-open' : 'contact-login'}
@@ -409,9 +348,17 @@ export default function ListingScreen() {
                 icon={
                   <Icon name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
                 }
-                onPress={() =>
-                  auth.status === 'signedIn' ? setComposing(true) : void auth.signIn()
-                }
+                onPress={() => {
+                  if (auth.status !== 'signedIn') return void auth.signIn();
+                  // iOS: the message is written in a native sheet (grabber, half and full height);
+                  // elsewhere the bottom bar turns into the form.
+                  if (Platform.OS === 'ios') {
+                    router.push({
+                      pathname: '/contact/[listingId]',
+                      params: { listingId: item.id, title: item.title },
+                    });
+                  } else setComposing(true);
+                }}
               />
             )}
           </Glass>

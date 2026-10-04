@@ -147,6 +147,10 @@ export default function Search() {
           <LargeTitle>{m.tabs.search}</LargeTitle>
           <Field
             testID="search-input"
+            inputMode="search"
+            autoCorrect={false}
+            clearButtonMode="while-editing"
+            enablesReturnKeyAutomatically
             value={text}
             onChangeText={setText}
             placeholder={m.search.placeholder}
