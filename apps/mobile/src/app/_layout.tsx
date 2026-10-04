@@ -14,6 +14,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { I18nProvider, useI18n } from '../i18n';
 import { AuthProvider } from '../lib/auth/provider';
 import { PushRegistration } from '../lib/push';
+import { WidgetSync } from '../lib/widget-sync';
 import { RealtimeProvider } from '../lib/realtime';
 import { glassBar, liquidGlass } from '../components/ui';
 import { fonts, ThemeProvider, useTheme } from '../theme';
@@ -136,6 +137,7 @@ export default function RootLayout() {
               <RealtimeProvider>
                 <Screens />
                 <PushRegistration />
+                <WidgetSync />
               </RealtimeProvider>
             </AuthProvider>
           </I18nProvider>

@@ -22,6 +22,9 @@ const config: ExpoConfig = {
   // Registered with Apple (permanent): the brand's domain, reversed.
   ios: {
     bundleIdentifier: 'com.raadiso.app',
+    appleTeamId: '9NE8R6TAR6',
+    // Shared with the home screen widget (targets/widget, src/lib/widget-payload.ts).
+    entitlements: { 'com.apple.security.application-groups': ['group.com.raadiso.app'] },
     // Home screen appearances (iOS 18+): the dark icon is the mark on the system's dark backdrop,
     // the tinted one a greyscale mark that iOS colours in.
     icon: {
@@ -40,6 +43,8 @@ const config: ExpoConfig = {
   web: { bundler: 'metro', output: 'single', favicon: './assets/favicon.png' },
   plugins: [
     'expo-router',
+    // Apple extension targets in ./targets: the "Saved searches" widget.
+    '@bacons/apple-targets',
     // Development builds (EAS, eas.json): our own app with the dev menu, loading code from Metro.
     'expo-dev-client',
     'expo-secure-store',

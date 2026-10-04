@@ -5,6 +5,10 @@ import { taxonomyMessages } from './taxonomy';
 
 const en = {
   tabs: { home: 'Home', search: 'Search', messages: 'Messages', account: 'Account' },
+  widget: {
+    signedOut: 'Sign in to Raadiso to see new matches.',
+    empty: 'No saved searches yet.',
+  },
   sort: {
     label: 'Sort',
     relevance: 'Most relevant',
@@ -215,6 +219,10 @@ export type Messages = typeof en;
 
 const nb: Messages = {
   tabs: { home: 'Hjem', search: 'Søk', messages: 'Meldinger', account: 'Konto' },
+  widget: {
+    signedOut: 'Logg inn i Raadiso for å se nye treff.',
+    empty: 'Ingen lagrede søk ennå.',
+  },
   sort: {
     label: 'Sorter',
     relevance: 'Mest relevant',
@@ -417,6 +425,10 @@ const nb: Messages = {
 
 const so: Messages = {
   tabs: { home: 'Bogga hore', search: 'Raadi', messages: 'Fariimaha', account: 'Akoon' },
+  widget: {
+    signedOut: 'Gal Raadiso si aad u aragto natiijooyin cusub.',
+    empty: 'Weli raadin la keydiyey ma jirto.',
+  },
   sort: {
     label: 'Kala sooc',
     relevance: 'Ugu habboon',

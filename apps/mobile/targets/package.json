@@ -1,0 +1,4 @@
+{
+  "//": "Apple target configs (expo-target.config.js) are CommonJS; the app itself is ESM.",
+  "type": "commonjs"
+}
