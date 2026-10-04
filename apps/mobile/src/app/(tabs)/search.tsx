@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ListingTile } from '../../components/listing-card';
 import { filterKeys, SearchFilters } from '../../components/search-filters';
 import { Body, Chip, Field, LargeTitle, Status } from '../../components/ui';
+import { SORTS, SortMenu, type Sort } from '../../components/sort-menu';
 import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi } from '../../lib/api';
 import { CATEGORIES, isCategory, isSubcategoryOf, subcategoriesOf } from '../../lib/categories';
@@ -74,6 +75,8 @@ export default function Search() {
       .filter(([, v]) => v !== ''),
   );
   const extraKey = JSON.stringify(extra);
+  const rawSort = one(params.sort);
+  const sort: Sort = SORTS.includes(rawSort as Sort) ? (rawSort as Sort) : 'relevance';
   const [text, setText] = useState(query);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [total, setTotal] = useState<number>();
@@ -165,6 +168,10 @@ export default function Search() {
             contentContainerStyle={styles.chips}
             style={styles.bleed}
           >
+            <SortMenu
+              value={sort}
+              onChange={(next) => router.setParams({ sort: next === 'relevance' ? '' : next })}
+            />
             <Chip
               label={m.home.all}
               selected={!category}

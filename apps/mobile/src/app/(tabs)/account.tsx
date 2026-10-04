@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Segmented } from '../../components/segmented';
 import { Body, Button, LargeTitle, Status, Title } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { languageNames } from '../../i18n/messages';
@@ -21,61 +22,6 @@ import {
 
 const LOCALES: Locale[] = ['nb', 'en', 'so'];
 const THEMES: ThemePreference[] = ['system', 'light', 'dark'];
-
-/** iOS-style segmented control. */
-function Segmented<T extends string>({
-  options,
-  value,
-  onChange,
-  label,
-  testID,
-}: {
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (value: T) => void;
-  label: string;
-  testID?: string;
-}) {
-  const theme = useTheme();
-  return (
-    <View
-      role="radiogroup"
-      aria-label={label}
-      testID={testID}
-      style={[styles.segmented, { backgroundColor: theme.surfaceAlt }]}
-    >
-      {options.map((option) => {
-        const selected = option.value === value;
-        return (
-          <Pressable
-            key={option.value}
-            role="radio"
-            aria-checked={selected}
-            testID={`${testID}-${option.value}`}
-            onPress={() => onChange(option.value)}
-            style={[
-              styles.segment,
-              selected && [
-                styles.selected,
-                { backgroundColor: theme.surface, shadowColor: theme.shadow },
-              ],
-            ]}
-          >
-            <Text
-              style={[
-                styles.segmentText,
-                { color: selected ? theme.text : theme.muted },
-                selected && { fontFamily: fonts.semibold },
-              ]}
-            >
-              {option.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 /** Push for new messages (ADR-0025). Other pushes follow the in-app notices and cannot be muted. */
 function NotificationSettings() {
@@ -232,16 +178,6 @@ export default function Account() {
 const styles = StyleSheet.create({
   page: { paddingHorizontal: space.xl - 4, gap: space.xxl },
   section: { gap: space.md },
-  segmented: { flexDirection: 'row', padding: 4, borderRadius: radius.md, gap: 4 },
-  segment: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: radius.md - 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selected: { shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 6 },
-  segmentText: { fontFamily: fonts.medium, fontSize: 15 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

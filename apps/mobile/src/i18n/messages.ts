@@ -5,6 +5,13 @@ import { taxonomyMessages } from './taxonomy';
 
 const en = {
   tabs: { home: 'Home', search: 'Search', messages: 'Messages', account: 'Account' },
+  sort: {
+    label: 'Sort',
+    relevance: 'Most relevant',
+    newest: 'Newest',
+    price_asc: 'Lowest price',
+    price_desc: 'Highest price',
+  },
   swipe: {
     markRead: 'Mark as read',
     markSold: 'Mark as sold',
@@ -208,6 +215,13 @@ export type Messages = typeof en;
 
 const nb: Messages = {
   tabs: { home: 'Hjem', search: 'Søk', messages: 'Meldinger', account: 'Konto' },
+  sort: {
+    label: 'Sorter',
+    relevance: 'Mest relevant',
+    newest: 'Nyeste',
+    price_asc: 'Lavest pris',
+    price_desc: 'Høyest pris',
+  },
   swipe: {
     markRead: 'Merk som lest',
     markSold: 'Merk som solgt',
@@ -403,6 +417,13 @@ const nb: Messages = {
 
 const so: Messages = {
   tabs: { home: 'Bogga hore', search: 'Raadi', messages: 'Fariimaha', account: 'Akoon' },
+  sort: {
+    label: 'Kala sooc',
+    relevance: 'Ugu habboon',
+    newest: 'Ugu cusub',
+    price_asc: 'Qiimaha ugu jaban',
+    price_desc: 'Qiimaha ugu sarreeya',
+  },
   swipe: {
     markRead: 'Calaamadee in la akhriyey',
     markSold: 'Calaamadee in la iibiyey',

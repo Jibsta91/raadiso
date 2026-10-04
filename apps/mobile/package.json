@@ -17,6 +17,7 @@
     "@expo-google-fonts/bricolage-grotesque": "0.4.1",
     "@expo-google-fonts/geist": "0.4.2",
     "@expo/metro-runtime": "57.0.16",
+    "@expo/ui": "57.0.21",
     "@expo/vector-icons": "15.1.1",
     "@raadi/api-client": "workspace:*",
     "@raadi/catalog": "workspace:*",
