@@ -1,8 +1,9 @@
 # Raadiso
 
 Raadiso ([raadiso.com](https://raadiso.com); from _raadi_, "search" in Somali) is an open-source classifieds
-marketplace in the spirit of Finn.no. It starts in Norway and grows into one marketplace for many countries,
-like Locanto ([ADR-0032](docs/adr/0032-multi-country-marketplace.md)). In the code it keeps its working
+marketplace by Horumar Group, in the spirit of Finn.no. It starts in Somaliland and grows into one marketplace
+for many countries, like Locanto ([ADR-0032](docs/adr/0032-multi-country-marketplace.md),
+[ADR-0033](docs/adr/0033-horumar-group-and-somaliland-first.md)). In the code it keeps its working
 name, `raadi` (packages, the `./raadi` command, the Keycloak realm). It has a web app, a mobile app, domain
 microservices and four AI pillars: governance, cybersecurity, data management and IaC operations. All of it
 is 100% OSI-licensed and runs fully offline on a laptop, with **Docker as the only prerequisite**.

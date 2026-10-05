@@ -37,3 +37,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0030](0030-staff-apis-and-console-workspaces.md)      | Staff APIs (console tokens only, step-up), a console workspace per role                | Accepted |
 | [0031](0031-foundation-slos-security-centre-doctor.md) | Foundation revisited: SLOs and journey probes, security centre, doctor, accessibility  | Accepted |
 | [0032](0032-multi-country-marketplace.md)              | One marketplace for many countries; country separate from language                     | Accepted |
+| [0033](0033-horumar-group-and-somaliland-first.md)     | Horumar Group owns Raadiso; Somaliland is the first market                             | Accepted |
