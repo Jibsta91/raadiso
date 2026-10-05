@@ -46,7 +46,13 @@ header() { grep -i "^$1:" "$HDRS" | head -1 | cut -d' ' -f2- | tr -d '\r'; }
 login_as() { # <email> [base URL: the website, or the admin console's host]
   local base="${2:-$PUBLIC}"
   : > "$JAR"
-  req GET "$base/auth/login?returnTo=/en&locale=en"
+  # The BFFs allow 20 sign-ins a minute per address; smoke signs in often, so wait out a 429.
+  local wait
+  for wait in 1 2 3 4 5 6; do
+    req GET "$base/auth/login?returnTo=/en&locale=en"
+    [[ "$status" == 429 ]] || break
+    sleep "$(header retry-after | grep -E '^[0-9]+$' || echo 10)"
+  done
   local loc; loc="$(header location)"
   req GET "$loc"
   local action; action=$(grep -o '<form[^>]*id="kc-form-login"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 \
@@ -653,6 +659,9 @@ grep -q 'kc-otp-login-form' "$BODY" && ok "the console requires a one-time code 
 req POST "$(grep -o '<form[^>]*id="kc-otp-login-form"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')" --data-urlencode "otp=000000"
 grep -q 'kc-otp-login-form' "$BODY" && [[ "$(header location)" != *"/auth/callback"* ]] \
   && ok "a wrong one-time code is refused" || fail "wrong OTP accepted"
+# Keycloak locks an account for a minute after two failures within a second (quick-login check);
+# the next sign-in may retry a code already used in this window, so leave a gap.
+sleep 2
 login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" "$ADMIN" || fail "admin console login"
 req GET "$ADMIN/auth/session"
 [[ "$(json '.user.roles | index("moderator") != null')" == "true" ]] && ok "staff sign in to the console through admin-bff" || fail "admin session" "$(head -c 200 "$BODY")"
