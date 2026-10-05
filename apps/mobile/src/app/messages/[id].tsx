@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoPhoto } from '../../components/no-photo';
+import { ReviewPrompt } from '../../components/review-prompt';
 import { Body, Button, Glass, noFocusRing, Status } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { confirm } from '../../lib/confirm';
@@ -236,6 +237,11 @@ export default function ConversationScreen() {
           <Icon name="chevron-forward" size={18} color={theme.muted} />
         </Pressable>
       </Link>
+      <ReviewPrompt
+        listingId={conversation.listing.id}
+        subjectId={conversation.counterpart.id}
+        subjectName={conversation.counterpart.name}
+      />
       <FlatList
         ref={list}
         testID="thread"
