@@ -11,6 +11,18 @@ Each phase ends with `docker compose up` green: the smoke test, Playwright E2E a
 | **5. CI/CD & cloud**                    | `compose.prod.yaml`, multi-arch builds to GHCR with SBOM, Cosign and SLSA provenance, OpenTofu modules (Hetzner/AWS examples), cloud-init, Ansible hardening, Provision and Deploy workflows with rollback, restic backups + tested restore, `docs/deploy.md`. Raadi MCP server (OAuth via Keycloak, read and write tool scopes, audit log), after the deployment because MCP clients need a public HTTPS endpoint. App releases: EAS production profile, TestFlight and Play internal testing, store listings and privacy labels (they need the public backend) | Planned                                                                                                                                                                                                                                                                                                                                                   |
 | **6. Hardening & docs**                 | CrowdSec + Coraza WAF (OWASP CRS), nonce-based CSP, ASVS L2 checklist, revoke the OpenBao root token, ZAP baseline in CI, documentation pass                                                                                                                                                                                                                                                                                                                                                                                                                     | Planned                                                                                                                                                                                                                                                                                                                                                   |
 
+## Many countries (ADR-0032)
+
+On 2026-10-05 the goal changed: one marketplace for many countries, like Locanto, with Norway as the first
+country ([ADR-0032](adr/0032-multi-country-marketplace.md)). Country is now a dimension of its own, separate
+from language, and new code must not assume one country, currency, locale or time zone.
+
+The follow-up decisions (brand and domain, country URLs, the data model, money, identity checks, law and
+privacy, languages, launch order) are listed in the ADR with an owner agent each
+([docs/ai-team.md](ai-team.md)). The project-manager places them into the phases. The country URLs and the
+data model should land before the public launch in Phase 5. The brand and domain must be settled before the
+production domain, the e-mail sender and the store listings.
+
 ## Phase 4: carry-overs and plan notes
 
 Phases 2 and 3 deferred work to Phase 4 in their ADRs. It is collected here so the phase gate covers it.

@@ -1,10 +1,11 @@
 # Raadiso
 
 Raadiso ([raadiso.com](https://raadiso.com); from _raadi_, "search" in Somali) is an open-source classifieds
-marketplace for Norway, in the spirit of Finn.no. In the code it keeps its working name, `raadi` (packages,
-the `./raadi` command, the Keycloak realm). It has a web app, a mobile app, domain microservices and four
-AI pillars: governance, cybersecurity, data management and IaC operations. All of it is 100% OSI-licensed and
-runs fully offline on a laptop, with **Docker as the only prerequisite**.
+marketplace in the spirit of Finn.no. It starts in Norway and grows into one marketplace for many countries,
+like Locanto ([ADR-0032](docs/adr/0032-multi-country-marketplace.md)). In the code it keeps its working
+name, `raadi` (packages, the `./raadi` command, the Keycloak realm). It has a web app, a mobile app, domain
+microservices and four AI pillars: governance, cybersecurity, data management and IaC operations. All of it
+is 100% OSI-licensed and runs fully offline on a laptop, with **Docker as the only prerequisite**.
 
 ## Quickstart
 
@@ -177,7 +178,7 @@ app (Expo) runs on iPhone and Android. Phase 4 (the AI pillars) is next; see the
 - [Architecture (C4)](docs/architecture/c4-container.md) · [ADRs](docs/adr/README.md) ·
   [Threat model](docs/threat-model.md) · [Runbooks](docs/runbooks/README.md) ·
   [Development](docs/development.md) · [Roadmap](docs/roadmap.md) · [Releases](docs/releasing.md) ·
-  [Changelog](CHANGELOG.md)
+  [Changelog](CHANGELOG.md) · [AI team](docs/ai-team.md)
 
 ## License
 
