@@ -164,10 +164,318 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every listing in any state (moderators, support, platform admins)
+         * @description Admin console only (console tokens; not routed by the gateway, ADR-0030).
+         */
+        get: operations["adminSearchListings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/listings/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing counts, daily new listings and moderation throughput */
+        get: operations["adminListingStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/listings/workbench": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reported listings with everything needed to decide, riskiest first */
+        get: operations["adminModerationWorkbench"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/listings/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent moderation decisions */
+        get: operations["adminModerationHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/listings/sellers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A seller's listing history */
+        get: operations["adminSellerSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/listings/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close the open reports of one or more listings */
+        post: operations["adminDismissReports"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/listings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One listing with its reports, seller history and other listings */
+        get: operations["adminListing"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/listings/{id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove the listing with a reason (resolves its reports) */
+        post: operations["adminRemoveListing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        RemovalReason: "fraud" | "prohibited" | "offensive" | "wrong_category" | "duplicate" | "spam" | "other";
+        AdminListing: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** @enum {string} */
+            status: "active" | "sold" | "deleted";
+            category: string;
+            subcategory: string;
+            priceNok: number | null;
+            /** Format: uuid */
+            ownerId: string;
+            sellerName: string;
+            placeId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            promotedUntil: string | null;
+            /** @enum {string|null} */
+            removedBy: "owner" | "moderation" | null;
+            removalReason: null | components["schemas"]["RemovalReason"];
+            openReports: number;
+            image: null | {
+                thumb: string;
+                card: string;
+            };
+        };
+        AdminListingPage: {
+            items: components["schemas"]["AdminListing"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        AdminReport: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            reason: "fraud" | "prohibited" | "offensive" | "wrong_category" | "other";
+            comment: string;
+            /** @enum {string} */
+            status: "open" | "resolved" | "dismissed";
+            /** Format: uuid */
+            reporterId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            handledBy: string | null;
+            /** Format: date-time */
+            handledAt: string | null;
+            handledNote: string | null;
+        };
+        SellerSnapshot: {
+            /** Format: uuid */
+            ownerId: string;
+            active: number;
+            sold: number;
+            deleted: number;
+            removedByModeration: number;
+            /** @description Reports about the seller's listings, ever */
+            reports: number;
+            /** Format: date-time */
+            firstListingAt: string | null;
+        };
+        AdminListingDetail: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** @enum {string} */
+            status: "active" | "sold" | "deleted";
+            category: string;
+            subcategory: string;
+            priceNok: number | null;
+            /** Format: uuid */
+            ownerId: string;
+            sellerName: string;
+            placeId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            promotedUntil: string | null;
+            /** @enum {string|null} */
+            removedBy: "owner" | "moderation" | null;
+            removalReason: null | components["schemas"]["RemovalReason"];
+            openReports: number;
+            image: null | {
+                thumb: string;
+                card: string;
+            };
+            description: string;
+            attributes: {
+                [key: string]: string | number | boolean;
+            };
+            images: {
+                thumb: string;
+                card: string;
+                large: string;
+            }[];
+            version: number;
+            reports: components["schemas"]["AdminReport"][];
+            seller: components["schemas"]["SellerSnapshot"];
+            otherListings: components["schemas"]["AdminListing"][];
+        };
+        WorkbenchItem: {
+            listing: components["schemas"]["AdminListingDetail"];
+            count: number;
+            reasons: {
+                [key: string]: number;
+            };
+            /** Format: date-time */
+            firstReportedAt: string;
+            /** @description A rough priority: report volume, fraud reports, seller history, age */
+            risk: number;
+        };
+        ModerationDecision: {
+            /** Format: uuid */
+            listingId: string;
+            title: string;
+            /** @enum {string} */
+            outcome: "resolved" | "dismissed";
+            reports: number;
+            /** Format: uuid */
+            handledBy: string;
+            /** Format: date-time */
+            handledAt: string;
+            note: string | null;
+            secondsToDecision: number;
+        };
+        ListingStats: {
+            active: number;
+            sold: number;
+            removed: number;
+            created: {
+                /** Format: date */
+                day: string;
+                count: number;
+            }[];
+            byCategory: {
+                category: string;
+                count: number;
+            }[];
+            moderation: {
+                open: number;
+                listings: number;
+                /** Format: date-time */
+                oldestAt: string | null;
+                handled7d: number;
+                removed7d: number;
+                dismissed7d: number;
+                medianHandleSeconds: number | null;
+                handled: {
+                    /** Format: date */
+                    day: string;
+                    count: number;
+                }[];
+            };
+        };
+        RemoveInput: {
+            reasonCode: components["schemas"]["RemovalReason"];
+            note?: string;
+        };
+        DismissInput: {
+            ids: string[];
+            note?: string;
+        };
         /** @enum {string} */
         Category: "torget" | "bil" | "eiendom" | "jobb" | "reise";
         /** @description Category-specific attributes (see @raadi/catalog), e.g. {"condition":"good"} for torget. */
@@ -626,6 +934,222 @@ export interface operations {
             400: components["responses"]["Problem"];
             401: components["responses"]["Problem"];
             403: components["responses"]["Problem"];
+        };
+    };
+    adminSearchListings: {
+        parameters: {
+            query?: {
+                q?: string;
+                owner?: string;
+                status?: "active" | "sold" | "deleted";
+                category?: string;
+                reported?: "true" | "false";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of listings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminListingPage"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminListingStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Statistics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListingStats"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminModerationWorkbench: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The queue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["WorkbenchItem"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminModerationHistory: {
+        parameters: {
+            query?: {
+                limit?: number;
+                handledBy?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Decisions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["ModerationDecision"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminSellerSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The seller */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerSnapshot"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminDismissReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DismissInput"];
+            };
+        };
+        responses: {
+            /** @description Closed */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        closed: number;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The listing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminListingDetail"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminRemoveListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemoveInput"];
+            };
+        };
+        responses: {
+            /** @description Removed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        removed: boolean;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
 }

@@ -15,16 +15,17 @@ ADMIN_CLIENT_SECRET="$(secret admin_oidc_client_secret)"
 GRAFANA_CLIENT_SECRET="$(secret grafana_oidc_client_secret)"
 REGISTRY_INIT_CLIENT_SECRET="$(secret registry_init_client_secret)"
 NOTIFICATIONS_CLIENT_SECRET="$(secret notifications_kc_client_secret)"
+ADMIN_KC_CLIENT_SECRET="$(secret admin_kc_client_secret)"
 DEMO_EMAIL_DOMAIN="${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}"
 export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL ADMIN_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLIENT_SECRET ADMIN_CLIENT_SECRET GRAFANA_CLIENT_SECRET \
-  REGISTRY_INIT_CLIENT_SECRET NOTIFICATIONS_CLIENT_SECRET \
+  REGISTRY_INIT_CLIENT_SECRET NOTIFICATIONS_CLIENT_SECRET ADMIN_KC_CLIENT_SECRET \
   SMTP_HOST="${SMTP_HOST:-mailpit}" SMTP_PORT="${SMTP_PORT:-1025}" \
   SMTP_FROM="${SMTP_FROM:-no-reply@${RAADI_DOMAIN}}" \
   DEMO_USER_PASSWORD="${DEMO_USER_PASSWORD:-}" DEMO_OTP_SECRET="${DEMO_OTP_SECRET:-}"
 
 # envsubst only replaces this explicit list (Keycloak's own ${...} keys stay intact).
 # shellcheck disable=SC2016
-vars='$DEMO_OTP_SECRET $PUBLIC_BASE_URL $ADMIN_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $ADMIN_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET'
+vars='$DEMO_OTP_SECRET $PUBLIC_BASE_URL $ADMIN_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $ADMIN_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET $ADMIN_KC_CLIENT_SECRET'
 realm="$(envsubst "$vars" < /opt/raadi/keycloak/realm-raadi.json)"
 if [[ "${SEED_DEMO_DATA:-false}" != "true" ]]; then
   realm="$(jq 'del(.users)' <<<"$realm")"
@@ -49,8 +50,23 @@ else
     .authenticatorConfig, .requiredActions, .identityProviders, .identityProviderMappers,
     .defaultDefaultClientScopes, .defaultOptionalClientScopes, .defaultRole)' <<<"$realm")"
   api -X PUT "$KC/admin/realms/$REALM" --data-binary @- <<<"$settings"
-  jq '{ifResourceExists: "OVERWRITE", clients: .clients}' <<<"$realm" \
-    | api -X POST "$KC/admin/realms/$REALM/partialImport" --data-binary @- >/dev/null
+  # Clients are updated in place: a partial import with OVERWRITE deletes and recreates them,
+  # which ends every session that uses them ("Session doesn't have required client") and drops
+  # service-account role grants. New clients are created; missing protocol mappers are added.
+  while IFS= read -r client; do
+    client_id="$(jq -r .clientId <<<"$client")"
+    have="$(api -G "$KC/admin/realms/$REALM/clients" --data-urlencode "clientId=$client_id" | jq -r '.[0].id // empty')"
+    if [[ -z "$have" ]]; then
+      api -X POST "$KC/admin/realms/$REALM/clients" --data-binary "$client" >/dev/null
+      info "client ${client_id} created"
+      continue
+    fi
+    jq 'del(.protocolMappers)' <<<"$client" | api -X PUT "$KC/admin/realms/$REALM/clients/$have" --data-binary @- >/dev/null
+    existing="$(api "$KC/admin/realms/$REALM/clients/$have/protocol-mappers/models" | jq -c '[.[].name]')"
+    while IFS= read -r mapper; do
+      api -X POST "$KC/admin/realms/$REALM/clients/$have/protocol-mappers/models" --data-binary "$mapper" >/dev/null
+    done < <(jq -c --argjson have "$existing" '.protocolMappers // [] | .[] | select(.name as $n | $have | index($n) | not)' <<<"$client")
+  done < <(jq -c '.clients[]' <<<"$realm")
   # Demo users have fixed ids (seed data references them). Recreate any demo
   # user that an older realm created with a random id.
   while IFS=$'\t' read -r want username otp; do
@@ -115,8 +131,7 @@ api "$KC/admin/realms/$REALM/clients/$admin_client" \
   | api -X PUT "$KC/admin/realms/$REALM/clients/$admin_client" --data-binary @- >/dev/null
 info "admin console requires a one-time code (flow ${FLOW})"
 
-# Service accounts get their client roles here (the realm import cannot express
-# them, and overwriting a client recreates its service-account user).
+# Service accounts get their client roles here (the realm import cannot express them).
 grant_client_role() { # <service-account client> <resource client> <role>
   local sa_client res_client role sa_user
   sa_client="$(api "$KC/admin/realms/$REALM/clients?clientId=$1" | jq -r '.[0].id')"
@@ -137,6 +152,12 @@ info "new users accept the terms of use"
 grant_client_role registry-init apicurio-registry sr-admin
 # notifications reads e-mail and language at send time, nothing else.
 grant_client_role notifications realm-management view-users
+# admin-bff serves the console's user administration (ADR-0030): it finds users, suspends them,
+# signs them out, sends account e-mails, changes staff roles and reads login events. Every call
+# is made on behalf of a signed-in staff member and recorded in the audit log.
+for role in view-users query-users manage-users view-events view-realm; do
+  grant_client_role admin-bff realm-management "$role"
+done
 
 # --- BankID mock realm (development; ADR-0018) --------------------------------
 # A stand-in BankID OIDC provider for the trust service's identity verification,

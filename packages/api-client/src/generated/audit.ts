@@ -21,6 +21,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/audit/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit entries for the admin console (console tokens only)
+         * @description Platform admins read everything. Other staff must name a target (`targetId`) or
+         *     themselves (`actor`): the history of one object or their own actions. Not routed by the
+         *     gateway; the console calls it from its server (ADR-0030).
+         */
+        get: operations["adminAuditEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/audit/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Entries per day, top actions and most active staff (platform admins) */
+        get: operations["adminAuditStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -72,10 +111,31 @@ export interface components {
                 id: string;
             };
             reason: string | null;
+            /** @description What changed, as ids, codes and numbers (never names or free text about people) */
+            details: {
+                [key: string]: string | number | boolean | string[];
+            } | null;
             /** @description The service that recorded it (CloudEvents source) */
             source: string;
             /** Format: date-time */
             at: string;
+        };
+        AuditStats: {
+            days: {
+                /** Format: date */
+                day: string;
+                count: number;
+            }[];
+            actions: {
+                action: string;
+                count: number;
+            }[];
+            actors: {
+                /** Format: uuid */
+                id: string;
+                count: number;
+            }[];
+            total: number;
         };
         Problem: {
             type: string;
@@ -139,6 +199,64 @@ export interface operations {
                 };
             };
             400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminAuditEntries: {
+        parameters: {
+            query?: {
+                actor?: string;
+                action?: string;
+                targetType?: string;
+                targetId?: string;
+                /** @description Only entries older than this (the previous page's last `at`) */
+                before?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of entries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["AuditEntry"][];
+                        hasMore: boolean;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminAuditStats: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Statistics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditStats"];
+                };
+            };
             401: components["responses"]["Problem"];
             403: components["responses"]["Problem"];
         };

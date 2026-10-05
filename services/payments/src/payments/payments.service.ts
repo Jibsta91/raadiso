@@ -236,7 +236,7 @@ export class PaymentsService {
   }
 
   /** Refunds a captured order in full and ends its promotion (platform admins). */
-  async refund(principal: Principal, id: string) {
+  async refund(principal: Principal, id: string, reason?: { reasonCode: string; note: string }) {
     if (!principal.roles.some((r) => ADMINS.includes(r)))
       throw new ForbiddenException('Admins only');
     const row = await this.repo.get(id);
@@ -251,6 +251,13 @@ export class PaymentsService {
         action: 'payment.refund',
         targetType: 'order',
         targetId: id,
+        ...(reason?.note ? { reason: reason.note } : {}),
+        details: {
+          amountOre: r.amount_ore,
+          product: r.product,
+          userId: r.user_id,
+          ...(reason ? { reasonCode: reason.reasonCode } : {}),
+        },
       });
     });
     this.logger.log({ orderId: id, admin: principal.sub }, 'order refunded');

@@ -15,6 +15,7 @@ import {
   RouteSpanInterceptor,
 } from '@raadi/service-kit';
 import { LoggerModule } from 'nestjs-pino';
+import { NotificationsAdminController } from './notifications/admin.js';
 import { createTransport } from 'nodemailer';
 import type { AppConfig } from './config.js';
 import { Lifecycle } from './lifecycle.js';
@@ -54,7 +55,7 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [NotificationsController, HealthController],
+      controllers: [NotificationsController, NotificationsAdminController, HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         {

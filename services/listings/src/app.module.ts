@@ -26,6 +26,7 @@ import { ListingsController } from './listings/listings.controller.js';
 import { ListingsRepository } from './listings/listings.repository.js';
 import { ListingsService, SIGNER } from './listings/listings.service.js';
 import { ReportsController, ReportsService } from './listings/reports.js';
+import { ListingsAdminController, ListingsAdminService } from './listings/admin.js';
 import { APP_CONFIG, PG_POOL } from './tokens.js';
 
 @Module({})
@@ -60,6 +61,7 @@ export class AppModule {
         ListingsController,
         ReportsController,
         InternalListingsController,
+        ListingsAdminController,
         HealthController,
       ],
       providers: [
@@ -82,6 +84,7 @@ export class AppModule {
         ListingsRepository,
         ListingsService,
         ReportsService,
+        ListingsAdminService,
         PromotionsConsumer,
         Lifecycle,
         { provide: APP_GUARD, useClass: ThrottlerGuard },

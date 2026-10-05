@@ -298,6 +298,24 @@
       "defaultClientScopes": ["basic", "roles"]
     },
     {
+      "clientId": "admin-bff",
+      "name": "Admin console user administration (ADR-0030)",
+      "description": "Service account of admin-bff: user search, suspension, sign-out, account e-mails, staff roles, login events. Used only on behalf of signed-in staff, every action audited.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${ADMIN_KC_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "attributes": {
+        "access.token.lifespan": "300"
+      },
+      "defaultClientScopes": ["basic", "roles"]
+    },
+    {
       "clientId": "registry-init",
       "name": "Schema registration (init container)",
       "enabled": true,

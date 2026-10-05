@@ -156,6 +156,21 @@ export const contracts = {
     targetId: z.string().min(1).max(100),
     /** Why, in the actor's words (shown to other admins only). */
     reason: z.string().max(500).optional(),
+    /**
+     * What changed, as ids, codes and numbers (e.g. roles added and removed, a reason code, an
+     * amount). Never names, e-mail addresses or free text about people.
+     */
+    details: z
+      .record(
+        z.string().regex(/^[a-zA-Z][a-zA-Z0-9_]{0,39}$/),
+        z.union([
+          z.string().max(200),
+          z.number(),
+          z.boolean(),
+          z.array(z.string().max(100)).max(20),
+        ]),
+      )
+      .optional(),
     at: timestamp,
   }),
 } as const;

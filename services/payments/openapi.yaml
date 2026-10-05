@@ -18,6 +18,8 @@ servers:
   - url: http://raadi.localhost
     description: Local development through the gateway
 tags:
+  - name: admin
+    description: Admin console (console tokens only, ADR-0030)
   - name: orders
   - name: webhooks
 security: [{ bearer: [] }, { session: [] }]
@@ -151,6 +153,101 @@ paths:
       responses:
         '200': { description: Ready }
         '503': { description: Not ready }
+  /admin/v1/payments/orders:
+    get:
+      tags: [admin]
+      operationId: adminSearchOrders
+      summary: Orders (support, platform admins)
+      description: Admin console only (console tokens; not routed by the gateway, ADR-0030).
+      parameters:
+        - {
+            name: q,
+            in: query,
+            schema:
+              {
+                type: string,
+                maxLength: 40,
+                description: Start of an order id or provider reference,
+              },
+          }
+        - { name: user, in: query, schema: { type: string, format: uuid } }
+        - { name: listing, in: query, schema: { type: string, format: uuid } }
+        - {
+            name: status,
+            in: query,
+            schema:
+              {
+                type: string,
+                enum: [created, authorized, captured, refunded, cancelled, expired, failed],
+              },
+          }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 25 },
+          }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: A page of orders
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminOrderPage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/payments/stats:
+    get:
+      tags: [admin]
+      operationId: adminPaymentStats
+      summary: Revenue and order statistics
+      responses:
+        '200':
+          description: Statistics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentStats' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/payments/orders/{id}:
+    get:
+      tags: [admin]
+      operationId: adminOrder
+      summary: One order with its status history and promotion
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminOrderDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/payments/orders/{id}/refund:
+    post:
+      tags: [admin]
+      operationId: adminRefundOrder
+      summary: Refund a captured order (platform admins, step-up)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefundInput' }
+      responses:
+        '200':
+          description: Refunded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminOrderDetail' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -162,6 +259,185 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    AdminOrder:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          userId,
+          listingId,
+          product,
+          amountOre,
+          currency,
+          provider,
+          providerRef,
+          status,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        listingId: { type: string, format: uuid }
+        product: { type: string }
+        amountOre: { type: integer }
+        currency: { type: string, enum: [NOK] }
+        provider: { type: string }
+        providerRef: { type: [string, 'null'] }
+        status:
+          {
+            type: string,
+            enum: [created, authorized, captured, refunded, cancelled, expired, failed],
+          }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    AdminOrderPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, limit, offset]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminOrder' } }
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+    AdminOrderDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - userId
+        - listingId
+        - product
+        - amountOre
+        - currency
+        - provider
+        - providerRef
+        - status
+        - createdAt
+        - updatedAt
+        - events
+        - promotion
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        listingId:
+          type: string
+          format: uuid
+        product:
+          type: string
+        amountOre:
+          type: integer
+        currency:
+          type: string
+          enum:
+            - NOK
+        provider:
+          type: string
+        providerRef:
+          type:
+            - string
+            - 'null'
+        status:
+          type: string
+          enum:
+            - created
+            - authorized
+            - captured
+            - refunded
+            - cancelled
+            - expired
+            - failed
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        events:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - from
+              - to
+              - source
+              - at
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+              source:
+                type: string
+              at:
+                type: string
+                format: date-time
+        promotion:
+          oneOf:
+            - type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - startsAt
+                - endsAt
+                - revokedAt
+              properties:
+                startsAt:
+                  type: string
+                  format: date-time
+                endsAt:
+                  type: string
+                  format: date-time
+                revokedAt:
+                  type:
+                    - string
+                    - 'null'
+                  format: date-time
+    PaymentStats:
+      type: object
+      additionalProperties: false
+      required: [capturedOre30d, refundedOre30d, orders30d, byStatus, revenue, stuck]
+      properties:
+        capturedOre30d: { type: integer }
+        refundedOre30d: { type: integer }
+        orders30d: { type: integer }
+        byStatus:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [status, count]
+            properties: { status: { type: string }, count: { type: integer } }
+        revenue:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [day, ore, orders]
+            properties:
+              {
+                day: { type: string, format: date },
+                ore: { type: integer },
+                orders: { type: integer },
+              }
+        stuck: { type: integer }
+    RefundInput:
+      type: object
+      additionalProperties: false
+      required: [reasonCode]
+      properties:
+        reasonCode:
+          {
+            type: string,
+            enum: [customer_request, duplicate, service_failure, fraud, goodwill, other],
+          }
+        note: { type: string, maxLength: 500 }
     ProductId:
       type: string
       enum: [promote_7d, promote_30d]

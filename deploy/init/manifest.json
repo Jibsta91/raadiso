@@ -13,6 +13,7 @@
     "bff_session_key",
     "admin_oidc_client_secret",
     "admin_session_key",
+    "admin_kc_client_secret",
     "kafka_admin_password",
     "kafka_connect_password",
     "kafka_search_password",
@@ -196,7 +197,8 @@
       "openbao": {
         "db_password": "identity_db_password",
         "oidc_client_secret": "admin_oidc_client_secret",
-        "session_key": "admin_session_key"
+        "session_key": "admin_session_key",
+        "keycloak_client_secret": "admin_kc_client_secret"
       },
       "shared": ["valkey"]
     },

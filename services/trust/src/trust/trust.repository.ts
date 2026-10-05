@@ -242,6 +242,7 @@ export class TrustRepository {
     id: string,
     by: 'author' | 'moderator',
     moderator?: Principal,
+    decision: { reasonCode?: string; note?: string } = {},
   ): Promise<boolean> {
     return withTransaction(this.pool, async (client) => {
       const { rowCount } = await client.query(
@@ -253,6 +254,8 @@ export class TrustRepository {
           action: 'review.remove',
           targetType: 'review',
           targetId: id,
+          ...(decision.note ? { reason: decision.note } : {}),
+          ...(decision.reasonCode ? { details: { reasonCode: decision.reasonCode } } : {}),
         });
       }
       return rowCount === 1;

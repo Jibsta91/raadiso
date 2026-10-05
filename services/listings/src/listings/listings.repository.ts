@@ -8,6 +8,7 @@ import {
   type CreateListing,
   type ListingRow,
   type ListingStatus,
+  type RemovalReason,
   toSnapshot,
 } from './listing.model.js';
 
@@ -181,12 +182,14 @@ export class ListingsRepository {
     id: string,
     reason: 'owner' | 'moderation',
     moderator?: Principal,
+    decision: { reasonCode?: RemovalReason; note?: string } = {},
   ): Promise<ListingRow | null> {
     return withTransaction(this.pool, async (client) => {
       const { rows } = await client.query<ListingRow>(
-        `UPDATE listings SET status = 'deleted', version = version + 1, updated_at = now()
+        `UPDATE listings SET status = 'deleted', version = version + 1, updated_at = now(),
+                removed_by = $2, removal_reason = $3
           WHERE id = $1 AND status <> 'deleted' RETURNING ${COLUMNS}`,
-        [id],
+        [id, reason, decision.reasonCode ?? null],
       );
       const row = rows[0];
       if (!row) return null;
@@ -199,15 +202,22 @@ export class ListingsRepository {
         reason,
       });
       if (moderator) {
-        await client.query(
-          `UPDATE reports SET status = 'resolved', handled_by = $2, handled_at = now()
+        const { rowCount } = await client.query(
+          `UPDATE reports SET status = 'resolved', handled_by = $2, handled_at = now(),
+                  handled_note = $3
             WHERE listing_id = $1 AND status = 'open'`,
-          [row.id, moderator.sub],
+          [row.id, moderator.sub, decision.note || null],
         );
         await audit(client, 'urn:raadi:listings', moderator, {
           action: 'listing.remove',
           targetType: 'listing',
           targetId: row.id,
+          ...(decision.note ? { reason: decision.note } : {}),
+          details: {
+            ownerId: row.owner_id,
+            reports: rowCount ?? 0,
+            ...(decision.reasonCode ? { reasonCode: decision.reasonCode } : {}),
+          },
         });
       }
       return row;

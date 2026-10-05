@@ -17,6 +17,8 @@ servers:
   - url: http://raadi.localhost
     description: Local development through the gateway
 tags:
+  - name: admin
+    description: Admin console (console tokens only, ADR-0030)
   - name: messaging
 security: [{ bearer: [] }, { session: [] }]
 paths:
@@ -184,6 +186,35 @@ paths:
       responses:
         '200': { description: Ready }
         '503': { description: A dependency is unavailable or the service is draining }
+  /admin/v1/messaging/users/{id}:
+    get:
+      tags: [admin]
+      operationId: adminMessagingUser
+      summary: A user's conversation and block counts (never message text)
+      description: Admin console only (console tokens; not routed by the gateway, ADR-0030).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Counts
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessagingUserStats' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/messaging/stats:
+    get:
+      tags: [admin]
+      operationId: adminMessagingStats
+      summary: Messages per day and recent conversations and blocks
+      responses:
+        '200':
+          description: Statistics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MessagingStats' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -195,6 +226,42 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    MessagingUserStats:
+      type: object
+      additionalProperties: false
+      required: [userId, conversations, messagesSent30d, lastMessageAt, blocks]
+      properties:
+        userId: { type: string, format: uuid }
+        conversations:
+          type: object
+          additionalProperties: false
+          required: [asBuyer, asSeller]
+          properties: { asBuyer: { type: integer }, asSeller: { type: integer } }
+        messagesSent30d: { type: integer }
+        lastMessageAt: { type: [string, 'null'], format: date-time }
+        blocks:
+          type: object
+          additionalProperties: false
+          required: [given, received]
+          properties: { given: { type: integer }, received: { type: integer } }
+    MessagingStats:
+      type: object
+      additionalProperties: false
+      required: [messages, conversations7d, blocks7d]
+      properties:
+        messages:
+          {
+            type: array,
+            items:
+              {
+                type: object,
+                additionalProperties: false,
+                required: [day, count],
+                properties: { day: { type: string, format: date }, count: { type: integer } },
+              },
+          }
+        conversations7d: { type: integer }
+        blocks7d: { type: integer }
     MessageBody:
       type: string
       minLength: 1

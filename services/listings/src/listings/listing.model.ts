@@ -86,6 +86,18 @@ export type UpdateListing = z.infer<typeof updateListingSchema>;
 /** Validates the result of applying a PATCH to the stored listing. */
 export const mergedListingSchema = z.object(fields).superRefine(validateListing);
 
+/** Why a moderator removed a listing (ADR-0030). */
+export const REMOVAL_REASONS = [
+  'fraud',
+  'prohibited',
+  'offensive',
+  'wrong_category',
+  'duplicate',
+  'spam',
+  'other',
+] as const;
+export type RemovalReason = (typeof REMOVAL_REASONS)[number];
+
 export interface ListingRow {
   id: string;
   owner_id: string;

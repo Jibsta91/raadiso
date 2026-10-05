@@ -666,6 +666,58 @@ login_as "kari.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as k
 req GET "$ADMIN/auth/session"
 [[ "$(json '.authenticated')" == "false" ]] && ok "the website's session does not open the console" || fail "session leak"
 
+section "Console staff APIs (ADR-0030)"
+# token_from <bff> <cookie name>: the bearer token the BFF hands out for the jar's session cookie.
+token_from() {
+  local sid; sid="$(awk -v n="$2" '$6 == n { v = $7 } END { print v }' "$JAR")"
+  curl -s -D - -o /dev/null --max-time 10 -H "cookie: $2=$sid" -H 'x-forwarded-method: GET' \
+    "http://$1:4000/auth/forward" | tr -d '\r' | sed -n 's/^[Aa]uthorization: Bearer //p'
+}
+staff_api() { # <token> <method> <url> [body]: prints the HTTP status, body in $BODY
+  curl -s -o "$BODY" -w '%{http_code}' --max-time 15 -X "$2" -H "authorization: Bearer $1" \
+    -H 'content-type: application/json' ${4:+--data "$4"} "$3"
+}
+req GET "$PUBLIC/admin/v1/listings"
+[[ "$status" != "200" ]] && ok "staff APIs are not routed by the gateway" || fail "staff API exposed" "HTTP $status"
+login_as "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as admin"
+web_token="$(token_from identity-bff raadi_sid)"
+[[ "$(staff_api "$web_token" GET http://listings:4000/admin/v1/listings)" == "403" ]] \
+  && ok "a website token never opens staff APIs, even a platform admin's" || fail "website token accepted" "$(head -c 200 "$BODY")"
+login_as "support@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" "$ADMIN" || fail "console login as support"
+support_token="$(token_from admin-bff raadi_admin_sid)"
+[[ "$(staff_api "$support_token" GET "http://admin-bff:4000/admin/v1/users?q=amina")" == "200" ]] \
+  && [[ "$(json '.items[0].email')" == amina.hassan@* ]] && ok "support finds an account through admin-bff (Keycloak service account)" \
+  || fail "user search" "$(head -c 200 "$BODY")"
+amina="$(json '.items[0].id')"
+[[ "$(staff_api "$support_token" GET http://listings:4000/admin/v1/listings/workbench)" == "403" ]] \
+  && ok "support cannot work the moderation queue" || fail "support moderation" "HTTP $(head -c 100 "$BODY")"
+[[ "$(staff_api "$support_token" POST "http://admin-bff:4000/admin/v1/users/$amina/suspend" '{"reasonCode":"spam","note":"smoke"}')" == "204" ]] \
+  && ok "support suspends an account (fresh sign-in passes step-up)" || fail "suspend" "$(head -c 200 "$BODY")"
+staff_api "$support_token" GET "http://admin-bff:4000/admin/v1/users/$amina" >/dev/null
+[[ "$(json '.suspended')" == "true" && "$(json '.suspension.reasonCode')" == "spam" ]] \
+  && ok "the account shows as suspended, with the reason" || fail "suspension state" "$(head -c 200 "$BODY")"
+[[ "$(staff_api "$support_token" POST "http://admin-bff:4000/admin/v1/users/$amina/unsuspend" '{"note":"smoke over"}')" == "204" ]] \
+  && ok "support lifts the suspension" || fail "unsuspend" "$(head -c 200 "$BODY")"
+moderator_id="1a9e3c5b-7d2f-4e8a-b6c1-9f0d4a2e7b44"
+[[ "$(staff_api "$support_token" POST "http://admin-bff:4000/admin/v1/users/$moderator_id/suspend" '{"reasonCode":"spam"}')" == "403" ]] \
+  && ok "support cannot suspend staff" || fail "support suspended staff" "$(head -c 200 "$BODY")"
+[[ "$(staff_api "$support_token" PUT "http://admin-bff:4000/admin/v1/users/$amina/roles" '{"roles":["support"],"note":"nope"}')" == "403" ]] \
+  && ok "only platform admins change staff roles" || fail "roles by support" "$(head -c 200 "$BODY")"
+req GET "$ADMIN/en/admin/users/$amina"
+expect_status 200 "support opens an account in the console"
+req GET "$ADMIN/en/admin/operations"
+expect_status 404 "support cannot open operations"
+login_as "operator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" "$ADMIN" || fail "console login as operator"
+req GET "$ADMIN/en/admin/operations"
+expect_status 200 "an operator opens operations"
+req GET "$ADMIN/en/admin/users"
+expect_status 404 "an operator never sees user data"
+operator_token="$(token_from admin-bff raadi_admin_sid)"
+[[ "$(staff_api "$operator_token" GET http://notifications:4000/admin/v1/notifications/queues)" == "200" ]] \
+  && ok "an operator reads the delivery queues" || fail "queues" "$(head -c 200 "$BODY")"
+[[ "$(staff_api "$operator_token" GET "http://admin-bff:4000/admin/v1/users/$amina")" == "403" ]] \
+  && ok "an operator cannot read accounts" || fail "operator account read" "$(head -c 200 "$BODY")"
+
 section "Audit log (ADR-0028)"
 login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"
 req GET "$PUBLIC/api/v1/audit/entries"
@@ -676,6 +728,7 @@ audited() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" -G "$PUBLIC/
 eventually "the refund is in the audit log (outbox -> Kafka -> audit)" 90 audited payment.refund "$order_id"
 eventually "the moderator's removal is in the audit log" 90 audited listing.remove "$listing"
 eventually "dismissed reports are in the audit log" 90 audited reports.dismiss "$kari_listing"
+eventually "the suspension is in the audit log (admin-bff outbox)" 90 audited user.suspend "$amina"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Operations"

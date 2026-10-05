@@ -19,6 +19,7 @@ import type { AppConfig } from './config.js';
 import { Lifecycle } from './lifecycle.js';
 import { BankIdClient } from './trust/bankid.js';
 import { ListingsClient } from './trust/listings.client.js';
+import { TrustAdminController, TrustAdminService } from './trust/admin.js';
 import { TrustController } from './trust/trust.controller.js';
 import { TrustRepository } from './trust/trust.repository.js';
 import { TrustService } from './trust/trust.service.js';
@@ -54,7 +55,7 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [TrustController, HealthController],
+      controllers: [TrustController, TrustAdminController, HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         { provide: PG_POOL, useFactory: () => createPgPool(env, secrets.db_password, 'trust') },
@@ -64,6 +65,7 @@ export class AppModule {
         { provide: ListingsClient, useValue: new ListingsClient(env.LISTINGS_URL) },
         TrustRepository,
         TrustService,
+        TrustAdminService,
         TrustWorkers,
         Lifecycle,
         { provide: APP_GUARD, useClass: ThrottlerGuard },

@@ -97,6 +97,38 @@ export type PaymentProduct = PaymentsComponents['schemas']['Product'];
 export type PaymentOrder = PaymentsComponents['schemas']['Order'];
 export type PaymentOrderInput = PaymentsComponents['schemas']['OrderInput'];
 
+// Admin console (ADR-0030): staff endpoints, console tokens only
+export type StaffRole = IdentityComponents['schemas']['StaffRole'];
+export type AdminUser = IdentityComponents['schemas']['AdminUser'];
+export type AdminUserPage = IdentityComponents['schemas']['AdminUserPage'];
+export type AdminUserDetail = IdentityComponents['schemas']['AdminUserDetail'];
+export type SuspensionReason = IdentityComponents['schemas']['SuspensionReason'];
+export type UserStats = IdentityComponents['schemas']['UserStats'];
+export type StaffIdentity = IdentityComponents['schemas']['StaffIdentity'];
+export type UserNote = IdentityComponents['schemas']['UserNote'];
+export type AdminListing = ListingsComponents['schemas']['AdminListing'];
+export type AdminListingPage = ListingsComponents['schemas']['AdminListingPage'];
+export type AdminListingDetail = ListingsComponents['schemas']['AdminListingDetail'];
+export type AdminReport = ListingsComponents['schemas']['AdminReport'];
+export type RemovalReason = ListingsComponents['schemas']['RemovalReason'];
+export type SellerSnapshot = ListingsComponents['schemas']['SellerSnapshot'];
+export type WorkbenchItem = ListingsComponents['schemas']['WorkbenchItem'];
+export type ModerationDecision = ListingsComponents['schemas']['ModerationDecision'];
+export type ListingStats = ListingsComponents['schemas']['ListingStats'];
+export type AdminOrder = PaymentsComponents['schemas']['AdminOrder'];
+export type AdminOrderPage = PaymentsComponents['schemas']['AdminOrderPage'];
+export type AdminOrderDetail = PaymentsComponents['schemas']['AdminOrderDetail'];
+export type PaymentStats = PaymentsComponents['schemas']['PaymentStats'];
+export type AdminReview = TrustComponents['schemas']['AdminReview'];
+export type AdminReviewPage = TrustComponents['schemas']['AdminReviewPage'];
+export type UserTrust = TrustComponents['schemas']['UserTrust'];
+export type MessagingUserStats = MessagingComponents['schemas']['MessagingUserStats'];
+export type MessagingStats = MessagingComponents['schemas']['MessagingStats'];
+export type NotificationsUser = NotificationsComponents['schemas']['NotificationsUser'];
+export type QueueStats = NotificationsComponents['schemas']['QueueStats'];
+export type IndexStatus = SearchComponents['schemas']['IndexStatus'];
+export type AuditStats = AuditComponents['schemas']['AuditStats'];
+
 /*
  * Typed clients shared by web and mobile:
  *   - web (server side): baseUrl = the service (internal) or the gateway

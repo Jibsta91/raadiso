@@ -13,6 +13,8 @@ servers:
   - url: http://raadi.localhost
     description: Local development through the gateway
 tags:
+  - name: admin
+    description: Admin console (console tokens only, ADR-0030)
   - name: audit
 security: [{ bearer: [] }, { session: [] }]
 paths:
@@ -52,6 +54,61 @@ paths:
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/audit/entries:
+    get:
+      tags: [audit]
+      operationId: adminAuditEntries
+      summary: Audit entries for the admin console (console tokens only)
+      description: |
+        Platform admins read everything. Other staff must name a target (`targetId`) or
+        themselves (`actor`): the history of one object or their own actions. Not routed by the
+        gateway; the console calls it from its server (ADR-0030).
+      parameters:
+        - { name: actor, in: query, schema: { type: string, format: uuid } }
+        - { name: action, in: query, schema: { type: string, maxLength: 60 } }
+        - { name: targetType, in: query, schema: { type: string, maxLength: 30 } }
+        - { name: targetId, in: query, schema: { type: string, maxLength: 100 } }
+        - {
+            name: before,
+            in: query,
+            description: Only entries older than this (the previous page's last `at`),
+            schema: { type: string, format: date-time },
+          }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 200, default: 50 },
+          }
+      responses:
+        '200':
+          description: A page of entries
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, hasMore]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/AuditEntry' } }
+                  hasMore: { type: boolean }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/audit/stats:
+    get:
+      tags: [audit]
+      operationId: adminAuditStats
+      summary: Entries per day, top actions and most active staff (platform admins)
+      parameters:
+        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 90, default: 14 } }
+      responses:
+        '200':
+          description: Statistics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuditStats' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
   /healthz:
     get:
       operationId: liveness
@@ -78,7 +135,7 @@ components:
     AuditEntry:
       type: object
       additionalProperties: false
-      required: [id, actor, action, target, reason, source, at]
+      required: [id, actor, action, target, reason, details, source, at]
       properties:
         id: { type: string, format: uuid }
         actor:
@@ -97,8 +154,44 @@ components:
             type: { type: string }
             id: { type: string }
         reason: { type: [string, 'null'] }
+        details:
+          type: [object, 'null']
+          description: What changed, as ids, codes and numbers (never names or free text about people)
+          additionalProperties:
+            oneOf:
+              - { type: string }
+              - { type: number }
+              - { type: boolean }
+              - { type: array, items: { type: string } }
         source: { type: string, description: The service that recorded it (CloudEvents source) }
         at: { type: string, format: date-time }
+    AuditStats:
+      type: object
+      additionalProperties: false
+      required: [days, actions, actors, total]
+      properties:
+        days:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [day, count]
+            properties: { day: { type: string, format: date }, count: { type: integer } }
+        actions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [action, count]
+            properties: { action: { type: string }, count: { type: integer } }
+        actors:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, count]
+            properties: { id: { type: string, format: uuid }, count: { type: integer } }
+        total: { type: integer }
     Problem:
       type: object
       required: [type, title, status]
