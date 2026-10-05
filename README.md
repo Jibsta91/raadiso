@@ -16,6 +16,9 @@ docker compose up
 When the stack is ready, the `summary` container prints every URL and the demo logins. Open
 **http://raadi.localhost**.
 
+> Something off? `./raadi doctor` checks Docker, memory, disk, ports, name resolution and the clock, and
+> says how to fix each problem (`./raadi up` runs it first).
+>
 > `*.localhost` resolves to your machine without editing the hosts file. HTTPS also works
 > (`https://raadi.localhost`) with a dev CA generated inside a container; trusting it is optional
 > (`./raadi ca-cert`). The first run builds images and takes a few minutes; later starts take about a minute.
@@ -127,7 +130,9 @@ Each command is available as `./raadi <command>` or `make <command>`. Everything
 
 | Command                                      | What it does                                                          |
 | -------------------------------------------- | --------------------------------------------------------------------- |
+| `./raadi doctor`                             | check this machine first: Docker, memory, disk, ports, DNS, clock     |
 | `./raadi up` / `down`                        | start (and wait until healthy) / stop                                 |
+| `./raadi status`                             | health, memory against each limit and CPU of every service            |
 | `./raadi dev`                                | hot-reload mode: source bind-mounted, `node_modules` in named volumes |
 | `./raadi lint` · `typecheck` · `test`        | quality checks in the toolbox                                         |
 | `./raadi test-integration`                   | Testcontainers tests (PostgreSQL, Valkey, OpenSearch)                 |

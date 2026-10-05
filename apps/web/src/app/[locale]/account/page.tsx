@@ -16,7 +16,6 @@ import { RemoveVerification, VerifyButton } from '@/components/trust/verificatio
 import { VerifiedBadge } from '@/components/trust/verified-badge';
 import { Link } from '@/i18n/navigation';
 import { myTrust } from '@/lib/api';
-import { env } from '@/lib/env';
 import { getMe, getSession } from '@/lib/session';
 import { parseTheme, THEME_COOKIE } from '@/lib/theme';
 
@@ -154,8 +153,8 @@ export default async function AccountPage({
           <CardDescription>{t('securityHint')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
-          <Button asChild variant="outline">
-            <a href={`${env.authBaseUrl}/realms/${env.realm}/account`}>{t('manageSecurity')}</a>
+          <Button asChild variant="outline" data-testid="open-security">
+            <Link href="/account/security">{t('manageSecurity')}</Link>
           </Button>
           <form action="/auth/logout" method="post">
             <Button type="submit" variant="secondary">

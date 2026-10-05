@@ -1,0 +1,35 @@
+# Synthetic probes of the main journeys through the gateway (ADR-0031). Prometheus passes the
+# target URL (http://traefik/...) and the public host name (?hostname=), so the request takes the
+# same route as a visitor's: Traefik router, middlewares, service.
+modules:
+  page:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ip4
+      follow_redirects: false
+      valid_status_codes: [200]
+      fail_if_body_not_matches_regexp: ['(?i)<html']
+  json_items:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ip4
+      follow_redirects: false
+      valid_status_codes: [200]
+      fail_if_body_not_matches_regexp: ['"items"']
+  oidc_discovery:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ip4
+      valid_status_codes: [200]
+      fail_if_body_not_matches_regexp: ['"authorization_endpoint"']
+  sign_in_redirect:
+    # The console sends visitors to sign in: proves web, the admin host and its routing.
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ip4
+      follow_redirects: false
+      valid_status_codes: [302, 303, 307, 308]

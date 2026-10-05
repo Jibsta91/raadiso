@@ -79,9 +79,10 @@ export function Panel({
 const TONES = {
   neutral: 'bg-muted text-subtle-foreground',
   info: 'bg-soft text-soft-foreground',
-  good: 'bg-success/12 text-success',
+  // Light mode darkens the text a little: small bold text needs 4.5:1 on the tinted background.
+  good: 'bg-success/12 text-[color-mix(in_oklab,var(--success),black_25%)] dark:text-success',
   warn: 'bg-highlight/40 text-highlight-foreground dark:bg-highlight/15 dark:text-highlight',
-  bad: 'bg-destructive/12 text-destructive',
+  bad: 'bg-destructive/12 text-[color-mix(in_oklab,var(--destructive),black_25%)] dark:text-destructive',
   ink: 'bg-ink text-ink-foreground',
 } as const;
 export type Tone = keyof typeof TONES;
@@ -356,7 +357,8 @@ export function Avatar({
         'inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white',
         { sm: 'size-7 text-[11px]', md: 'size-9 text-xs', lg: 'size-14 text-lg' }[size],
       )}
-      style={{ background: `oklch(0.58 0.14 ${hue})` }}
+      // L 0.45 keeps white initials above 4.5:1 contrast for every hue (WCAG AA).
+      style={{ background: `oklch(0.45 0.13 ${hue})` }}
     >
       {initials}
     </span>

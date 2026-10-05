@@ -106,6 +106,7 @@ export type SuspensionReason = IdentityComponents['schemas']['SuspensionReason']
 export type UserStats = IdentityComponents['schemas']['UserStats'];
 export type StaffIdentity = IdentityComponents['schemas']['StaffIdentity'];
 export type UserNote = IdentityComponents['schemas']['UserNote'];
+export type SecurityOverview = IdentityComponents['schemas']['SecurityOverview'];
 export type AdminListing = ListingsComponents['schemas']['AdminListing'];
 export type AdminListingPage = ListingsComponents['schemas']['AdminListingPage'];
 export type AdminListingDetail = ListingsComponents['schemas']['AdminListingDetail'];

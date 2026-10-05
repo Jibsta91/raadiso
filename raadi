@@ -18,6 +18,8 @@ Platform
   dev                hot-reload mode (source bind-mounted; Ctrl-C to stop)
   logs [svc...]      follow logs
   ps                 show services and health
+  status             health, memory and CPU of every service, against the memory budget
+  doctor             check this machine before 'up' (Docker, memory, disk, ports, DNS, clock)
   summary            print URLs and demo logins again
   restart <svc...>   restart services (e.g. after editing deploy/traefik/*)
   migrate            run database migrations
@@ -51,10 +53,126 @@ Phone (docs/mobile.md)
 USAGE
 }
 
+# --- doctor / status ---------------------------------------------------------------------------
+G=$'\033[32m'; Y=$'\033[33m'; R=$'\033[31m'; B=$'\033[1m'; D=$'\033[2m'; N=$'\033[0m'
+[[ -t 1 ]] || { G=; Y=; R=; B=; D=; N=; }
+doctor_fail=0; doctor_warn=0
+pass() { printf '  %s✔%s %s\n' "$G" "$N" "$1"; }
+warn() { printf '  %s!%s %s\n    %s%s%s\n' "$Y" "$N" "$1" "$D" "$2" "$N"; doctor_warn=$((doctor_warn + 1)); }
+bad() { printf '  %s✖%s %s\n    %s%s%s\n' "$R" "$N" "$1" "$D" "$2" "$N"; doctor_fail=$((doctor_fail + 1)); }
+version_ge() { [[ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -1)" == "$2" ]]; }
+
+# Everything 'docker compose up' needs from this machine, with a fix for each problem.
+doctor() {
+  printf '%sRaadi doctor%s\n\n' "$B" "$N"
+  if ! command -v docker >/dev/null; then
+    bad "Docker is not installed" "Install Docker Desktop or Docker Engine with Compose v2 (docs/development.md)."
+    return 1
+  fi
+  if ! docker info >/dev/null 2>&1; then
+    bad "The Docker daemon does not answer" "Start Docker Desktop (Linux: systemctl --user restart docker-desktop)."
+    return 1
+  fi
+  local server compose
+  server="$(docker version --format '{{.Server.Version}}' 2>/dev/null)"
+  version_ge "$server" 24.0.0 && pass "Docker Engine $server" || bad "Docker Engine $server is too old" "Raadi needs 24 or newer."
+  compose="$(docker compose version --short 2>/dev/null | sed 's/^v//')"
+  if [[ -z "$compose" ]]; then bad "Docker Compose v2 is missing" "Install the compose plugin (docker compose, not docker-compose)."
+  elif version_ge "$compose" 2.24.0; then pass "Docker Compose $compose"
+  else bad "Docker Compose $compose is too old" "Raadi needs 2.24 or newer (include, depends_on conditions)."; fi
+
+  local mem_gib cpus
+  mem_gib=$(( $(docker info --format '{{.MemTotal}}') / 1024 / 1024 / 1024 ))
+  cpus="$(docker info --format '{{.NCPU}}')"
+  if (( mem_gib >= 14 )); then pass "${mem_gib} GiB memory for containers"
+  elif (( mem_gib >= 11 )); then warn "${mem_gib} GiB memory for containers" "Enough for the stack; 16 GiB leaves room for tests and builds (ADR-0011)."
+  else bad "Only ${mem_gib} GiB memory for containers" "Give Docker 12 GiB or more (Docker Desktop: Settings > Resources)."; fi
+  (( cpus >= 4 )) && pass "$cpus CPUs" || warn "$cpus CPUs" "Builds and cold starts are slow below 4."
+
+  # Free space where images and volumes live (inside Docker Desktop's VM), measured from a container.
+  local image free_gib
+  image="$(docker image ls --format '{{.Repository}}:{{.Tag}}' raadi/init 2>/dev/null | head -1)"
+  if [[ -n "$image" ]]; then
+    free_gib=$(( $(docker run --rm --network none --entrypoint sh "$image" -c "df -Pk /etc/hostname | awk 'NR==2 {print \$4}'" 2>/dev/null || echo 0) / 1024 / 1024 ))
+    if (( free_gib >= 20 )); then pass "${free_gib} GiB free for images and volumes"
+    elif (( free_gib >= 8 )); then warn "${free_gib} GiB free for images and volumes" "Builds need room: docker builder prune, docker image prune."
+    else bad "Only ${free_gib} GiB free for images and volumes" "'no match for platform' and failed builds follow. Run docker system prune."; fi
+  else
+    pass "Disk: checked after the first build"
+  fi
+
+  # Docker Desktop for Linux only shares /home with its VM.
+  if [[ "$(docker info --format '{{.OperatingSystem}}')" == *"Docker Desktop"* && "$(uname -s)" == Linux && "$PWD" != /home/* ]]; then
+    bad "The checkout is outside /home" "Docker Desktop for Linux shares only /home: bind mounts (dev mode, toolbox) will be empty."
+  else
+    pass "Checkout at $PWD"
+  fi
+  [[ -f .env ]] && pass ".env present" || bad ".env is missing" "Restore it from git (git checkout .env); .env.example documents it."
+
+  local domain bind port holder
+  domain="$(sed -n 's/^RAADI_DOMAIN=//p' .env)"; bind="$(sed -n 's/^BIND_ADDRESS=//p' .env)"
+  for host in "$domain" "admin.$domain" "auth.$domain"; do
+    if getent hosts "$host" 2>/dev/null | grep -qE '^(127\.|::1)'; then pass "$host resolves to this machine"
+    elif [[ "$domain" == *.localhost ]]; then warn "$host does not resolve here" "Browsers resolve *.localhost themselves; for curl add it to /etc/hosts."
+    else warn "$host does not resolve to this machine" "Expected in phone mode or on a server; check DNS (./raadi dns)."; fi
+  done
+  for port in 80 443; do
+    holder="$(docker ps --filter "publish=$port" --format '{{.Names}}' | head -1)"
+    if [[ "$holder" == raadi-traefik-* ]]; then pass "Port $port is Raadi's gateway"
+    elif [[ -n "$holder" ]]; then bad "Port $port is taken by container $holder" "Stop it, or set BIND_ADDRESS in .env."
+    elif command -v ss >/dev/null && ss -Hltn "sport = :$port" 2>/dev/null | grep -q .; then
+      bad "Port $port on ${bind:-127.0.0.1} is in use by another program" "Find it with: sudo ss -ltnp 'sport = :$port'"
+    else pass "Port $port is free"; fi
+  done
+
+  # One-time codes and token lifetimes depend on the containers' clock agreeing with yours.
+  local skew
+  if [[ -n "$image" ]]; then
+    skew=$(( $(docker run --rm --network none --entrypoint date "$image" +%s 2>/dev/null || date +%s) - $(date +%s) ))
+    (( ${skew#-} <= 5 )) && pass "Clock in step with Docker (${skew}s)" \
+      || bad "Docker's clock is ${skew}s off" "One-time codes and tokens fail. Restart Docker Desktop (it re-syncs the VM clock)."
+  fi
+
+  if docker compose ps -q 2>/dev/null | grep -q .; then
+    local unhealthy
+    unhealthy="$(docker compose ps --format '{{.Service}} {{.Health}}' | awk '$2 == "unhealthy" {print $1}' | xargs)"
+    [[ -z "$unhealthy" ]] && pass "Running stack: no unhealthy services" \
+      || bad "Unhealthy: $unhealthy" "./raadi logs $unhealthy — after laptop sleep: systemctl --user restart docker-desktop."
+  fi
+
+  printf '\n'
+  if (( doctor_fail )); then printf '%s%d problem(s)%s, %d warning(s).\n' "$R" "$doctor_fail" "$N" "$doctor_warn"; return 1; fi
+  printf '%sReady.%s %d warning(s). Next: ./raadi up\n' "$G" "$N" "$doctor_warn"
+}
+
+# A one-screen view of the running stack: health, memory against each limit, CPU.
+status() {
+  local stats
+  stats="$(docker stats --no-stream --format '{{.Name}}|{{.MemUsage}}|{{.CPUPerc}}' 2>/dev/null)"
+  printf '%s%-24s %-10s %-22s %7s%s\n' "$B" SERVICE HEALTH "MEMORY (USED / LIMIT)" CPU "$N"
+  docker compose ps --format '{{.Name}}|{{.Service}}|{{.State}}|{{.Health}}' | sort -t'|' -k2 \
+    | while IFS='|' read -r name service state health; do
+      local line mem cpu colour=$G label="${health:-$state}"
+      line="$(grep "^$name|" <<<"$stats")"; mem="$(cut -d'|' -f2 <<<"$line")"; cpu="$(cut -d'|' -f3 <<<"$line")"
+      [[ "$label" == healthy || "$label" == running ]] || colour=$Y
+      [[ "$label" == unhealthy || "$state" == exited ]] && colour=$R
+      printf '%-24s %s%-10s%s %-22s %7s\n' "$service" "$colour" "$label" "$N" "${mem:--}" "${cpu:--}"
+    done
+  local total
+  total="$(docker stats --no-stream --format '{{.MemUsage}}' | awk '{u=$1; if (u ~ /GiB/) v=u+0; else if (u ~ /MiB/) v=(u+0)/1024; else v=(u+0)/1048576; s+=v} END {printf "%.1f", s}')"
+  printf '\n%sIn use: %s GiB of %s GiB%s (budget: ADR-0011)\n' "$B" "$total" \
+    "$(( $(docker info --format '{{.MemTotal}}') / 1024 / 1024 / 1024 ))" "$N"
+}
+
 cmd="${1:-help}"; shift || true
 case "$cmd" in
   help|-h|--help) usage ;;
   up)
+    # Fail early with a fix instead of halfway through a cold start (RAADI_SKIP_DOCTOR=1 skips).
+    if [[ -z "${RAADI_SKIP_DOCTOR:-}" ]] && ! doctor >/tmp/raadi-doctor.$$ 2>&1; then
+      cat /tmp/raadi-doctor.$$; rm -f /tmp/raadi-doctor.$$; exit 1
+    fi
+    rm -f /tmp/raadi-doctor.$$
     "${DC[@]}" up -d --wait "$@"
     "${DC[@]}" logs --no-log-prefix summary | sed -n '/┌/,$p'
     ;;
@@ -62,6 +180,8 @@ case "$cmd" in
   dev) "${DEV[@]}" up --build "$@" ;;
   logs) "${DC[@]}" logs -f --tail=200 "$@" ;;
   ps) "${DC[@]}" ps -a ;;
+  status) status ;;
+  doctor) doctor ;;
   summary) "${DC[@]}" logs --no-log-prefix summary | sed -n '/┌/,$p' ;;
   restart) "${DC[@]}" restart "$@" ;;
   migrate) "${DC[@]}" run --rm db-init ;;

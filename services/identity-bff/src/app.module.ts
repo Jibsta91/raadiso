@@ -21,6 +21,7 @@ import { createPool, createValkey, type Valkey } from './infra/clients.js';
 import { ValkeyThrottlerStorage } from './infra/throttler-storage.js';
 import { Lifecycle } from './lifecycle.js';
 import { MeController } from './me/me.controller.js';
+import { AccountClient, SecurityController } from './me/security.controller.js';
 import { KeycloakAdmin } from './staff/keycloak-admin.js';
 import { KEYCLOAK_ADMIN, UserAdminController, UserAdminService } from './staff/users.admin.js';
 import { APP_CONFIG, PG_POOL, VALKEY } from './tokens.js';
@@ -72,7 +73,13 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [AuthController, MeController, ...staff.controllers, HealthController],
+      controllers: [
+        AuthController,
+        MeController,
+        SecurityController,
+        ...staff.controllers,
+        HealthController,
+      ],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         { provide: VALKEY, useValue: valkey satisfies Valkey },
@@ -89,6 +96,7 @@ export class AppModule {
         SessionStore,
         OidcService,
         UsersRepository,
+        AccountClient,
         ...staff.providers,
         Lifecycle,
         { provide: APP_GUARD, useClass: ThrottlerGuard },

@@ -43,6 +43,7 @@
   "webAuthnPolicyUserVerificationRequirement": "preferred",
   "webAuthnPolicyPasswordlessRpEntityName": "Raadi",
   "webAuthnPolicyPasswordlessRpId": "${RAADI_DOMAIN}",
+  "webAuthnPolicyPasswordlessPasskeysEnabled": true,
   "webAuthnPolicyPasswordlessRequireResidentKey": "Yes",
   "webAuthnPolicyPasswordlessUserVerificationRequirement": "required",
   "smtpServer": {

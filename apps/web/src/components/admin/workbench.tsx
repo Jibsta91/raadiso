@@ -108,20 +108,16 @@ export function Workbench({
           </div>
         ) : null}
         <ul
-          role="listbox"
           aria-label={t('queue')}
           className="max-h-[calc(100vh-14rem)] space-y-1.5 overflow-y-auto pr-1"
         >
           {items.map((item, i) => (
             <li
               key={item.listing.id}
-              role="option"
-              aria-selected={i === index}
               data-wb-index={i}
               data-testid="moderation-item"
-              onClick={() => setIndex(i)}
               className={cn(
-                'flex cursor-pointer items-center gap-3 rounded-2xl border p-2.5 transition-colors',
+                'flex items-center gap-3 rounded-2xl border p-2.5 transition-colors',
                 i === index
                   ? 'border-ink bg-card shadow-sm ring-1 ring-ink'
                   : 'bg-card/60 hover:bg-card',
@@ -129,9 +125,8 @@ export function Workbench({
             >
               <input
                 type="checkbox"
-                aria-label={t('select')}
+                aria-label={`${t('select')}: ${item.listing.title}`}
                 checked={selected.has(item.listing.id)}
-                onClick={(e) => e.stopPropagation()}
                 onChange={() =>
                   setSelected((s) => {
                     const next = new Set(s);
@@ -142,31 +137,38 @@ export function Workbench({
                 }
                 className="size-4 shrink-0"
               />
-              {item.listing.image ? (
-                <img
-                  src={item.listing.image.thumb}
-                  alt=""
-                  className="size-11 shrink-0 rounded-xl object-cover"
-                />
-              ) : (
-                <span className="size-11 shrink-0 rounded-xl bg-placeholder" />
-              )}
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold">{item.listing.title}</span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {t('count', { count: item.count })} ·{' '}
-                  {format.relativeTime(new Date(item.firstReportedAt), new Date())}
-                </span>
-              </span>
-              <span
-                className={cn(
-                  'rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums',
-                  riskTone(item.risk),
-                )}
-                title={t('risk')}
+              <button
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-current={i === index ? 'true' : undefined}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {item.risk}
-              </span>
+                {item.listing.image ? (
+                  <img
+                    src={item.listing.image.thumb}
+                    alt=""
+                    className="size-11 shrink-0 rounded-xl object-cover"
+                  />
+                ) : (
+                  <span className="size-11 shrink-0 rounded-xl bg-placeholder" />
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{item.listing.title}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {t('count', { count: item.count })} ·{' '}
+                    {format.relativeTime(new Date(item.firstReportedAt), new Date())}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    'rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums',
+                    riskTone(item.risk),
+                  )}
+                  title={t('risk')}
+                >
+                  {item.risk}
+                </span>
+              </button>
             </li>
           ))}
         </ul>
@@ -236,12 +238,13 @@ export function Workbench({
 
         <div className="flex gap-2 overflow-x-auto pb-1">
           {l.images.length ? (
-            l.images.map((img) => (
+            l.images.map((img, n) => (
               <a
                 key={img.card}
                 href={img.large}
                 target="_blank"
                 rel="noreferrer"
+                aria-label={t('image', { n: n + 1 })}
                 className="shrink-0"
               >
                 <img src={img.card} alt="" className="h-36 w-48 rounded-2xl object-cover" />

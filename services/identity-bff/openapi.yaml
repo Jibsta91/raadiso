@@ -431,6 +431,55 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /api/v1/identity/me/security:
+    get:
+      tags: [me]
+      operationId: mySecurity
+      summary: My sessions on every device, and my sign-in methods
+      description: "Read from Keycloak's Account API with the user's own token (ADR-0031)."
+      responses:
+        '200':
+          description: Overview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SecurityOverview' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /api/v1/identity/me/sessions:
+    delete:
+      tags: [me]
+      operationId: endOtherSessions
+      summary: Sign out every other session (this one stays)
+      responses:
+        '204': { description: Signed out }
+        '401': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /api/v1/identity/me/sessions/{id}:
+    delete:
+      tags: [me]
+      operationId: endSession
+      summary: Sign out one session
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, pattern: '^[\w-]{8,64}$' } }
+      responses:
+        '204': { description: Signed out }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /api/v1/identity/me/credentials/{id}:
+    delete:
+      tags: [me]
+      operationId: removeCredential
+      summary: Remove a passkey or authenticator (needs a sign-in in the last 15 minutes)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, pattern: '^[\w-]{8,64}$' } }
+      responses:
+        '204': { description: Removed }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -442,6 +491,62 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    SecurityOverview:
+      type: object
+      additionalProperties: false
+      required: [sessions, methods, signedInAt]
+      properties:
+        signedInAt: { type: [string, 'null'], format: date-time }
+        sessions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              [
+                id,
+                browser,
+                os,
+                device,
+                mobile,
+                ip,
+                startedAt,
+                lastAccessAt,
+                expiresAt,
+                apps,
+                current,
+              ]
+            properties:
+              id: { type: string }
+              browser: { type: string }
+              os: { type: string }
+              device: { type: string }
+              mobile: { type: boolean }
+              ip: { type: [string, 'null'] }
+              startedAt: { type: string, format: date-time }
+              lastAccessAt: { type: string, format: date-time }
+              expiresAt: { type: string, format: date-time }
+              apps: { type: array, items: { type: string } }
+              current: { type: boolean }
+        methods:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [type, removable, credentials]
+            properties:
+              type: { type: string, enum: [password, otp, webauthn-passwordless, webauthn] }
+              removable: { type: boolean }
+              credentials:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [id, label, createdAt]
+                  properties:
+                    id: { type: string }
+                    label: { type: [string, 'null'] }
+                    createdAt: { type: [string, 'null'], format: date-time }
     StaffRole:
       type: string
       enum: [moderator, support, operator, platform-admin]

@@ -1,0 +1,229 @@
+# Service level objectives (ADR-0031). Rolling 7-day windows (Prometheus keeps 7 days).
+#
+#   slo               objective  what counts as good
+#   web_availability  99.5 %     website responses that are not 5xx
+#   api_availability  99.9 %     API responses (all domain services) that are not 5xx
+#   page_latency      95 %       website responses within 1.2 s
+#   search_latency    95 %       search responses within 300 ms
+#   sign_in           99 %       sign-ins that complete (identity-bff and admin-bff)
+#   journeys          99.5 %     synthetic probes of the main journeys that pass (blackbox exporter)
+#
+# slo:sli_error:ratio_rate<window> is the share of bad events (empty when nothing happened, so idle
+# periods neither burn nor earn budget). Alerts follow the multi-window, multi-burn-rate method of
+# the Google SRE workbook: a fast burn pages (critical), a slow burn opens a ticket (warning).
+# Runbook: docs/runbooks/slo.md. Dashboard: Grafana "Raadi · SLOs"; public view: /status.
+groups:
+  - name: slo-web-availability
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.995)
+        labels: { slo: web_availability }
+      - record: slo:sli_error:ratio_rate5m
+        expr: (sum(rate(traefik_service_requests_total{service="web@file",code=~"5.."}[5m]))) / (sum(rate(traefik_service_requests_total{service="web@file"}[5m])) > 0)
+        labels: { slo: web_availability }
+      - record: slo:sli_error:ratio_rate30m
+        expr: (sum(rate(traefik_service_requests_total{service="web@file",code=~"5.."}[30m]))) / (sum(rate(traefik_service_requests_total{service="web@file"}[30m])) > 0)
+        labels: { slo: web_availability }
+      - record: slo:sli_error:ratio_rate1h
+        expr: (sum(rate(traefik_service_requests_total{service="web@file",code=~"5.."}[1h]))) / (sum(rate(traefik_service_requests_total{service="web@file"}[1h])) > 0)
+        labels: { slo: web_availability }
+      - record: slo:sli_error:ratio_rate2h
+        expr: (sum(rate(traefik_service_requests_total{service="web@file",code=~"5.."}[2h]))) / (sum(rate(traefik_service_requests_total{service="web@file"}[2h])) > 0)
+        labels: { slo: web_availability }
+      - record: slo:sli_error:ratio_rate6h
+        expr: (sum(rate(traefik_service_requests_total{service="web@file",code=~"5.."}[6h]))) / (sum(rate(traefik_service_requests_total{service="web@file"}[6h])) > 0)
+        labels: { slo: web_availability }
+      - record: slo:sli_error:ratio_rate1d
+        expr: (sum(rate(traefik_service_requests_total{service="web@file",code=~"5.."}[1d]))) / (sum(rate(traefik_service_requests_total{service="web@file"}[1d])) > 0)
+        labels: { slo: web_availability }
+      - record: slo:sli_error:ratio_rate3d
+        expr: (sum(rate(traefik_service_requests_total{service="web@file",code=~"5.."}[3d]))) / (sum(rate(traefik_service_requests_total{service="web@file"}[3d])) > 0)
+        labels: { slo: web_availability }
+      - record: slo:sli_error:ratio_rate7d
+        expr: (sum(rate(traefik_service_requests_total{service="web@file",code=~"5.."}[7d]))) / (sum(rate(traefik_service_requests_total{service="web@file"}[7d])) > 0)
+        labels: { slo: web_availability }
+  - name: slo-api-availability
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.999)
+        labels: { slo: api_availability }
+      - record: slo:sli_error:ratio_rate5m
+        expr: (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file",code=~"5.."}[5m]))) / (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file"}[5m])) > 0)
+        labels: { slo: api_availability }
+      - record: slo:sli_error:ratio_rate30m
+        expr: (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file",code=~"5.."}[30m]))) / (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file"}[30m])) > 0)
+        labels: { slo: api_availability }
+      - record: slo:sli_error:ratio_rate1h
+        expr: (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file",code=~"5.."}[1h]))) / (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file"}[1h])) > 0)
+        labels: { slo: api_availability }
+      - record: slo:sli_error:ratio_rate2h
+        expr: (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file",code=~"5.."}[2h]))) / (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file"}[2h])) > 0)
+        labels: { slo: api_availability }
+      - record: slo:sli_error:ratio_rate6h
+        expr: (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file",code=~"5.."}[6h]))) / (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file"}[6h])) > 0)
+        labels: { slo: api_availability }
+      - record: slo:sli_error:ratio_rate1d
+        expr: (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file",code=~"5.."}[1d]))) / (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file"}[1d])) > 0)
+        labels: { slo: api_availability }
+      - record: slo:sli_error:ratio_rate3d
+        expr: (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file",code=~"5.."}[3d]))) / (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file"}[3d])) > 0)
+        labels: { slo: api_availability }
+      - record: slo:sli_error:ratio_rate7d
+        expr: (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file",code=~"5.."}[7d]))) / (sum(rate(traefik_service_requests_total{service=~"(listings|search|media|messaging|notifications|trust|saved|payments|identity-bff|audit)@file"}[7d])) > 0)
+        labels: { slo: api_availability }
+  - name: slo-page-latency
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.95)
+        labels: { slo: page_latency }
+      - record: slo:sli_error:ratio_rate5m
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[5m])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="web@file",le="1.2"}[5m]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[5m])) > 0)
+        labels: { slo: page_latency }
+      - record: slo:sli_error:ratio_rate30m
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[30m])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="web@file",le="1.2"}[30m]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[30m])) > 0)
+        labels: { slo: page_latency }
+      - record: slo:sli_error:ratio_rate1h
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[1h])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="web@file",le="1.2"}[1h]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[1h])) > 0)
+        labels: { slo: page_latency }
+      - record: slo:sli_error:ratio_rate2h
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[2h])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="web@file",le="1.2"}[2h]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[2h])) > 0)
+        labels: { slo: page_latency }
+      - record: slo:sli_error:ratio_rate6h
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[6h])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="web@file",le="1.2"}[6h]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[6h])) > 0)
+        labels: { slo: page_latency }
+      - record: slo:sli_error:ratio_rate1d
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[1d])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="web@file",le="1.2"}[1d]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[1d])) > 0)
+        labels: { slo: page_latency }
+      - record: slo:sli_error:ratio_rate3d
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[3d])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="web@file",le="1.2"}[3d]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[3d])) > 0)
+        labels: { slo: page_latency }
+      - record: slo:sli_error:ratio_rate7d
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[7d])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="web@file",le="1.2"}[7d]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="web@file"}[7d])) > 0)
+        labels: { slo: page_latency }
+  - name: slo-search-latency
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.95)
+        labels: { slo: search_latency }
+      - record: slo:sli_error:ratio_rate5m
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[5m])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="search@file",le="0.3"}[5m]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[5m])) > 0)
+        labels: { slo: search_latency }
+      - record: slo:sli_error:ratio_rate30m
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[30m])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="search@file",le="0.3"}[30m]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[30m])) > 0)
+        labels: { slo: search_latency }
+      - record: slo:sli_error:ratio_rate1h
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[1h])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="search@file",le="0.3"}[1h]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[1h])) > 0)
+        labels: { slo: search_latency }
+      - record: slo:sli_error:ratio_rate2h
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[2h])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="search@file",le="0.3"}[2h]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[2h])) > 0)
+        labels: { slo: search_latency }
+      - record: slo:sli_error:ratio_rate6h
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[6h])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="search@file",le="0.3"}[6h]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[6h])) > 0)
+        labels: { slo: search_latency }
+      - record: slo:sli_error:ratio_rate1d
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[1d])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="search@file",le="0.3"}[1d]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[1d])) > 0)
+        labels: { slo: search_latency }
+      - record: slo:sli_error:ratio_rate3d
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[3d])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="search@file",le="0.3"}[3d]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[3d])) > 0)
+        labels: { slo: search_latency }
+      - record: slo:sli_error:ratio_rate7d
+        expr: (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[7d])) - sum(rate(traefik_service_request_duration_seconds_bucket{service="search@file",le="0.3"}[7d]))) / (sum(rate(traefik_service_request_duration_seconds_count{service="search@file"}[7d])) > 0)
+        labels: { slo: search_latency }
+  - name: slo-sign-in
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.99)
+        labels: { slo: sign_in }
+      - record: slo:sli_error:ratio_rate5m
+        expr: (sum(rate(raadi_auth_login_total{outcome!="success"}[5m]))) / (sum(rate(raadi_auth_login_total[5m])) > 0)
+        labels: { slo: sign_in }
+      - record: slo:sli_error:ratio_rate30m
+        expr: (sum(rate(raadi_auth_login_total{outcome!="success"}[30m]))) / (sum(rate(raadi_auth_login_total[30m])) > 0)
+        labels: { slo: sign_in }
+      - record: slo:sli_error:ratio_rate1h
+        expr: (sum(rate(raadi_auth_login_total{outcome!="success"}[1h]))) / (sum(rate(raadi_auth_login_total[1h])) > 0)
+        labels: { slo: sign_in }
+      - record: slo:sli_error:ratio_rate2h
+        expr: (sum(rate(raadi_auth_login_total{outcome!="success"}[2h]))) / (sum(rate(raadi_auth_login_total[2h])) > 0)
+        labels: { slo: sign_in }
+      - record: slo:sli_error:ratio_rate6h
+        expr: (sum(rate(raadi_auth_login_total{outcome!="success"}[6h]))) / (sum(rate(raadi_auth_login_total[6h])) > 0)
+        labels: { slo: sign_in }
+      - record: slo:sli_error:ratio_rate1d
+        expr: (sum(rate(raadi_auth_login_total{outcome!="success"}[1d]))) / (sum(rate(raadi_auth_login_total[1d])) > 0)
+        labels: { slo: sign_in }
+      - record: slo:sli_error:ratio_rate3d
+        expr: (sum(rate(raadi_auth_login_total{outcome!="success"}[3d]))) / (sum(rate(raadi_auth_login_total[3d])) > 0)
+        labels: { slo: sign_in }
+      - record: slo:sli_error:ratio_rate7d
+        expr: (sum(rate(raadi_auth_login_total{outcome!="success"}[7d]))) / (sum(rate(raadi_auth_login_total[7d])) > 0)
+        labels: { slo: sign_in }
+  - name: slo-journeys
+    rules:
+      - record: slo:objective:ratio
+        expr: vector(0.995)
+        labels: { slo: journeys }
+      - record: slo:sli_error:ratio_rate5m
+        expr: 1 - sum(sum_over_time(probe_success{job="journeys"}[5m])) / sum(count_over_time(probe_success{job="journeys"}[5m]))
+        labels: { slo: journeys }
+      - record: slo:sli_error:ratio_rate30m
+        expr: 1 - sum(sum_over_time(probe_success{job="journeys"}[30m])) / sum(count_over_time(probe_success{job="journeys"}[30m]))
+        labels: { slo: journeys }
+      - record: slo:sli_error:ratio_rate1h
+        expr: 1 - sum(sum_over_time(probe_success{job="journeys"}[1h])) / sum(count_over_time(probe_success{job="journeys"}[1h]))
+        labels: { slo: journeys }
+      - record: slo:sli_error:ratio_rate2h
+        expr: 1 - sum(sum_over_time(probe_success{job="journeys"}[2h])) / sum(count_over_time(probe_success{job="journeys"}[2h]))
+        labels: { slo: journeys }
+      - record: slo:sli_error:ratio_rate6h
+        expr: 1 - sum(sum_over_time(probe_success{job="journeys"}[6h])) / sum(count_over_time(probe_success{job="journeys"}[6h]))
+        labels: { slo: journeys }
+      - record: slo:sli_error:ratio_rate1d
+        expr: 1 - sum(sum_over_time(probe_success{job="journeys"}[1d])) / sum(count_over_time(probe_success{job="journeys"}[1d]))
+        labels: { slo: journeys }
+      - record: slo:sli_error:ratio_rate3d
+        expr: 1 - sum(sum_over_time(probe_success{job="journeys"}[3d])) / sum(count_over_time(probe_success{job="journeys"}[3d]))
+        labels: { slo: journeys }
+      - record: slo:sli_error:ratio_rate7d
+        expr: 1 - sum(sum_over_time(probe_success{job="journeys"}[7d])) / sum(count_over_time(probe_success{job="journeys"}[7d]))
+        labels: { slo: journeys }
+  - name: slo-budgets
+    rules:
+      # Share of the 7-day error budget left: 1 = untouched, 0 = spent, below 0 = overspent.
+      - record: slo:error_budget_remaining:ratio
+        expr: 1 - (slo:sli_error:ratio_rate7d / on (slo) (1 - slo:objective:ratio))
+      - alert: SLOFastBurn
+        # 14.4 x the sustainable rate for an hour (and still burning in the last 5 minutes).
+        expr: |
+          slo:sli_error:ratio_rate1h > on (slo) (14.4 * (1 - slo:objective:ratio))
+            and slo:sli_error:ratio_rate5m > on (slo) (14.4 * (1 - slo:objective:ratio))
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: 'SLO {{ $labels.slo }} is burning its error budget fast'
+          description: 'At this rate the 7-day budget is gone in about half a day.'
+          runbook_url: docs/runbooks/slo.md
+      - alert: SLOSlowBurn
+        expr: |
+          slo:sli_error:ratio_rate6h > on (slo) (6 * (1 - slo:objective:ratio))
+            and slo:sli_error:ratio_rate30m > on (slo) (6 * (1 - slo:objective:ratio))
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: 'SLO {{ $labels.slo }} is using its error budget too quickly'
+          runbook_url: docs/runbooks/slo.md
+      - alert: SLOBudgetExhausted
+        expr: slo:error_budget_remaining:ratio < 0
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: 'SLO {{ $labels.slo }} has spent its 7-day error budget'
+          description: 'Prefer reliability work over new features until the budget recovers.'
+          runbook_url: docs/runbooks/slo.md
+      - alert: JourneyProbeFailing
+        expr: probe_success{job="journeys"} == 0
+        for: 3m
+        labels: { severity: warning }
+        annotations:
+          summary: 'Synthetic journey {{ $labels.journey }} fails'
+          runbook_url: docs/runbooks/slo.md
