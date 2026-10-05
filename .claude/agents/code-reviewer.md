@@ -19,7 +19,7 @@ a finding.
 - **Contracts:** `openapi.yaml` updated and the client regenerated (`./raadi generate`) and committed; event
   contracts in `@raadi/events` only gain optional fields (draft-07); RFC 9457 errors.
 - **Non-negotiables:** exact pins and digests; healthcheck, `depends_on` conditions, memory limit and
-  `summary` for a new service; OSI licences only; secrets only from OpenBao; the outbox written in the same
+  `summary` for a new service; licences per ADR-0009 (free, non-OSI ones recorded); secrets only from OpenBao; the outbox written in the same
   transaction as the state change; no personal data or tokens in logs or events; no names in events; staff
   endpoints with `@Staff` and `audit()`.
 - **Countries and languages (ADR-0032):** no hard-coded country, currency, locale, time zone, phone or address

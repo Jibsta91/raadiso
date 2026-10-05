@@ -28,7 +28,9 @@ languages), `docs/threat-model.md`, and the README section on switching the LLM 
   logged or traced: prompts and traces hold no personal data.
 - Every model-backed feature has an evaluation set per language (today Norwegian and Somali, plus each launch
   language from ADR-0032), tracked in Langfuse or MLflow, with a quality bar agreed before launch.
-- Python with uv, exact pins and OSI licences only (LiteLLM and Langfuse only in their OSI-licensed form). The
+- Python with uv and exact pins. Licences per ADR-0009: free and offline, OSI first; free non-OSI models (Llama,
+  Gemma) are recorded in the models manifest; non-commercial ones (NLLB-200, Aya) only until Phase 5, behind a
+  LiteLLM alias so they can be swapped. LiteLLM and Langfuse without their enterprise directories. The
   telemetry, health and secrets rules of the TypeScript services apply here too.
 
 ## Tests and checks

@@ -21,7 +21,8 @@ Do not trade these away. Changing one needs its own ADR and the owner's yes.
 
 - `docker compose up` on a clean machine brings everything up healthy. Docker is the only prerequisite, and
   the default profile fits a 16 GB laptop (ADR-0011).
-- 100% OSI-licensed and runs offline (ADR-0009). No BSL, SSPL or Elastic-licensed components.
+- Free of charge and runs offline, OSI first (ADR-0009). Free licences that allow commercial use are allowed and
+  recorded with their class; non-commercial ones only until Phase 5; never paid licences or cloud API keys.
 - One database per service, dbmate migrations, a transactional outbox with CloudEvents through Debezium and
   Kafka, contracts in Apicurio as JSON Schema draft-07 (ADR-0008, ADR-0012).
 - OIDC with Keycloak everywhere, a token-handler BFF, JWT validation in every service, OpenFGA relationships

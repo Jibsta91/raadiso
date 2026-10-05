@@ -70,6 +70,9 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- Licensing policy (ADR-0009, amended): every component must be free of charge and run offline, OSI first.
+  Free licences that allow commercial use (BSL, SSPL, Elastic, Llama/Gemma) are allowed and recorded; free
+  non-commercial ones only until Phase 5. Previously only OSI-approved licences were allowed.
 - Direction: Raadi grows from a marketplace for Norway into one marketplace for many countries, like Locanto
   (ADR-0032). The roadmap lists the follow-up decisions.
 - E-mails and pushes come in the language chosen on the website or in the app: the choice is saved to the

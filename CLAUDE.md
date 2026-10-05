@@ -19,8 +19,9 @@ QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says
   idempotently. Exact version pins (never `:latest`; digests for base images), memory limits that fit a
   16 GB laptop ([ADR-0011](docs/adr/0011-resource-budget.md)), heavy extras behind compose profiles. New
   services must appear in the `summary` output.
-- **Licensing:** 100% OSI-licensed and runs offline ([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
-  No BSL/SSPL/Elastic-licensed components.
+- **Licensing:** free of charge and runs offline, OSI first ([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
+  Free licences that allow commercial use (BSL, SSPL, Elastic, Llama/Gemma) are allowed and recorded; free
+  non-commercial ones (CC-BY-NC models) only until Phase 5. Never paid licences or cloud API keys.
 - **Services:** 12-factor; OTel traces, metrics and logs everywhere; transactional outbox with CloudEvents; one
   database per service; retries, circuit breakers and rate limits; non-root distroless images; multi-arch.
 - **Security:** OIDC everywhere (Keycloak), zero trust between services, secrets only from OpenBao, TLS at the

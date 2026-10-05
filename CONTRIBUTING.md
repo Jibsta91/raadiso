@@ -30,7 +30,8 @@ Report security problems privately (see [SECURITY.md](SECURITY.md)), not in an i
 ## Conventions
 
 - Pin exact versions (never `latest`); Renovate proposes upgrades.
-- Only OSI-licensed dependencies ([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
+- Only free dependencies, OSI first; a non-OSI licence is recorded with its class
+  ([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
 - New services follow the checklist in [docs/development.md](docs/development.md#adding-a-nestjs-service-checklist).
 - Secrets come only from OpenBao; no personal data in logs or events.
 - Write an ADR for every significant decision ([format](docs/adr/0001-record-architecture-decisions.md)).

@@ -5,7 +5,7 @@ marketplace in the spirit of Finn.no. It starts in Norway and grows into one mar
 like Locanto ([ADR-0032](docs/adr/0032-multi-country-marketplace.md)). In the code it keeps its working
 name, `raadi` (packages, the `./raadi` command, the Keycloak realm). It has a web app, a mobile app, domain
 microservices and four AI pillars: governance, cybersecurity, data management and IaC operations. All of it
-is 100% OSI-licensed and runs fully offline on a laptop, with **Docker as the only prerequisite**.
+is free of charge, open source first, and runs fully offline on a laptop, with **Docker as the only prerequisite**.
 
 ## Quickstart
 
@@ -138,7 +138,7 @@ Each command is available as `./raadi <command>` or `make <command>`. Everything
 | `./raadi lint` · `typecheck` · `test`        | quality checks in the toolbox                                         |
 | `./raadi test-integration`                   | Testcontainers tests (PostgreSQL, Valkey, OpenSearch)                 |
 | `./raadi smoke` · `e2e`                      | smoke test and Playwright tests against the running stack             |
-| `./raadi security` · `iac-scan` · `licenses` | Trivy, Gitleaks, OSV-Scanner · Checkov · OSI license gate             |
+| `./raadi security` · `iac-scan` · `licenses` | Trivy, Gitleaks, OSV-Scanner · Checkov · license gate                 |
 | `./raadi toolbox`                            | shell with pnpm, uv, tofu, ansible, checkov, trivy, playwright…       |
 | `./raadi secret <name>` · `ca-cert`          | read a generated secret · export the dev CA                           |
 
@@ -182,5 +182,5 @@ app (Expo) runs on iPhone and Android. Phase 4 (the AI pillars) is next; see the
 
 ## License
 
-[Apache-2.0](LICENSE). All third-party components are under OSI-approved licenses
-([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
+[Apache-2.0](LICENSE). All third-party components are free of charge and mostly under OSI-approved licenses;
+[ADR-0009](docs/adr/0009-open-source-licensing-policy.md) sets the rules for the exceptions and where they are listed.
