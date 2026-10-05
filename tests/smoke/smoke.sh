@@ -47,8 +47,7 @@ login_as() { # <email> [base URL: the website, or the admin console's host]
   local base="${2:-$PUBLIC}"
   : > "$JAR"
   # The BFFs allow 20 sign-ins a minute per address; smoke signs in often, so wait out a 429.
-  local wait
-  for wait in 1 2 3 4 5 6; do
+  for _ in 1 2 3 4 5 6; do
     req GET "$base/auth/login?returnTo=/en&locale=en"
     [[ "$status" == 429 ]] || break
     sleep "$(header retry-after | grep -E '^[0-9]+$' || echo 10)"
