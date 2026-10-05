@@ -6,7 +6,8 @@ working name `raadi` (packages, `./raadi`, realm, databases, images). In Somali 
 "search": leave those strings alone. It is built in six phases; [docs/roadmap.md](docs/roadmap.md) holds the
 scope and status of each. Read that first, then [docs/development.md](docs/development.md) (layout, service
 checklist, conventions) and [docs/adr/README.md](docs/adr/README.md) (decisions already made; don't
-re-litigate them without a new ADR).
+re-litigate them without a new ADR). Specialist subagents (project manager, architect, engineers, security,
+QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says who does what.
 
 ## Non-negotiables
 
@@ -27,6 +28,9 @@ re-litigate them without a new ADR).
 - **Git:** `main` is protected (PR only, both CI jobs green, signed commits, squash merge). Work on a branch,
   push it, open a PR and merge it through the GitHub API once CI passes. Never push to `main` directly.
 - **Stack is settled:** Keycloak + OpenBao (Authentik/Bitwarden were considered and rejected). No Kubernetes.
+- **Many countries** ([ADR-0032](docs/adr/0032-multi-country-marketplace.md)): one marketplace for many
+  countries, like Locanto, with Norway first. Country and language are separate dimensions; never hard-code a
+  country, currency, locale, time zone, phone or address format.
 - **Phase gate:** a phase is done only when a cold `docker compose up` is green and smoke, e2e, lint,
   typecheck, unit, integration, licenses, security and iac-scan all pass. No TODO placeholders. Write an ADR
   for each decision.

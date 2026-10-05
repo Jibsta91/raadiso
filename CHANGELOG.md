@@ -64,9 +64,14 @@ Each release also has generated notes on GitHub.
   `ReportsSpike` and `WebSocketOriginRejected`; runbooks for notifications (push), moderation, saved,
   messaging and the audit log. Listings reports the moderation backlog (`raadi.listings.reports_open`,
   `raadi.listings.reports_oldest_age`).
+- An AI team for Claude Code: eleven specialist subagents in `.claude/agents/` (project manager, architect,
+  backend, frontend, mobile, platform, AI, internationalization, security, QA and a code reviewer), with
+  [docs/ai-team.md](docs/ai-team.md) on how they work together.
 
 ### Changed
 
+- Direction: Raadi grows from a marketplace for Norway into one marketplace for many countries, like Locanto
+  (ADR-0032). The roadmap lists the follow-up decisions.
 - E-mails and pushes come in the language chosen on the website or in the app: the choice is saved to the
   profile, and `preferences_changed` events carry the new language (optional field). The app remembers its
   language setting.
