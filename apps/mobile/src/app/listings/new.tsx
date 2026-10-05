@@ -1,7 +1,7 @@
 import { Icon, type IconName } from '../../components/icon';
-import type { Media } from '@raadi/api-client';
+import type { Listing, Media } from '@raadi/api-client';
 import { ATTRIBUTE_FIELDS, attributePayload, priceRequired } from '@raadi/catalog/attributes';
-import { PLACES, type Place } from '@raadi/catalog/places';
+import { findPlace, PLACES, type Place } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -195,7 +195,8 @@ function Picked({
 }: {
   label: string;
   icon: IconName;
-  onChange: () => void;
+  /** Absent when editing: a listing keeps its category. */
+  onChange?: () => void;
 }) {
   const { m } = useI18n();
   const theme = useTheme();
@@ -210,9 +211,11 @@ function Picked({
       <Text numberOfLines={1} style={[styles.pickedText, { color: theme.text }]}>
         {label}
       </Text>
-      <Pressable role="button" testID="change-category" onPress={onChange} hitSlop={8}>
-        <Text style={[styles.change, { color: theme.accent }]}>{m.sell.change}</Text>
-      </Pressable>
+      {onChange ? (
+        <Pressable role="button" testID="change-category" onPress={onChange} hitSlop={8}>
+          <Text style={[styles.change, { color: theme.accent }]}>{m.sell.change}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -245,28 +248,41 @@ function Label({ text, optional }: { text: string; optional?: boolean }) {
   );
 }
 
-function ListingForm({
+/** The listing form: a new listing, or `existing` to edit (as the website's edit page). */
+export function ListingForm({
   category,
   subcategory,
   onChange,
+  existing,
 }: {
   category: CategoryId;
   subcategory: SubcategoryId;
-  onChange: () => void;
+  onChange?: () => void;
+  existing?: Listing;
 }) {
   const { m } = useI18n();
   const api = useApi();
   const auth = useAuth();
   const theme = useTheme();
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>(
+    () => existing?.images.map((i) => ({ id: i.id, thumb: i.urls.thumb })) ?? [],
+  );
   const [uploading, setUploading] = useState(0);
   const [photoError, setPhotoError] = useState<string>();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [attributes, setAttributes] = useState<Record<string, string>>({});
-  const [price, setPrice] = useState('');
+  const [title, setTitle] = useState(existing?.title ?? '');
+  const [description, setDescription] = useState(existing?.description ?? '');
+  const [attributes, setAttributes] = useState<Record<string, string>>(() =>
+    Object.fromEntries(Object.entries(existing?.attributes ?? {}).map(([k, v]) => [k, String(v)])),
+  );
+  const [price, setPrice] = useState(
+    existing?.priceNok !== null && existing?.priceNok !== undefined
+      ? String(existing.priceNok)
+      : '',
+  );
   const [placeQuery, setPlaceQuery] = useState('');
-  const [place, setPlace] = useState<Place>();
+  const [place, setPlace] = useState<Place | undefined>(() =>
+    existing ? findPlace(existing.location.placeId) : undefined,
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
   const needsPrice = priceRequired(category);
@@ -344,27 +360,38 @@ function ListingForm({
   const publish = async () => {
     setSaving(true);
     setError(undefined);
+    const body = {
+      category,
+      subcategory,
+      title: title.trim(),
+      description: description.trim(),
+      priceNok: needsPrice ? Number(price) : null,
+      attributes: attributePayload(category, attributes),
+      placeId: place!.id,
+      imageIds: photos.map((p) => p.id),
+    };
     try {
       const {
         data,
         error: problem,
         response,
-      } = await api.listings.POST('/api/v1/listings', {
-        body: {
-          category,
-          subcategory,
-          title: title.trim(),
-          description: description.trim(),
-          priceNok: needsPrice ? Number(price) : null,
-          attributes: attributePayload(category, attributes),
-          placeId: place!.id,
-          imageIds: photos.map((p) => p.id),
-        },
-      });
+      } = existing
+        ? await api.listings.PATCH('/api/v1/listings/{id}', {
+            params: {
+              path: { id: existing.id },
+              // Optimistic concurrency: refused (412) if the listing changed since it was loaded.
+              header: { 'If-Match': `"${existing.version}"` },
+            },
+            body,
+          })
+        : await api.listings.POST('/api/v1/listings', { body });
       if (data) {
-        router.replace(`/listings/${data.id}`);
+        // Editing goes back to the listing (which reloads on focus); a new one replaces the form.
+        if (existing) router.dismissTo(`/listings/${data.id}`);
+        else router.replace(`/listings/${data.id}`);
         return;
       }
+      if (response.status === 412) return setError(m.sell.conflict);
       const errors = (problem as { errors?: Array<{ code?: string }> } | undefined)?.errors ?? [];
       const policy = errors.find((e) => POLICY.includes(e.code as never))?.code;
       setError(
@@ -591,8 +618,16 @@ function ListingForm({
           </Text>
         ) : null}
         <Button
-          testID="publish"
-          label={saving ? m.sell.publishing : m.sell.publish}
+          testID={existing ? 'save' : 'publish'}
+          label={
+            existing
+              ? saving
+                ? m.sell.saving
+                : m.sell.save
+              : saving
+                ? m.sell.publishing
+                : m.sell.publish
+          }
           disabled={missing || saving || uploading > 0}
           onPress={() => void publish()}
         />

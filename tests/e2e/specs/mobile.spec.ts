@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
-import { domain, password } from './support.js';
+import { domain, login, password } from './support.js';
 
 const fixture = fileURLToPath(new URL('../../fixtures/images/listing.jpg', import.meta.url));
 
@@ -92,6 +92,17 @@ test('app: sell something, with a photo, and land on the new listing', async ({ 
   await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('listing-title')).toHaveText(title);
   await expect(page.getByTestId('own-listing')).toBeVisible();
+
+  // Edit it: the form opens filled in, and saving goes back to the updated listing.
+  await page.getByTestId('edit-listing').click();
+  await expect(page).toHaveURL(/\/m\/listings\/edit\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('field-title')).toHaveValue(title);
+  await expect(page.getByTestId('change-category')).toHaveCount(0);
+  await page.getByTestId('field-title').fill(`${title} (redigert)`);
+  await page.getByTestId('field-price').fill('3200');
+  await page.getByTestId('save').click();
+  await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('listing-title')).toHaveText(`${title} (redigert)`);
   // Clean up: test listings would otherwise pile up against the 50-listing quota.
   const id = page.url().split('/').pop()!;
   await page.request.delete(`/api/v1/listings/${id}`, {
@@ -144,4 +155,73 @@ test("app: a seller's profile from the listing, and the notifications inbox", as
   await page.getByTestId('open-my-profile').click();
   await expect(page).toHaveURL(/\/m\/users\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('profile-name')).toBeVisible();
+});
+
+test('app: the buyer reviews the seller from the conversation after a sale', async ({
+  browser,
+}) => {
+  const seller = await browser.newPage();
+  await login(seller, `ola.nordmann@${domain}`);
+  const origin = new URL(seller.url()).origin;
+  const title = `App-omtale e2e ${Date.now().toString(36)}`;
+  const created = await seller.request.post('/api/v1/listings', {
+    headers: { origin },
+    data: {
+      category: 'torget',
+      subcategory: 'hobby',
+      title,
+      description: 'Laget av e2e-testen for omtaler i appen.',
+      priceNok: 150,
+      attributes: { condition: 'good' },
+      placeId: 'oslo',
+      imageIds: [],
+    },
+  });
+  expect(created.status()).toBe(201);
+  const { id: listingId } = (await created.json()) as { id: string };
+
+  // The buyer asks, the seller answers and marks the listing sold.
+  const buyer = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  await login(buyer, `kari.nordmann@${domain}`);
+  const started = await buyer.request.post('/api/v1/messaging/conversations', {
+    headers: { origin },
+    data: { listingId, body: 'Er den fortsatt ledig?' },
+  });
+  expect(started.ok()).toBe(true);
+  const conversationId = ((await started.json()) as { conversation: { id: string } }).conversation
+    .id;
+  expect(
+    (
+      await seller.request.post(`/api/v1/messaging/conversations/${conversationId}/messages`, {
+        headers: { origin },
+        data: { body: 'Ja, den er din.' },
+      })
+    ).ok(),
+  ).toBe(true);
+  expect(
+    (
+      await seller.request.patch(`/api/v1/listings/${listingId}`, {
+        headers: { origin },
+        data: { status: 'sold' },
+      })
+    ).status(),
+  ).toBe(200);
+
+  // Once trust has seen the sale, the app offers the review in the conversation.
+  await expect(async () => {
+    await buyer.goto(`/m/messages/${conversationId}`);
+    await expect(buyer.getByTestId('review-open')).toBeVisible({ timeout: 1_500 });
+  }).toPass({ timeout: 60_000 });
+  await buyer.getByTestId('review-open').click();
+  await buyer.getByTestId('review-submit').click();
+  await expect(buyer.getByTestId('review-error')).toBeVisible();
+  await buyer.getByTestId('review-star-4').click();
+  await buyer.getByTestId('review-comment').fill(`Grei handel (${title})`);
+  await buyer.getByTestId('review-submit').click();
+  await expect(buyer.getByTestId('review-done')).toBeVisible();
+
+  await buyer.reload();
+  await expect(buyer.getByTestId('review-done')).toBeVisible();
+  await buyer.close();
+  await seller.close();
 });

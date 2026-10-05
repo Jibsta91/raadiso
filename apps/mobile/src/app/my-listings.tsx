@@ -1,6 +1,6 @@
 import type { Listing } from '@raadi/api-client';
 import { Image } from 'expo-image';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Badge, Status } from '../components/ui';
 import { NoPhoto } from '../components/no-photo';
@@ -42,6 +42,14 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
       actions={[
         ...(listing.status === 'active'
           ? [
+              {
+                key: 'edit',
+                label: m.sell.edit,
+                icon: 'create-outline' as const,
+                // Slate in both themes: the label on it is white.
+                color: '#5b6170',
+                onPress: () => router.push(`/listings/edit/${listing.id}`),
+              },
               {
                 key: 'sold',
                 label: m.swipe.markSold,
