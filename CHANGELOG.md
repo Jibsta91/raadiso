@@ -57,6 +57,8 @@ Each release also has generated notes on GitHub.
 
 - Refunds asked for a role (`admin`) that did not exist, so nobody could refund. They now need
   `platform-admin` and answer 200.
+- A seller without reviews had no public profile (404), so the "No reviews yet" link on listings led
+  nowhere. Every seller trust knows now has a profile.
 - Removing a review had the same mistake: platform admins could not remove reviews. A moderator's removal is
   now also written to the audit log (`review.remove`).
 - `./raadi lint` failed on two shellcheck findings in `./raadi otp` and the smoke test.
