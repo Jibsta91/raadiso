@@ -7,19 +7,21 @@ Docker is the only prerequisite. Every tool runs in the `toolbox` container thro
 2. Start the stack and check it is green before you change anything:
    `./raadi up && ./raadi smoke && ./raadi e2e`.
 3. Keep commits small and working; each one should leave the stack green.
-4. Before you push, run the gates CI runs:
+4. Before you push, run the gates. GitHub Actions are switched off (since 2026-10-05), so these local runs are
+   the check:
    `./raadi lint && ./raadi typecheck && ./raadi test && ./raadi test-integration && ./raadi licenses && ./raadi security && ./raadi iac-scan`.
 
 ## Branches and pull requests
 
-`main` is protected by a ruleset: every change goes through a pull request, both CI jobs must pass on a branch
-that is up to date with `main`, commits must be signed, and force-pushes and deletion are blocked. No review
-approval is required.
+Every change to `main` goes through a pull request with signed commits; force-pushes and deletion are not
+allowed. GitHub Actions are switched off, so no CI job runs on the pull request: run the gates above (and
+`./raadi smoke && ./raadi e2e` for anything beyond docs) on a branch that is up to date with `main`. No review
+approval is required. `.github/workflows/ci.yaml` is kept, so CI can be switched back on.
 
 1. Branch from `main` with a short prefix: `feat/`, `fix/`, `chore/`, `docs/` or `refactor/`.
 2. Open a pull request and fill in the template. Its title becomes the commit message on `main`, so write it
    in the imperative mood ("Add notifications service").
-3. Merge with **Squash and merge** once CI is green. The branch is deleted automatically.
+3. Merge with **Squash and merge** once the local gates pass. The branch is deleted automatically.
 
 Releases are signed SemVer tags with GitHub Releases; see [docs/releasing.md](docs/releasing.md). Label pull
 requests (`enhancement`, `bug`, `security`, `dependencies`, `documentation`, `chore`) so release notes group

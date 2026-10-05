@@ -26,8 +26,11 @@ QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says
   database per service; retries, circuit breakers and rate limits; non-root distroless images; multi-arch.
 - **Security:** OIDC everywhere (Keycloak), zero trust between services, secrets only from OpenBao, TLS at the
   edge, OWASP ASVS L2, GDPR (no PII in logs or events).
-- **Git:** `main` is protected (PR only, both CI jobs green, signed commits, squash merge). Work on a branch,
-  push it, open a PR and merge it through the GitHub API once CI passes. Never push to `main` directly.
+- **Git:** `main` takes changes only through PRs (signed commits, squash merge). GitHub Actions are switched
+  off since 2026-10-05 (too slow): run the gates locally (`./raadi lint typecheck test`, then `licenses`,
+  `security` and `iac-scan`, plus `smoke` and `e2e` for anything beyond docs), then push the branch, open a PR
+  and merge it through the GitHub API. `.github/workflows/ci.yaml` stays, so CI can be switched back on.
+  Never push to `main` directly.
 - **Stack is settled:** Keycloak + OpenBao (Authentik/Bitwarden were considered and rejected). No Kubernetes.
 - **Many countries** ([ADR-0032](docs/adr/0032-multi-country-marketplace.md)): one marketplace for many
   countries, like Locanto, with Norway first. Country and language are separate dimensions; never hard-code a
