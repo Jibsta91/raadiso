@@ -86,6 +86,7 @@ function Screens() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="listings/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="listings/new" options={{ title: m.sell.title }} />
+        <Stack.Screen name="listings/edit/[id]" options={{ title: m.sell.editTitle }} />
         <Stack.Screen
           name="contact/[listingId]"
           options={{

@@ -92,6 +92,17 @@ test('app: sell something, with a photo, and land on the new listing', async ({ 
   await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('listing-title')).toHaveText(title);
   await expect(page.getByTestId('own-listing')).toBeVisible();
+
+  // Edit it: the form opens filled in, and saving goes back to the updated listing.
+  await page.getByTestId('edit-listing').click();
+  await expect(page).toHaveURL(/\/m\/listings\/edit\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('field-title')).toHaveValue(title);
+  await expect(page.getByTestId('change-category')).toHaveCount(0);
+  await page.getByTestId('field-title').fill(`${title} (redigert)`);
+  await page.getByTestId('field-price').fill('3200');
+  await page.getByTestId('save').click();
+  await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('listing-title')).toHaveText(`${title} (redigert)`);
   // Clean up: test listings would otherwise pile up against the 50-listing quota.
   const id = page.url().split('/').pop()!;
   await page.request.delete(`/api/v1/listings/${id}`, {

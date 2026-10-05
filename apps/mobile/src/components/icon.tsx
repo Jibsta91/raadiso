@@ -32,6 +32,7 @@ const SF_SYMBOLS: Partial<Record<IconName, SFSymbol>> = {
   close: 'xmark',
   'color-palette-outline': 'paintpalette',
   'construct-outline': 'wrench.and.screwdriver',
+  'create-outline': 'square.and.pencil',
   'earth-outline': 'globe.europe.africa',
   'ellipse-outline': 'circle',
   'hammer-outline': 'hammer',

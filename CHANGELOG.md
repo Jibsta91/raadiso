@@ -33,6 +33,8 @@ Each release also has generated notes on GitHub.
   profiles with ratings and reviews: tap the seller on a listing, or "My public profile". Authors can
   withdraw their own review there, and a review push now opens the profile.
 - Reviews from the app: after a sale, the conversation offers to rate the other party, as on the website.
+- Edit a listing from the app ("Edit" on your listing, or swipe in My listings): the sell form, filled in,
+  with the website's check that nobody changed the listing in the meantime.
 - Operations for the Phase 3 features: Marketplace dashboard panels for pushes, the moderation backlog,
   reports, blocks, favourite and saved-search alerts, staff actions, promotion revenue and image clean-up;
   alerts `PushQueueBacklog`, `PushesGivenUp`, `SavedSearchChecksFailing`, `ModerationQueueStale`,

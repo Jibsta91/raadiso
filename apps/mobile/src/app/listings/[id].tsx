@@ -1,8 +1,8 @@
 import { Icon, type IconName } from '../../components/icon';
 import { COUNTIES, type County } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import {
   Animated,
   Platform,
@@ -83,6 +83,15 @@ export default function ListingScreen() {
     async () =>
       unwrap(await api.listings.GET('/api/v1/listings/{id}', { params: { path: { id } } })),
     [api, id],
+  );
+  // Back from editing (or anywhere else): show the current version. The first focus is the load itself.
+  const reloadListing = listing.reload;
+  const focused = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (focused.current) reloadListing();
+      focused.current = true;
+    }, [reloadListing]),
   );
   const seller = useLoad(
     async () =>
@@ -300,7 +309,17 @@ export default function ListingScreen() {
 
           <Body>{item.description}</Body>
           {item.viewer?.isOwner ? (
-            <Badge label={m.listing.yours} tone="neutral" testID="own-listing" />
+            <View style={styles.ownerRow}>
+              <Badge label={m.listing.yours} tone="neutral" testID="own-listing" />
+              {item.viewer.canEdit && item.status === 'active' ? (
+                <Button
+                  testID="edit-listing"
+                  variant="secondary"
+                  label={m.sell.edit}
+                  onPress={() => router.push(`/listings/edit/${item.id}`)}
+                />
+              ) : null}
+            </View>
           ) : (
             <ReportListing listingId={item.id} />
           )}
@@ -425,6 +444,7 @@ const styles = StyleSheet.create({
   },
   place: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   small: { fontSize: 14, lineHeight: 20 },
+  ownerRow: { gap: space.md, alignItems: 'flex-start' },
   seller: {
     flexDirection: 'row',
     alignItems: 'center',
