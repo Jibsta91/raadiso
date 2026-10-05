@@ -29,6 +29,9 @@ Each release also has generated notes on GitHub.
 
 - The app's search has each category's own filters (makes, fuel, body type, ranges for year, mileage, area
   and price) in a filter sheet.
+- The app has the in-app notifications (Account → Notifications, with the unread count) and public trust
+  profiles with ratings and reviews: tap the seller on a listing, or "My public profile". Authors can
+  withdraw their own review there, and a review push now opens the profile.
 - Operations for the Phase 3 features: Marketplace dashboard panels for pushes, the moderation backlog,
   reports, blocks, favourite and saved-search alerts, staff actions, promotion revenue and image clean-up;
   alerts `PushQueueBacklog`, `PushesGivenUp`, `SavedSearchChecksFailing`, `ModerationQueueStale`,
@@ -51,6 +54,8 @@ Each release also has generated notes on GitHub.
 
 - Refunds asked for a role (`admin`) that did not exist, so nobody could refund. They now need
   `platform-admin` and answer 200.
+- A seller without reviews had no public profile (404), so the "No reviews yet" link on listings led
+  nowhere. Every seller trust knows now has a profile.
 - Removing a review had the same mistake: platform admins could not remove reviews. A moderator's removal is
   now also written to the audit log (`review.remove`).
 - `./raadi lint` failed on two shellcheck findings in `./raadi otp` and the smoke test.

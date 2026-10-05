@@ -118,3 +118,30 @@ test("app: a category's own filters narrow the results", async ({ page }) => {
     .poll(async () => Number((await total.innerText()).replace(/\D/g, '')))
     .toBeLessThan(before);
 });
+
+test("app: a seller's profile from the listing, and the notifications inbox", async ({ page }) => {
+  await page.goto('/m/search?q=Kawasaki');
+  await page.getByTestId('search-results').getByTestId('listing-card').first().click();
+  await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
+  await page.getByTestId('seller').click();
+  await expect(page).toHaveURL(/\/m\/users\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('profile-name')).toBeVisible();
+  await expect(page.getByTestId('profile-verification')).toBeVisible();
+
+  await page.goto('/m/account');
+  await page.getByTestId('login').click();
+  await page.locator('#username').fill(`amina.hassan@${domain}`);
+  await page.locator('#password').fill(password);
+  await page.locator('#kc-login').click();
+  await expect(page).toHaveURL(/\/m\/account$|\/welcome/);
+  if (/\/welcome/.test(page.url())) await page.getByTestId('welcome-continue').click();
+
+  await page.getByTestId('open-notifications').click();
+  await expect(page).toHaveURL(/\/m\/notifications$/);
+  await expect(page.getByTestId('notifications')).toBeVisible();
+
+  await page.goto('/m/account');
+  await page.getByTestId('open-my-profile').click();
+  await expect(page).toHaveURL(/\/m\/users\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('profile-name')).toBeVisible();
+});

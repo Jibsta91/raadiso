@@ -63,6 +63,8 @@ const SF_SYMBOLS: Partial<Record<IconName, SFSymbol>> = {
   'shield-outline': 'shield',
   'shirt-outline': 'tshirt',
   'speedometer-outline': 'speedometer',
+  star: 'star.fill',
+  'star-outline': 'star',
   'trail-sign-outline': 'signpost.right',
   'trash-outline': 'trash',
 };

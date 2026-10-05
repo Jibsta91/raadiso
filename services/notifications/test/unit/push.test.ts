@@ -25,12 +25,12 @@ describe('push', () => {
   });
 
   it('opens app paths only', () => {
-    assert.equal(pushPath('new_message', 'c1'), '/messages/c1');
-    assert.equal(pushPath('listing_removed', 'l1'), '/my-listings');
-    assert.equal(pushPath('listing_promoted', 'l1'), '/listings/l1');
-    assert.equal(pushPath('review_received', 'r1'), '/account');
-    assert.equal(pushPath('favourite_price_drop', 'l1'), '/listings/l1');
-    assert.equal(pushPath('saved_search_match', 's1'), '/saved-searches/s1');
+    assert.equal(pushPath('new_message', 'c1', 'u1'), '/messages/c1');
+    assert.equal(pushPath('listing_removed', 'l1', 'u1'), '/my-listings');
+    assert.equal(pushPath('listing_promoted', 'l1', 'u1'), '/listings/l1');
+    assert.equal(pushPath('review_received', 'r1', 'u1'), '/users/u1');
+    assert.equal(pushPath('favourite_price_drop', 'l1', 'u1'), '/listings/l1');
+    assert.equal(pushPath('saved_search_match', 's1', 'u1'), '/saved-searches/s1');
   });
 
   it('accepts Expo push tokens only', () => {

@@ -184,7 +184,9 @@ export class TrustService {
       this.repo.reviewsAbout(userId, limit, offset),
     ]);
     const rating = summarise(reviews.counts);
-    if (!name && !verification && rating.count === 0) throw new NotFoundException('User not found');
+    // Sellers without reviews have a profile too: listing pages link to it.
+    if (!name && !verification && rating.count === 0 && !(await this.repo.hasListings(userId)))
+      throw new NotFoundException('User not found');
     return {
       userId,
       name: name ?? UNKNOWN_NAME,

@@ -124,8 +124,10 @@ page) turns message pushes off.
 ## Layout
 
 ```text
-apps/mobile/src/app/          Expo Router screens: (tabs)/ home, search, messages, account; listings/[id],
-                              messages/[id], my-listings, auth, +not-found
+apps/mobile/src/app/          Expo Router screens: (tabs)/ home, search, sell, messages, account;
+                              listings/[id], listings/new, categories/[id], contact/[listingId],
+                              messages/[id], my-listings, favourites, saved-searches, notifications,
+                              users/[id] (trust profile), auth, +not-found
 apps/mobile/src/components/   ui.tsx (Fjord Glass primitives), listing-card.tsx, no-photo.tsx
 apps/mobile/src/lib/          api (typed clients, useLoad, usePaged), auth (provider.tsx for web,
                               provider.native.tsx for devices), realtime (one shared WebSocket), storage,

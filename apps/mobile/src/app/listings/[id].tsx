@@ -242,19 +242,22 @@ export default function ListingScreen() {
             </Body>
           </View>
 
-          <View
+          <Pressable
             testID="seller"
+            role="link"
+            aria-label={`${m.profile.seeProfile}: ${item.seller.name}`}
+            disabled={!seller.data}
+            onPress={() => seller.data && router.push(`/users/${seller.data.userId}`)}
             style={[styles.seller, { backgroundColor: theme.surface, borderColor: theme.border }]}
           >
+            {/* The name comes from the listing: trust only learns names once someone is reviewed. */}
             <View style={[styles.avatar, { backgroundColor: theme.placeholder }]}>
               <Text style={[styles.avatarText, { color: theme.text }]}>
-                {(seller.data?.name ?? item.seller.name).slice(0, 1)}
+                {item.seller.name.slice(0, 1)}
               </Text>
             </View>
             <View style={styles.grow}>
-              <Text style={[styles.sellerName, { color: theme.text }]}>
-                {seller.data?.name ?? item.seller.name}
-              </Text>
+              <Text style={[styles.sellerName, { color: theme.text }]}>{item.seller.name}</Text>
               {seller.data ? (
                 <View style={styles.place}>
                   <Icon
@@ -271,7 +274,8 @@ export default function ListingScreen() {
                 </View>
               ) : null}
             </View>
-          </View>
+            {seller.data ? <Icon name="chevron-forward" size={18} color={theme.muted} /> : null}
+          </Pressable>
 
           {details.length > 0 ? (
             <View

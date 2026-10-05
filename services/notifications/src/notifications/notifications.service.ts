@@ -297,7 +297,7 @@ export class NotificationsService {
         return void pushes.add(1, { kind: push.kind, outcome: 'skipped' });
       }
       const copy = renderPush(push.kind, locale, push.params);
-      const url = pushPath(push.kind, push.ref_id);
+      const url = pushPath(push.kind, push.ref_id, push.user_id);
       const result = await this.pusher.send(
         tokens.map((to) => ({
           to,

@@ -284,6 +284,15 @@ export class TrustRepository {
     return rows.map((r) => ({ rating: r.rating, n: Number(r.n) }));
   }
 
+  /** Whether the user has put up any listing trust knows of (a seller, reviewed or not). */
+  async hasListings(userId: string): Promise<boolean> {
+    const { rowCount } = await this.pool.query(
+      'SELECT 1 FROM listings WHERE owner_id = $1 LIMIT 1',
+      [userId],
+    );
+    return rowCount === 1;
+  }
+
   async listing(id: string): Promise<ListingRow | null> {
     const { rows } = await this.pool.query<ListingRow>('SELECT * FROM listings WHERE id = $1', [
       id,

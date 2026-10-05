@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Segmented } from '../../components/segmented';
@@ -74,7 +74,18 @@ export default function Account() {
   const { m, locale, setLocale } = useI18n();
   const { preference, setPreference } = useThemeState();
   const auth = useAuth();
+  const api = useApi();
   const insets = useSafeAreaInsets();
+  // Refreshed whenever the tab comes back into view, so the count follows what was read.
+  const unread = useLoad(
+    async () =>
+      auth.status === 'signedIn'
+        ? unwrap(await api.notifications.GET('/api/v1/notifications/unread'))
+        : undefined,
+    [api, auth.status],
+  );
+  const reloadUnread = unread.reload;
+  useFocusEffect(useCallback(() => reloadUnread(), [reloadUnread]));
   if (auth.status === 'loading') return <Status loading />;
 
   const themeLabels: Record<ThemePreference, string> = {
@@ -103,6 +114,16 @@ export default function Account() {
             onPress={() => router.push('/listings/new')}
           />
           <Button
+            testID="open-notifications"
+            variant="secondary"
+            label={
+              unread.data?.count
+                ? `${m.notifications.title} · ${fill(m.notifications.unread, { count: unread.data.count })}`
+                : m.notifications.title
+            }
+            onPress={() => router.push('/notifications')}
+          />
+          <Button
             testID="my-listings"
             variant="secondary"
             label={m.account.myListings}
@@ -119,6 +140,12 @@ export default function Account() {
             variant="secondary"
             label={m.savedSearches.title}
             onPress={() => router.push('/saved-searches')}
+          />
+          <Button
+            testID="open-my-profile"
+            variant="secondary"
+            label={m.profile.myProfile}
+            onPress={() => router.push(`/users/${auth.user!.id}`)}
           />
           <Button
             testID="logout"
