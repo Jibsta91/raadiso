@@ -297,8 +297,10 @@ export function ListingForm({
     } else {
       body.append('file', {
         uri: asset.uri,
-        name: asset.fileName ?? 'photo.jpg',
-        type: asset.mimeType ?? 'image/jpeg',
+        name: (asset.fileName ?? 'photo').replace(/\.(heic|heif)$/i, '.jpg'),
+        type: /hei[cf]/i.test(asset.mimeType ?? '')
+          ? 'image/jpeg'
+          : (asset.mimeType ?? 'image/jpeg'),
       } as unknown as Blob);
     }
     const res = await auth.fetch(
@@ -330,6 +332,10 @@ export function ListingForm({
       mediaTypes: ['images'],
       quality: 0.8,
       exif: false,
+      // iPhones keep photos as HEIC; ask iOS for a JPEG copy, which the media service accepts
+      // (it takes JPEG, PNG and WebP, recognised by their bytes).
+      preferredAssetRepresentationMode:
+        ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
       allowsMultipleSelection: source === 'library',
       selectionLimit: room,
     };
