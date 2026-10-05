@@ -322,6 +322,17 @@ describe('reviews', () => {
     assert.deepEqual(entries[0]!.payload.data.actorRoles, ['moderator']);
   });
 
+  it('has a profile for every known seller, reviewed or not, and none for strangers', async () => {
+    const seller = person('Nina');
+    const id = randomUUID();
+    owners.set(id, seller.sub);
+    await service.onEvent(received(listingEvent(snapshot(id, seller.sub, 1, 'active'))));
+    const profile = await service.profile(seller.sub, 20, 0);
+    assert.equal(profile.rating.count, 0);
+    assert.equal(profile.verification, null);
+    assert.equal(await status(service.profile(randomUUID(), 20, 0)), 404);
+  });
+
   it('lets platform admins remove reviews too', async () => {
     const seller = person('Siri');
     const buyer = person('Per');
