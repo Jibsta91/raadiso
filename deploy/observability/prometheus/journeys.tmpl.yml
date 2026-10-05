@@ -1,0 +1,15 @@
+# Journeys the blackbox exporter probes every 30 s (ADR-0031). The Prometheus container renders
+# this file into /prometheus/journeys.yml at start, with __DOMAIN__ replaced by RAADI_DOMAIN.
+- targets: ['http://traefik/en']
+  labels: { journey: home, __param_module: page, __param_hostname: '__DOMAIN__' }
+- targets: ['http://traefik/en/search?q=sykkel']
+  labels: { journey: search_page, __param_module: page, __param_hostname: '__DOMAIN__' }
+- targets: ['http://traefik/api/v1/search/listings?q=bil&pageSize=1']
+  labels: { journey: search_api, __param_module: json_items, __param_hostname: '__DOMAIN__' }
+- targets: ['http://traefik/realms/raadi/.well-known/openid-configuration']
+  labels: { journey: sign_in, __param_module: oidc_discovery, __param_hostname: 'auth.__DOMAIN__' }
+- targets: ['http://traefik/en/admin']
+  labels:
+    { journey: console, __param_module: sign_in_redirect, __param_hostname: 'admin.__DOMAIN__' }
+- targets: ['http://traefik/m/']
+  labels: { journey: app_web, __param_module: page, __param_hostname: '__DOMAIN__' }

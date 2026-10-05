@@ -51,6 +51,7 @@ cat <<BANNER
     OpenBao UI ......... ${S}://bao.${D}${P}/ui/   (token: ./raadi secret openbao_root_token)
     Traefik dashboard .. ${S}://traefik.${D}${P}/dashboard/
     Prometheus ......... ${S}://prometheus.${D}${P}
+    SLOs ............... ${S}://grafana.${D}${P}/d/raadi-slos   (error budgets; public view: /en/status)
     Mailpit (emails) ... ${S}://mail.${D}${P}
     Push mock (app) .... ${S}://push.${D}${P}/messages   (pushes to the app, in development)
 

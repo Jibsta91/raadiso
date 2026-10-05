@@ -53,6 +53,15 @@ services:
     image: prom/prometheus:v3.15.0
     environment:
       GOMEMLIMIT: 400MiB
+      RAADI_DOMAIN: ${RAADI_DOMAIN}
+    # The journey targets carry the public host names (ADR-0031): rendered from the template here.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        sed "s/__DOMAIN__/$${RAADI_DOMAIN}/g" /etc/prometheus/journeys.tmpl.yml > /prometheus/journeys.yml
+        && exec /bin/prometheus "$$@"
+      - prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -73,6 +82,22 @@ services:
     deploy:
       resources:
         limits: { memory: 512M, cpus: '1.0' }
+
+  # Synthetic probes of the main journeys through the gateway (ADR-0031).
+  blackbox:
+    <<: *hardening
+    image: prom/blackbox-exporter:v0.28.0
+    command: ['--config.file=/etc/blackbox/blackbox.yml']
+    volumes:
+      - ./deploy/observability/blackbox:/etc/blackbox:ro
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:9115/-/healthy']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 48M, cpus: '0.25' }
 
   alertmanager:
     <<: *hardening

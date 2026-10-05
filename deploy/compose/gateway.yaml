@@ -40,7 +40,8 @@ services:
     healthcheck:
       test: ['CMD', 'traefik', 'healthcheck', '--configFile=/etc/traefik/traefik.yml']
       interval: 10s
-      timeout: 3s
+      # The check starts a second traefik process; on a busy laptop VM that took over 3 s.
+      timeout: 6s
       retries: 10
     deploy:
       resources:

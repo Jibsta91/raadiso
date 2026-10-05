@@ -118,3 +118,54 @@ describe('user administration', () => {
     assert.ok(!suspendSchema.safeParse({ reasonCode: 'fraud', hours: 0 }).success);
   });
 });
+
+describe('security overview (ADR-0031)', () => {
+  it('maps Keycloak devices and credentials to the contract', async () => {
+    const { toOverview } = await import('../../src/me/security.controller.js');
+    const now = Math.floor(Date.now() / 1000);
+    const overview = toOverview(
+      [
+        {
+          os: 'Mac OS X',
+          device: 'Other',
+          mobile: false,
+          sessions: [
+            {
+              id: 'sess-aaaaaaaa',
+              ipAddress: '10.0.0.1',
+              started: now - 600,
+              lastAccess: now,
+              expires: now + 3600,
+              browser: 'Chrome/140',
+              current: true,
+              clients: [{ clientId: 'raadi-bff' }, { clientId: 'raadi-mobile' }],
+            },
+          ],
+        },
+      ],
+      [
+        {
+          type: 'password',
+          removeable: false,
+          userCredentialMetadatas: [{ credential: { id: 'c1' } }],
+        },
+        {
+          type: 'webauthn-passwordless',
+          removeable: true,
+          userCredentialMetadatas: [
+            { credential: { id: 'p1', userLabel: 'Phone', createdDate: Date.now() } },
+          ],
+        },
+      ],
+      now - 60,
+    );
+    const v = validator('SecurityOverview');
+    assert.ok(v(overview), JSON.stringify(v.errors));
+    assert.deepEqual(overview.sessions[0]?.apps, ['web', 'app']);
+    assert.equal(
+      overview.methods.find((m) => m.type === 'webauthn-passwordless')?.credentials[0]?.label,
+      'Phone',
+    );
+    assert.equal(overview.methods.find((m) => m.type === 'otp')?.credentials.length, 0);
+  });
+});

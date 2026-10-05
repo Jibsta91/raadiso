@@ -17,3 +17,4 @@ Commands assume the repository root (development) or `DEPLOY_DIR` (production, `
 | [saved.md](saved.md)                     | `SavedSearchChecksFailing`, favourites not following price changes                                                        |
 | [messaging.md](messaging.md)             | `WebSocketOriginRejected`, messages arriving only after a reload, closed conversations                                    |
 | [audit.md](audit.md)                     | A staff action missing from the audit log, "who did this?"                                                                |
+| [slo.md](slo.md)                         | `SLOFastBurn`, `SLOSlowBurn`, `SLOBudgetExhausted`, `JourneyProbeFailing`; the status page shows a journey down           |

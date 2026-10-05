@@ -2,6 +2,9 @@
 
 Prerequisites: **Docker** (Desktop, or Engine + Compose v2) and **Git**. Every other tool runs in containers.
 
+Before the first start, `./raadi doctor` checks Docker, memory, disk, ports, name resolution and the clock;
+`./raadi status` shows each running service's health, memory and CPU.
+
 ## Run modes
 
 | Mode       | Command                                                                 | Use it for                                           |

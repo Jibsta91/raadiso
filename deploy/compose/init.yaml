@@ -175,6 +175,7 @@ services:
       grafana: { condition: service_healthy }
       prometheus: { condition: service_healthy }
       alertmanager: { condition: service_healthy }
+      blackbox: { condition: service_healthy }
       loki: { condition: service_healthy }
       tempo: { condition: service_healthy }
       otel-collector: { condition: service_healthy }

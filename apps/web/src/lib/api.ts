@@ -2,6 +2,7 @@ import 'server-only';
 import {
   type ConversationDetail,
   type ConversationPage,
+  createIdentityClient,
   createListingsClient,
   createMessagingClient,
   createNotificationsClient,
@@ -20,6 +21,7 @@ import {
   type ListingPage,
   type SearchQuery,
   type SearchResult,
+  type SecurityOverview,
   type TrustProfile,
   type TrustSummary,
 } from '@raadi/api-client';
@@ -347,4 +349,21 @@ export async function markSavedSearchSeen(id: string): Promise<SavedSearch | nul
     .POST('/api/v1/saved/searches/{id}/seen', { ...init, params: { path: { id } } })
     .catch(() => undefined);
   return (await savedSearches().catch(() => null))?.find((s) => s.id === id) ?? null;
+}
+
+/** My sessions on every device and my sign-in methods (ADR-0031); null when signed out. */
+export async function mySecurity(): Promise<SecurityOverview | null> {
+  const token = await accessToken();
+  if (!token) return null;
+  const { data, response } = await createIdentityClient({ baseUrl: env.identityBffUrl }).GET(
+    '/api/v1/identity/me/security',
+    {
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(6000),
+      cache: 'no-store',
+    },
+  );
+  if (data) return data;
+  if (response.status === 401) return null;
+  throw new ServiceUnavailableError(`identity-bff returned ${response.status}`);
 }

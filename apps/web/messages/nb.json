@@ -86,21 +86,52 @@
     },
     "securityTitle": "Sikkerhet",
     "securityHint": "Bytt passord, slå på totrinnsbekreftelse eller legg til en passnøkkel.",
-    "manageSecurity": "Administrer innlogging og sikkerhet",
+    "manageSecurity": "Sikkerhet og enheter",
     "logout": "Logg ut"
   },
   "status": {
     "title": "Driftsstatus",
-    "subtitle": "Sanntidsstatus for Raadisos tjenester.",
+    "subtitle": "Raadisos helse akkurat nå: reisene folk tar, løftene våre og hver komponent.",
     "allOk": "Alle systemer fungerer normalt",
-    "degraded": "Noen komponenter har redusert drift",
+    "degraded": "Noen komponenter er redusert; hovedreisene virker",
     "groups": {
       "app": "Applikasjon",
       "platform": "Plattform",
       "observability": "Overvåking"
     },
     "latency": "{ms} ms",
-    "down": "Nede"
+    "down": "Nede",
+    "outage": "Noe folk er avhengige av, virker ikke",
+    "journeysTitle": "Reiser",
+    "journeysHint": "Sjekket hvert 30. sekund, time for time i 7 dager",
+    "journeys": {
+      "home": "Forsiden",
+      "search_page": "Søkesiden",
+      "search_api": "Søk (API og app)",
+      "sign_in": "Innlogging",
+      "console": "Ansattkonsoll",
+      "app_web": "Appen på nett"
+    },
+    "uptime": "{value} oppe",
+    "stripLabel": "Oppetid for {journey}, time for time i 7 dager",
+    "noData": "ingen data",
+    "noHistory": "Historikken er midlertidig utilgjengelig.",
+    "daysAgo": "for 7 dager siden",
+    "now": "nå",
+    "slosTitle": "Løftene våre",
+    "slosHint": "Tjenestenivåmål, siste 7 dager",
+    "slos": {
+      "journeys": "Reisene virker",
+      "web_availability": "Sider lastes uten feil",
+      "api_availability": "Appen og API-ene svarer",
+      "page_latency": "Sider innen 1,2 sekunder",
+      "search_latency": "Søk innen 0,3 sekunder",
+      "sign_in": "Innlogginger fullføres"
+    },
+    "objective": "mål {value}",
+    "budget": "{value} av feilbudsjettet igjen",
+    "noTraffic": "Ingen trafikk ennå",
+    "componentsTitle": "Komponenter"
   },
   "privacy": {
     "title": "Personvern",
@@ -1139,7 +1170,8 @@
       },
       "handledBy": "Behandlet av {name}",
       "history": "Ansatthandlinger",
-      "noHistory": "Ingen ansatthandlinger ennå."
+      "noHistory": "Ingen ansatthandlinger ennå.",
+      "image": "Åpne bilde {n}"
     },
     "moderation": {
       "title": "Moderering",
@@ -1209,7 +1241,8 @@
       "outcome": {
         "resolved": "Fjernet",
         "dismissed": "Avvist"
-      }
+      },
+      "image": "Åpne bilde {n}"
     },
     "orders": {
       "title": "Ordrer",
@@ -1484,6 +1517,66 @@
         "user_roles_change": "Ansattroller endret",
         "user_otp_reset": "Autentiseringsapp fjernet"
       }
+    }
+  },
+  "security": {
+    "title": "Sikkerhet",
+    "back": "Konto",
+    "intro": "Hvor du er logget inn, og hvordan du logger inn. Endringer åpner Raadisos innloggingsside og tar deg tilbake hit.",
+    "unavailable": "Sikkerhetsinnstillingene er midlertidig utilgjengelige. Prøv igjen om litt.",
+    "failed": "Det gikk ikke. Prøv igjen.",
+    "scoreLabel": "Sikkerhetspoeng {score} av 100",
+    "levels": {
+      "strong": "Kontoen din er godt beskyttet",
+      "good": "Bra, ett steg igjen",
+      "basic": "Kontoen din er bare beskyttet av et passord"
+    },
+    "checks": {
+      "passkeyDone": "Du logger inn med passnøkkel",
+      "passkeyTodo": "Legg til en passnøkkel: ikke noe passord å stjele eller glemme",
+      "otpDone": "En ekstra faktor beskytter kontoen",
+      "otpTodo": "Legg til en autentiseringsapp eller passnøkkel som ekstra faktor",
+      "sessionsDone": "{count, plural, one {Bare # annen økt er åpen} other {Bare # andre økter er åpne}}",
+      "sessionsTodo": "{count, plural, one {# annen økt er åpen: logg ut dem du ikke kjenner igjen} other {# andre økter er åpne: logg ut dem du ikke kjenner igjen}}"
+    },
+    "recommended": "Anbefalt",
+    "remove": "Fjern",
+    "added": "lagt til {when}",
+    "passkeys": {
+      "title": "Passnøkler",
+      "hint": "Logg inn med ansikt, fingeravtrykk eller skjermlås. Passnøkler kan ikke fiskes eller lekke.",
+      "add": "Legg til passnøkkel",
+      "unnamed": "Passnøkkel",
+      "confirmRemove": "Fjerne denne passnøkkelen? Du kan ikke lenger logge inn med den."
+    },
+    "otp": {
+      "title": "Autentiseringsapp",
+      "hint": "En sekssifret kode fra en app på telefonen, etter passordet.",
+      "add": "Sett opp autentiseringsapp",
+      "on": "{count, plural, one {På (# app)} other {På (# apper)}}",
+      "confirmRemove": "Fjerne autentiseringsappen? Innlogging spør da bare om passord."
+    },
+    "password": {
+      "title": "Passord",
+      "hint": "Bruk et langt og unikt passord.",
+      "changed": "Sist endret {when}",
+      "change": "Endre passord"
+    },
+    "sessions": {
+      "title": "Hvor du er logget inn",
+      "hint": "Alle nettlesere og telefoner med en åpen økt. Kjenner du ikke igjen en? Logg den ut og endre passordet.",
+      "what": "{browser} på {os}",
+      "thisDevice": "Denne enheten",
+      "active": "aktiv {when}",
+      "signOut": "Logg ut",
+      "signOutOthers": "{count, plural, one {Logg ut den andre økten} other {Logg ut # andre økter}}",
+      "confirmOthers": "Logge ut overalt unntatt her?"
+    },
+    "apps": {
+      "web": "Nettsted",
+      "app": "App",
+      "console": "Ansattkonsoll",
+      "grafana": "Grafana"
     }
   }
 }

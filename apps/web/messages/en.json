@@ -86,21 +86,52 @@
     },
     "securityTitle": "Security",
     "securityHint": "Change your password, set up two-factor authentication or add a passkey.",
-    "manageSecurity": "Manage sign-in & security",
+    "manageSecurity": "Security and devices",
     "logout": "Log out"
   },
   "status": {
     "title": "Platform status",
-    "subtitle": "Live health of Raadiso's services.",
+    "subtitle": "Live health of Raadiso: the journeys people take, our promises, and every component.",
     "allOk": "All systems operational",
-    "degraded": "Some components are degraded",
+    "degraded": "Some components are degraded; the main journeys work",
     "groups": {
       "app": "Application",
       "platform": "Platform",
       "observability": "Observability"
     },
     "latency": "{ms} ms",
-    "down": "Down"
+    "down": "Down",
+    "outage": "Something people rely on is not working",
+    "journeysTitle": "Journeys",
+    "journeysHint": "Checked every 30 seconds, hour by hour for 7 days",
+    "journeys": {
+      "home": "Front page",
+      "search_page": "Search page",
+      "search_api": "Search (API and app)",
+      "sign_in": "Sign-in",
+      "console": "Staff console",
+      "app_web": "App on the web"
+    },
+    "uptime": "{value} up",
+    "stripLabel": "Uptime of {journey}, hour by hour for 7 days",
+    "noData": "no data",
+    "noHistory": "History is temporarily unavailable.",
+    "daysAgo": "7 days ago",
+    "now": "now",
+    "slosTitle": "Our promises",
+    "slosHint": "Service level objectives, last 7 days",
+    "slos": {
+      "journeys": "Journeys work",
+      "web_availability": "Pages load without errors",
+      "api_availability": "The app and APIs answer",
+      "page_latency": "Pages within 1.2 seconds",
+      "search_latency": "Search within 0.3 seconds",
+      "sign_in": "Sign-ins complete"
+    },
+    "objective": "goal {value}",
+    "budget": "{value} of the error budget left",
+    "noTraffic": "No traffic yet",
+    "componentsTitle": "Components"
   },
   "privacy": {
     "title": "Privacy",
@@ -1139,7 +1170,8 @@
       },
       "handledBy": "Handled by {name}",
       "history": "Staff actions",
-      "noHistory": "No staff actions yet."
+      "noHistory": "No staff actions yet.",
+      "image": "Open image {n}"
     },
     "moderation": {
       "title": "Moderation",
@@ -1209,7 +1241,8 @@
       "outcome": {
         "resolved": "Removed",
         "dismissed": "Dismissed"
-      }
+      },
+      "image": "Open image {n}"
     },
     "orders": {
       "title": "Orders",
@@ -1484,6 +1517,66 @@
         "user_roles_change": "Staff roles changed",
         "user_otp_reset": "Authenticator removed"
       }
+    }
+  },
+  "security": {
+    "title": "Security",
+    "back": "Account",
+    "intro": "Where you are signed in, and how you sign in. Changes open Raadiso's sign-in page and bring you back here.",
+    "unavailable": "Your security settings are temporarily unavailable. Try again in a moment.",
+    "failed": "That did not work. Try again.",
+    "scoreLabel": "Security score {score} of 100",
+    "levels": {
+      "strong": "Your account is well protected",
+      "good": "Good, one step to go",
+      "basic": "Your account relies on a password alone"
+    },
+    "checks": {
+      "passkeyDone": "You sign in with a passkey",
+      "passkeyTodo": "Add a passkey: no password to steal or forget",
+      "otpDone": "A second factor protects your account",
+      "otpTodo": "Add an authenticator app or a passkey as a second factor",
+      "sessionsDone": "{count, plural, one {Only # other session is open} other {Only # other sessions are open}}",
+      "sessionsTodo": "{count, plural, one {# other session is open: sign out the ones you don't recognise} other {# other sessions are open: sign out the ones you don't recognise}}"
+    },
+    "recommended": "Recommended",
+    "remove": "Remove",
+    "added": "added {when}",
+    "passkeys": {
+      "title": "Passkeys",
+      "hint": "Sign in with your face, fingerprint or screen lock. Passkeys cannot be phished or leaked.",
+      "add": "Add a passkey",
+      "unnamed": "Passkey",
+      "confirmRemove": "Remove this passkey? You can no longer sign in with it."
+    },
+    "otp": {
+      "title": "Authenticator app",
+      "hint": "A six-digit code from an app on your phone, asked for after your password.",
+      "add": "Set up an authenticator app",
+      "on": "{count, plural, one {On (# app)} other {On (# apps)}}",
+      "confirmRemove": "Remove the authenticator app? Sign-in will ask only for your password."
+    },
+    "password": {
+      "title": "Password",
+      "hint": "Use a long, unique password.",
+      "changed": "Last changed {when}",
+      "change": "Change password"
+    },
+    "sessions": {
+      "title": "Where you are signed in",
+      "hint": "Every browser and phone with an open session. Don't recognise one? Sign it out and change your password.",
+      "what": "{browser} on {os}",
+      "thisDevice": "This device",
+      "active": "active {when}",
+      "signOut": "Sign out",
+      "signOutOthers": "{count, plural, one {Sign out the other session} other {Sign out # other sessions}}",
+      "confirmOthers": "Sign out everywhere except here?"
+    },
+    "apps": {
+      "web": "Website",
+      "app": "App",
+      "console": "Staff console",
+      "grafana": "Grafana"
     }
   }
 }

@@ -143,33 +143,35 @@ export default async function ListingPage({
                 : formatPrice(listing.priceNok, locale)}
             </p>
           </div>
-          <dl className="space-y-3 rounded-lg border p-4 text-sm">
-            <div className="flex items-start gap-2">
-              <MapPin aria-hidden className="mt-0.5 size-4 text-muted-foreground" />
-              <div>
-                <dt className="sr-only">{t('listing.location')}</dt>
+          <div className="space-y-3 rounded-lg border p-4 text-sm">
+            <dl className="space-y-3">
+              <div className="flex items-start gap-2">
+                <dt className="mt-0.5">
+                  <MapPin aria-hidden className="size-4 text-muted-foreground" />
+                  <span className="sr-only">{t('listing.location')}</span>
+                </dt>
                 <dd>
                   {listing.location.name},{' '}
                   {COUNTIES[listing.location.county as County] ?? listing.location.county}
                 </dd>
               </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <User aria-hidden className="mt-0.5 size-4 text-muted-foreground" />
-              <div>
-                <dt className="sr-only">{t('listing.seller')}</dt>
+              <div className="flex items-start gap-2">
+                <dt className="mt-0.5">
+                  <User aria-hidden className="size-4 text-muted-foreground" />
+                  <span className="sr-only">{t('listing.seller')}</span>
+                </dt>
                 <dd className="space-y-1">
                   <span data-testid="listing-seller">{listing.seller.name}</span>
                   <SellerTrust listingId={listing.id} />
                 </dd>
               </div>
-            </div>
+            </dl>
             <p className="text-xs text-muted-foreground">
               {t('listing.published', {
                 date: format.dateTime(new Date(listing.publishedAt), { dateStyle: 'medium' }),
               })}
             </p>
-          </dl>
+          </div>
           <ListingActions listing={listing} />
           {canContact && session.authenticated ? <ContactSeller listingId={listing.id} /> : null}
           {canContact && !session.authenticated ? (

@@ -5,7 +5,6 @@ import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { VerifyButton } from '@/components/trust/verification';
 import { Link } from '@/i18n/navigation';
-import { env } from '@/lib/env';
 import { getSession } from '@/lib/session';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -81,7 +80,9 @@ export default async function WelcomePage({
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline">
-            <a href={`${env.authBaseUrl}/realms/${env.realm}/account/account-security/signing-in`}>
+            <a
+              href={`/auth/login?action=webauthn-register-passwordless&returnTo=${encodeURIComponent(`/${locale}/account/security`)}&locale=${locale}`}
+            >
               {t('passkeyAction')}
             </a>
           </Button>

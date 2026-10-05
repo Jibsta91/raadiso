@@ -18,6 +18,14 @@ export interface TokenSet {
   claims: Record<string, unknown>;
 }
 
+/** Keycloak actions a signed-in user may start from the website's security page (ADR-0031). */
+export const ACCOUNT_ACTIONS = [
+  'UPDATE_PASSWORD',
+  'CONFIGURE_TOTP',
+  'webauthn-register-passwordless',
+] as const;
+export type AccountAction = (typeof ACCOUNT_ACTIONS)[number];
+
 /**
  * Keycloak OIDC client (Authorization Code + PKCE, confidential client).
  * Browser-facing endpoints use the public URL; token/revocation calls use the
@@ -77,15 +85,20 @@ export class OidcService {
     };
   }
 
-  /** `signup` opens Keycloak's registration form directly (OIDC `prompt=create`). */
+  /**
+   * `signup` opens Keycloak's registration form directly (OIDC `prompt=create`); `action` runs a
+   * Keycloak application-initiated action (`kc_action`), e.g. adding a passkey, and comes back.
+   */
   async authorizationUrl(
     tx: LoginTransaction & { state: string },
     uiLocale: string,
     signup = false,
+    action?: AccountAction,
+    reauth = false,
   ): Promise<URL> {
     // admin-bff sets OIDC_PROMPT=login: the console always asks for the password again, even with
     // a Keycloak session from the website (ADR-0028).
-    const prompt = signup ? 'create' : this.cfg.env.OIDC_PROMPT;
+    const prompt = signup ? 'create' : reauth ? 'login' : this.cfg.env.OIDC_PROMPT;
     return oidc.buildAuthorizationUrl(this.config, {
       ...(prompt ? { prompt } : {}),
       redirect_uri: this.redirectUri,
@@ -96,6 +109,7 @@ export class OidcService {
       code_challenge: await oidc.calculatePKCECodeChallenge(tx.codeVerifier),
       code_challenge_method: 'S256',
       ui_locales: uiLocale,
+      ...(action ? { kc_action: action } : {}),
     });
   }
 

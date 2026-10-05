@@ -7,7 +7,7 @@ import type { AppConfig } from '../config.js';
 import { loginCounter, refreshCounter } from '../metrics.js';
 import { APP_CONFIG } from '../tokens.js';
 import { UsersRepository } from '../users/users.repository.js';
-import { OidcService } from './oidc.service.js';
+import { ACCOUNT_ACTIONS, type AccountAction, OidcService } from './oidc.service.js';
 import {
   afterLoginPath,
   isCsrfSafe,
@@ -34,7 +34,10 @@ export class AuthController {
     private readonly users: UsersRepository,
   ) {}
 
-  /** Starts the Authorization Code + PKCE flow; `?signup=1` opens registration instead of login. */
+  /**
+   * Starts the Authorization Code + PKCE flow; `?signup=1` opens registration instead of login, and
+   * `?action=` one of ACCOUNT_ACTIONS (add a passkey, set up an authenticator, change the password).
+   */
   @Get('login')
   @Throttle(AUTH_THROTTLE)
   async login(@Req() req: Req, @Res() reply: FastifyReply): Promise<void> {
@@ -43,7 +46,16 @@ export class AuthController {
     const tx = this.oidc.newTransaction(safeReturnTo(query.returnTo, `/${locale}`));
     await this.sessions.putLoginTransaction(tx.state, tx);
     const signup = query.signup === '1' || query.signup === 'true';
-    const url = await this.oidc.authorizationUrl(tx, keycloakUiLocale(locale), signup);
+    const action = ACCOUNT_ACTIONS.find((a) => a === query.action) as AccountAction | undefined;
+    // `?reauth=1`: ask for the password even with a Keycloak session, for a fresh auth_time (step-up).
+    const reauth = query.reauth === '1';
+    const url = await this.oidc.authorizationUrl(
+      tx,
+      keycloakUiLocale(locale),
+      signup,
+      action,
+      reauth,
+    );
     this.redirect(reply, 302, url.href);
   }
 

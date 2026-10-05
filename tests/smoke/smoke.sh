@@ -682,8 +682,10 @@ token_from() {
     "http://$1:4000/auth/forward" | tr -d '\r' | sed -n 's/^[Aa]uthorization: Bearer //p'
 }
 staff_api() { # <token> <method> <url> [body]: prints the HTTP status, body in $BODY
+  local body=()
+  [[ -n "${4:-}" ]] && body=(-H 'content-type: application/json' --data "$4")
   curl -s -o "$BODY" -w '%{http_code}' --max-time 15 -X "$2" -H "authorization: Bearer $1" \
-    -H 'content-type: application/json' ${4:+--data "$4"} "$3"
+    "${body[@]}" "$3"
 }
 req GET "$PUBLIC/admin/v1/listings"
 [[ "$status" != "200" ]] && ok "staff APIs are not routed by the gateway" || fail "staff API exposed" "HTTP $status"
@@ -725,6 +727,28 @@ operator_token="$(token_from admin-bff raadi_admin_sid)"
   && ok "an operator reads the delivery queues" || fail "queues" "$(head -c 200 "$BODY")"
 [[ "$(staff_api "$operator_token" GET "http://admin-bff:4000/admin/v1/users/$amina")" == "403" ]] \
   && ok "an operator cannot read accounts" || fail "operator account read" "$(head -c 200 "$BODY")"
+
+section "Journeys, SLOs and account security (ADR-0031)"
+eventually "every journey probe passes (blackbox exporter through the gateway)" 120 \
+  q 'min(probe_success{job="journeys"}) and count(probe_success{job="journeys"}) >= 6' '.data.result[0].value[1] == "1"'
+rules_ok() { curl -sf --max-time 10 http://prometheus:9090/api/v1/rules | jq -e '[.data.groups[] | select(.name | startswith("slo-")) | .rules[] | .health] | length > 50 and all(. == "ok")'; }
+eventually "SLO rules evaluate without errors" 90 rules_ok
+eventually "error budgets are recorded for every SLO" 120 q 'count(slo:objective:ratio)' '.data.result[0].value[1] == "6"'
+req GET "$PUBLIC/en/status"
+expect_status 200 "the status page answers"
+grep -q 'data-testid="status-journey"' "$BODY" && ok "the status page shows the journeys' uptime" || fail "status journeys"
+req GET "$PUBLIC/auth/login?reauth=1&returnTo=/en/account/security&locale=en"
+[[ "$(header location)" == *"prompt=login"* ]] && ok "re-authentication asks for the password again (fresh auth_time)" || fail "reauth" "$(header location)"
+req GET "$PUBLIC/auth/login?action=webauthn-register-passwordless&returnTo=/en/account/security&locale=en"
+[[ "$(header location)" == *"kc_action=webauthn-register-passwordless"* ]] && ok "adding a passkey starts Keycloak's action from the website" || fail "kc_action" "$(header location)"
+login_as "$USER_EMAIL" || fail "login as kari"
+kari_token="$(token_from identity-bff raadi_sid)"
+[[ "$(staff_api "$kari_token" GET http://identity-bff:4000/api/v1/identity/me/security)" == "200" ]] \
+  && [[ "$(json '[.sessions[] | select(.current)] | length')" == "1" ]] \
+  && ok "the security page reads my sessions from Keycloak with my own token" || fail "security overview" "$(head -c 200 "$BODY")"
+[[ "$(staff_api "$kari_token" DELETE http://identity-bff:4000/api/v1/identity/me/credentials/aaaaaaaa-0000-0000-0000-000000000000)" =~ ^(401|404)$ ]] \
+  && ok "removing a sign-in method needs a recent sign-in or an existing method" || fail "credential removal" "$(head -c 200 "$BODY")"
+req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Audit log (ADR-0028)"
 login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"

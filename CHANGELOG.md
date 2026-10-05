@@ -8,6 +8,19 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Service level objectives (ADR-0031): six SLOs over 7 days (website and API availability, page and search
+  latency, sign-ins, synthetic journeys) with error budgets and multi-window burn-rate alerts, a Grafana
+  **Raadi · SLOs** dashboard and a runbook. A blackbox exporter probes six journeys through the gateway
+  every 30 s.
+- The status page shows each journey hour by hour for 7 days, how well each promise is kept, and the error
+  budget left.
+- A security centre on the website (Account → Security and devices): every signed-in device with sign-out
+  for one or all others, passkeys (add, sign in with them, remove), the authenticator app, password change
+  and a security checkup. Passkey sign-in is enabled on the login page.
+- `./raadi doctor` checks the machine before a start (and `./raadi up` runs it); `./raadi status` shows the
+  health, memory and CPU of every service.
+- An accessibility gate: axe-core checks the main pages, signed-in pages and the console against WCAG 2.2 AA
+  in the e2e suite.
 - Favourites and saved searches (ADR-0026): a heart on every listing, a Favourites page and app screen, and
   "Save search" on the results. You hear about it (in the app, as a push, and for saved searches at most one
   e-mail a day) when a favourite gets cheaper or is sold, or a saved search has new matches. New service:
@@ -65,6 +78,9 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- Screen readers met an invalid list on the listing page (location and seller); the console's avatars and
+  status pills had too little contrast; the moderation queue nested a checkbox inside a list option.
+- Traefik could report unhealthy on a busy machine: its health check now has 6 s.
 - Users were signed out after `docker compose up` re-ran keycloak-init ("Session doesn't have required
   client"): it recreated every Keycloak client. Clients are now updated in place.
 - Refunds asked for a role (`admin`) that did not exist, so nobody could refund. They now need

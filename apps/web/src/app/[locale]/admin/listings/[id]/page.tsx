@@ -162,6 +162,8 @@ export default async function ListingPage({
                     target="_blank"
                     rel="noreferrer"
                     className={i === 0 ? 'col-span-2 row-span-2' : ''}
+
+                    aria-label={t('image', { n: i + 1 })}
                   >
                     <img
                       src={i === 0 ? img.large : img.card}

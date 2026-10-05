@@ -86,21 +86,52 @@
     },
     "securityTitle": "Amniga",
     "securityHint": "Beddel furahaaga sirta ah, dami xaqiijinta laba-tallaabo ama ku dar furaha gelitaanka (passkey).",
-    "manageSecurity": "Maamul galitaanka iyo amniga",
+    "manageSecurity": "Ammaanka iyo qalabka",
     "logout": "Ka bax"
   },
   "status": {
     "title": "Xaaladda nidaamka",
-    "subtitle": "Xaaladda tooska ah ee adeegyada Raadiso.",
+    "subtitle": "Caafimaadka Raadiso hadda: socdaalka dadku qaadaan, ballamahayaga iyo qayb kasta.",
     "allOk": "Dhammaan nidaamyadu way shaqeynayaan",
-    "degraded": "Qaar ka mid ah qaybaha ayaa dhibaato qaba",
+    "degraded": "Qaybo ka mid ah way hoos u dhaceen; socdaalka muhiimka ahi wuu shaqaynayaa",
     "groups": {
       "app": "Codsiga",
       "platform": "Madal",
       "observability": "La socodka"
     },
     "latency": "{ms} ms",
-    "down": "Ma shaqeynayo"
+    "down": "Ma shaqeynayo",
+    "outage": "Wax dadku ku tiirsan yihiin ma shaqaynayo",
+    "journeysTitle": "Socdaal",
+    "journeysHint": "La hubiyo 30-kii ilbiriqsi kasta, saac saac 7 maalmood",
+    "journeys": {
+      "home": "Bogga hore",
+      "search_page": "Bogga raadinta",
+      "search_api": "Raadin (API iyo app)",
+      "sign_in": "Gelitaan",
+      "console": "Konsoolka shaqaalaha",
+      "app_web": "App-ka websaydhka"
+    },
+    "uptime": "{value} shaqaynayay",
+    "stripLabel": "Shaqaynta {journey}, saac saac 7 maalmood",
+    "noData": "xog ma jirto",
+    "noHistory": "Taariikhda si ku meel gaar ah looma heli karo.",
+    "daysAgo": "7 maalmood kahor",
+    "now": "hadda",
+    "slosTitle": "Ballamahayaga",
+    "slosHint": "Ujeeddooyinka heerka adeegga, 7-dii maalmood ee u dambeeyay",
+    "slos": {
+      "journeys": "Socdaalku wuu shaqeeyaa",
+      "web_availability": "Bogagga waxay u furmaan khalad la'aan",
+      "api_availability": "App-ka iyo API-yadu way jawaabaan",
+      "page_latency": "Bogag 1.2 ilbiriqsi gudahood",
+      "search_latency": "Raadin 0.3 ilbiriqsi gudahood",
+      "sign_in": "Gelitaannadu way dhammaystirmaan"
+    },
+    "objective": "hadaf {value}",
+    "budget": "{value} miisaaniyadda khaladka ayaa haray",
+    "noTraffic": "Weli taraafik ma jiro",
+    "componentsTitle": "Qaybaha"
   },
   "privacy": {
     "title": "Asturnaanta",
@@ -1139,7 +1170,8 @@
       },
       "handledBy": "Waxaa xalliyay {name}",
       "history": "Ficilada shaqaalaha",
-      "noHistory": "Weli ficil shaqaale ma jiro."
+      "noHistory": "Weli ficil shaqaale ma jiro.",
+      "image": "Fur sawirka {n}"
     },
     "moderation": {
       "title": "Dhexdhexaadin",
@@ -1209,7 +1241,8 @@
       "outcome": {
         "resolved": "La saaray",
         "dismissed": "La diiday"
-      }
+      },
+      "image": "Fur sawirka {n}"
     },
     "orders": {
       "title": "Dalabyada",
@@ -1484,6 +1517,66 @@
         "user_roles_change": "Doorarka shaqaalaha la beddelay",
         "user_otp_reset": "Barnaamijka xaqiijinta la saaray"
       }
+    }
+  },
+  "security": {
+    "title": "Ammaanka",
+    "back": "Akoonka",
+    "intro": "Meesha aad ku jirto iyo sida aad u gasho. Isbeddelladu waxay furayaan bogga gelitaanka Raadiso oo halkan kugu soo celinayaan.",
+    "unavailable": "Dejinta ammaankaagu si ku meel gaar ah looma heli karo. Isku day mar kale.",
+    "failed": "Taasi ma shaqayn. Isku day mar kale.",
+    "scoreLabel": "Dhibcaha ammaanka {score} ee 100",
+    "levels": {
+      "strong": "Akoonkaagu si wanaagsan ayuu u ilaashan yahay",
+      "good": "Fiican, hal tallaabo ayaa dhiman",
+      "basic": "Akoonkaagu wuxuu ku tiirsan yahay furaha sirta oo kaliya"
+    },
+    "checks": {
+      "passkeyDone": "Waxaad ku gashaa furaha gelitaanka",
+      "passkeyTodo": "Ku dar furaha gelitaanka: furaha sirta oo la xado ama la ilaabo ma jiro",
+      "otpDone": "Arrin labaad ayaa ilaalisa akoonkaaga",
+      "otpTodo": "Ku dar barnaamij xaqiijin ama furaha gelitaanka arrin labaad ahaan",
+      "sessionsDone": "{count, plural, one {Kaliya # fadhi kale ayaa furan} other {Kaliya # fadhi kale ayaa furan}}",
+      "sessionsTodo": "{count, plural, one {# fadhi kale ayaa furan: ka saar kuwa aadan aqoon} other {# fadhi kale ayaa furan: ka saar kuwa aadan aqoon}}"
+    },
+    "recommended": "La soo jeediyay",
+    "remove": "Saar",
+    "added": "lagu daray {when}",
+    "passkeys": {
+      "title": "Furayaasha gelitaanka",
+      "hint": "Ku gal wejigaaga, faraha ama qufulka shaashadda. Furayaasha gelitaanka lama xadi karo.",
+      "add": "Ku dar furaha gelitaanka",
+      "unnamed": "Furaha gelitaanka",
+      "confirmRemove": "Saar furahan? Mar dambe kuma geli kartid."
+    },
+    "otp": {
+      "title": "Barnaamijka xaqiijinta",
+      "hint": "Koodh lix god ah oo ka yimaada app taleefankaaga, kadib furaha sirta.",
+      "add": "Deji barnaamijka xaqiijinta",
+      "on": "{count, plural, one {Shidan (# app)} other {Shidan (# app)}}",
+      "confirmRemove": "Saar barnaamijka xaqiijinta? Gelitaanku wuxuu weydiin doonaa furaha sirta oo kaliya."
+    },
+    "password": {
+      "title": "Furaha sirta",
+      "hint": "Isticmaal furo dheer oo gaar ah.",
+      "changed": "Markii u dambaysay la beddelay {when}",
+      "change": "Beddel furaha sirta"
+    },
+    "sessions": {
+      "title": "Meelaha aad ku jirto",
+      "hint": "Biraawsar iyo taleefan kasta oo fadhi furan leh. Mid aadan aqoon? Ka saar oo beddel furaha sirta.",
+      "what": "{browser} ee {os}",
+      "thisDevice": "Qalabkan",
+      "active": "firfircoon {when}",
+      "signOut": "Ka saar",
+      "signOutOthers": "{count, plural, one {Ka saar fadhiga kale} other {Ka saar # fadhi oo kale}}",
+      "confirmOthers": "Meel kasta ka saar marka laga reebo halkan?"
+    },
+    "apps": {
+      "web": "Websaydh",
+      "app": "App",
+      "console": "Konsoolka shaqaalaha",
+      "grafana": "Grafana"
     }
   }
 }
