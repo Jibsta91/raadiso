@@ -14,6 +14,8 @@ servers:
   - url: http://raadi.localhost
     description: Local development through the gateway
 tags:
+  - name: admin
+    description: Admin console (console tokens only, ADR-0030)
   - name: auth
   - name: me
   - name: health
@@ -125,6 +127,310 @@ paths:
       responses:
         '200': { description: Ready }
         '503': { description: Not ready or draining }
+  /admin/v1/users:
+    get:
+      tags: [admin]
+      operationId: adminSearchUsers
+      summary: Find users (support, platform admins)
+      description: Admin console only (admin-bff, console tokens; not routed by the gateway, ADR-0030).
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: role, in: query, schema: { $ref: '#/components/schemas/StaffRole' } }
+        - { name: status, in: query, schema: { type: string, enum: [active, suspended] } }
+        - { name: first, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: max, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: A page of users
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUserPage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/stats:
+    get:
+      tags: [admin]
+      operationId: adminUserStats
+      summary: Account counts and daily sign-ups and sign-ins
+      responses:
+        '200':
+          description: Statistics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserStats' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/staff:
+    get:
+      tags: [admin]
+      operationId: adminStaff
+      summary: Staff members and their roles (platform admins)
+      responses:
+        '200':
+          description: Staff
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [items],
+                  properties:
+                    { items: { type: array, items: { $ref: '#/components/schemas/AdminUser' } } },
+                }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/lookup:
+    get:
+      tags: [admin]
+      operationId: adminLookupStaff
+      summary: E-mail and name of staff members (other ids are left out)
+      parameters:
+        - {
+            name: ids,
+            in: query,
+            required: true,
+            schema: { type: string, description: Comma-separated user ids (max 50) },
+          }
+      responses:
+        '200':
+          description: Staff members
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [items],
+                  properties:
+                    {
+                      items: { type: array, items: { $ref: '#/components/schemas/StaffIdentity' } },
+                    },
+                }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}:
+    get:
+      tags: [admin]
+      operationId: adminUser
+      summary: 'One account: roles, sessions, credentials, lockout, suspension, sign-in events'
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: The account
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminUserDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}/notes:
+    get:
+      tags: [admin]
+      operationId: adminUserNotes
+      summary: Support's internal notes about the account
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Notes
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [items],
+                  properties:
+                    { items: { type: array, items: { $ref: '#/components/schemas/UserNote' } } },
+                }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [admin]
+      operationId: adminAddUserNote
+      summary: Add an internal note (audited without its text)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserNoteInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [id],
+                  properties: { id: { type: string, format: uuid } },
+                }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}/suspend:
+    post:
+      tags: [admin]
+      operationId: adminSuspendUser
+      summary: Suspend the account and end its sessions (step-up)
+      description: Support may not suspend staff accounts or their own. Needs a sign-in within the step-up window (RFC 9470 challenge otherwise).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SuspendInput' }
+      responses:
+        '204': { description: Suspended }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}/unsuspend:
+    post:
+      tags: [admin]
+      operationId: adminUnsuspendUser
+      summary: Lift a suspension (step-up)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteInput' }
+      responses:
+        '204': { description: Lifted }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}/sign-out:
+    post:
+      tags: [admin]
+      operationId: adminSignOutUser
+      summary: End every session of the account
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteInput' }
+      responses:
+        '200':
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [sessions],
+                  properties: { sessions: { type: integer } },
+                }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}/emails:
+    post:
+      tags: [admin]
+      operationId: adminSendUserEmail
+      summary: Send Keycloak's password reset or e-mail verification
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailInput' }
+      responses:
+        '202':
+          description: Sent
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [sent],
+                  properties: { sent: { type: boolean } },
+                }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}/unlock:
+    post:
+      tags: [admin]
+      operationId: adminUnlockUser
+      summary: Clear a brute-force lockout
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Unlocked }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}/roles:
+    put:
+      tags: [admin]
+      operationId: adminSetStaffRoles
+      summary: Set the staff roles (platform admins, step-up)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RolesInput' }
+      responses:
+        '200':
+          description: Changed
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [added, removed],
+                  properties:
+                    {
+                      added: { type: array, items: { $ref: '#/components/schemas/StaffRole' } },
+                      removed: { type: array, items: { $ref: '#/components/schemas/StaffRole' } },
+                    },
+                }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/users/{id}/otp-reset:
+    post:
+      tags: [admin]
+      operationId: adminResetOtp
+      summary: Remove the authenticator (platform admins, step-up)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteInput' }
+      responses:
+        '204': { description: Removed }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -136,6 +442,311 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    StaffRole:
+      type: string
+      enum: [moderator, support, operator, platform-admin]
+    AdminUser:
+      type: object
+      additionalProperties: false
+      required:
+        [id, email, name, enabled, emailVerified, createdAt, lastLoginAt, staffRoles, suspended]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: [string, 'null'] }
+        name: { type: [string, 'null'] }
+        enabled: { type: boolean }
+        emailVerified: { type: boolean }
+        createdAt: { type: [string, 'null'], format: date-time }
+        lastLoginAt: { type: [string, 'null'], format: date-time }
+        staffRoles: { type: array, items: { $ref: '#/components/schemas/StaffRole' } }
+        suspended: { type: boolean }
+    AdminUserPage:
+      type: object
+      additionalProperties: false
+      required: [items, total]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminUser' } }
+        total: { type: integer }
+    AdminUserDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - email
+        - name
+        - enabled
+        - emailVerified
+        - createdAt
+        - lastLoginAt
+        - staffRoles
+        - suspended
+        - displayName
+        - locale
+        - requiredActions
+        - sessions
+        - credentials
+        - lockout
+        - suspension
+        - events
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type:
+            - string
+            - 'null'
+        name:
+          type:
+            - string
+            - 'null'
+        enabled:
+          type: boolean
+        emailVerified:
+          type: boolean
+        createdAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        lastLoginAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        staffRoles:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffRole'
+        suspended:
+          type: boolean
+        displayName:
+          type:
+            - string
+            - 'null'
+        locale:
+          type:
+            - string
+            - 'null'
+        requiredActions:
+          type: array
+          items:
+            type: string
+        sessions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - ip
+              - startedAt
+              - lastAccessAt
+              - clients
+            properties:
+              id:
+                type: string
+              ip:
+                type:
+                  - string
+                  - 'null'
+              startedAt:
+                type: string
+                format: date-time
+              lastAccessAt:
+                type: string
+                format: date-time
+              clients:
+                type: array
+                items:
+                  type: string
+        credentials:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - type
+              - label
+              - createdAt
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+              label:
+                type:
+                  - string
+                  - 'null'
+              createdAt:
+                type:
+                  - string
+                  - 'null'
+                format: date-time
+        lockout:
+          type: object
+          additionalProperties: false
+          required:
+            - locked
+            - failures
+            - lastFailureAt
+          properties:
+            locked:
+              type: boolean
+            failures:
+              type: integer
+            lastFailureAt:
+              type:
+                - string
+                - 'null'
+              format: date-time
+        suspension:
+          oneOf:
+            - type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - reasonCode
+                - note
+                - by
+                - at
+                - until
+              properties:
+                reasonCode:
+                  $ref: '#/components/schemas/SuspensionReason'
+                note:
+                  type: string
+                by:
+                  type: string
+                  format: uuid
+                at:
+                  type: string
+                  format: date-time
+                until:
+                  type:
+                    - string
+                    - 'null'
+                  format: date-time
+        events:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - type
+              - at
+              - ip
+              - client
+              - error
+            properties:
+              type:
+                type: string
+              at:
+                type: string
+                format: date-time
+              ip:
+                type:
+                  - string
+                  - 'null'
+              client:
+                type:
+                  - string
+                  - 'null'
+              error:
+                type:
+                  - string
+                  - 'null'
+    SuspensionReason:
+      type: string
+      enum: [fraud, spam, abuse, chargeback, impersonation, security, other]
+    UserStats:
+      type: object
+      additionalProperties: false
+      required: [total, suspended, staff, signups, active]
+      properties:
+        total: { type: integer }
+        suspended: { type: integer }
+        staff: { type: integer }
+        signups:
+          {
+            type: array,
+            items:
+              {
+                type: object,
+                additionalProperties: false,
+                required: [day, count],
+                properties: { day: { type: string, format: date }, count: { type: integer } },
+              },
+          }
+        active:
+          {
+            type: array,
+            items:
+              {
+                type: object,
+                additionalProperties: false,
+                required: [day, count],
+                properties: { day: { type: string, format: date }, count: { type: integer } },
+              },
+          }
+    StaffIdentity:
+      type: object
+      additionalProperties: false
+      required: [id, email, name]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: [string, 'null'] }
+        name: { type: [string, 'null'] }
+    UserNote:
+      type: object
+      additionalProperties: false
+      required: [id, authorId, body, pinned, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        authorId: { type: string, format: uuid }
+        body: { type: string }
+        pinned: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    UserNoteInput:
+      type: object
+      additionalProperties: false
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 2000 }
+        pinned: { type: boolean, default: false }
+    SuspendInput:
+      type: object
+      additionalProperties: false
+      required: [reasonCode]
+      properties:
+        reasonCode: { $ref: '#/components/schemas/SuspensionReason' }
+        note: { type: string, maxLength: 500 }
+        hours:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 8760,
+            description: Lift automatically after this many hours,
+          }
+    NoteInput:
+      type: object
+      additionalProperties: false
+      properties:
+        note: { type: string, maxLength: 500 }
+    EmailInput:
+      type: object
+      additionalProperties: false
+      required: [action]
+      properties:
+        action: { type: string, enum: [password_reset, verify_email] }
+    RolesInput:
+      type: object
+      additionalProperties: false
+      required: [roles, note]
+      properties:
+        roles: { type: array, maxItems: 4, items: { $ref: '#/components/schemas/StaffRole' } }
+        note: { type: string, minLength: 3, maxLength: 500 }
     Locale:
       type: string
       enum: [nb, en, so]

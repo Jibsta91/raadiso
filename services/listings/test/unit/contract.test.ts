@@ -13,6 +13,13 @@ import {
   toSnapshot,
 } from '../../src/listings/listing.model.js';
 import { contracts } from '@raadi/events';
+import {
+  type AdminListing,
+  type AdminListingDetail,
+  dismissSchema,
+  ListingsAdminService,
+  removeSchema,
+} from '../../src/listings/admin.js';
 
 const spec = parse(readFileSync(new URL('../../../openapi.yaml', import.meta.url), 'utf8'));
 const ajv = new Ajv2020({ strict: false, allErrors: true });
@@ -87,5 +94,63 @@ describe('OpenAPI contract', () => {
     const data = { listing: toSnapshot(row) };
     assert.ok(contracts['no.raadi.listings.listing.updated.v1'].safeParse(data).success);
     assert.equal(JSON.stringify(data).includes('Kari'), false, 'no seller name in events');
+  });
+});
+
+describe('admin console contract (ADR-0030)', () => {
+  const signer = imgproxySigner('00'.repeat(32), '11'.repeat(32));
+  // Rows as the admin queries return them; the service maps them without the database.
+  const admin = new ListingsAdminService({} as never, signer, {} as never, {} as never);
+  const adminRow = {
+    ...row,
+    removed_by: null,
+    removal_reason: null,
+    open_reports: '2',
+  };
+
+  it('admin listings and details match the schemas', () => {
+    const item = (admin as unknown as { toAdmin(r: unknown): AdminListing }).toAdmin(adminRow);
+    const v = validator('AdminListing');
+    assert.ok(v(item), JSON.stringify(v.errors));
+    assert.equal(item.openReports, 2);
+    const detail: AdminListingDetail = {
+      ...item,
+      description: row.description,
+      attributes: row.attributes,
+      images: [{ thumb: '/img/a', card: '/img/b', large: '/img/c' }],
+      version: 3,
+      reports: [
+        {
+          id: '0d7c1f3e-9a51-4c47-8f0e-1c2b3a4d5e6f',
+          reason: 'fraud',
+          comment: '',
+          status: 'resolved',
+          reporterId: row.owner_id,
+          createdAt: new Date().toISOString(),
+          handledBy: row.owner_id,
+          handledAt: new Date().toISOString(),
+          handledNote: 'Fake',
+        },
+      ],
+      seller: {
+        ownerId: row.owner_id,
+        active: 1,
+        sold: 0,
+        deleted: 1,
+        removedByModeration: 1,
+        reports: 1,
+        firstListingAt: null,
+      },
+      otherListings: [],
+    };
+    const d = validator('AdminListingDetail');
+    assert.ok(d(detail), JSON.stringify(d.errors));
+  });
+
+  it('removal and dismissal input', () => {
+    assert.ok(removeSchema.safeParse({ reasonCode: 'duplicate' }).success);
+    assert.ok(!removeSchema.safeParse({ reasonCode: 'ugly' }).success);
+    assert.ok(!dismissSchema.safeParse({ ids: [] }).success);
+    assert.ok(dismissSchema.safeParse({ ids: [row.id], note: 'fine' }).success);
   });
 });

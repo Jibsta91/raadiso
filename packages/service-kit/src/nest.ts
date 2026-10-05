@@ -1,4 +1,5 @@
 import {
+  applyDecorators,
   type ArgumentsHost,
   type CallHandler,
   Catch,
@@ -67,6 +68,15 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     else if (detail !== undefined) problem.detail = detail;
     const errors = (body as { errors?: unknown } | undefined)?.errors;
     if (errors) problem.errors = errors;
+    if (exception instanceof StepUpRequiredException) {
+      // RFC 9470: the client signs in again and retries with a fresher token.
+      problem.type = 'urn:raadi:problem:step-up-required';
+      problem.maxAge = exception.maxAge;
+      void reply.header(
+        'www-authenticate',
+        `Bearer error="insufficient_user_authentication", error_description="A recent sign-in is required", max_age=${exception.maxAge}`,
+      );
+    }
 
     void reply.status(status).header('content-type', 'application/problem+json').send(problem);
   }
@@ -97,6 +107,31 @@ export const IS_PUBLIC = 'raadi:isPublic';
 export const ROLES = 'raadi:roles';
 export const Public = () => SetMetadata(IS_PUBLIC, true);
 export const Roles = (...roles: string[]) => SetMetadata(ROLES, roles);
+
+export const STAFF = 'raadi:staff';
+
+/** Client id of the admin console (ADR-0028); only its tokens open staff endpoints. */
+export const CONSOLE_CLIENT_ID = process.env.ADMIN_CLIENT_ID ?? 'raadi-admin';
+/** How recent a sign-in must be for a step-up action, in seconds (ADR-0030). */
+export const STEP_UP_MAX_AGE = Number(process.env.STEP_UP_MAX_AGE_SECONDS ?? 900);
+
+/**
+ * A staff endpoint (ADR-0030): one of the roles, AND a token the admin console obtained (azp
+ * `raadi-admin`), so a website session never drives staff APIs even for staff. With `stepUp`, the
+ * person must also have signed in within STEP_UP_MAX_AGE (RFC 9470 challenge otherwise).
+ */
+export const Staff = (roles: readonly string[], opts: { stepUp?: boolean } = {}) =>
+  applyDecorators(
+    SetMetadata(ROLES, [...roles]),
+    SetMetadata(STAFF, { stepUp: opts.stepUp ?? false }),
+  );
+
+/** 401 with a step-up challenge: sign in again (RFC 9470). */
+export class StepUpRequiredException extends UnauthorizedException {
+  constructor(readonly maxAge: number) {
+    super({ message: 'This action needs a recent sign-in', code: 'step_up_required' });
+  }
+}
 
 export type AuthenticatedRequest = FastifyRequest & { principal?: Principal };
 
@@ -131,6 +166,16 @@ export class JwtAuthGuard implements CanActivate {
     const required = this.reflector.getAllAndOverride<string[]>(ROLES, targets);
     if (required?.length && !required.some((r) => req.principal!.roles.includes(r))) {
       throw new ForbiddenException('Insufficient role');
+    }
+    const staff = this.reflector.getAllAndOverride<{ stepUp: boolean }>(STAFF, targets);
+    if (staff) {
+      if (req.principal.claims.azp !== CONSOLE_CLIENT_ID) {
+        throw new ForbiddenException('Staff endpoints accept admin console tokens only');
+      }
+      const authTime = Number(req.principal.claims.auth_time);
+      if (staff.stepUp && !(authTime > Date.now() / 1000 - STEP_UP_MAX_AGE)) {
+        throw new StepUpRequiredException(STEP_UP_MAX_AGE);
+      }
     }
     return true;
   }

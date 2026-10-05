@@ -143,6 +143,8 @@ services:
       SESSION_MAX_AGE_SEC: '28800'
       SESSION_KEY_PREFIX: admin
       OPENBAO_SECRET_PATH: raadi/admin-bff
+      # The console's user administration through Keycloak's service account (ADR-0030).
+      STAFF_API: 'true'
     volumes:
       - type: volume
         source: secrets
@@ -577,6 +579,8 @@ services:
       AUDIT_URL: http://audit:4000
       ADMIN_BFF_URL: http://admin-bff:4000
       ADMIN_BASE_URL: ${ADMIN_BASE_URL}
+      PROMETHEUS_URL: http://prometheus:9090
+      ALERTMANAGER_URL: http://alertmanager:9093
     depends_on:
       identity-bff: { condition: service_healthy }
     healthcheck:

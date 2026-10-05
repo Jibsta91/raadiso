@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { parse } from 'yaml';
+import { redact } from '../../src/notifications/admin.js';
 import { toNotification } from '../../src/notifications/model.js';
 
 const spec = parse(readFileSync(new URL('../../../openapi.yaml', import.meta.url), 'utf8'));
@@ -32,5 +33,14 @@ describe('OpenAPI contract', () => {
     valid('Preferences', { emailMessages: false });
     valid('Preferences', { emailMessages: true, pushMessages: false });
     valid('Device', { token: 'ExponentPushToken[abc]', platform: 'ios' });
+  });
+});
+
+describe('admin queues (ADR-0030)', () => {
+  it('never shows e-mail addresses in provider errors', () => {
+    assert.equal(
+      redact('550 5.1.1 <kari.nordmann@example.com>: Recipient address rejected'),
+      '550 5.1.1 <‹address›>: Recipient address rejected',
+    );
   });
 });

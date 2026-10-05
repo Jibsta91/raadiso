@@ -108,3 +108,7 @@ digest; Renovate updates it.
 - Events: CloudEvents 1.0 written to the service's `outbox` table in the same transaction as the state change.
 - Config: environment variables (validated with zod at startup). Secrets come only from OpenBao.
 - Versions: exact pins everywhere. Renovate proposes upgrades ([ADR-0010](adr/0010-pinned-versions.md)).
+- Staff endpoints: `/admin/v1/<service>/…` with `@Staff(roles, { stepUp })` (console tokens only, never
+  routed by the gateway); every change writes `audit()` in its transaction with a reason and `details`. The
+  console calls them from `apps/web/src/lib/admin/api.ts` and its server actions
+  ([ADR-0030](adr/0030-staff-apis-and-console-workspaces.md)).

@@ -207,12 +207,13 @@ export class ReportsService implements OnModuleInit {
   }
 
   /** Dismisses a listing's open reports (the listing is fine), with an audit entry (ADR-0028). */
-  async dismiss(listingId: string, moderator: Principal): Promise<number> {
+  async dismiss(listingId: string, moderator: Principal, note = ''): Promise<number> {
     return withTransaction(this.pool, async (db) => {
       const { rowCount } = await db.query(
-        `UPDATE reports SET status = 'dismissed', handled_by = $2, handled_at = now()
+        `UPDATE reports SET status = 'dismissed', handled_by = $2, handled_at = now(),
+                handled_note = $3
           WHERE listing_id = $1 AND status = 'open'`,
-        [listingId, moderator.sub],
+        [listingId, moderator.sub, note || null],
       );
       if (rowCount) {
         reported.add(rowCount, { outcome: 'dismissed' });
@@ -220,6 +221,8 @@ export class ReportsService implements OnModuleInit {
           action: 'reports.dismiss',
           targetType: 'listing',
           targetId: listingId,
+          ...(note ? { reason: note } : {}),
+          details: { reports: rowCount },
         });
       }
       return rowCount ?? 0;

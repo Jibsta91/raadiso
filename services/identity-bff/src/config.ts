@@ -1,6 +1,8 @@
 import { baseEnvSchema, loadEnv, OpenBaoClient } from '@raadi/service-kit';
 import { z } from 'zod';
 
+const bool = z.enum(['true', 'false']).transform((v) => v === 'true');
+
 export const envSchema = baseEnvSchema.extend({
   PORT: z.coerce.number().int().default(4000),
   PUBLIC_BASE_URL: z.url(),
@@ -38,6 +40,12 @@ export const envSchema = baseEnvSchema.extend({
     .string()
     .regex(/^raadi\/[a-z-]+$/)
     .default('raadi/identity-bff'),
+  /**
+   * The console's user administration (/admin/v1/users, ADR-0030). Only admin-bff turns it on; it
+   * then needs the Keycloak service account below.
+   */
+  STAFF_API: bool.default(false),
+  KEYCLOAK_ADMIN_CLIENT_ID: z.string().min(1).default('admin-bff'),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -48,6 +56,8 @@ export interface Secrets {
   /** 32-byte AES-256-GCM key for session encryption at rest. */
   sessionKey: Buffer;
   valkeyPassword: string;
+  /** The Keycloak service account's secret (admin-bff only). */
+  keycloakClientSecret?: string;
 }
 
 export interface AppConfig {
@@ -96,6 +106,7 @@ export async function loadAppConfig(): Promise<AppConfig> {
       oidc_client_secret: z.string().min(16),
       session_key: z.string().regex(/^[0-9a-f]{64}$/, 'must be 32 bytes hex'),
       valkey_password: z.string().min(16),
+      keycloak_client_secret: env.STAFF_API ? z.string().min(16) : z.string().optional(),
     })
     .parse({ ...own, valkey_password: valkey.password });
 
@@ -104,5 +115,6 @@ export async function loadAppConfig(): Promise<AppConfig> {
     oidcClientSecret: secrets.oidc_client_secret,
     sessionKey: Buffer.from(secrets.session_key, 'hex'),
     valkeyPassword: secrets.valkey_password,
+    keycloakClientSecret: secrets.keycloak_client_secret,
   });
 }

@@ -717,13 +717,25 @@
     "failed": "Handlingen feilet. Prøv igjen."
   },
   "admin": {
-    "title": "Admin",
-    "nav": "Admin-meny",
+    "title": "Konsoll",
+    "nav": "Konsollmeny",
     "logout": "Logg ut",
+    "copy": "Kopier",
     "sections": {
       "overview": "Oversikt",
       "moderation": "Moderering",
+      "users": "Brukere",
+      "listings": "Annonser",
+      "orders": "Ordrer",
+      "reviews": "Vurderinger",
+      "operations": "Drift",
+      "staff": "Ansatte",
       "audit": "Revisjonslogg"
+    },
+    "groups": {
+      "workspace": "Arbeidsflate",
+      "marketplace": "Markedsplass",
+      "platform": "Plattform"
     },
     "roles": {
       "moderator": "Moderator",
@@ -731,29 +743,697 @@
       "operator": "Drift",
       "platform-admin": "Administrator"
     },
+    "environment": {
+      "development": "Utvikling",
+      "production": "Produksjon"
+    },
     "noAccess": {
       "title": "Ingen tilgang",
-      "body": "{email} har ikke en rolle som gir tilgang til admin. Spør en administrator."
+      "body": "{email} har ingen rolle som gir tilgang til administrasjonskonsollen. Spør en administrator."
+    },
+    "stepUp": {
+      "explain": "Følsomme handlinger (utestengelse, refusjon, roller) krever innlogging de siste 15 minuttene.",
+      "fresh": "Følsomme handlinger tillatt · {minutes} min",
+      "stale": "Logg inn på nytt for følsomme handlinger"
+    },
+    "palette": {
+      "button": "Søk eller gå til …",
+      "label": "Kommandopalett",
+      "placeholder": "Søk etter brukere, annonser, ordrer eller seksjoner …",
+      "placeholderNav": "Gå til en seksjon …",
+      "nothing": "Ingen treff",
+      "commands": "Kommandoer",
+      "toggleTheme": "Bytt lys / mørk",
+      "shortcuts": "Hurtigtaster",
+      "logout": "Logg ut",
+      "recent": "Nylig sett",
+      "goTo": "Gå til",
+      "move": "flytt",
+      "open": "åpne",
+      "close": "lukk",
+      "kinds": {
+        "user": "Brukere",
+        "listing": "Annonser",
+        "order": "Ordrer"
+      }
+    },
+    "shortcuts": {
+      "title": "Hurtigtaster",
+      "palette": "Kommandopalett",
+      "search": "Søk",
+      "help": "Denne listen",
+      "close": "Lukk"
+    },
+    "live": {
+      "updated": "Live · for {seconds} s siden",
+      "paused": "Pause",
+      "pause": "Sett automatisk oppdatering på pause",
+      "resume": "Fortsett automatisk oppdatering"
+    },
+    "dialog": {
+      "close": "Lukk",
+      "cancel": "Avbryt",
+      "working": "Jobber …",
+      "stepUpNote": "Krever innlogging de siste 15 minuttene.",
+      "signInAgain": "Logg inn på nytt",
+      "typeToConfirm": "Skriv <b>{text}</b> for å bekrefte."
+    },
+    "result": {
+      "forbidden": "Du har ikke lov til å gjøre det.",
+      "invalid": "Sjekk skjemaet og prøv igjen.",
+      "failed": "Noe gikk galt. Prøv igjen.",
+      "notFound": "Den finnes ikke lenger.",
+      "conflict": "Det går ikke i nåværende tilstand.",
+      "stepUp": "Logg inn på nytt før du gjør dette, for sikkerhets skyld.",
+      "suspended": "Kontoen er utestengt og logget ut.",
+      "unsuspended": "Utestengelsen er opphevet.",
+      "signedOut": "Logget ut overalt.",
+      "emailSent": "E-posten er sendt.",
+      "unlocked": "Kontoen er låst opp.",
+      "noteAdded": "Notat lagt til.",
+      "rolesChanged": "Rollene er endret. Personen er logget ut.",
+      "otpReset": "Autentiseringsappen er fjernet.",
+      "listingRemoved": "Annonsen er fjernet. Selgeren får beskjed.",
+      "dismissed": "Rapportene er avvist.",
+      "reviewRemoved": "Vurderingen er fjernet.",
+      "refunded": "Refundert."
+    },
+    "channels": {
+      "email": "E-post",
+      "push": "Push"
     },
     "overview": {
       "title": "Oversikt",
-      "intro": "Det som trenger oppmerksomhet nå, for rollene dine.",
-      "openReports": "Åpne rapporter",
-      "listings": "{count, plural, one {# annonse} other {# annonser}}",
-      "latestAction": "Siste handling",
-      "auditHint": "Se hele revisjonsloggen",
+      "greeting": {
+        "morning": "God morgen, {name}",
+        "afternoon": "God ettermiddag, {name}",
+        "evening": "God kveld, {name}"
+      },
+      "intro": "Dagens tall og det som trenger en person, for dine roller.",
+      "openReports": "Rapporterte annonser",
+      "median": "Median beslutningstid {time}",
+      "handled": "{count, plural, one {# behandlet denne uken} other {# behandlet denne uken}}",
+      "activeListings": "Aktive annonser",
+      "newToday": "{count, plural, one {# ny i dag} other {# nye i dag}}",
+      "users": "Kontoer",
+      "signups": "{count, plural, one {# ny siste 14 dager} other {# nye siste 14 dager}}",
+      "revenue": "Inntekt, 30 dager",
+      "orders": "{count, plural, one {# ordre} other {# ordrer}}",
+      "errorRate": "Serverfeil",
+      "lastHour": "Andel av forespørsler, siste time",
+      "messages": "Meldinger i dag",
+      "conversations": "{count, plural, one {# ny samtale denne uken} other {# nye samtaler denne uken}}",
+      "attention": "Trenger oppmerksomhet",
+      "allClear": "Alt i orden. Ingenting venter på deg.",
+      "myActivity": "Dine siste handlinger",
+      "all": "Alle",
+      "noActivity": "Ingenting ennå. Handlingene dine vises her.",
       "tools": "Verktøy",
       "toolNames": {
         "grafana": "Grafana (overvåking)",
-        "keycloak": "Keycloak (brukere og roller)"
+        "keycloak": "Keycloak (identitet)",
+        "website": "Nettstedet"
+      }
+    },
+    "attention": {
+      "alerts": "{count, plural, one {# varsel er aktivt} other {# varsler er aktive}}",
+      "reports": "{count, plural, one {# rapportert annonse venter} other {# rapporterte annonser venter}}, den eldste i {age}",
+      "stuck": "{count, plural, one {# betaling henger hos leverandøren} other {# betalinger henger hos leverandøren}}",
+      "delivery": "{channel}: {count, plural, one {# levering feilet} other {# leveringer feilet}} siste døgn",
+      "errors": "Serverfeil utgjør {rate} av forespørslene"
+    },
+    "users": {
+      "title": "Brukere",
+      "intro": "Finn en konto med e-post, navn eller id, og hjelp, steng ute eller logg den ut. Alle handlinger havner i revisjonsloggen.",
+      "stats": {
+        "total": "Kontoer",
+        "signups": "{count, plural, one {# ny siste 14 dager} other {# nye siste 14 dager}}",
+        "active": "Logget inn i dag",
+        "activeHint": "Kontoer per dag, 14 dager",
+        "suspended": "Utestengt",
+        "staff": "{count, plural, one {# ansatt} other {# ansatte}}"
+      },
+      "filters": {
+        "q": "Søk",
+        "qPlaceholder": "E-post, navn eller id",
+        "role": "Ansattrolle",
+        "status": "Status",
+        "any": "Alle",
+        "apply": "Søk"
+      },
+      "status": {
+        "active": "Aktiv",
+        "suspended": "Utestengt",
+        "unverified": "E-post ikke bekreftet"
+      },
+      "columns": {
+        "user": "Konto",
+        "status": "Status",
+        "roles": "Ansattroller",
+        "created": "Opprettet",
+        "lastLogin": "Sist innlogget"
+      },
+      "never": "Aldri",
+      "empty": "Ingen kontoer passer.",
+      "unavailable": "Brukeradministrasjonen er midlertidig utilgjengelig.",
+      "prev": "Forrige",
+      "next": "Neste",
+      "range": "{from}–{to} av {total}"
+    },
+    "user": {
+      "back": "← Brukere",
+      "unavailable": "Denne informasjonen er midlertidig utilgjengelig.",
+      "status": {
+        "active": "Aktiv",
+        "suspended": "Utestengt"
+      },
+      "emailVerified": "E-post bekreftet",
+      "emailUnverified": "E-post ikke bekreftet",
+      "bankid": "BankID-verifisert",
+      "otp": "Autentiseringsapp",
+      "locked": "Låst ute",
+      "actions": {
+        "suspend": "Steng ute",
+        "unsuspend": "Opphev utestengelse",
+        "signOut": "Logg ut overalt",
+        "passwordReset": "E-post om nytt passord",
+        "verifyEmail": "Bekreftelses-e-post",
+        "unlock": "Lås opp",
+        "roles": "Ansattroller",
+        "resetOtp": "Fjern autentiseringsapp"
+      },
+      "suspend": {
+        "title": "Steng ute {name}?",
+        "description": "Personen kan ikke logge inn, og alle økter avsluttes nå. Annonsene blir liggende til du fjerner dem.",
+        "reason": "Årsak",
+        "note": "Notat til revisjonsloggen",
+        "notePlaceholder": "Hva skjedde, saksnummer …",
+        "duration": "Varighet",
+        "untilLifted": "Til den oppheves",
+        "hours": "{count, plural, one {# time} other {# timer}}",
+        "days": "{count, plural, one {# dag} other {# dager}}"
+      },
+      "suspensionReasons": {
+        "fraud": "Svindel",
+        "spam": "Spam",
+        "abuse": "Misbruk eller trakassering",
+        "chargeback": "Tilbakeføring av betaling",
+        "impersonation": "Utgir seg for å være noen andre",
+        "security": "Kontosikkerhet",
+        "other": "Annet"
+      },
+      "unsuspend": {
+        "title": "Oppheve utestengelsen av {name}?",
+        "description": "Personen kan logge inn igjen med en gang.",
+        "note": "Hvorfor (til revisjonsloggen)"
+      },
+      "signOut": {
+        "title": "Logge ut overalt?",
+        "description": "{count, plural, one {Avslutter # økt på nettstedet og i appen. Personen kan logge inn igjen.} other {Avslutter # økter på nettstedet og i appen. Personen kan logge inn igjen.}}",
+        "note": "Notat (valgfritt)"
+      },
+      "passwordReset": {
+        "title": "Sende e-post om nytt passord?",
+        "description": "Keycloak sender {email} en lenke for å velge nytt passord (gyldig i 12 timer).",
+        "send": "Send"
+      },
+      "verifyEmail": {
+        "title": "Sende bekreftelses-e-post?",
+        "description": "Keycloak sender {email} en lenke for å bekrefte adressen."
+      },
+      "unlock": {
+        "title": "Låse opp kontoen?",
+        "description": "{count, plural, one {Innlogging ble sperret etter # mislykket forsøk. Lås opp hvis du har bekreftet at det er personen.} other {Innlogging ble sperret etter # mislykkede forsøk. Lås opp hvis du har bekreftet at det er personen.}}"
+      },
+      "roles": {
+        "title": "Ansattroller for {name}",
+        "description": "Personen logges ut slik at de nye rollene gjelder med en gang.",
+        "note": "Hvorfor (til revisjonsloggen)",
+        "explain": {
+          "moderator": "Rapporterte annonser og vurderinger",
+          "support": "Kontoer, ordrer; stenger ute og logger ut",
+          "operator": "Plattformhelse, køer; ingen brukerdata",
+          "platform-admin": "Alt, også refusjon, roller og revisjonsloggen"
+        }
+      },
+      "resetOtp": {
+        "title": "Fjerne autentiseringsappen?",
+        "description": "Ansatte må sette opp en ny ved neste innlogging i konsollen. Gjør det bare når du har bekreftet hvem som spør.",
+        "note": "Hvordan du bekreftet hvem som spurte"
+      },
+      "suspendedBanner": "Utestengt: {reason}",
+      "until": "oppheves",
+      "untilLifted": "til en ansatt opphever den",
+      "tabsLabel": "Kontodeler",
+      "tabs": {
+        "overview": "Oversikt",
+        "listings": "Annonser",
+        "orders": "Ordrer",
+        "reviews": "Vurderinger",
+        "security": "Sikkerhet",
+        "notes": "Notater",
+        "history": "Ansatthandlinger"
+      },
+      "kpi": {
+        "listings": "Aktive annonser",
+        "listingsHint": "{sold} solgt · {removed} fjernet av moderatorer",
+        "rating": "Vurdering",
+        "ratingHint": "{count, plural, one {# vurdering} other {# vurderinger}}",
+        "messages": "Sendte meldinger, 30 dager",
+        "messagesHint": "{conversations} samtaler · blokkert av {blocked}",
+        "spent": "Brukt på fremheving",
+        "ordersHint": "{count, plural, one {# ordre} other {# ordrer}}"
+      },
+      "profile": "Profil",
+      "fields": {
+        "id": "Id",
+        "displayName": "Offentlig navn",
+        "locale": "Språk",
+        "created": "Opprettet",
+        "lastLogin": "Sist innlogget",
+        "firstListing": "Første annonse",
+        "reportsAgainst": "Rapporter om annonsene",
+        "devices": "Enheter",
+        "emailMessages": "E-post ved nye meldinger",
+        "requiredActions": "Ventende steg",
+        "locked": "Låst ute",
+        "failures": "Mislykkede innlogginger",
+        "lastFailure": "Siste feil"
+      },
+      "never": "Aldri",
+      "none": "Ingen",
+      "on": "På",
+      "off": "Av",
+      "yes": "Ja",
+      "no": "Nei",
+      "notes": {
+        "all": "Alle notater",
+        "empty": "Ingen notater ennå.",
+        "add": "Legg til notat",
+        "placeholder": "Hva skjedde, hva dere avtalte, hva man bør følge med på …",
+        "pin": "Fest øverst",
+        "privacy": "Bare ansatte ser notater. Skriv fakta, ikke meninger; brukeren kan be om innsyn (GDPR)."
+      },
+      "recentSignIns": "Siste innlogginger",
+      "signIns": "Innloggingshendelser (30 dager)",
+      "noEvents": "Ingen innloggingshendelser.",
+      "sessions": "Aktive økter",
+      "noSessions": "Ingen aktive økter.",
+      "columns": {
+        "ip": "IP-adresse",
+        "clients": "Apper",
+        "started": "Startet",
+        "lastAccess": "Sist aktiv"
+      },
+      "credentials": "Innloggingsmetoder",
+      "credentialTypes": {
+        "password": "Passord",
+        "otp": "Autentiseringsapp",
+        "webauthn": "Sikkerhetsnøkkel",
+        "webauthn-passwordless": "Passnøkkel"
+      },
+      "lockout": "Beskyttelse mot gjetting",
+      "noHistory": "Ingen ansatthandlinger på denne kontoen."
+    },
+    "listings": {
+      "title": "Annonser",
+      "intro": "Alle annonser i alle tilstander, med rapporter og selgerens historikk.",
+      "unavailable": "Annonser er midlertidig utilgjengelige.",
+      "empty": "Ingen annonser passer.",
+      "stats": {
+        "active": "Aktive",
+        "sold": "Solgt",
+        "reported": "Med åpne rapporter",
+        "created": "Nye annonser, 14 dager"
+      },
+      "filters": {
+        "q": "Søk",
+        "qPlaceholder": "Tittel, selger eller id",
+        "status": "Status",
+        "category": "Kategori",
+        "reported": "Bare rapporterte",
+        "any": "Alle",
+        "apply": "Søk"
+      },
+      "columns": {
+        "listing": "Annonse",
+        "seller": "Selger",
+        "category": "Kategori",
+        "status": "Status",
+        "reports": "Åpne rapporter",
+        "created": "Opprettet"
+      },
+      "status": {
+        "active": "Aktiv",
+        "sold": "Solgt",
+        "deleted": "Fjernet"
+      },
+      "removedByModeration": "Fjernet av moderator",
+      "prev": "Forrige",
+      "next": "Neste",
+      "range": "{from}–{to} av {total}",
+      "back": "← Annonser",
+      "removalReasons": {
+        "fraud": "Svindel",
+        "prohibited": "Forbudt vare",
+        "offensive": "Støtende",
+        "wrong_category": "Feil kategori",
+        "duplicate": "Duplikat",
+        "spam": "Spam",
+        "other": "Annet"
+      },
+      "openReports": "{count, plural, one {# åpen rapport} other {# åpne rapporter}}",
+      "promoted": "Fremhevet",
+      "openOnSite": "Åpne på nettstedet",
+      "dismiss": "Avvis rapporter",
+      "dismissTitle": "Avvise rapportene?",
+      "dismissDescription": "{count, plural, one {Annonsen er i orden. # åpen rapport lukkes.} other {Annonsen er i orden. # åpne rapporter lukkes.}}",
+      "remove": "Fjern annonse",
+      "removeTitle": "Fjerne annonsen?",
+      "removeDescription": "Selgeren får beskjed, åpne rapporter løses, og den forsvinner fra søk. Dette kan ikke angres.",
+      "reason": "Årsak",
+      "note": "Notat til revisjonsloggen (valgfritt)",
+      "notePlaceholder": "Hva du så",
+      "noImages": "Ingen bilder",
+      "description": "Beskrivelse",
+      "seller": "Selger",
+      "openAccount": "Åpne konto",
+      "sellerStats": {
+        "active": "aktive",
+        "sold": "solgt",
+        "removed": "fjernet",
+        "reports": "Rapporter totalt",
+        "since": "Selger siden"
+      },
+      "fields": {
+        "created": "Opprettet",
+        "updated": "Oppdatert",
+        "place": "Sted"
+      },
+      "reports": "Rapporter",
+      "noReports": "Ingen har rapportert denne annonsen.",
+      "reportStatus": {
+        "open": "Åpen",
+        "resolved": "Fjernet",
+        "dismissed": "Avvist"
+      },
+      "handledBy": "Behandlet av {name}",
+      "history": "Ansatthandlinger",
+      "noHistory": "Ingen ansatthandlinger ennå."
+    },
+    "moderation": {
+      "title": "Moderering",
+      "intro": "Rapporterte annonser, mest risikable først. Bestem med tastaturet: j/k for å flytte, x for å fjerne, d for å avvise.",
+      "unavailable": "Moderering er midlertidig utilgjengelig.",
+      "emptyTitle": "Tom kø",
+      "empty": "Ingen åpne rapporter. Fint!",
+      "queue": "Rapporterte annonser",
+      "select": "Velg",
+      "selected": "{count, plural, one {# valgt} other {# valgt}}",
+      "dismissSelected": "Avvis",
+      "bulkTitle": "{count, plural, one {Avvise rapporter på # annonse?} other {Avvise rapporter på # annonser?}}",
+      "bulkDescription": "Bruk dette når annonsene er i orden, for eksempel etter en bølge av feilaktige rapporter.",
+      "note": "Notat til revisjonsloggen (valgfritt)",
+      "notePlaceholder": "Hva du så",
+      "count": "{count, plural, one {# rapport} other {# rapporter}}",
+      "risk": "Risikoscore",
+      "riskLabel": "Risiko {risk}",
+      "keys": "j/k flytt · x fjern · d avvis · mellomrom velg",
+      "dismiss": "Avvis",
+      "dismissTitle": "Avvise rapportene?",
+      "dismissDescription": "{count, plural, one {Annonsen er i orden. # åpen rapport lukkes.} other {Annonsen er i orden. # åpne rapporter lukkes.}}",
+      "templates": {
+        "fine": "Innenfor reglene.",
+        "duplicateReport": "Rapportert ved en feil."
+      },
+      "remove": "Fjern",
+      "removeTitle": "Fjerne annonsen?",
+      "removeDescription": "Selgeren får beskjed, åpne rapporter løses, og den forsvinner fra søk. Dette kan ikke angres.",
+      "reason": "Årsak",
+      "why": "Hvorfor den ble rapportert",
+      "sellerHistory": "Selgeren",
+      "seller": {
+        "active": "aktive annonser",
+        "removed": "fjernet av oss",
+        "reports": "rapporter totalt",
+        "since": "selger siden"
+      },
+      "description": "Beskrivelse",
+      "openDetail": "Alle detaljer",
+      "openOnSite": "Åpne på nettstedet",
+      "views": "Modereringsvisninger",
+      "tabs": {
+        "queue": "Kø",
+        "mine": "Mine avgjørelser",
+        "history": "Teamets historikk"
+      },
+      "stats": {
+        "open": "Annonser som venter",
+        "reports": "{count, plural, one {# åpen rapport} other {# åpne rapporter}}",
+        "oldest": "Eldste i køen",
+        "oldestHint": "Varsel etter 24 timer",
+        "median": "Median beslutningstid",
+        "medianHint": "Første rapport til avgjørelse, 7 dager",
+        "handled": "Avgjørelser, 7 dager",
+        "split": "{removed} fjernet · {dismissed} avvist"
+      },
+      "noHistory": "Ingen avgjørelser ennå.",
+      "columns": {
+        "listing": "Annonse",
+        "outcome": "Avgjørelse",
+        "reports": "Rapporter",
+        "by": "Av",
+        "time": "Tid til avgjørelse",
+        "when": "Når"
+      },
+      "outcome": {
+        "resolved": "Fjernet",
+        "dismissed": "Avvist"
+      }
+    },
+    "orders": {
+      "title": "Ordrer",
+      "intro": "Kjøp av fremheving, betalingsstatus og refusjoner.",
+      "unavailable": "Ordrer er midlertidig utilgjengelige.",
+      "empty": "Ingen ordrer passer.",
+      "stats": {
+        "revenue": "Inntekt",
+        "last30": "Betalte ordrer, 30 dager",
+        "refunded": "Refundert, 30 dager",
+        "stuck": "{count, plural, one {# henger hos leverandøren} other {# henger hos leverandøren}}",
+        "daily": "Inntekt per dag, 30 dager"
+      },
+      "filters": {
+        "q": "Ordre- eller leverandørreferanse",
+        "qPlaceholder": "Starten av id-en",
+        "status": "Status",
+        "any": "Alle",
+        "apply": "Søk"
+      },
+      "columns": {
+        "order": "Ordre",
+        "product": "Produkt",
+        "amount": "Beløp",
+        "status": "Status",
+        "provider": "Leverandør",
+        "user": "Kjøper",
+        "created": "Opprettet"
+      },
+      "products": {
+        "promote_7d": "Fremheving, 7 dager",
+        "promote_30d": "Fremheving, 30 dager"
+      },
+      "status": {
+        "created": "Venter på betaling",
+        "authorized": "Reservert",
+        "captured": "Betalt",
+        "refunded": "Refundert",
+        "cancelled": "Avbrutt",
+        "expired": "Utløpt",
+        "failed": "Feilet"
+      },
+      "prev": "Forrige",
+      "next": "Neste",
+      "range": "{from}–{to} av {total}",
+      "back": "← Ordrer",
+      "refund": "Refunder",
+      "refundTitle": "Refundere {amount}?",
+      "refundDescription": "Pengene går tilbake via betalingsleverandøren, og fremhevingen avsluttes. Dette kan ikke angres.",
+      "reason": "Årsak",
+      "refundReasons": {
+        "customer_request": "Kunden ba om det",
+        "duplicate": "Betalt to ganger",
+        "service_failure": "Vår feil",
+        "fraud": "Svindel",
+        "goodwill": "Kulanse",
+        "other": "Annet"
+      },
+      "note": "Notat til revisjonsloggen (valgfritt)",
+      "details": "Detaljer",
+      "fields": {
+        "id": "Ordre-id",
+        "user": "Kjøper",
+        "listing": "Annonse",
+        "provider": "Leverandør",
+        "providerRef": "Leverandørreferanse",
+        "created": "Opprettet",
+        "updated": "Oppdatert",
+        "starts": "Starter",
+        "ends": "Slutter",
+        "revoked": "Avsluttet tidlig"
+      },
+      "promotion": "Fremheving",
+      "noPromotion": "Ingenting ble fremhevet (ikke betalt).",
+      "timeline": "Tidslinje",
+      "sources": {
+        "api": "av kjøperen",
+        "webhook": "av leverandøren",
+        "reconcile": "ved avstemming",
+        "admin": "av ansatt"
+      }
+    },
+    "reviews": {
+      "title": "Vurderinger",
+      "intro": "Alle vurderinger, også fjernede. Fjern krenkende eller falske vurderinger med en årsak.",
+      "unavailable": "Vurderinger er midlertidig utilgjengelige.",
+      "empty": "Ingen vurderinger passer.",
+      "about": "Om personen",
+      "by": "Skrevet av personen",
+      "removed": "Fjernet",
+      "filters": {
+        "rating": "Stjerner",
+        "state": "Vises",
+        "visible": "Synlige",
+        "removed": "Fjernet",
+        "user": "Person (id)",
+        "any": "Alle",
+        "apply": "Filtrer"
+      },
+      "stars": "{count, plural, one {# stjerne} other {# stjerner}}",
+      "roles": {
+        "buyer": "som kjøper",
+        "seller": "som selger"
+      },
+      "noComment": "Ingen kommentar",
+      "removedBy": {
+        "author": "Fjernet av forfatteren",
+        "moderator": "Fjernet av en moderator"
+      },
+      "remove": "Fjern",
+      "removeTitle": "Fjerne vurderingen?",
+      "removeDescription": "Den forsvinner fra profilen, og vurderingen regnes ut på nytt.",
+      "reason": "Årsak",
+      "reasons": {
+        "abusive": "Krenkende",
+        "personal_data": "Personopplysninger",
+        "not_genuine": "Ikke ekte",
+        "off_topic": "Utenfor tema",
+        "other": "Annet"
+      },
+      "note": "Notat til revisjonsloggen (valgfritt)",
+      "prev": "Forrige",
+      "next": "Neste",
+      "range": "{from}–{to} av {total}"
+    },
+    "operations": {
+      "title": "Drift",
+      "intro": "Plattformens helse: tjenester og avhengigheter, trafikk, feil, hendelser, levering og søk. Bare tall, ingen brukerdata.",
+      "unavailable": "Midlertidig utilgjengelig.",
+      "stats": {
+        "services": "Tjenester klare",
+        "down": "Ikke klar: {names}",
+        "allReady": "Alle avhengigheter svarer",
+        "alerts": "Aktive varsler",
+        "noAlerts": "Ingen aktive",
+        "lag": "Hendelsesetterslep",
+        "lagHint": "{groups, plural, one {Uleste hendelser, # konsumentgruppe} other {Uleste hendelser, # konsumentgrupper}}",
+        "dlq": "Døde meldinger",
+        "dlqHint": "Hendelser ingen tjeneste kunne behandle",
+        "logins": "Innlogginger, siste time",
+        "loginsHint": "Nettsted, app og konsoll"
+      },
+      "health": "Tjenester",
+      "columns": {
+        "service": "Tjeneste",
+        "status": "Klar",
+        "dependencies": "Avhengigheter",
+        "rate": "Forespørsler",
+        "errors": "5xx",
+        "p95": "p95 svartid",
+        "trend": "Siste time"
+      },
+      "status": {
+        "ok": "Klar",
+        "degraded": "Redusert",
+        "down": "Nede"
+      },
+      "pipeline": "Hendelsesflyt",
+      "noMetrics": "Ingen målinger ennå.",
+      "lag": "{count, plural, one {# bak} other {# bak}}",
+      "dlqBody": "{count, plural, one {# hendelse ligger i dødmeldingskøen.} other {# hendelser ligger i dødmeldingskøen.}}",
+      "dlqEmpty": "Dødmeldingskøen er tom.",
+      "dlqLogs": "Logger for døde meldinger",
+      "delivery": "E-post og push",
+      "channels": {
+        "email": "E-post",
+        "push": "Push"
+      },
+      "queue": "{pending} venter · {sent} sendt · {failed} feilet (24 t)",
+      "oldest": "Eldste venter",
+      "noErrors": "Ingen leveringsfeil de siste 7 dagene.",
+      "search": "Søkeindeks",
+      "index": {
+        "alias": "Indeks",
+        "documents": "Dokumenter",
+        "size": "Størrelse",
+        "newest": "Nyeste endring",
+        "lag": "Indekseringsforsinkelse (p95)",
+        "drift": "Stemmer med annonser",
+        "inSync": "I takt",
+        "off": "{count, plural, =1 {1 mer i søk} other {# avvik}}"
+      },
+      "alerts": "Varsler",
+      "noAlerts": "Ingen varsler er aktive.",
+      "payments": "Betalinger som henger hos leverandøren: {stuck}"
+    },
+    "staff": {
+      "title": "Ansatte",
+      "intro": "Hvem som kan gjøre hva, og hvor aktive de var de siste 14 dagene. Endre roller på personens side.",
+      "unavailable": "Ansatte er midlertidig utilgjengelige.",
+      "columns": {
+        "person": "Person",
+        "actions": "Handlinger, 14 dager",
+        "lastLogin": "Sist innlogget"
+      },
+      "never": "Aldri",
+      "suspended": "Utestengt",
+      "add": "Legg til en ansatt",
+      "find": "Finn personen",
+      "findPlaceholder": "E-post eller navn",
+      "search": "Søk",
+      "openToGrant": "Gi roller →",
+      "noMatch": "Ingen konto passer. Personen må registrere seg først.",
+      "addHint": "Ansatte bruker sin egen konto. Gi roller på siden deres; de må sette opp en autentiseringsapp ved første innlogging i konsollen.",
+      "matrix": "Hva hver rolle kan gjøre",
+      "explain": {
+        "moderator": "Jobber i modereringskøen: fjerner annonser og vurderinger, avviser rapporter. Ser selgernes annonsehistorikk, ikke e-postadresser.",
+        "support": "Hjelper kunder: finner kontoer, leser ordrer, stenger ute og logger ut kontoer, sender konto-e-post, skriver notater. Leser aldri meldinger.",
+        "operator": "Holder plattformen i gang: helse, køer, hendelsesflyt, søk. Ser tall, aldri brukerdata.",
+        "platform-admin": "Alt over, i tillegg refusjon, ansattroller, autentiseringsapper og revisjonsloggen. Hold gruppen liten."
       }
     },
     "audit": {
       "title": "Revisjonslogg",
-      "intro": "Alt ansatte gjør med annonser, brukere og betalinger, nyeste først. Loggen kan ikke endres.",
+      "intro": "Alt ansatte gjør, nyeste først. Loggen kan ikke endres, heller ikke av administratorer.",
       "empty": "Ingen handlinger passer filteret.",
       "older": "Eldre",
       "unavailable": "Revisjonsloggen er midlertidig utilgjengelig.",
+      "export": "Eksporter CSV",
+      "stats": {
+        "perDay": "{total, plural, one {# handling på 14 dager} other {# handlinger på 14 dager}}",
+        "actions": "Hyppigst",
+        "actors": "Mest aktive"
+      },
       "filters": {
         "action": "Handling",
         "targetType": "Gjelder",
@@ -763,27 +1443,46 @@
         "apply": "Filtrer",
         "clear": "Nullstill"
       },
-      "columns": {
-        "at": "Tidspunkt",
-        "action": "Handling",
-        "target": "Gjelder",
-        "actor": "Utført av",
-        "reason": "Begrunnelse"
-      },
       "actions": {
-        "listing_remove": "Annonse fjernet",
-        "reports_dismiss": "Rapporter avvist",
-        "review_remove": "Omtale fjernet",
-        "payment_refund": "Betaling refundert"
+        "listing_remove": "fjernet",
+        "reports_dismiss": "avviste rapporter på",
+        "review_remove": "fjernet",
+        "payment_refund": "refunderte",
+        "user_suspend": "stengte ute",
+        "user_unsuspend": "opphevet utestengelsen av",
+        "user_suspension_expired": "utestengelsen utløp for",
+        "user_sign_out": "logget ut",
+        "user_password_reset": "sendte nytt passord-e-post til",
+        "user_verify_email": "sendte bekreftelses-e-post til",
+        "user_unlock": "låste opp",
+        "user_note": "skrev et notat på",
+        "user_roles_change": "endret rollene til",
+        "user_otp_reset": "fjernet autentiseringsappen til"
       },
       "targets": {
-        "listing": "Annonse",
-        "order": "Ordre",
-        "user": "Bruker",
-        "review": "Omtale",
-        "report": "Rapport",
-        "conversation": "Samtale",
-        "system": "System"
+        "listing": "annonse",
+        "order": "ordre",
+        "user": "konto",
+        "review": "vurdering",
+        "report": "rapport",
+        "conversation": "samtale",
+        "system": "system"
+      },
+      "actionNames": {
+        "listing_remove": "Annonse fjernet",
+        "reports_dismiss": "Rapporter avvist",
+        "review_remove": "Vurdering fjernet",
+        "payment_refund": "Betaling refundert",
+        "user_suspend": "Konto utestengt",
+        "user_unsuspend": "Utestengelse opphevet",
+        "user_suspension_expired": "Utestengelse utløpt",
+        "user_sign_out": "Logget ut overalt",
+        "user_password_reset": "Nytt passord sendt",
+        "user_verify_email": "Bekreftelses-e-post sendt",
+        "user_unlock": "Konto låst opp",
+        "user_note": "Notat skrevet",
+        "user_roles_change": "Ansattroller endret",
+        "user_otp_reset": "Autentiseringsapp fjernet"
       }
     }
   }

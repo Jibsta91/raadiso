@@ -31,6 +31,13 @@ export const env = {
   get adminSessionCookie() {
     return process.env.ADMIN_SESSION_COOKIE_NAME ?? 'raadi_admin_sid';
   },
+  /** Operations data for the console (ADR-0030): metrics and firing alerts, read-only. */
+  get prometheusUrl() {
+    return process.env.PROMETHEUS_URL ?? 'http://prometheus:9090';
+  },
+  get alertmanagerUrl() {
+    return process.env.ALERTMANAGER_URL ?? 'http://alertmanager:9093';
+  },
   get savedUrl() {
     return process.env.SAVED_URL ?? 'http://saved:4000';
   },

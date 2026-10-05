@@ -14,10 +14,13 @@ export function ThemeSwitcher({
   initial,
   className,
   testId = 'theme-switcher',
+  compact = false,
 }: {
   initial: ThemePreference;
   className?: string;
   testId?: string;
+  /** Icons only (the label becomes the button's name), for narrow places like a sidebar. */
+  compact?: boolean;
 }) {
   const t = useTranslations('theme');
   const [theme, setTheme] = useState(initial);
@@ -62,7 +65,7 @@ export function ThemeSwitcher({
             )}
           >
             <Icon aria-hidden className="size-4" />
-            {t(option)}
+            {compact ? <span className="sr-only">{t(option)}</span> : t(option)}
           </button>
         );
       })}

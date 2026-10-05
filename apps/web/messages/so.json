@@ -717,73 +717,772 @@
     "failed": "Ficilku wuu fashilmay. Isku day mar kale."
   },
   "admin": {
-    "title": "Maamul",
-    "nav": "Liiska maamulka",
+    "title": "Konsoolka",
+    "nav": "Liiska konsoolka",
     "logout": "Ka bax",
+    "copy": "Koobiyee",
     "sections": {
       "overview": "Guudmar",
-      "moderation": "Kormeer",
+      "moderation": "Dhexdhexaadin",
+      "users": "Isticmaalayaasha",
+      "listings": "Xayeysiisyada",
+      "orders": "Dalabyada",
+      "reviews": "Faallooyinka",
+      "operations": "Hawlgalka",
+      "staff": "Shaqaalaha",
       "audit": "Diiwaanka hubinta"
     },
+    "groups": {
+      "workspace": "Goobta shaqada",
+      "marketplace": "Suuqa",
+      "platform": "Madal"
+    },
     "roles": {
-      "moderator": "Kormeere",
-      "support": "Adeegga macaamiisha",
+      "moderator": "Dhexdhexaadiye",
+      "support": "Taageero",
       "operator": "Hawlgal",
       "platform-admin": "Maamule"
     },
+    "environment": {
+      "development": "Horumarin",
+      "production": "Wax-soo-saar"
+    },
     "noAccess": {
-      "title": "Ogolaansho ma lihid",
-      "body": "{email} ma laha door u oggolaanaya maamulka. Weydii maamule."
+      "title": "Gelitaan ma jiro",
+      "body": "{email} ma laha door u oggolaanaya konsoolka maamulka. Weydii maamule."
+    },
+    "stepUp": {
+      "explain": "Ficilada xasaasiga ah (hakinta, lacag-celinta, doorarka) waxay u baahan yihiin gelitaan 15-kii daqiiqo ee u dambeeyay.",
+      "fresh": "Ficilada xasaasiga ah waa la oggol yahay · {minutes} daq",
+      "stale": "Mar kale gal si aad u samayso ficilo xasaasi ah"
+    },
+    "palette": {
+      "button": "Raadi ama u bood…",
+      "label": "Liiska amarrada",
+      "placeholder": "Raadi isticmaalayaal, xayeysiisyo, dalabyo ama qaybo…",
+      "placeholderNav": "U bood qayb…",
+      "nothing": "Waxba lama helin",
+      "commands": "Amarro",
+      "toggleTheme": "Beddel iftiin / madow",
+      "shortcuts": "Furayaasha gaagaaban",
+      "logout": "Ka bax",
+      "recent": "Dhowaan la eegay",
+      "goTo": "U gudub",
+      "move": "dhaqaaji",
+      "open": "fur",
+      "close": "xir",
+      "kinds": {
+        "user": "Isticmaalayaal",
+        "listing": "Xayeysiisyo",
+        "order": "Dalabyo"
+      }
+    },
+    "shortcuts": {
+      "title": "Furayaasha gaagaaban",
+      "palette": "Liiska amarrada",
+      "search": "Raadi",
+      "help": "Liiskan",
+      "close": "Xir"
+    },
+    "live": {
+      "updated": "Toos · {seconds} il. kahor",
+      "paused": "La hakiyay",
+      "pause": "Haki cusboonaysiinta tooska ah",
+      "resume": "Sii wad cusboonaysiinta tooska ah"
+    },
+    "dialog": {
+      "close": "Xir",
+      "cancel": "Jooji",
+      "working": "Waa la shaqaynayaa…",
+      "stepUpNote": "Waxay u baahan tahay gelitaan 15-kii daqiiqo ee u dambeeyay.",
+      "signInAgain": "Mar kale gal",
+      "typeToConfirm": "Qor <b>{text}</b> si aad u xaqiijiso."
+    },
+    "result": {
+      "forbidden": "Looma oggola inaad taas samayso.",
+      "invalid": "Hubi foomka oo isku day mar kale.",
+      "failed": "Wax baa khaldamay. Isku day mar kale.",
+      "notFound": "Mar dambe ma jiro.",
+      "conflict": "Taasi suurtagal maaha xaaladdeeda hadda.",
+      "stepUp": "Ammaankaaga darteed, mar kale gal ka hor intaadan tan samayn.",
+      "suspended": "Akoonka waa la hakiyay oo laga saaray.",
+      "unsuspended": "Hakinta waa la qaaday.",
+      "signedOut": "Meel kasta waa laga saaray.",
+      "emailSent": "Iimaylka waa la diray.",
+      "unlocked": "Akoonka waa la furay.",
+      "noteAdded": "Qoraal ayaa lagu daray.",
+      "rolesChanged": "Doorarka waa la beddelay. Qofka waa laga saaray.",
+      "otpReset": "Barnaamijka xaqiijinta waa la saaray.",
+      "listingRemoved": "Xayeysiiska waa la saaray. Iibiyaha waa loo sheegay.",
+      "dismissed": "Warbixinnada waa la diiday.",
+      "reviewRemoved": "Faallada waa la saaray.",
+      "refunded": "Lacagta waa la celiyay."
+    },
+    "channels": {
+      "email": "Iimayl",
+      "push": "Push"
     },
     "overview": {
       "title": "Guudmar",
-      "intro": "Waxa hadda u baahan fiiro gaar ah, doorarkaaga.",
-      "openReports": "Warbixino furan",
-      "listings": "{count, plural, one {# xayeysiis} other {# xayeysiis}}",
-      "latestAction": "Ficilkii ugu dambeeyay",
-      "auditHint": "Arag diiwaanka hubinta oo dhan",
+      "greeting": {
+        "morning": "Subax wanaagsan, {name}",
+        "afternoon": "Galab wanaagsan, {name}",
+        "evening": "Fiid wanaagsan, {name}"
+      },
+      "intro": "Tirooyinka maanta iyo waxa u baahan qof, doorarkaaga.",
+      "openReports": "Xayeysiisyo la soo sheegay",
+      "median": "Waqtiga dhexe ee go'aanka {time}",
+      "handled": "{count, plural, one {# la xalliyay toddobaadkan} other {# la xalliyay toddobaadkan}}",
+      "activeListings": "Xayeysiisyo firfircoon",
+      "newToday": "{count, plural, one {# cusub maanta} other {# cusub maanta}}",
+      "users": "Akoonno",
+      "signups": "{count, plural, one {# cusub 14 maalmood} other {# cusub 14 maalmood}}",
+      "revenue": "Dakhli, 30 maalmood",
+      "orders": "{count, plural, one {# dalab} other {# dalab}}",
+      "errorRate": "Khaladaadka server-ka",
+      "lastHour": "Saamiga codsiyada, saacaddii u dambaysay",
+      "messages": "Fariimaha maanta",
+      "conversations": "{count, plural, one {# wadahadal cusub toddobaadkan} other {# wadahadal cusub toddobaadkan}}",
+      "attention": "U baahan feejignaan",
+      "allClear": "Wax walba waa nadiif. Waxba kuma sugayaan.",
+      "myActivity": "Ficiladaadii u dambeeyay",
+      "all": "Dhammaan",
+      "noActivity": "Weli waxba. Ficiladaadu halkan ayay ka muuqan doonaan.",
       "tools": "Qalab",
       "toolNames": {
         "grafana": "Grafana (la socod)",
-        "keycloak": "Keycloak (isticmaalayaal iyo doorar)"
+        "keycloak": "Keycloak (aqoonsi)",
+        "website": "Websaydhka"
+      }
+    },
+    "attention": {
+      "alerts": "{count, plural, one {# digniin ayaa shaqaynaysa} other {# digniin ayaa shaqaynaysa}}",
+      "reports": "{count, plural, one {# xayeysiis la soo sheegay ayaa sugaya} other {# xayeysiis la soo sheegay ayaa sugaya}}, kan ugu da'da weyn {age}",
+      "stuck": "{count, plural, one {# lacag-bixin ayaa ku xayiran bixiyaha} other {# lacag-bixin ayaa ku xayiran bixiyaha}}",
+      "delivery": "{channel}: {count, plural, one {# gaarsiin ayaa fashilantay} other {# gaarsiin ayaa fashilantay}} 24 saac",
+      "errors": "Khaladaadka server-ka waa {rate} codsiyada"
+    },
+    "users": {
+      "title": "Isticmaalayaasha",
+      "intro": "Ka hel akoon iimayl, magac ama aqoonsi, kadib caawi, haki ama ka saar. Ficil kasta wuxuu galayaa diiwaanka hubinta.",
+      "stats": {
+        "total": "Akoonno",
+        "signups": "{count, plural, one {# cusub 14 maalmood} other {# cusub 14 maalmood}}",
+        "active": "Galay maanta",
+        "activeHint": "Akoonno maalintii, 14 maalmood",
+        "suspended": "La hakiyay",
+        "staff": "{count, plural, one {# shaqaale} other {# shaqaale}}"
+      },
+      "filters": {
+        "q": "Raadi",
+        "qPlaceholder": "Iimayl, magac ama aqoonsi",
+        "role": "Doorka shaqaalaha",
+        "status": "Xaalad",
+        "any": "Mid kasta",
+        "apply": "Raadi"
+      },
+      "status": {
+        "active": "Firfircoon",
+        "suspended": "La hakiyay",
+        "unverified": "Iimaylka lama xaqiijin"
+      },
+      "columns": {
+        "user": "Akoon",
+        "status": "Xaalad",
+        "roles": "Doorarka shaqaalaha",
+        "created": "La sameeyay",
+        "lastLogin": "Gelitaankii u dambeeyay"
+      },
+      "never": "Weligiis",
+      "empty": "Akoon ku habboon ma jiro.",
+      "unavailable": "Maamulka isticmaalayaasha si ku meel gaar ah looma heli karo.",
+      "prev": "Hore",
+      "next": "Xiga",
+      "range": "{from}–{to} ee {total}"
+    },
+    "user": {
+      "back": "← Isticmaalayaasha",
+      "unavailable": "Macluumaadkan si ku meel gaar ah looma heli karo.",
+      "status": {
+        "active": "Firfircoon",
+        "suspended": "La hakiyay"
+      },
+      "emailVerified": "Iimaylka waa la xaqiijiyay",
+      "emailUnverified": "Iimaylka lama xaqiijin",
+      "bankid": "BankID waa la xaqiijiyay",
+      "otp": "Barnaamijka xaqiijinta",
+      "locked": "Laga xiray",
+      "actions": {
+        "suspend": "Haki",
+        "unsuspend": "Qaad hakinta",
+        "signOut": "Meel kasta ka saar",
+        "passwordReset": "Iimaylka dib-u-dejinta furaha",
+        "verifyEmail": "Iimaylka xaqiijinta",
+        "unlock": "Fur",
+        "roles": "Doorarka shaqaalaha",
+        "resetOtp": "Saar barnaamijka xaqiijinta"
+      },
+      "suspend": {
+        "title": "Haki {name}?",
+        "description": "Ma geli karaan, fadhi kastana hadda wuu dhammaanayaa. Xayeysiisyadoodu way sii jiri doonaan ilaa aad saarto.",
+        "reason": "Sababta",
+        "note": "Qoraal loogu talagalay diiwaanka hubinta",
+        "notePlaceholder": "Maxaa dhacay, lambarka tigidka…",
+        "duration": "Muddada",
+        "untilLifted": "Ilaa la qaado",
+        "hours": "{count, plural, one {# saac} other {# saacadood}}",
+        "days": "{count, plural, one {# maalin} other {# maalmood}}"
+      },
+      "suspensionReasons": {
+        "fraud": "Khiyaano",
+        "spam": "Spam",
+        "abuse": "Xadgudub ama dhibaatayn",
+        "chargeback": "Celinta lacag-bixinta",
+        "impersonation": "Iska dhigid qof kale",
+        "security": "Ammaanka akoonka",
+        "other": "Kale"
+      },
+      "unsuspend": {
+        "title": "Ka qaad hakinta {name}?",
+        "description": "Way geli karaan mar kale isla markiiba.",
+        "note": "Sababta (diiwaanka hubinta)"
+      },
+      "signOut": {
+        "title": "Meel kasta ka saar?",
+        "description": "{count, plural, one {Waxay dhammaynaysaa # fadhi websaydhka iyo app-ka. Way geli karaan mar kale.} other {Waxay dhammaynaysaa # fadhi websaydhka iyo app-ka. Way geli karaan mar kale.}}",
+        "note": "Qoraal (ikhtiyaari)"
+      },
+      "passwordReset": {
+        "title": "Dir iimaylka dib-u-dejinta furaha?",
+        "description": "Keycloak wuxuu u dirayaa {email} xiriir lagu doorto furaha cusub (12 saac ayuu shaqaynayaa).",
+        "send": "Dir"
+      },
+      "verifyEmail": {
+        "title": "Dir iimaylka xaqiijinta?",
+        "description": "Keycloak wuxuu u dirayaa {email} xiriir lagu xaqiijiyo cinwaanka."
+      },
+      "unlock": {
+        "title": "Fur akoonka?",
+        "description": "{count, plural, one {Gelitaanka waa la xannibay kadib # isku day oo fashilmay. Fur haddii aad xaqiijisay inay iyagu yihiin.} other {Gelitaanka waa la xannibay kadib # isku day oo fashilmay. Fur haddii aad xaqiijisay inay iyagu yihiin.}}"
+      },
+      "roles": {
+        "title": "Doorarka shaqaalaha ee {name}",
+        "description": "Waa laga saarayaa si doorarka cusubi isla markiiba u shaqeeyaan.",
+        "note": "Sababta (diiwaanka hubinta)",
+        "explain": {
+          "moderator": "Xayeysiisyada la soo sheegay iyo faallooyinka",
+          "support": "Akoonno, dalabyo; haki oo ka saar",
+          "operator": "Caafimaadka madasha, safafka; xog isticmaale ma leh",
+          "platform-admin": "Wax walba, oo ay ku jiraan lacag-celin, doorar iyo diiwaanka hubinta"
+        }
+      },
+      "resetOtp": {
+        "title": "Saar barnaamijka xaqiijinta?",
+        "description": "Shaqaaluhu waa inay mid cusub dejiyaan marka xigta ee ay konsoolka galaan. Samee kaliya kadib markaad xaqiijiso cidda codsatay.",
+        "note": "Sida aad u xaqiijisay cidda codsatay"
+      },
+      "suspendedBanner": "La hakiyay: {reason}",
+      "until": "la qaadayaa",
+      "untilLifted": "ilaa shaqaale qaado",
+      "tabsLabel": "Qaybaha akoonka",
+      "tabs": {
+        "overview": "Guudmar",
+        "listings": "Xayeysiisyo",
+        "orders": "Dalabyo",
+        "reviews": "Faallooyin",
+        "security": "Ammaan",
+        "notes": "Qoraallo",
+        "history": "Ficilada shaqaalaha"
+      },
+      "kpi": {
+        "listings": "Xayeysiisyo firfircoon",
+        "listingsHint": "{sold} la iibiyay · {removed} dhexdhexaadiyayaashu saareen",
+        "rating": "Qiimayn",
+        "ratingHint": "{count, plural, one {# faallo} other {# faallo}}",
+        "messages": "Fariimaha la diray, 30 maalmood",
+        "messagesHint": "{conversations} wadahadal · {blocked} ayaa xannibay",
+        "spent": "Ku bixiyay xayeysiin",
+        "ordersHint": "{count, plural, one {# dalab} other {# dalab}}"
+      },
+      "profile": "Astaanta",
+      "fields": {
+        "id": "Aqoonsi",
+        "displayName": "Magaca dadweynaha",
+        "locale": "Luqad",
+        "created": "La sameeyay",
+        "lastLogin": "Gelitaankii u dambeeyay",
+        "firstListing": "Xayeysiiskii ugu horreeyay",
+        "reportsAgainst": "Warbixinnada ku saabsan xayeysiisyadooda",
+        "devices": "Qalab",
+        "emailMessages": "Iimayl marka fariin cusub timaado",
+        "requiredActions": "Tallaabooyin sugaya",
+        "locked": "Laga xiray",
+        "failures": "Gelitaanno fashilmay",
+        "lastFailure": "Fashilkii u dambeeyay"
+      },
+      "never": "Weligiis",
+      "none": "Midna",
+      "on": "Shid",
+      "off": "Dami",
+      "yes": "Haa",
+      "no": "Maya",
+      "notes": {
+        "all": "Dhammaan qoraallada",
+        "empty": "Weli qoraal ma jiro.",
+        "add": "Ku dar qoraal",
+        "placeholder": "Maxaa dhacay, maxaad isku afgarteen, maxaa la ilaalinayaa…",
+        "pin": "Ku dheji xagga sare",
+        "privacy": "Shaqaalaha kaliya ayaa arka qoraallada. Qor xaqiiqooyin, ha qorin fikrado; isticmaaluhu wuu codsan karaa inuu arko (GDPR)."
+      },
+      "recentSignIns": "Gelitaannadii u dambeeyay",
+      "signIns": "Dhacdooyinka gelitaanka (30 maalmood)",
+      "noEvents": "Dhacdo gelitaan ma jirto.",
+      "sessions": "Fadhiyada firfircoon",
+      "noSessions": "Fadhi firfircoon ma jiro.",
+      "columns": {
+        "ip": "Cinwaanka IP",
+        "clients": "App-yada",
+        "started": "Bilaabay",
+        "lastAccess": "Firfircoonidii u dambaysay"
+      },
+      "credentials": "Hababka gelitaanka",
+      "credentialTypes": {
+        "password": "Furaha sirta",
+        "otp": "Barnaamijka xaqiijinta",
+        "webauthn": "Furaha ammaanka",
+        "webauthn-passwordless": "Furaha gelitaanka"
+      },
+      "lockout": "Ka ilaalinta isku dayga xoogga",
+      "noHistory": "Ficil shaqaale oo akoonkan ah ma jiro."
+    },
+    "listings": {
+      "title": "Xayeysiisyada",
+      "intro": "Xayeysiis kasta xaalad kasta, oo ay la socdaan warbixinnadiisa iyo taariikhda iibiyaha.",
+      "unavailable": "Xayeysiisyada si ku meel gaar ah looma heli karo.",
+      "empty": "Xayeysiis ku habboon ma jiro.",
+      "stats": {
+        "active": "Firfircoon",
+        "sold": "La iibiyay",
+        "reported": "Leh warbixinno furan",
+        "created": "Xayeysiisyo cusub, 14 maalmood"
+      },
+      "filters": {
+        "q": "Raadi",
+        "qPlaceholder": "Cinwaan, iibiye ama aqoonsi",
+        "status": "Xaalad",
+        "category": "Qayb",
+        "reported": "Kaliya kuwa la soo sheegay",
+        "any": "Mid kasta",
+        "apply": "Raadi"
+      },
+      "columns": {
+        "listing": "Xayeysiis",
+        "seller": "Iibiye",
+        "category": "Qayb",
+        "status": "Xaalad",
+        "reports": "Warbixinno furan",
+        "created": "La sameeyay"
+      },
+      "status": {
+        "active": "Firfircoon",
+        "sold": "La iibiyay",
+        "deleted": "La saaray"
+      },
+      "removedByModeration": "Dhexdhexaadiye ayaa saaray",
+      "prev": "Hore",
+      "next": "Xiga",
+      "range": "{from}–{to} ee {total}",
+      "back": "← Xayeysiisyada",
+      "removalReasons": {
+        "fraud": "Khiyaano",
+        "prohibited": "Alaab mamnuuc ah",
+        "offensive": "Xun",
+        "wrong_category": "Qayb khaldan",
+        "duplicate": "Nuqul",
+        "spam": "Spam",
+        "other": "Kale"
+      },
+      "openReports": "{count, plural, one {# warbixin furan} other {# warbixin furan}}",
+      "promoted": "La xayeysiiyay",
+      "openOnSite": "Ka fur websaydhka",
+      "dismiss": "Diid warbixinnada",
+      "dismissTitle": "Diid warbixinnada?",
+      "dismissDescription": "{count, plural, one {Xayeysiisku waa caadi. # warbixin furan ayaa la xirayaa.} other {Xayeysiisku waa caadi. # warbixin furan ayaa la xirayaa.}}",
+      "remove": "Saar xayeysiiska",
+      "removeTitle": "Saar xayeysiiska?",
+      "removeDescription": "Iibiyaha waa loo sheegayaa, warbixinnada furan waa la xallinayaa, raadintana wuu ka baxayaa. Lagama noqon karo.",
+      "reason": "Sababta",
+      "note": "Qoraal diiwaanka hubinta (ikhtiyaari)",
+      "notePlaceholder": "Waxa aad aragtay",
+      "noImages": "Sawir ma jiro",
+      "description": "Sharaxaad",
+      "seller": "Iibiye",
+      "openAccount": "Fur akoonka",
+      "sellerStats": {
+        "active": "firfircoon",
+        "sold": "la iibiyay",
+        "removed": "la saaray",
+        "reports": "Warbixinnada guud",
+        "since": "Iibinayay tan iyo"
+      },
+      "fields": {
+        "created": "La sameeyay",
+        "updated": "La cusboonaysiiyay",
+        "place": "Goob"
+      },
+      "reports": "Warbixinnada",
+      "noReports": "Cidna ma soo sheegin xayeysiiskan.",
+      "reportStatus": {
+        "open": "Furan",
+        "resolved": "La saaray",
+        "dismissed": "La diiday"
+      },
+      "handledBy": "Waxaa xalliyay {name}",
+      "history": "Ficilada shaqaalaha",
+      "noHistory": "Weli ficil shaqaale ma jiro."
+    },
+    "moderation": {
+      "title": "Dhexdhexaadin",
+      "intro": "Xayeysiisyada la soo sheegay, kuwa khatarta badan marka hore. Ku go'aanso kiiboodhka: j/k dhaqaaji, x saar, d diid.",
+      "unavailable": "Dhexdhexaadinta si ku meel gaar ah looma heli karo.",
+      "emptyTitle": "Saf madhan",
+      "empty": "Warbixin furan ma jirto. Fiican!",
+      "queue": "Xayeysiisyada la soo sheegay",
+      "select": "Dooro",
+      "selected": "{count, plural, one {# la doortay} other {# la doortay}}",
+      "dismissSelected": "Diid",
+      "bulkTitle": "{count, plural, one {Diid warbixinnada # xayeysiis?} other {Diid warbixinnada # xayeysiis?}}",
+      "bulkDescription": "Isticmaal tan marka xayeysiisyadu caadi yihiin, tusaale kadib mowjad warbixinno khaldan.",
+      "note": "Qoraal diiwaanka hubinta (ikhtiyaari)",
+      "notePlaceholder": "Waxa aad aragtay",
+      "count": "{count, plural, one {# warbixin} other {# warbixin}}",
+      "risk": "Dhibcaha khatarta",
+      "riskLabel": "Khatar {risk}",
+      "keys": "j/k dhaqaaji · x saar · d diid · meel bannaan dooro",
+      "dismiss": "Diid",
+      "dismissTitle": "Diid warbixinnada?",
+      "dismissDescription": "{count, plural, one {Xayeysiisku waa caadi. # warbixin furan ayaa la xirayaa.} other {Xayeysiisku waa caadi. # warbixin furan ayaa la xirayaa.}}",
+      "templates": {
+        "fine": "Waa xeerarka gudahooda.",
+        "duplicateReport": "Si khalad ah ayaa loo soo sheegay."
+      },
+      "remove": "Saar",
+      "removeTitle": "Saar xayeysiiska?",
+      "removeDescription": "Iibiyaha waa loo sheegayaa, warbixinnada furan waa la xallinayaa, raadintana wuu ka baxayaa. Lagama noqon karo.",
+      "reason": "Sababta",
+      "why": "Sababta loo soo sheegay",
+      "sellerHistory": "Iibiyaha",
+      "seller": {
+        "active": "xayeysiisyo firfircoon",
+        "removed": "annagu saarnay",
+        "reports": "warbixinno guud",
+        "since": "iibinayay tan iyo"
+      },
+      "description": "Sharaxaad",
+      "openDetail": "Faahfaahin buuxda",
+      "openOnSite": "Ka fur websaydhka",
+      "views": "Muuqaalada dhexdhexaadinta",
+      "tabs": {
+        "queue": "Saf",
+        "mine": "Go'aanadayda",
+        "history": "Taariikhda kooxda"
+      },
+      "stats": {
+        "open": "Xayeysiisyo sugaya",
+        "reports": "{count, plural, one {# warbixin furan} other {# warbixin furan}}",
+        "oldest": "Kan ugu da'da weyn",
+        "oldestHint": "Digniin kadib 24 saac",
+        "median": "Waqtiga dhexe ee go'aanka",
+        "medianHint": "Warbixinta koowaad ilaa go'aanka, 7 maalmood",
+        "handled": "Go'aanno, 7 maalmood",
+        "split": "{removed} la saaray · {dismissed} la diiday"
+      },
+      "noHistory": "Weli go'aan ma jiro.",
+      "columns": {
+        "listing": "Xayeysiis",
+        "outcome": "Go'aan",
+        "reports": "Warbixinno",
+        "by": "Waxaa sameeyay",
+        "time": "Waqtiga go'aanka",
+        "when": "Goorma"
+      },
+      "outcome": {
+        "resolved": "La saaray",
+        "dismissed": "La diiday"
+      }
+    },
+    "orders": {
+      "title": "Dalabyada",
+      "intro": "Iibsiga xayeysiinta, xaaladda lacag-bixinta iyo lacag-celinta.",
+      "unavailable": "Dalabyada si ku meel gaar ah looma heli karo.",
+      "empty": "Dalab ku habboon ma jiro.",
+      "stats": {
+        "revenue": "Dakhli",
+        "last30": "Dalabyo la bixiyay, 30 maalmood",
+        "refunded": "La celiyay, 30 maalmood",
+        "stuck": "{count, plural, one {# ku xayiran bixiyaha} other {# ku xayiran bixiyaha}}",
+        "daily": "Dakhliga maalintii, 30 maalmood"
+      },
+      "filters": {
+        "q": "Tixraaca dalabka ama bixiyaha",
+        "qPlaceholder": "Bilowga aqoonsiga",
+        "status": "Xaalad",
+        "any": "Mid kasta",
+        "apply": "Raadi"
+      },
+      "columns": {
+        "order": "Dalab",
+        "product": "Badeeco",
+        "amount": "Qaddar",
+        "status": "Xaalad",
+        "provider": "Bixiye",
+        "user": "Iibsade",
+        "created": "La sameeyay"
+      },
+      "products": {
+        "promote_7d": "Xayeysiin, 7 maalmood",
+        "promote_30d": "Xayeysiin, 30 maalmood"
+      },
+      "status": {
+        "created": "Sugaya lacag-bixin",
+        "authorized": "La oggolaaday",
+        "captured": "La bixiyay",
+        "refunded": "Lacagta la celiyay",
+        "cancelled": "La joojiyay",
+        "expired": "Dhacay",
+        "failed": "Fashilmay"
+      },
+      "prev": "Hore",
+      "next": "Xiga",
+      "range": "{from}–{to} ee {total}",
+      "back": "← Dalabyada",
+      "refund": "Celi lacagta",
+      "refundTitle": "Celi {amount}?",
+      "refundDescription": "Lacagtu waxay dib ugu noqonaysaa bixiyaha lacag-bixinta, xayeysiintuna way dhammaanaysaa. Lagama noqon karo.",
+      "reason": "Sababta",
+      "refundReasons": {
+        "customer_request": "Macmiilka ayaa codsaday",
+        "duplicate": "Laba jeer la bixiyay",
+        "service_failure": "Khaladkayaga",
+        "fraud": "Khiyaano",
+        "goodwill": "Samafal",
+        "other": "Kale"
+      },
+      "note": "Qoraal diiwaanka hubinta (ikhtiyaari)",
+      "details": "Faahfaahin",
+      "fields": {
+        "id": "Aqoonsiga dalabka",
+        "user": "Iibsade",
+        "listing": "Xayeysiis",
+        "provider": "Bixiye",
+        "providerRef": "Tixraaca bixiyaha",
+        "created": "La sameeyay",
+        "updated": "La cusboonaysiiyay",
+        "starts": "Bilaabanaya",
+        "ends": "Dhammaanaya",
+        "revoked": "Goor hore la joojiyay"
+      },
+      "promotion": "Xayeysiin",
+      "noPromotion": "Waxba lama xayeysiin (lama bixin).",
+      "timeline": "Jadwalka waqtiga",
+      "sources": {
+        "api": "iibsadaha",
+        "webhook": "bixiyaha",
+        "reconcile": "is-waafajinta",
+        "admin": "shaqaalaha"
+      }
+    },
+    "reviews": {
+      "title": "Faallooyinka",
+      "intro": "Faallo kasta, oo ay ku jiraan kuwa la saaray. Ku saar faallooyinka xun ama been abuurka ah sabab.",
+      "unavailable": "Faallooyinka si ku meel gaar ah looma heli karo.",
+      "empty": "Faallo ku habboon ma jirto.",
+      "about": "Iyaga ku saabsan",
+      "by": "Iyagu qoreen",
+      "removed": "La saaray",
+      "filters": {
+        "rating": "Xiddigo",
+        "state": "La muujiyay",
+        "visible": "Muuqda",
+        "removed": "La saaray",
+        "user": "Qof (aqoonsi)",
+        "any": "Mid kasta",
+        "apply": "Sifee"
+      },
+      "stars": "{count, plural, one {# xiddig} other {# xiddigood}}",
+      "roles": {
+        "buyer": "iibsade ahaan",
+        "seller": "iibiye ahaan"
+      },
+      "noComment": "Faallo qoraal ah ma jirto",
+      "removedBy": {
+        "author": "Qoraaga ayaa saaray",
+        "moderator": "Dhexdhexaadiye ayaa saaray"
+      },
+      "remove": "Saar",
+      "removeTitle": "Saar faallada?",
+      "removeDescription": "Waxay ka baxaysaa astaanta, qiimayntuna dib ayaa loo xisaabinayaa.",
+      "reason": "Sababta",
+      "reasons": {
+        "abusive": "Xun",
+        "personal_data": "Xog shakhsi ah",
+        "not_genuine": "Been abuur",
+        "off_topic": "Mawduuca ka baxsan",
+        "other": "Kale"
+      },
+      "note": "Qoraal diiwaanka hubinta (ikhtiyaari)",
+      "prev": "Hore",
+      "next": "Xiga",
+      "range": "{from}–{to} ee {total}"
+    },
+    "operations": {
+      "title": "Hawlgalka",
+      "intro": "Caafimaadka madasha: adeegyada iyo ku-tiirsanaantooda, taraafikada, khaladaadka, dhacdooyinka, gaarsiinta iyo raadinta. Tirooyin kaliya, xog isticmaale ma jirto.",
+      "unavailable": "Si ku meel gaar ah looma heli karo.",
+      "stats": {
+        "services": "Adeegyo diyaar ah",
+        "down": "Diyaar maaha: {names}",
+        "allReady": "Ku-tiirsanaan kasta way jawaabaysaa",
+        "alerts": "Digniinaha shaqaynaya",
+        "noAlerts": "Wax shaqaynaya ma jiro",
+        "lag": "Dib-u-dhaca dhacdooyinka",
+        "lagHint": "{groups, plural, one {Dhacdooyin aan la akhrin, # koox} other {Dhacdooyin aan la akhrin, # koox}}",
+        "dlq": "Fariimo dhintay",
+        "dlqHint": "Dhacdooyin adeeg uusan habayn karin",
+        "logins": "Gelitaanno, saacaddii u dambaysay",
+        "loginsHint": "Websaydh, app iyo konsool"
+      },
+      "health": "Adeegyada",
+      "columns": {
+        "service": "Adeeg",
+        "status": "Diyaarsanaan",
+        "dependencies": "Ku-tiirsanaan",
+        "rate": "Codsiyo",
+        "errors": "5xx",
+        "p95": "p95 daahitaan",
+        "trend": "Saacaddii u dambaysay"
+      },
+      "status": {
+        "ok": "Diyaar",
+        "degraded": "Hoos u dhacay",
+        "down": "Dhacay"
+      },
+      "pipeline": "Socodka dhacdooyinka",
+      "noMetrics": "Weli cabbir ma jiro.",
+      "lag": "{count, plural, one {# ka dambeeya} other {# ka dambeeya}}",
+      "dlqBody": "{count, plural, one {# dhacdo ayaa ku jirta mawduuca fariimaha dhintay.} other {# dhacdo ayaa ku jira mawduuca fariimaha dhintay.}}",
+      "dlqEmpty": "Mawduuca fariimaha dhintay waa madhan yahay.",
+      "dlqLogs": "Diiwaanka dhacdooyinka dhintay",
+      "delivery": "Iimayl iyo push",
+      "channels": {
+        "email": "Iimayl",
+        "push": "Push"
+      },
+      "queue": "{pending} sugaya · {sent} la diray · {failed} fashilmay (24 s)",
+      "oldest": "Kan ugu da'da weyn wuu sugayaa",
+      "noErrors": "Khalad gaarsiin ah ma jiro 7-dii maalmood ee u dambeeyay.",
+      "search": "Tusaha raadinta",
+      "index": {
+        "alias": "Tusaha",
+        "documents": "Dukumiintiyo",
+        "size": "Cabbir",
+        "newest": "Isbeddelka ugu cusub",
+        "lag": "Dib-u-dhaca tusaynta (p95)",
+        "drift": "Waafaqsan xayeysiisyada",
+        "inSync": "Waa waafaqsan yihiin",
+        "off": "{count, plural, =1 {1 dheeraad ah raadinta} other {# kala duwan}}"
+      },
+      "alerts": "Digniinno",
+      "noAlerts": "Digniin shaqaynaysa ma jirto.",
+      "payments": "Lacag-bixinnada ku xayiran bixiyaha: {stuck}"
+    },
+    "staff": {
+      "title": "Shaqaalaha",
+      "intro": "Cidda samayn karta waxa, iyo sida ay u firfircoonaayeen 14-kii maalmood ee u dambeeyay. Ka beddel doorarka bogga qofka.",
+      "unavailable": "Shaqaalaha si ku meel gaar ah looma heli karo.",
+      "columns": {
+        "person": "Qof",
+        "actions": "Ficillo, 14 maalmood",
+        "lastLogin": "Gelitaankii u dambeeyay"
+      },
+      "never": "Weligiis",
+      "suspended": "La hakiyay",
+      "add": "Ku dar shaqaale",
+      "find": "Hel qofka",
+      "findPlaceholder": "Iimayl ama magac",
+      "search": "Raadi",
+      "openToGrant": "Sii doorar →",
+      "noMatch": "Akoon ku habboon ma jiro. Waa inay marka hore isdiiwaangeliyaan.",
+      "addHint": "Shaqaaluhu waxay isticmaalaan akoonkooda. Ku sii doorar boggooda; waa inay dejiyaan barnaamijka xaqiijinta marka ugu horreysa ee ay konsoolka galaan.",
+      "matrix": "Waxa door kastaa samayn karo",
+      "explain": {
+        "moderator": "Ka shaqeeya safka dhexdhexaadinta: saara xayeysiisyo iyo faallooyin, diida warbixinno. Arka taariikhda xayeysiisyada iibiyayaasha, ma arko cinwaannada iimaylka.",
+        "support": "Caawiya macaamiisha: hela akoonno, akhriya dalabyo, hakiya oo ka saara akoonno, dira iimaylada akoonka, qora qoraallo. Weligood ma akhriyaan fariimaha.",
+        "operator": "Ilaaliya socodka madasha: caafimaad, safaf, socodka dhacdooyinka, raadin. Arka tirooyin, weligood xog isticmaale.",
+        "platform-admin": "Wax walba oo kor ku xusan, iyo lacag-celin, doorarka shaqaalaha, barnaamijyada xaqiijinta iyo diiwaanka hubinta. Kooxdan yaree."
       }
     },
     "audit": {
       "title": "Diiwaanka hubinta",
-      "intro": "Wax kasta oo shaqaaluhu ku sameeyaan xayeysiisyada, isticmaalayaasha iyo lacag bixinta, kuwa ugu cusub marka hore. Diiwaanka lama beddeli karo.",
+      "intro": "Wax kasta oo shaqaaluhu sameeyaan, kan ugu cusub marka hore. Diiwaanka lama beddeli karo, xitaa maamulayaasha.",
       "empty": "Ficil ku habboon shaandhada ma jiro.",
-      "older": "Kuwii hore",
-      "unavailable": "Diiwaanka hubinta hadda lama heli karo.",
+      "older": "Kuwa hore",
+      "unavailable": "Diiwaanka hubinta si ku meel gaar ah looma heli karo.",
+      "export": "Dhoofi CSV",
+      "stats": {
+        "perDay": "{total, plural, one {# ficil 14 maalmood} other {# ficil 14 maalmood}}",
+        "actions": "Kuwa ugu badan",
+        "actors": "Kuwa ugu firfircoon"
+      },
       "filters": {
         "action": "Ficil",
-        "targetType": "Ku saabsan",
+        "targetType": "Khuseeya",
         "targetId": "Aqoonsi",
         "actor": "Waxaa sameeyay (aqoonsi)",
-        "any": "Dhammaan",
-        "apply": "Shaandhee",
-        "clear": "Nadiifi"
-      },
-      "columns": {
-        "at": "Waqtiga",
-        "action": "Ficil",
-        "target": "Ku saabsan",
-        "actor": "Waxaa sameeyay",
-        "reason": "Sababta"
+        "any": "Mid kasta",
+        "apply": "Sifee",
+        "clear": "Tirtir"
       },
       "actions": {
-        "listing_remove": "Xayeysiis la saaray",
-        "reports_dismiss": "Warbixino la diiday",
-        "review_remove": "Faallo la saaray",
-        "payment_refund": "Lacag la celiyay"
+        "listing_remove": "saaray",
+        "reports_dismiss": "diiday warbixinnada",
+        "review_remove": "saaray",
+        "payment_refund": "celiyay lacagta",
+        "user_suspend": "hakiyay",
+        "user_unsuspend": "ka qaaday hakinta",
+        "user_suspension_expired": "hakintu way dhammaatay",
+        "user_sign_out": "ka saaray",
+        "user_password_reset": "u diray dib-u-dejinta furaha",
+        "user_verify_email": "u diray iimaylka xaqiijinta",
+        "user_unlock": "furay",
+        "user_note": "qoraal ku qoray",
+        "user_roles_change": "beddelay doorarka",
+        "user_otp_reset": "ka saaray barnaamijka xaqiijinta"
       },
       "targets": {
-        "listing": "Xayeysiis",
-        "order": "Dalab",
-        "user": "Isticmaale",
-        "review": "Faallo",
-        "report": "Warbixin",
-        "conversation": "Wadahadal",
-        "system": "Nidaam"
+        "listing": "xayeysiis",
+        "order": "dalab",
+        "user": "akoon",
+        "review": "faallo",
+        "report": "warbixin",
+        "conversation": "wadahadal",
+        "system": "nidaam"
+      },
+      "actionNames": {
+        "listing_remove": "Xayeysiis la saaray",
+        "reports_dismiss": "Warbixinno la diiday",
+        "review_remove": "Faallo la saaray",
+        "payment_refund": "Lacag la celiyay",
+        "user_suspend": "Akoon la hakiyay",
+        "user_unsuspend": "Hakin la qaaday",
+        "user_suspension_expired": "Hakintii way dhammaatay",
+        "user_sign_out": "Meel kasta laga saaray",
+        "user_password_reset": "Dib-u-dejinta furaha la diray",
+        "user_verify_email": "Iimaylka xaqiijinta la diray",
+        "user_unlock": "Akoon la furay",
+        "user_note": "Qoraal la qoray",
+        "user_roles_change": "Doorarka shaqaalaha la beddelay",
+        "user_otp_reset": "Barnaamijka xaqiijinta la saaray"
       }
     }
   }

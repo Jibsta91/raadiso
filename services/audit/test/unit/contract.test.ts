@@ -21,6 +21,7 @@ describe('audit', () => {
       target_type: 'order',
       target_id: '6f1c4a52-2a43-4d0d-9b55-2f1f1b0e5a11',
       reason: null,
+      details: { product: 'promote_7d', amountOre: 4900 },
       source: 'urn:raadi:payments',
       at: new Date('2026-10-04T10:00:00Z'),
     });

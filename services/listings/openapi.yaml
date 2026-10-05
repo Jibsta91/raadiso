@@ -14,6 +14,8 @@ servers:
   - url: http://raadi.localhost
     description: Local development through the gateway
 tags:
+  - name: admin
+    description: Admin console (console tokens only, ADR-0030)
   - name: listings
   - name: moderation
   - name: internal
@@ -212,6 +214,197 @@ paths:
         '400': { $ref: '#/components/responses/Problem' }
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/listings:
+    get:
+      tags: [admin]
+      operationId: adminSearchListings
+      summary: Every listing in any state (moderators, support, platform admins)
+      description: Admin console only (console tokens; not routed by the gateway, ADR-0030).
+      parameters:
+        - {
+            name: q,
+            in: query,
+            schema:
+              {
+                type: string,
+                maxLength: 100,
+                description: Title or seller name; an id or its start finds that listing,
+              },
+          }
+        - { name: owner, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string, enum: [active, sold, deleted] } }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: reported, in: query, schema: { type: string, enum: ['true', 'false'] } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 25 },
+          }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: A page of listings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminListingPage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/listings/stats:
+    get:
+      tags: [admin]
+      operationId: adminListingStats
+      summary: Listing counts, daily new listings and moderation throughput
+      responses:
+        '200':
+          description: Statistics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListingStats' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/listings/workbench:
+    get:
+      tags: [admin]
+      operationId: adminModerationWorkbench
+      summary: Reported listings with everything needed to decide, riskiest first
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 50 },
+          }
+      responses:
+        '200':
+          description: The queue
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [items],
+                  properties:
+                    {
+                      items: { type: array, items: { $ref: '#/components/schemas/WorkbenchItem' } },
+                    },
+                }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/listings/history:
+    get:
+      tags: [admin]
+      operationId: adminModerationHistory
+      summary: Recent moderation decisions
+      parameters:
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 50 },
+          }
+        - { name: handledBy, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Decisions
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [items],
+                  properties:
+                    {
+                      items:
+                        { type: array, items: { $ref: '#/components/schemas/ModerationDecision' } },
+                    },
+                }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/listings/sellers/{id}:
+    get:
+      tags: [admin]
+      operationId: adminSellerSnapshot
+      summary: A seller's listing history
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: The seller
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SellerSnapshot' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/listings/dismiss:
+    post:
+      tags: [admin]
+      operationId: adminDismissReports
+      summary: Close the open reports of one or more listings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DismissInput' }
+      responses:
+        '201':
+          description: Closed
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [closed],
+                  properties: { closed: { type: integer } },
+                }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/listings/{id}:
+    get:
+      tags: [admin]
+      operationId: adminListing
+      summary: One listing with its reports, seller history and other listings
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: The listing
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminListingDetail' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /admin/v1/listings/{id}/remove:
+    post:
+      tags: [admin]
+      operationId: adminRemoveListing
+      summary: Remove the listing with a reason (resolves its reports)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RemoveInput' }
+      responses:
+        '200':
+          description: Removed
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  additionalProperties: false,
+                  required: [removed],
+                  properties: { removed: { type: boolean } },
+                }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -223,6 +416,324 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    RemovalReason:
+      type: string
+      enum: [fraud, prohibited, offensive, wrong_category, duplicate, spam, other]
+    AdminListing:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          title,
+          status,
+          category,
+          subcategory,
+          priceNok,
+          ownerId,
+          sellerName,
+          placeId,
+          createdAt,
+          updatedAt,
+          promotedUntil,
+          removedBy,
+          removalReason,
+          openReports,
+          image,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        status: { type: string, enum: [active, sold, deleted] }
+        category: { type: string }
+        subcategory: { type: string }
+        priceNok: { type: [integer, 'null'] }
+        ownerId: { type: string, format: uuid }
+        sellerName: { type: string }
+        placeId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        promotedUntil: { type: [string, 'null'], format: date-time }
+        removedBy: { type: [string, 'null'], enum: [owner, moderation, null] }
+        removalReason:
+          oneOf:
+            - { type: 'null' }
+            - { $ref: '#/components/schemas/RemovalReason' }
+        openReports: { type: integer }
+        image:
+          oneOf:
+            - { type: 'null' }
+            - type: object
+              additionalProperties: false
+              required: [thumb, card]
+              properties: { thumb: { type: string }, card: { type: string } }
+    AdminListingPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, limit, offset]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminListing' } }
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+    AdminReport:
+      type: object
+      additionalProperties: false
+      required:
+        [id, reason, comment, status, reporterId, createdAt, handledBy, handledAt, handledNote]
+      properties:
+        id: { type: string, format: uuid }
+        reason: { type: string, enum: [fraud, prohibited, offensive, wrong_category, other] }
+        comment: { type: string }
+        status: { type: string, enum: [open, resolved, dismissed] }
+        reporterId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        handledBy: { type: [string, 'null'], format: uuid }
+        handledAt: { type: [string, 'null'], format: date-time }
+        handledNote: { type: [string, 'null'] }
+    SellerSnapshot:
+      type: object
+      additionalProperties: false
+      required: [ownerId, active, sold, deleted, removedByModeration, reports, firstListingAt]
+      properties:
+        ownerId: { type: string, format: uuid }
+        active: { type: integer }
+        sold: { type: integer }
+        deleted: { type: integer }
+        removedByModeration: { type: integer }
+        reports: { type: integer, description: "Reports about the seller's listings, ever" }
+        firstListingAt: { type: [string, 'null'], format: date-time }
+    AdminListingDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - status
+        - category
+        - subcategory
+        - priceNok
+        - ownerId
+        - sellerName
+        - placeId
+        - createdAt
+        - updatedAt
+        - promotedUntil
+        - removedBy
+        - removalReason
+        - openReports
+        - image
+        - description
+        - attributes
+        - images
+        - version
+        - reports
+        - seller
+        - otherListings
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - sold
+            - deleted
+        category:
+          type: string
+        subcategory:
+          type: string
+        priceNok:
+          type:
+            - integer
+            - 'null'
+        ownerId:
+          type: string
+          format: uuid
+        sellerName:
+          type: string
+        placeId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        promotedUntil:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        removedBy:
+          type:
+            - string
+            - 'null'
+          enum:
+            - owner
+            - moderation
+            - null
+        removalReason:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/RemovalReason'
+        openReports:
+          type: integer
+        image:
+          oneOf:
+            - type: 'null'
+            - type: object
+              additionalProperties: false
+              required:
+                - thumb
+                - card
+              properties:
+                thumb:
+                  type: string
+                card:
+                  type: string
+        description:
+          type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type:
+              - string
+              - number
+              - boolean
+        images:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - thumb
+              - card
+              - large
+            properties:
+              thumb:
+                type: string
+              card:
+                type: string
+              large:
+                type: string
+        version:
+          type: integer
+        reports:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminReport'
+        seller:
+          $ref: '#/components/schemas/SellerSnapshot'
+        otherListings:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminListing'
+    WorkbenchItem:
+      type: object
+      additionalProperties: false
+      required: [listing, count, reasons, firstReportedAt, risk]
+      properties:
+        listing: { $ref: '#/components/schemas/AdminListingDetail' }
+        count: { type: integer }
+        reasons: { type: object, additionalProperties: { type: integer } }
+        firstReportedAt: { type: string, format: date-time }
+        risk:
+          {
+            type: integer,
+            minimum: 0,
+            maximum: 100,
+            description: 'A rough priority: report volume, fraud reports, seller history, age',
+          }
+    ModerationDecision:
+      type: object
+      additionalProperties: false
+      required: [listingId, title, outcome, reports, handledBy, handledAt, note, secondsToDecision]
+      properties:
+        listingId: { type: string, format: uuid }
+        title: { type: string }
+        outcome: { type: string, enum: [resolved, dismissed] }
+        reports: { type: integer }
+        handledBy: { type: string, format: uuid }
+        handledAt: { type: string, format: date-time }
+        note: { type: [string, 'null'] }
+        secondsToDecision: { type: integer }
+    ListingStats:
+      type: object
+      additionalProperties: false
+      required: [active, sold, removed, created, byCategory, moderation]
+      properties:
+        active: { type: integer }
+        sold: { type: integer }
+        removed: { type: integer }
+        created:
+          {
+            type: array,
+            items:
+              {
+                type: object,
+                additionalProperties: false,
+                required: [day, count],
+                properties: { day: { type: string, format: date }, count: { type: integer } },
+              },
+          }
+        byCategory:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [category, count]
+            properties: { category: { type: string }, count: { type: integer } }
+        moderation:
+          type: object
+          additionalProperties: false
+          required:
+            [
+              open,
+              listings,
+              oldestAt,
+              handled7d,
+              removed7d,
+              dismissed7d,
+              medianHandleSeconds,
+              handled,
+            ]
+          properties:
+            open: { type: integer }
+            listings: { type: integer }
+            oldestAt: { type: [string, 'null'], format: date-time }
+            handled7d: { type: integer }
+            removed7d: { type: integer }
+            dismissed7d: { type: integer }
+            medianHandleSeconds: { type: [integer, 'null'] }
+            handled:
+              {
+                type: array,
+                items:
+                  {
+                    type: object,
+                    additionalProperties: false,
+                    required: [day, count],
+                    properties: { day: { type: string, format: date }, count: { type: integer } },
+                  },
+              }
+    RemoveInput:
+      type: object
+      additionalProperties: false
+      required: [reasonCode]
+      properties:
+        reasonCode: { $ref: '#/components/schemas/RemovalReason' }
+        note: { type: string, maxLength: 500 }
+    DismissInput:
+      type: object
+      additionalProperties: false
+      required: [ids]
+      properties:
+        ids: { type: array, minItems: 1, maxItems: 50, items: { type: string, format: uuid } }
+        note: { type: string, maxLength: 500 }
     Category: { type: string, enum: [torget, bil, eiendom, jobb, reise] }
     Attributes:
       type: object

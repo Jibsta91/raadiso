@@ -128,10 +128,163 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/payments/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Orders (support, platform admins)
+         * @description Admin console only (console tokens; not routed by the gateway, ADR-0030).
+         */
+        get: operations["adminSearchOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/payments/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Revenue and order statistics */
+        get: operations["adminPaymentStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/payments/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One order with its status history and promotion */
+        get: operations["adminOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/payments/orders/{id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund a captured order (platform admins, step-up) */
+        post: operations["adminRefundOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminOrder: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            userId: string;
+            /** Format: uuid */
+            listingId: string;
+            product: string;
+            amountOre: number;
+            /** @enum {string} */
+            currency: "NOK";
+            provider: string;
+            providerRef: string | null;
+            /** @enum {string} */
+            status: "created" | "authorized" | "captured" | "refunded" | "cancelled" | "expired" | "failed";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AdminOrderPage: {
+            items: components["schemas"]["AdminOrder"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        AdminOrderDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            userId: string;
+            /** Format: uuid */
+            listingId: string;
+            product: string;
+            amountOre: number;
+            /** @enum {string} */
+            currency: "NOK";
+            provider: string;
+            providerRef: string | null;
+            /** @enum {string} */
+            status: "created" | "authorized" | "captured" | "refunded" | "cancelled" | "expired" | "failed";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            events: {
+                from: string;
+                to: string;
+                source: string;
+                /** Format: date-time */
+                at: string;
+            }[];
+            promotion: null | {
+                /** Format: date-time */
+                startsAt: string;
+                /** Format: date-time */
+                endsAt: string;
+                /** Format: date-time */
+                revokedAt: string | null;
+            };
+        };
+        PaymentStats: {
+            capturedOre30d: number;
+            refundedOre30d: number;
+            orders30d: number;
+            byStatus: {
+                status: string;
+                count: number;
+            }[];
+            revenue: {
+                /** Format: date */
+                day: string;
+                ore: number;
+                orders: number;
+            }[];
+            stuck: number;
+        };
+        RefundInput: {
+            /** @enum {string} */
+            reasonCode: "customer_request" | "duplicate" | "service_failure" | "fraud" | "goodwill" | "other";
+            note?: string;
+        };
         /** @enum {string} */
         ProductId: "promote_7d" | "promote_30d";
         Product: {
@@ -422,6 +575,114 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    adminSearchOrders: {
+        parameters: {
+            query?: {
+                q?: string;
+                user?: string;
+                listing?: string;
+                status?: "created" | "authorized" | "captured" | "refunded" | "cancelled" | "expired" | "failed";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of orders */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderPage"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminPaymentStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Statistics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentStats"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderDetail"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminRefundOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundInput"];
+            };
+        };
+        responses: {
+            /** @description Refunded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderDetail"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
         };
     };
 }

@@ -14,7 +14,7 @@ export async function audit(
   db: Queryable,
   source: string,
   actor: Principal,
-  entry: Pick<AuditData, 'action' | 'targetType' | 'targetId' | 'reason'>,
+  entry: Pick<AuditData, 'action' | 'targetType' | 'targetId' | 'reason' | 'details'>,
 ): Promise<void> {
   const event = buildEvent('no.raadi.audit.action.v1', {
     source,

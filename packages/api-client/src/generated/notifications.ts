@@ -158,10 +158,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/notifications/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A user's devices, preferences and recent deliveries (no addresses or tokens)
+         * @description Admin console only (console tokens; not routed by the gateway, ADR-0030).
+         */
+        get: operations["adminNotificationsUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/notifications/queues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E-mail and push queues and recent errors (operators) */
+        get: operations["adminNotificationQueues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        NotificationsUser: {
+            /** Format: uuid */
+            userId: string;
+            locale: string | null;
+            emailMessages: boolean;
+            devices: {
+                /** @enum {string} */
+                platform: "ios" | "android";
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                lastSeenAt: string;
+            }[];
+            recent: {
+                /** @enum {string} */
+                channel: "email" | "push";
+                kind: string;
+                status: string;
+                attempts: number;
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                sentAt: string | null;
+            }[];
+        };
+        QueueStats: {
+            channels: {
+                /** @enum {string} */
+                channel: "email" | "push";
+                pending: number;
+                sent24h: number;
+                failed24h: number;
+                skipped24h: number;
+                /** Format: date-time */
+                oldestPendingAt: string | null;
+            }[];
+            errors: {
+                /** @enum {string} */
+                channel: "email" | "push";
+                error: string;
+                count: number;
+                /** Format: date-time */
+                lastAt: string;
+            }[];
+        };
         Notification: {
             /** Format: uuid */
             id: string;
@@ -449,6 +531,52 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    adminNotificationsUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Delivery */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationsUser"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminNotificationQueues: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queues */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueStats"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
         };
     };
 }

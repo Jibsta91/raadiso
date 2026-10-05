@@ -6,9 +6,7 @@ import {
   createMessagingClient,
   createNotificationsClient,
   createPaymentsClient,
-  createAuditClient,
   createSavedClient,
-  type AuditEntry,
   type FavouritePage,
   type SavedSearch,
   type NotificationList,
@@ -349,51 +347,4 @@ export async function markSavedSearchSeen(id: string): Promise<SavedSearch | nul
     .POST('/api/v1/saved/searches/{id}/seen', { ...init, params: { path: { id } } })
     .catch(() => undefined);
   return (await savedSearches().catch(() => null))?.find((s) => s.id === id) ?? null;
-}
-
-/** Open reports grouped by listing (moderators); null when not allowed. */
-export async function reportQueue() {
-  const token = await accessToken();
-  if (!token) return null;
-  const { data, response } = await createListingsClient({ baseUrl: env.listingsUrl }).GET(
-    '/api/v1/listings/moderation/reports',
-    {
-      params: { query: { limit: 50 } },
-      headers: { authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(5000),
-      cache: 'no-store',
-    },
-  );
-  if (data) return data.items;
-  if (response.status === 401 || response.status === 403) return null;
-  throw new ServiceUnavailableError(`listings returned ${response.status}`);
-}
-
-export interface AuditFilters {
-  actor?: string;
-  action?: string;
-  targetType?: string;
-  targetId?: string;
-  before?: string;
-}
-
-/** The audit log, newest first (platform admins); null when not allowed. */
-export async function auditEntries(
-  filters: AuditFilters,
-): Promise<{ items: AuditEntry[]; hasMore: boolean } | null> {
-  const token = await accessToken();
-  if (!token) return null;
-  const { data, response } = await createAuditClient({ baseUrl: env.auditUrl }).GET(
-    '/api/v1/audit/entries',
-    {
-      params: { query: { ...filters, limit: 50 } },
-      headers: { authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(5000),
-      cache: 'no-store',
-    },
-  );
-  if (data) return data;
-  if (response.status === 401 || response.status === 403) return null;
-  if (response.status === 400) return { items: [], hasMore: false };
-  throw new ServiceUnavailableError(`audit returned ${response.status}`);
 }

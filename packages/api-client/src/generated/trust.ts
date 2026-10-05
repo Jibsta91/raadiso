@@ -203,10 +203,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/trust/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reviews, including removed ones
+         * @description Admin console only (console tokens; not routed by the gateway, ADR-0030).
+         */
+        get: operations["adminSearchReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/trust/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A user's rating, verification and review history */
+        get: operations["adminUserTrust"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/trust/reviews/{id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove a review with a reason (moderators, platform admins) */
+        post: operations["adminRemoveReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            listingId: string;
+            listingTitle: string;
+            /** Format: uuid */
+            reviewerId: string;
+            reviewerName: string;
+            /** Format: uuid */
+            subjectId: string;
+            /** @enum {string} */
+            subjectRole: "buyer" | "seller";
+            rating: number;
+            comment: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            removedAt: string | null;
+            /** @enum {string|null} */
+            removedBy: "author" | "moderator" | null;
+        };
+        AdminReviewPage: {
+            items: components["schemas"]["AdminReview"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        UserTrust: {
+            /** Format: uuid */
+            userId: string;
+            name: string | null;
+            /** Format: date-time */
+            verifiedAt: string | null;
+            rating: {
+                average: number | null;
+                count: number;
+            };
+            given: number;
+            /** @description Reviews by or about the user that moderators removed */
+            removed: number;
+        };
+        RemoveReviewInput: {
+            /** @enum {string} */
+            reasonCode: "abusive" | "personal_data" | "not_genuine" | "off_topic" | "other";
+            note?: string;
+        };
         /** @enum {string} */
         Role: "buyer" | "seller";
         Verification: {
@@ -567,6 +668,88 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    adminSearchReviews: {
+        parameters: {
+            query?: {
+                user?: string;
+                as?: "about" | "by";
+                rating?: number;
+                removed?: "true" | "false";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of reviews */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminReviewPage"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminUserTrust: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Trust */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserTrust"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminRemoveReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemoveReviewInput"];
+            };
+        };
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
 }

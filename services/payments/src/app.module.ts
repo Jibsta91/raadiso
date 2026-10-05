@@ -18,6 +18,7 @@ import { LoggerModule } from 'nestjs-pino';
 import type { AppConfig } from './config.js';
 import { Lifecycle } from './lifecycle.js';
 import { ListingsClient } from './payments/listings.client.js';
+import { PaymentsAdminController, PaymentsAdminService } from './payments/admin.js';
 import { PaymentsController } from './payments/payments.controller.js';
 import { PaymentsRepository } from './payments/payments.repository.js';
 import { PaymentsService } from './payments/payments.service.js';
@@ -72,7 +73,7 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [PaymentsController, HealthController],
+      controllers: [PaymentsController, PaymentsAdminController, HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         { provide: PG_POOL, useFactory: () => createPgPool(env, secrets.db_password, 'payments') },
@@ -82,6 +83,7 @@ export class AppModule {
         { provide: ListingsClient, useValue: new ListingsClient(env.LISTINGS_URL) },
         PaymentsRepository,
         PaymentsService,
+        PaymentsAdminService,
         PaymentWorkers,
         Lifecycle,
         { provide: APP_GUARD, useClass: ThrottlerGuard },

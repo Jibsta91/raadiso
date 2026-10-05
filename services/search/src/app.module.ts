@@ -18,6 +18,7 @@ import { LoggerModule } from 'nestjs-pino';
 import type { AppConfig } from './config.js';
 import { Lifecycle } from './lifecycle.js';
 import { SearchController } from './search/search.controller.js';
+import { SearchAdminController } from './search/admin.js';
 import { SearchIndex } from './search/search.index.js';
 import { SearchService, SIGNER } from './search/search.service.js';
 import { APP_CONFIG } from './tokens.js';
@@ -50,7 +51,7 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [SearchController, HealthController],
+      controllers: [SearchController, SearchAdminController, HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         { provide: JwtVerifier, useValue: keycloakVerifier(env) },

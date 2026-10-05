@@ -14,6 +14,8 @@ servers:
   - url: http://raadi.localhost
     description: Local development through the gateway
 tags:
+  - name: admin
+    description: Admin console (console tokens only, ADR-0030)
   - name: profiles
   - name: reviews
   - name: verification
@@ -166,6 +168,65 @@ paths:
       responses:
         '200': { description: Ready }
         '503': { description: Not ready }
+  /admin/v1/trust/reviews:
+    get:
+      tags: [admin]
+      operationId: adminSearchReviews
+      summary: Reviews, including removed ones
+      description: Admin console only (console tokens; not routed by the gateway, ADR-0030).
+      parameters:
+        - { name: user, in: query, schema: { type: string, format: uuid } }
+        - { name: as, in: query, schema: { type: string, enum: [about, by] } }
+        - { name: rating, in: query, schema: { type: integer, minimum: 1, maximum: 5 } }
+        - { name: removed, in: query, schema: { type: string, enum: ['true', 'false'] } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 25 },
+          }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: A page of reviews
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminReviewPage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/trust/users/{id}:
+    get:
+      tags: [admin]
+      operationId: adminUserTrust
+      summary: A user's rating, verification and review history
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Trust
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserTrust' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/trust/reviews/{id}/remove:
+    post:
+      tags: [admin]
+      operationId: adminRemoveReview
+      summary: Remove a review with a reason (moderators, platform admins)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RemoveReviewInput' }
+      responses:
+        '204': { description: Removed }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -177,6 +238,69 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    AdminReview:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          listingId,
+          listingTitle,
+          reviewerId,
+          reviewerName,
+          subjectId,
+          subjectRole,
+          rating,
+          comment,
+          createdAt,
+          removedAt,
+          removedBy,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        listingId: { type: string, format: uuid }
+        listingTitle: { type: string }
+        reviewerId: { type: string, format: uuid }
+        reviewerName: { type: string }
+        subjectId: { type: string, format: uuid }
+        subjectRole: { type: string, enum: [buyer, seller] }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string }
+        createdAt: { type: string, format: date-time }
+        removedAt: { type: [string, 'null'], format: date-time }
+        removedBy: { type: [string, 'null'], enum: [author, moderator, null] }
+    AdminReviewPage:
+      type: object
+      additionalProperties: false
+      required: [items, total, limit, offset]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/AdminReview' } }
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+    UserTrust:
+      type: object
+      additionalProperties: false
+      required: [userId, name, verifiedAt, rating, given, removed]
+      properties:
+        userId: { type: string, format: uuid }
+        name: { type: [string, 'null'] }
+        verifiedAt: { type: [string, 'null'], format: date-time }
+        rating:
+          type: object
+          additionalProperties: false
+          required: [average, count]
+          properties: { average: { type: [number, 'null'] }, count: { type: integer } }
+        given: { type: integer }
+        removed:
+          { type: integer, description: Reviews by or about the user that moderators removed }
+    RemoveReviewInput:
+      type: object
+      additionalProperties: false
+      required: [reasonCode]
+      properties:
+        reasonCode: { type: string, enum: [abusive, personal_data, not_genuine, off_topic, other] }
+        note: { type: string, maxLength: 500 }
     Role:
       type: string
       enum: [buyer, seller]

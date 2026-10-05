@@ -63,6 +63,9 @@ A full reset (wipes data): `docker compose down -v --remove-orphans`.
   explicit `:mode=1777`, and never `cp` over read-only files in entrypoints (`cap_drop: ALL`, no DAC override).
 - Arguments to `./raadi e2e` replace the container command: run one spec with
   `./raadi e2e e2e specs/<file>.spec.ts`.
+- Staff APIs are `/admin/v1/…`, not routed by Traefik, and take console tokens only (`@Staff`, azp
+  `raadi-admin`). Smoke gets tokens straight from `http://<bff>:4000/auth/forward` (`token_from`). Step-up
+  actions need a sign-in in the last 15 minutes: tests sign in fresh before them.
 - Grafana has basic auth disabled. For API checks, log in with `POST /login` (admin secret) and use the cookie.
 - OpenSearch's search user may only touch `raadi-listings*`, so index/alias calls must name that pattern.
 - All Playwright workers reach Traefik from one IP and share its per-client rate limit. A 429 on a page or
@@ -72,11 +75,11 @@ A full reset (wipes data): `docker compose down -v --remove-orphans`.
   volumes, and Keycloak can crash-loop. Do a cold start after switching between branches that change
   Keycloak or init (`docker compose --profile tools --profile test down -v --remove-orphans`, then `up`).
 - After the laptop sleeps, Docker Desktop can wedge (Kafka stops answering, containers cannot be killed).
-  Run `systemctl --user restart docker-desktop`, then do a cold start. A wedged VM also made Keycloak drop
-  `raadi-bff` client sessions after a few minutes, so token refreshes failed with "Session doesn't have
-  required client" and users were signed out. That stopped after the restart (refreshes then worked after a
-  330 s gap). `ENOTFOUND registry.npmjs.org`
+  Run `systemctl --user restart docker-desktop`, then do a cold start. `ENOTFOUND registry.npmjs.org`
   during a build is a dropped network: retry.
+- Token refreshes failing with "Session doesn't have required client" (users signed out) came from
+  keycloak-init re-importing clients with OVERWRITE, which recreated them on every `up` and killed their
+  sessions. It now updates clients in place (ADR-0030); keep it that way.
 - A locked 1Password SSH agent ("communication with agent failed", "failed to fill whole buffer") blocks
   signed commits, tags and pushes. Ask the user to unlock it; never disable signing.
 - The toolbox mounts only this checkout. In a worktree, bind-mount the worktree's files explicitly and run

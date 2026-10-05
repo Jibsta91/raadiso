@@ -125,10 +125,370 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Find users (support, platform admins)
+         * @description Admin console only (admin-bff, console tokens; not routed by the gateway, ADR-0030).
+         */
+        get: operations["adminSearchUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Account counts and daily sign-ups and sign-ins */
+        get: operations["adminUserStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Staff members and their roles (platform admins) */
+        get: operations["adminStaff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** E-mail and name of staff members (other ids are left out) */
+        get: operations["adminLookupStaff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One account: roles, sessions, credentials, lockout, suspension, sign-in events */
+        get: operations["adminUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Support's internal notes about the account */
+        get: operations["adminUserNotes"];
+        put?: never;
+        /** Add an internal note (audited without its text) */
+        post: operations["adminAddUserNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend the account and end its sessions (step-up)
+         * @description Support may not suspend staff accounts or their own. Needs a sign-in within the step-up window (RFC 9470 challenge otherwise).
+         */
+        post: operations["adminSuspendUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}/unsuspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lift a suspension (step-up) */
+        post: operations["adminUnsuspendUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}/sign-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End every session of the account */
+        post: operations["adminSignOutUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}/emails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Keycloak's password reset or e-mail verification */
+        post: operations["adminSendUserEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear a brute-force lockout */
+        post: operations["adminUnlockUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set the staff roles (platform admins, step-up) */
+        put: operations["adminSetStaffRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/v1/users/{id}/otp-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove the authenticator (platform admins, step-up) */
+        post: operations["adminResetOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        StaffRole: "moderator" | "support" | "operator" | "platform-admin";
+        AdminUser: {
+            /** Format: uuid */
+            id: string;
+            email: string | null;
+            name: string | null;
+            enabled: boolean;
+            emailVerified: boolean;
+            /** Format: date-time */
+            createdAt: string | null;
+            /** Format: date-time */
+            lastLoginAt: string | null;
+            staffRoles: components["schemas"]["StaffRole"][];
+            suspended: boolean;
+        };
+        AdminUserPage: {
+            items: components["schemas"]["AdminUser"][];
+            total: number;
+        };
+        AdminUserDetail: {
+            /** Format: uuid */
+            id: string;
+            email: string | null;
+            name: string | null;
+            enabled: boolean;
+            emailVerified: boolean;
+            /** Format: date-time */
+            createdAt: string | null;
+            /** Format: date-time */
+            lastLoginAt: string | null;
+            staffRoles: components["schemas"]["StaffRole"][];
+            suspended: boolean;
+            displayName: string | null;
+            locale: string | null;
+            requiredActions: string[];
+            sessions: {
+                id: string;
+                ip: string | null;
+                /** Format: date-time */
+                startedAt: string;
+                /** Format: date-time */
+                lastAccessAt: string;
+                clients: string[];
+            }[];
+            credentials: {
+                id: string;
+                type: string;
+                label: string | null;
+                /** Format: date-time */
+                createdAt: string | null;
+            }[];
+            lockout: {
+                locked: boolean;
+                failures: number;
+                /** Format: date-time */
+                lastFailureAt: string | null;
+            };
+            suspension: null | {
+                reasonCode: components["schemas"]["SuspensionReason"];
+                note: string;
+                /** Format: uuid */
+                by: string;
+                /** Format: date-time */
+                at: string;
+                /** Format: date-time */
+                until: string | null;
+            };
+            events: {
+                type: string;
+                /** Format: date-time */
+                at: string;
+                ip: string | null;
+                client: string | null;
+                error: string | null;
+            }[];
+        };
+        /** @enum {string} */
+        SuspensionReason: "fraud" | "spam" | "abuse" | "chargeback" | "impersonation" | "security" | "other";
+        UserStats: {
+            total: number;
+            suspended: number;
+            staff: number;
+            signups: {
+                /** Format: date */
+                day: string;
+                count: number;
+            }[];
+            active: {
+                /** Format: date */
+                day: string;
+                count: number;
+            }[];
+        };
+        StaffIdentity: {
+            /** Format: uuid */
+            id: string;
+            email: string | null;
+            name: string | null;
+        };
+        UserNote: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            authorId: string;
+            body: string;
+            pinned: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        UserNoteInput: {
+            body: string;
+            /** @default false */
+            pinned: boolean;
+        };
+        SuspendInput: {
+            reasonCode: components["schemas"]["SuspensionReason"];
+            note?: string;
+            /** @description Lift automatically after this many hours */
+            hours?: number;
+        };
+        NoteInput: {
+            note?: string;
+        };
+        EmailInput: {
+            /** @enum {string} */
+            action: "password_reset" | "verify_email";
+        };
+        RolesInput: {
+            roles: components["schemas"]["StaffRole"][];
+            note: string;
+        };
         /** @enum {string} */
         Locale: "nb" | "en" | "so";
         SessionUser: {
@@ -370,6 +730,396 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    adminSearchUsers: {
+        parameters: {
+            query?: {
+                q?: string;
+                role?: components["schemas"]["StaffRole"];
+                status?: "active" | "suspended";
+                first?: number;
+                max?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserPage"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminUserStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Statistics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserStats"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminStaff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Staff */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["AdminUser"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminLookupStaff: {
+        parameters: {
+            query: {
+                ids: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Staff members */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["StaffIdentity"][];
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserDetail"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminUserNotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["UserNote"][];
+                    };
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+        };
+    };
+    adminAddUserNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserNoteInput"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminSuspendUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SuspendInput"];
+            };
+        };
+        responses: {
+            /** @description Suspended */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminUnsuspendUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteInput"];
+            };
+        };
+        responses: {
+            /** @description Lifted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminSignOutUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteInput"];
+            };
+        };
+        responses: {
+            /** @description Signed out */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        sessions: number;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminSendUserEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmailInput"];
+            };
+        };
+        responses: {
+            /** @description Sent */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        sent: boolean;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminUnlockUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Unlocked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminSetStaffRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RolesInput"];
+            };
+        };
+        responses: {
+            /** @description Changed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        added: components["schemas"]["StaffRole"][];
+                        removed: components["schemas"]["StaffRole"][];
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+        };
+    };
+    adminResetOtp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteInput"];
+            };
+        };
+        responses: {
+            /** @description Removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
         };
     };
 }

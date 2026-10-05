@@ -16,6 +16,7 @@ import {
   RouteSpanInterceptor,
 } from '@raadi/service-kit';
 import { LoggerModule } from 'nestjs-pino';
+import { MessagingAdminController } from './messaging/admin.js';
 import type { AppConfig } from './config.js';
 import { Lifecycle } from './lifecycle.js';
 import { ListingsClient } from './messaging/listings.client.js';
@@ -54,7 +55,7 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [MessagingController, HealthController],
+      controllers: [MessagingController, MessagingAdminController, HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         { provide: PG_POOL, useFactory: () => createPgPool(env, secrets.db_password, 'messaging') },

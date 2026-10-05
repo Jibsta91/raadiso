@@ -13,6 +13,8 @@ servers:
   - url: http://raadi.localhost
     description: Local development through the gateway
 tags:
+  - name: admin
+    description: Admin console (console tokens only, ADR-0030)
   - name: notifications
 security: [{ bearer: [] }, { session: [] }]
 paths:
@@ -136,6 +138,35 @@ paths:
       responses:
         '200': { description: Ready }
         '503': { description: A dependency is unavailable or the service is draining }
+  /admin/v1/notifications/users/{id}:
+    get:
+      tags: [admin]
+      operationId: adminNotificationsUser
+      summary: A user's devices, preferences and recent deliveries (no addresses or tokens)
+      description: Admin console only (console tokens; not routed by the gateway, ADR-0030).
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Delivery
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationsUser' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /admin/v1/notifications/queues:
+    get:
+      tags: [admin]
+      operationId: adminNotificationQueues
+      summary: E-mail and push queues and recent errors (operators)
+      responses:
+        '200':
+          description: Queues
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QueueStats' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -147,6 +178,66 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    NotificationsUser:
+      type: object
+      additionalProperties: false
+      required: [userId, locale, emailMessages, devices, recent]
+      properties:
+        userId: { type: string, format: uuid }
+        locale: { type: [string, 'null'] }
+        emailMessages: { type: boolean }
+        devices:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [platform, createdAt, lastSeenAt]
+            properties:
+              platform: { type: string, enum: [ios, android] }
+              createdAt: { type: string, format: date-time }
+              lastSeenAt: { type: string, format: date-time }
+        recent:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [channel, kind, status, attempts, createdAt, sentAt]
+            properties:
+              channel: { type: string, enum: [email, push] }
+              kind: { type: string }
+              status: { type: string }
+              attempts: { type: integer }
+              createdAt: { type: string, format: date-time }
+              sentAt: { type: [string, 'null'], format: date-time }
+    QueueStats:
+      type: object
+      additionalProperties: false
+      required: [channels, errors]
+      properties:
+        channels:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [channel, pending, sent24h, failed24h, skipped24h, oldestPendingAt]
+            properties:
+              channel: { type: string, enum: [email, push] }
+              pending: { type: integer }
+              sent24h: { type: integer }
+              failed24h: { type: integer }
+              skipped24h: { type: integer }
+              oldestPendingAt: { type: [string, 'null'], format: date-time }
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [channel, error, count, lastAt]
+            properties:
+              channel: { type: string, enum: [email, push] }
+              error: { type: string }
+              count: { type: integer }
+              lastAt: { type: string, format: date-time }
     Notification:
       type: object
       additionalProperties: false

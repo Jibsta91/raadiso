@@ -35,7 +35,7 @@ for (const user of users) {
 }
 
 // Staff also get a session on the admin host (admin-bff, its own cookie and Keycloak client).
-for (const user of ['moderator', 'support', 'admin']) {
+for (const user of ['moderator', 'support', 'operator', 'admin']) {
   setup(`sign in ${user} to the admin console`, async ({ page }) => {
     await page.goto(`${adminBase}/en/admin`);
     await page.locator('#username').fill(`${user}@${domain}`);
