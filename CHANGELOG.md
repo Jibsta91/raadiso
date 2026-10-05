@@ -81,6 +81,10 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- Photo uploads from the app failed. Expo's fetch rejected the app's file part (uploads now use React
+  Native's XMLHttpRequest), and the gateway answered 500 to any upload over 1 MB: its upload buffer could not
+  write to the read-only container (Traefik now has a small in-memory /tmp). iPhone HEIC photos are sent as
+  JPEG.
 - Keycloak's admin console (`auth.<domain>/admin/`) stayed blank: the gateway sent `X-Frame-Options: DENY` on
   Keycloak's pages, which blocked the console's own same-origin frames. Keycloak's routes now allow same-origin
   framing, as Keycloak itself does; the website still cannot be framed.

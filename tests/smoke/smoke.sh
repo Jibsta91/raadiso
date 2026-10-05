@@ -299,6 +299,10 @@ printf '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
 req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/not-an-image.jpg;type=image/jpeg"
 [[ "$status" == "422" && "$(json '.errors[0].code')" == "unsupported_type" ]] \
   && ok "non-images are refused by content sniffing" || fail "content sniffing" "HTTP $status $(cat "$BODY")"
+# Phone photos are several MB: the gateway buffers bodies over 1 MB in /tmp (a 500 when it could not).
+{ printf '\xff\xd8\xff\xe0'; head -c 3000000 /dev/urandom; } > /tmp/large.jpg
+req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/large.jpg;type=image/jpeg"
+[[ "$status" == "422" ]] && ok "a 3 MB upload passes the gateway to the media service" || fail "large upload" "HTTP $status $(head -c 200 "$BODY")"
 # ClamAV's EICAR signature is anchored at offset 0, so the file is sent as is
 # (every upload is scanned before its type is checked).
 # shellcheck disable=SC2016 # the "$" characters are part of the EICAR string
