@@ -15,6 +15,24 @@ http:
           X-Powered-By: ''
           Cross-Origin-Opener-Policy: same-origin
 
+    # Keycloak frames its own pages: the admin console and keycloak-js load
+    # /realms/.../3p-cookies/step1.html and the login status iframe from the same
+    # origin. DENY broke them (blank admin console), so framing is SAMEORIGIN here,
+    # as Keycloak itself sends; other sites still cannot frame the login pages.
+    keycloak-headers:
+      headers:
+        customFrameOptionsValue: SAMEORIGIN
+        contentTypeNosniff: true
+        browserXssFilter: false
+        referrerPolicy: strict-origin-when-cross-origin
+        permissionsPolicy: 'camera=(), microphone=(), geolocation=(self), payment=()'
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        customResponseHeaders:
+          Server: ''
+          X-Powered-By: ''
+          Cross-Origin-Opener-Policy: same-origin
+
     # Content-Security-Policy for the web app. Next.js needs inline scripts for
     # hydration; nonces are a Phase 6 hardening item tracked in docs/threat-model.md.
     web-csp:

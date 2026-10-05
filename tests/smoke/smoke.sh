@@ -163,6 +163,11 @@ issuer=$(jq -r .issuer "$BODY" 2>/dev/null)
 [[ "$issuer" == "$AUTH/realms/$REALM" ]] && ok "issuer is $issuer" || fail "issuer" "got '$issuer'"
 req GET "$AUTH/metrics"
 [[ "$status" == "404" ]] && ok "Keycloak metrics not exposed publicly" || fail "Keycloak metrics exposed" "HTTP $status"
+# Keycloak frames its own pages (admin console, keycloak-js cookie check); DENY left the console blank.
+req GET "$OIDC/3p-cookies/step1.html"
+[[ "$(header x-frame-options)" == SAMEORIGIN ]] && ok "Keycloak may frame its own pages (admin console loads)" || fail "Keycloak framing" "X-Frame-Options: $(header x-frame-options)"
+req GET "$PUBLIC/en"
+[[ "$(header x-frame-options)" == DENY ]] && ok "the website cannot be framed" || fail "website framing" "X-Frame-Options: $(header x-frame-options)"
 
 section "Sign-up (hosted registration, Raadi theme)"
 : > "$JAR"
