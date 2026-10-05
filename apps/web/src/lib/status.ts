@@ -84,8 +84,12 @@ export interface JourneyHistory {
   up: boolean;
 }
 
-export async function journeyHistory(): Promise<JourneyHistory[] | null> {
-  const end = Math.floor(Date.now() / 3_600_000) * 3600;
+export async function journeyHistory(): Promise<{
+  end: number;
+  journeys: JourneyHistory[];
+} | null> {
+  // The last bucket ends now (not at the last full hour), so a stack started minutes ago has data.
+  const end = Math.floor(Date.now() / 1000);
   const start = end - (HOURS - 1) * 3600;
   const [hourly, week, now] = await Promise.all([
     promQuery<Matrix>('query_range', {
@@ -100,20 +104,28 @@ export async function journeyHistory(): Promise<JourneyHistory[] | null> {
     }),
     promQuery<Vector>('query', { query: 'max by (journey) (probe_success{job="journeys"})' }),
   ]);
-  if (!hourly || !week || !now) return null;
-  const uptime = new Map(week.result.map((r) => [r.metric.journey!, Number(r.value[1])]));
-  const latest = new Map(now.result.map((r) => [r.metric.journey!, r.value[1] === '1']));
-  return hourly.result
+  if (!now) return null;
+  const uptime = new Map((week?.result ?? []).map((r) => [r.metric.journey!, Number(r.value[1])]));
+  const hours = new Map(
+    (hourly?.result ?? []).map((r) => [
+      r.metric.journey!,
+      new Map(r.values.map(([t, v]) => [t, Number(v)])),
+    ]),
+  );
+  // Every journey probed now is listed, with or without history.
+  const journeys = now.result
     .map((r) => {
-      const byTime = new Map(r.values.map(([t, v]) => [t, Number(v)]));
+      const journey = r.metric.journey!;
+      const byTime = hours.get(journey);
       return {
-        journey: r.metric.journey!,
-        hours: Array.from({ length: HOURS }, (_, i) => byTime.get(start + i * 3600) ?? null),
-        uptime: uptime.get(r.metric.journey!) ?? null,
-        up: latest.get(r.metric.journey!) ?? false,
+        journey,
+        hours: Array.from({ length: HOURS }, (_, i) => byTime?.get(start + i * 3600) ?? null),
+        uptime: uptime.get(journey) ?? null,
+        up: r.value[1] === '1',
       };
     })
     .sort((a, b) => JOURNEY_ORDER.indexOf(a.journey) - JOURNEY_ORDER.indexOf(b.journey));
+  return { end, journeys };
 }
 
 const JOURNEY_ORDER = ['home', 'search_page', 'search_api', 'sign_in', 'console', 'app_web'];

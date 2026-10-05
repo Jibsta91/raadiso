@@ -29,13 +29,14 @@ const hourTone = (v: number | null) =>
 export default async function StatusPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const [t, format, components, journeys, slos] = await Promise.all([
+  const [t, format, components, history, slos] = await Promise.all([
     getTranslations('status'),
     getFormatter(),
     platformStatus(),
     journeyHistory(),
     sloSummary(),
   ]);
+  const journeys = history?.journeys ?? null;
   const componentsOk = components.every((c) => c.ok);
   const journeysOk = journeys?.every((j) => j.up) ?? true;
   const state = componentsOk && journeysOk ? 'ok' : journeysOk ? 'partial' : 'down';
@@ -43,7 +44,7 @@ export default async function StatusPage({ params }: { params: Promise<{ locale:
   const pct = (v: number) =>
     format.number(v, { style: 'percent', maximumFractionDigits: v >= 0.999 && v < 1 ? 2 : 1 });
   const hourLabel = (i: number) => {
-    const at = new Date((Math.floor(Date.now() / 3_600_000) - (167 - i)) * 3_600_000);
+    const at = new Date(((history?.end ?? Date.now() / 1000) - (167 - i) * 3600) * 1000);
     return format.dateTime(at, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
   };
 

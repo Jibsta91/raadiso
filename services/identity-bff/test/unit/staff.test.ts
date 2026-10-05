@@ -144,11 +144,17 @@ describe('security overview (ADR-0031)', () => {
         },
       ],
       [
-        { type: 'password', removeable: false, userCredentialMetadatas: [{ credential: { id: 'c1' } }] },
+        {
+          type: 'password',
+          removeable: false,
+          userCredentialMetadatas: [{ credential: { id: 'c1' } }],
+        },
         {
           type: 'webauthn-passwordless',
           removeable: true,
-          userCredentialMetadatas: [{ credential: { id: 'p1', userLabel: 'Phone', createdDate: Date.now() } }],
+          userCredentialMetadatas: [
+            { credential: { id: 'p1', userLabel: 'Phone', createdDate: Date.now() } },
+          ],
         },
       ],
       now - 60,
@@ -156,7 +162,10 @@ describe('security overview (ADR-0031)', () => {
     const v = validator('SecurityOverview');
     assert.ok(v(overview), JSON.stringify(v.errors));
     assert.deepEqual(overview.sessions[0]?.apps, ['web', 'app']);
-    assert.equal(overview.methods.find((m) => m.type === 'webauthn-passwordless')?.credentials[0]?.label, 'Phone');
+    assert.equal(
+      overview.methods.find((m) => m.type === 'webauthn-passwordless')?.credentials[0]?.label,
+      'Phone',
+    );
     assert.equal(overview.methods.find((m) => m.type === 'otp')?.credentials.length, 0);
   });
 });
