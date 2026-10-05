@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { buildEvent, type ListingSnapshot } from '@raadi/events';
-import { appendToOutbox, withTransaction } from '@raadi/service-kit';
+import { appendToOutbox, audit, type Principal, withTransaction } from '@raadi/service-kit';
 import type pg from 'pg';
 import { PG_POOL } from '../tokens.js';
 import type { DealFacts, ListingRow, ReviewRow, Role, VerificationRow } from './model.js';
@@ -234,13 +234,29 @@ export class TrustRepository {
     return rows[0] ?? null;
   }
 
-  /** Hides a review; the row stays so the same deal cannot be reviewed again. */
-  async removeReview(id: string, by: 'author' | 'moderator'): Promise<boolean> {
-    const { rowCount } = await this.pool.query(
-      `UPDATE reviews SET removed_at = now(), removed_by = $2 WHERE id = $1 AND removed_at IS NULL`,
-      [id, by],
-    );
-    return rowCount === 1;
+  /**
+   * Hides a review; the row stays so the same deal cannot be reviewed again. A moderator's removal
+   * writes an audit entry in the same transaction (ADR-0028).
+   */
+  async removeReview(
+    id: string,
+    by: 'author' | 'moderator',
+    moderator?: Principal,
+  ): Promise<boolean> {
+    return withTransaction(this.pool, async (client) => {
+      const { rowCount } = await client.query(
+        `UPDATE reviews SET removed_at = now(), removed_by = $2 WHERE id = $1 AND removed_at IS NULL`,
+        [id, by],
+      );
+      if (rowCount === 1 && moderator) {
+        await audit(client, 'urn:raadi:trust', moderator, {
+          action: 'review.remove',
+          targetType: 'review',
+          targetId: id,
+        });
+      }
+      return rowCount === 1;
+    });
   }
 
   async reviewsAbout(

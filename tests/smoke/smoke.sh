@@ -74,7 +74,7 @@ json() { jq -r "$1" "$BODY" 2>/dev/null; }
 totp() {
   local c=$(( $(date +%s) / 30 )) bytes="" i
   for i in 7 6 5 4 3 2 1 0; do bytes+=$(printf '\\x%02x' $(( (c >> (i * 8)) & 255 ))); done
-  local mac; mac=$(printf "$bytes" | openssl dgst -sha256 -mac HMAC -macopt "key:${DEMO_OTP_SECRET:?}" -r | cut -d' ' -f1)
+  local mac; mac=$(printf '%b' "$bytes" | openssl dgst -sha256 -mac HMAC -macopt "key:${DEMO_OTP_SECRET:?}" -r | cut -d' ' -f1)
   local off=$(( 16#${mac:63:1} ))
   printf '%06d' $(( ((16#${mac:$((off * 2)):8}) & 0x7fffffff) % 1000000 ))
 }

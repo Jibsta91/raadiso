@@ -773,6 +773,7 @@
       "actions": {
         "listing_remove": "Listing removed",
         "reports_dismiss": "Reports dismissed",
+        "review_remove": "Review removed",
         "payment_refund": "Payment refunded"
       },
       "targets": {
