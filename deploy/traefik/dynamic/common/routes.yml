@@ -149,7 +149,7 @@ http:
         {{- if ne (env "KEYCLOAK_ADMIN_PUBLIC") "false" }} || PathPrefix(`/admin/`){{ end }})
       entryPoints: [web, websecure]
       service: keycloak
-      middlewares: [security-headers, ratelimit-auth]
+      middlewares: [keycloak-headers, ratelimit-auth]
 
     # Keycloak's static theme assets (about ten per login page) get the normal
     # limit; the strict one is for the endpoints that handle credentials.
@@ -157,7 +157,7 @@ http:
       rule: Host(`auth.{{ $d }}`) && (PathPrefix(`/resources/`) || PathPrefix(`/js/`))
       entryPoints: [web, websecure]
       service: keycloak
-      middlewares: [security-headers, ratelimit-default]
+      middlewares: [keycloak-headers, ratelimit-default]
 
     grafana:
       rule: Host(`grafana.{{ $d }}`)

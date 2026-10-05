@@ -78,6 +78,9 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- Keycloak's admin console (`auth.<domain>/admin/`) stayed blank: the gateway sent `X-Frame-Options: DENY` on
+  Keycloak's pages, which blocked the console's own same-origin frames. Keycloak's routes now allow same-origin
+  framing, as Keycloak itself does; the website still cannot be framed.
 - Screen readers met an invalid list on the listing page (location and seller); the console's avatars and
   status pills had too little contrast; the moderation queue nested a checkbox inside a list option.
 - Traefik could report unhealthy on a busy machine: its health check now has 6 s.
