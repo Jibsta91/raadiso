@@ -5,7 +5,7 @@ import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View } f
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Glass } from './ui';
 import { useI18n } from '../i18n';
-import { useUnread } from '../lib/unread';
+import { useUnread, useUnreadNotifications } from '../lib/unread';
 import { fonts, radius, space, useTheme } from '../theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -15,9 +15,9 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
 
 const ICONS: Record<string, [IconName, IconName]> = {
   index: ['home', 'home-outline'],
-  search: ['search', 'search-outline'],
   sell: ['add-circle', 'add-circle-outline'],
   messages: ['chatbubbles', 'chatbubbles-outline'],
+  notifications: ['notifications', 'notifications-outline'],
   account: ['person-circle', 'person-circle-outline'],
 };
 
@@ -167,13 +167,17 @@ export function TabLayout() {
   const { m } = useI18n();
   const theme = useTheme();
   const unread = useUnread();
+  const alerts = useUnreadNotifications();
   return (
     <Tabs
       tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: theme.background } }}
     >
       <Tabs.Screen name="index" options={{ title: m.tabs.home }} />
-      <Tabs.Screen name="search" options={{ title: m.tabs.search }} />
+      <Tabs.Screen
+        name="notifications"
+        options={{ title: m.tabs.alerts, tabBarBadge: alerts > 0 ? alerts : undefined }}
+      />
       <Tabs.Screen name="sell" options={{ title: m.sell.cta }} />
       <Tabs.Screen
         name="messages"

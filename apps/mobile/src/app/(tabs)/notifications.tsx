@@ -1,14 +1,16 @@
 import type { Notification } from '@raadi/api-client';
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Status } from '../components/ui';
-import { fill, useI18n } from '../i18n';
-import { unwrap, useApi, useLoad, usePullToRefresh } from '../lib/api';
-import { useAuth } from '../lib/auth/context';
-import { formatAge } from '../lib/format';
-import { notificationPath } from '../lib/push-path';
-import { fonts, radius, space, useTheme } from '../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, LargeTitle, Status } from '../../components/ui';
+import { fill, useI18n } from '../../i18n';
+import { unwrap, useApi, useLoad, usePullToRefresh } from '../../lib/api';
+import { useAuth } from '../../lib/auth/context';
+import { formatAge } from '../../lib/format';
+import { notificationPath } from '../../lib/push-path';
+import { refreshNotificationBadge } from '../../lib/unread';
+import { fonts, radius, space, tabBarSpace, useTheme } from '../../theme';
 
 /**
  * In-app notifications (ADR-0017), the same list as the website's /notifications: removed listings,
@@ -20,6 +22,7 @@ export default function Notifications() {
   const api = useApi();
   const auth = useAuth();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   // Read state changed here, kept until the next reload (the server has it too).
   const [read, setRead] = useState<ReadonlySet<string>>(new Set());
   const list = useLoad(
@@ -42,7 +45,7 @@ export default function Notifications() {
       setRead((prev) => new Set(prev).add(n.id));
       void api.notifications
         .POST('/api/v1/notifications/{id}/read', { params: { path: { id: n.id } } })
-        .catch(() => undefined);
+        .then(refreshNotificationBadge, () => undefined);
     }
     const path = notificationPath(n.link);
     if (path) router.push(path as never);
@@ -51,7 +54,10 @@ export default function Notifications() {
     const { response } = await api.notifications
       .POST('/api/v1/notifications/read-all')
       .catch(() => ({ response: { ok: false } }));
-    if (response.ok) setRead(new Set(items.map((n) => n.id)));
+    if (response.ok) {
+      setRead(new Set(items.map((n) => n.id)));
+      refreshNotificationBadge();
+    }
   };
 
   if (auth.status !== 'signedIn') {
@@ -65,10 +71,17 @@ export default function Notifications() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerRight: () =>
-            unread > 0 ? (
+      <FlatList
+        {...refresh}
+        testID="notifications"
+        contentContainerStyle={[
+          styles.list,
+          { paddingTop: insets.top + space.lg, paddingBottom: tabBarSpace + insets.bottom },
+        ]}
+        ListHeaderComponent={
+          <View style={styles.titleRow}>
+            <LargeTitle>{m.notifications.title}</LargeTitle>
+            {unread > 0 ? (
               <Pressable
                 role="button"
                 testID="notifications-read-all"
@@ -79,14 +92,9 @@ export default function Notifications() {
                   {m.notifications.markAllRead}
                 </Text>
               </Pressable>
-            ) : null,
-        }}
-      />
-      <FlatList
-        contentInsetAdjustmentBehavior="automatic"
-        {...refresh}
-        testID="notifications"
-        contentContainerStyle={styles.list}
+            ) : null}
+          </View>
+        }
         data={items}
         keyExtractor={(n) => n.id}
         renderItem={({ item }) => {
@@ -135,7 +143,13 @@ export default function Notifications() {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: space.xl - 4, gap: space.md, flexGrow: 1 },
+  list: { paddingHorizontal: space.xl - 4, gap: space.md, flexGrow: 1 },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: space.md,
+  },
   signedOut: { flex: 1, justifyContent: 'center', gap: space.lg, padding: space.xl },
   row: {
     flexDirection: 'row',

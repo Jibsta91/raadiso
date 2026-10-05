@@ -113,8 +113,8 @@ function Screens() {
         />
         <Stack.Screen name="saved-searches/[id]" options={{ title: m.savedSearches.title }} />
         <Stack.Screen
-          name="notifications"
-          options={{ title: m.notifications.title, headerLargeTitle: true, ...glassBar }}
+          name="search"
+          options={{ title: m.tabs.search, headerLargeTitle: true, ...glassBar }}
         />
         <Stack.Screen name="users/[id]" options={{ title: m.profile.title }} />
       </Stack>

@@ -1,19 +1,19 @@
-import { Icon } from '../../components/icon';
+import { Icon } from '../components/icon';
 import type { FacetValue, SearchHit } from '@raadi/api-client';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ListingTile } from '../../components/listing-card';
-import { filterKeys, SearchFilters } from '../../components/search-filters';
-import { Body, Chip, Field, LargeTitle, Status } from '../../components/ui';
-import { SortMenu } from '../../components/sort-menu';
-import { fill, useI18n } from '../../i18n';
-import { unwrap, useApi } from '../../lib/api';
-import { SORTS, type Sort } from '../../lib/sort';
-import { CATEGORIES, isCategory, isSubcategoryOf, subcategoriesOf } from '../../lib/categories';
-import { useAuth } from '../../lib/auth/context';
-import { fonts, radius, space, tabBarSpace, useTheme } from '../../theme';
+import { ListingTile } from '../components/listing-card';
+import { filterKeys, SearchFilters } from '../components/search-filters';
+import { Body, Chip, Field, Status } from '../components/ui';
+import { SortMenu } from '../components/sort-menu';
+import { fill, useI18n } from '../i18n';
+import { unwrap, useApi } from '../lib/api';
+import { SORTS, type Sort } from '../lib/sort';
+import { CATEGORIES, isCategory, isSubcategoryOf, subcategoriesOf } from '../lib/categories';
+import { useAuth } from '../lib/auth/context';
+import { fonts, radius, space, useTheme } from '../theme';
 
 const PAGE_SIZE = 24;
 
@@ -135,10 +135,8 @@ export default function Search() {
     <FlatList
       testID="search-results"
       keyboardDismissMode="on-drag"
-      contentContainerStyle={[
-        styles.list,
-        { paddingTop: insets.top + space.lg, paddingBottom: tabBarSpace + insets.bottom },
-      ]}
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + space.xl }]}
       data={hits}
       numColumns={2}
       columnWrapperStyle={styles.row}
@@ -148,7 +146,6 @@ export default function Search() {
       onEndReachedThreshold={0.5}
       ListHeaderComponent={
         <View style={styles.header}>
-          <LargeTitle>{m.tabs.search}</LargeTitle>
           <Field
             testID="search-input"
             inputMode="search"

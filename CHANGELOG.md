@@ -67,6 +67,9 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- The app's tab bar is Home · Alerts · Sell · Messages · Account: Sell sits in the middle, and the in-app
+  notifications are a tab with an unread badge. Search left the tab bar: the home screen's search field and
+  categories stay pinned at the top while the listings scroll underneath, and search opens as its own screen.
 - E-mails and pushes come in the language chosen on the website or in the app: the choice is saved to the
   profile, and `preferences_changed` events carry the new language (optional field). The app remembers its
   language setting.
