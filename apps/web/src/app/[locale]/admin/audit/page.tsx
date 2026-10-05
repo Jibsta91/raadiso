@@ -7,7 +7,7 @@ import { env } from '@/lib/env';
 import { getSession } from '@/lib/session';
 import { canOpen } from '@/lib/staff';
 
-const ACTIONS = ['listing.remove', 'reports.dismiss', 'payment.refund'] as const;
+const ACTIONS = ['listing.remove', 'reports.dismiss', 'review.remove', 'payment.refund'] as const;
 const TARGETS = ['listing', 'order', 'user', 'review', 'report', 'conversation', 'system'] as const;
 
 /** Message key of an action ("listing.remove" → "listing_remove": dots mean nesting to next-intl). */

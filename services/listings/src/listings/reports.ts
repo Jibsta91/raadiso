@@ -8,6 +8,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  type OnModuleInit,
   Param,
   ParseUUIDPipe,
   Post,
@@ -81,11 +82,37 @@ export interface QueueItem {
  * listing as a moderator resolves its open reports; dismissing closes them.
  */
 @Injectable()
-export class ReportsService {
+export class ReportsService implements OnModuleInit {
   constructor(
     @Inject(PG_POOL) private readonly pool: pg.Pool,
     @Inject(SIGNER) private readonly signer: ImgproxySigner,
   ) {}
+
+  /** The moderation backlog, so an unworked queue raises an alert (ModerationQueueStale). */
+  onModuleInit(): void {
+    const backlog = meter.createObservableGauge('raadi.listings.reports_open', {
+      description: 'Listings with open reports, waiting for a moderator',
+    });
+    const oldest = meter.createObservableGauge('raadi.listings.reports_oldest_age', {
+      description: 'Age of the oldest open report',
+      unit: 's',
+    });
+    meter.addBatchObservableCallback(
+      async (r) => {
+        const { rows } = await this.pool
+          .query<{ listings: string; oldest: number | null }>(
+            `SELECT count(DISTINCT listing_id) AS listings,
+                    extract(epoch FROM now() - min(created_at))::float8 AS oldest
+               FROM reports WHERE status = 'open'`,
+          )
+          .catch(() => ({ rows: [] }));
+        if (!rows[0]) return;
+        r.observe(backlog, Number(rows[0].listings));
+        r.observe(oldest, rows[0].oldest ?? 0);
+      },
+      [backlog, oldest],
+    );
+  }
 
   async report(
     reporterId: string,

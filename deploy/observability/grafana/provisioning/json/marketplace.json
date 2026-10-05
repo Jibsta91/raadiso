@@ -1187,6 +1187,419 @@
         }
       },
       "description": "Provider webhooks: applied, duplicate (ignored, exactly once), ignored (events Raadi does not act on), rejected (bad signature)."
+    },
+    {
+      "id": 25,
+      "title": "Pushes by outcome",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 76,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (kind, outcome) (rate(raadi_notifications_pushes_total[5m]))",
+          "legendFormat": "{{kind}} {{outcome}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "Expo pushes: queued, throttled, opted_out, sent, skipped (no device), retry and failed (given up)."
+    },
+    {
+      "id": 26,
+      "title": "Push queue and forgotten devices",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 76,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "max(raadi_notifications_push_queue)",
+          "legendFormat": "waiting",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "expr": "sum(increase(raadi_notifications_devices_unregistered_total[1h]))",
+          "legendFormat": "devices forgotten (1h)",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "Pushes waiting to be sent (with retries), and push tokens dropped because the app was uninstalled."
+    },
+    {
+      "id": 27,
+      "title": "Reports by reason and outcome",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 84,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(raadi_listings_reports_total{reason!=\"\"}[5m]))",
+          "legendFormat": "{{reason}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "expr": "sum by (outcome) (rate(raadi_listings_reports_total{outcome!=\"\"}[5m]))",
+          "legendFormat": "{{outcome}}",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "Listing reports from users by reason, and reports closed by moderators (resolved by removal, dismissed). ADR-0027."
+    },
+    {
+      "id": 28,
+      "title": "Moderation backlog",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 84,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "max(raadi_listings_reports_open)",
+          "legendFormat": "listings waiting",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "expr": "max(raadi_listings_reports_oldest_age_seconds) / 3600",
+          "legendFormat": "oldest report (hours)",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "Listings with open reports and the age of the oldest one. ModerationQueueStale fires after 24 hours."
+    },
+    {
+      "id": 29,
+      "title": "Blocks",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 92,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (action) (increase(raadi_messaging_blocks_total[1h]))",
+          "legendFormat": "{{action}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "People blocking (and unblocking) someone in a conversation, per hour. A spike points at a harassing account."
+    },
+    {
+      "id": 30,
+      "title": "Favourite and saved-search alerts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 92,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (kind) (increase(raadi_saved_alerts_total[1h]))",
+          "legendFormat": "{{kind}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "expr": "sum by (outcome) (increase(raadi_saved_search_checks_total[1h]))",
+          "legendFormat": "check {{outcome}}",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "Alerts raised by the saved service (price drop, sold, new matches) and saved-search checks by outcome, per hour. ADR-0026."
+    },
+    {
+      "id": 31,
+      "title": "Staff actions (audit log)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 100,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (action) (increase(raadi_audit_entries_total[1h]))",
+          "legendFormat": "{{action}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "Entries written to the append-only audit log per hour, by action (ADR-0028). Staff actions that never arrive here show up as consumer lag or dead letters."
+    },
+    {
+      "id": 32,
+      "title": "Promotion revenue and image clean-up",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 100,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(raadi_payments_captured_ore_total[24h])) / 100",
+          "legendFormat": "captured NOK (24h)",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        },
+        {
+          "expr": "sum(increase(raadi_media_orphans_deleted_total[24h]))",
+          "legendFormat": "orphan images deleted (24h)",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "description": "Money captured for promoted listings, and detached images removed by the media garbage collector."
     }
   ]
 }

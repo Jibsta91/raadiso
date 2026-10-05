@@ -11,3 +11,7 @@ patchedDependencies:
 overrides:
   xcode>uuid: 11.1.1
   query-string>decode-uri-component: 0.5.0
+  # @bacons/xcode (the iOS widget target, ADR-0029) pins an old @expo/plist on xmldom 0.7 (0.8 has the same
+  # API) and uuid 8.
+  '@expo/plist@0.0.18>@xmldom/xmldom': 0.8.15
+  '@bacons/xcode>uuid': 11.1.1

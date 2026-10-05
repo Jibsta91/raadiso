@@ -11,7 +11,7 @@ import { getSession } from '@/lib/session';
 export const dynamic = 'force-dynamic';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const MODERATORS = ['moderator', 'admin'];
+const MODERATORS = ['moderator', 'platform-admin'];
 
 export async function generateMetadata({
   params,

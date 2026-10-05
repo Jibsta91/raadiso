@@ -37,9 +37,9 @@ reversed, which is by design.
 
 ## A review breaks the rules
 
-Sign in as a moderator, open the reviewed user's profile (`/users/<id>`), and use "Remove review". The
-review stays recorded (removed by moderator), so the same deal cannot be reviewed again. Removals are
-logged as `review removed by moderator` with the moderator's id.
+Sign in as a moderator or platform admin, open the reviewed user's profile (`/users/<id>`), and use
+"Remove review". The review stays recorded (removed by moderator), so the same deal cannot be reviewed
+again. The removal is written to the audit log as `review.remove` ([audit.md](audit.md)).
 
 ## A user cannot review after a sale
 

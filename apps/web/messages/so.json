@@ -773,6 +773,7 @@
       "actions": {
         "listing_remove": "Xayeysiis la saaray",
         "reports_dismiss": "Warbixino la diiday",
+        "review_remove": "Faallo la saaray",
         "payment_refund": "Lacag la celiyay"
       },
       "targets": {

@@ -52,6 +52,49 @@ groups:
           summary: E-mails failed after every retry in the last hour
           runbook_url: docs/runbooks/event-pipeline.md
 
+      - alert: PushQueueBacklog
+        expr: max(raadi_notifications_push_queue) > 100
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $value }} pushes are waiting to be sent'
+          description: Expo's push service (push-mock in development) is slow, failing or refusing the access token.
+          runbook_url: docs/runbooks/notifications.md
+      - alert: PushesGivenUp
+        expr: sum(increase(raadi_notifications_pushes_total{outcome="failed"}[1h])) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: Pushes failed after every retry in the last hour
+          runbook_url: docs/runbooks/notifications.md
+
+  - name: saved
+    rules:
+      - alert: SavedSearchChecksFailing
+        expr: sum(increase(raadi_saved_search_checks_total{outcome="failed"}[30m])) > 5
+        labels: { severity: warning }
+        annotations:
+          summary: Saved-search checks fail, so nobody hears about new matches
+          description: The saved service cannot query search (search down, OpenSearch unhealthy or a circuit breaker open).
+          runbook_url: docs/runbooks/saved.md
+
+  - name: moderation
+    rules:
+      - alert: ModerationQueueStale
+        expr: max(raadi_listings_reports_oldest_age_seconds) > 86400
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: A reported listing has waited more than a day for a moderator
+          description: '{{ with query "max(raadi_listings_reports_open)" }}{{ . | first | value }}{{ end }} listings have open reports.'
+          runbook_url: docs/runbooks/moderation.md
+      - alert: ReportsSpike
+        expr: sum(increase(raadi_listings_reports_total{reason!=""}[1h])) > 30
+        labels: { severity: info }
+        annotations:
+          summary: More than 30 listing reports in the last hour
+          description: A scam wave, a run of bad listings, or someone flooding the queue (each person may hold 20 open reports).
+          runbook_url: docs/runbooks/moderation.md
+
   - name: payments
     rules:
       - alert: PaymentsStuckOpen
@@ -79,3 +122,10 @@ groups:
           summary: More than 5 uploads were rejected as malware in the last hour
           description: Look up the uploaders in the media database (rejected rows keep the user id and signature).
           runbook_url: docs/runbooks/auth-anomalies.md
+      - alert: WebSocketOriginRejected
+        expr: sum(increase(raadi_messaging_ws_rejected_total{reason="origin"}[15m])) > 10
+        labels: { severity: warning }
+        annotations:
+          summary: WebSocket handshakes from foreign origins are being refused
+          description: Cross-site WebSocket hijacking attempts, or the PUBLIC_BASE_URL given to messaging does not match the origin users browse.
+          runbook_url: docs/runbooks/messaging.md
