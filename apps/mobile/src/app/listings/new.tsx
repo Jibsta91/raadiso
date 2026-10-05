@@ -21,6 +21,7 @@ import {
 import { Body, Button, Chip, Field, Status, Title } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { useApi } from '../../lib/api';
+import { uploadForm } from '../../lib/upload';
 import { useAuth } from '../../lib/auth/context';
 import {
   CATEGORIES,
@@ -303,15 +304,19 @@ export function ListingForm({
           : (asset.mimeType ?? 'image/jpeg'),
       } as unknown as Blob);
     }
-    const res = await auth.fetch(
-      new Request(`${config.apiBaseUrl}/api/v1/media`, { method: 'POST', body }),
-    );
+    const url = `${config.apiBaseUrl}/api/v1/media`;
+    const res =
+      Platform.OS === 'web'
+        ? await auth.fetch(new Request(url, { method: 'POST', body }))
+        : await uploadForm(url, body, await auth.socketHeaders());
     if (res.ok) {
       const media = (await res.json()) as Media;
       setPhotos((p) => [...p, { id: media.id, thumb: media.urls.thumb }]);
       return;
     }
     const problem = (await res.json().catch(() => ({}))) as { errors?: Array<{ code?: string }> };
+    // eslint-disable-next-line no-console -- development only: the reason reaches Metro's log
+    if (__DEV__) console.warn('photo upload refused', res.status, JSON.stringify(problem));
     const code = res.status === 413 ? 'too_large' : problem.errors?.[0]?.code;
     setPhotoError(
       IMAGE.includes(code as never)
@@ -348,7 +353,9 @@ export function ListingForm({
       setUploading((n) => n + 1);
       try {
         await upload(asset);
-      } catch {
+      } catch (error) {
+        // eslint-disable-next-line no-console -- development only: the reason reaches Metro's log
+        if (__DEV__) console.warn('photo upload failed', asset.uri, asset.mimeType, error);
         setPhotoError(m.sell.imageErrors.generic);
       } finally {
         setUploading((n) => n - 1);
