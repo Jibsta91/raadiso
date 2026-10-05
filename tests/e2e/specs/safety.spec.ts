@@ -39,11 +39,19 @@ test('a buyer reports a listing; a moderator removes it from the queue', async (
   await adminLogin(moderator, `moderator@${domain}`);
   await moderator.getByTestId('admin-nav-moderation').click();
   await expect(moderator).toHaveURL(new RegExp(`${adminBase}/en/admin/moderation$`));
-  const item = moderator.getByTestId('moderation-item').filter({ hasText: title });
-  await expect(item).toContainText('Fraud or a scam attempt');
-  await expect(item).toContainText('Wants payment up front.');
-  moderator.once('dialog', (dialog) => void dialog.accept());
-  await item.getByTestId('moderation-remove').click();
+  // The workbench: pick the listing, read why it was reported, remove it with a reason.
+  await moderator.getByTestId('moderation-item').filter({ hasText: title }).click();
+  const detail = moderator.getByTestId('moderation-detail');
+  await expect(detail.getByRole('heading', { name: title })).toBeVisible();
+  await expect(detail).toContainText('Fraud or a scam attempt');
+  await expect(detail).toContainText('Wants payment up front.');
+  await moderator.keyboard.press('x');
+  const dialog = moderator.getByTestId('moderation-remove-dialog');
+  await expect(dialog).toBeVisible();
+  await expect(moderator.getByTestId('moderation-remove-submit')).toBeDisabled();
+  await dialog.getByText('Fraud or scam', { exact: true }).click();
+  await moderator.getByTestId('moderation-remove-submit').click();
+  await expect(moderator.getByTestId('toast').first()).toContainText('Listing removed');
   await expect(moderator.getByTestId('moderation-item').filter({ hasText: title })).toHaveCount(0);
   await moderator.close();
 });

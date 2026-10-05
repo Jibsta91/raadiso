@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { adminBase, adminLogin, domain, login, openAccountMenu } from './support.js';
 
 test('staff reach the admin console from the account menu; it has its own sign-in', async ({
@@ -11,24 +11,44 @@ test('staff reach the admin console from the account menu; it has its own sign-i
   // (prompt=login), even though the moderator is signed in to the website.
   await page.goto(`${adminBase}/en/admin`);
   await expect(page.locator('#password')).toBeVisible();
-  await expect(page.getByText('Please re-authenticate to continue')).toBeVisible();
+  await expect(page.getByTestId('admin-console')).toHaveCount(0);
 });
 
-test('each role sees its own sections', async ({ browser }) => {
-  const admin = await browser.newPage();
-  await adminLogin(admin, `admin@${domain}`);
-  for (const section of ['overview', 'moderation', 'audit'])
-    await expect(admin.getByTestId(`admin-nav-${section}`)).toBeVisible();
-  await admin.close();
+const ALL = [
+  'overview',
+  'moderation',
+  'users',
+  'listings',
+  'orders',
+  'reviews',
+  'operations',
+  'staff',
+  'audit',
+] as const;
 
-  const support = await browser.newPage();
-  await adminLogin(support, `support@${domain}`);
-  await expect(support.getByTestId('admin-nav-overview')).toBeVisible();
-  await expect(support.getByTestId('admin-nav-moderation')).toHaveCount(0);
-  await expect(support.getByTestId('admin-nav-audit')).toHaveCount(0);
-  const res = await support.goto(`${adminBase}/en/admin/audit`);
-  expect(res?.status()).toBe(404);
-  await support.close();
+async function sections(page: Page) {
+  const shown: string[] = [];
+  for (const s of ALL) if (await page.getByTestId(`admin-nav-${s}`).count()) shown.push(s);
+  return shown;
+}
+
+test('each role sees its own sections, and nothing else opens', async ({ browser }) => {
+  const expected: Record<string, string[]> = {
+    admin: [...ALL],
+    moderator: ['overview', 'moderation', 'listings', 'reviews'],
+    support: ['overview', 'users', 'listings', 'orders', 'reviews'],
+    operator: ['overview', 'operations'],
+  };
+  for (const [who, want] of Object.entries(expected)) {
+    const page = await browser.newPage();
+    await adminLogin(page, `${who}@${domain}`);
+    expect(await sections(page), who).toEqual(want);
+    for (const hidden of ALL.filter((s) => !want.includes(s) && s !== 'overview')) {
+      const res = await page.goto(`${adminBase}/en/admin/${hidden}`);
+      expect(res?.status(), `${who} → ${hidden}`).toBe(404);
+    }
+    await page.close();
+  }
 });
 
 test('the admin host serves only the console, and the audit log filters', async ({ page }) => {
@@ -47,8 +67,62 @@ test('the admin host serves only the console, and the audit log filters', async 
   // Either refunds are listed (all about orders) or none match yet.
   const entries = page.getByTestId('audit-entry');
   if (await entries.count()) {
-    for (const row of await entries.all()) await expect(row).toContainText('Order');
+    for (const row of await entries.all()) await expect(row).toContainText('order');
   } else {
     await expect(page.getByTestId('audit-empty')).toBeVisible();
   }
+  // The export keeps the filter.
+  await expect(page.getByTestId('audit-export')).toHaveAttribute('href', /targetType=order/);
+});
+
+test('⌘K finds an account and opens it; g then a letter switches sections', async ({ page }) => {
+  await adminLogin(page, `support@${domain}`);
+  await page.keyboard.press('ControlOrMeta+k');
+  await expect(page.getByTestId('command-palette')).toBeVisible();
+  await page.getByTestId('palette-input').fill('amina');
+  const hit = page.getByTestId('palette-item').filter({ hasText: `amina.hassan@${domain}` });
+  await expect(hit).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/en\/admin\/users\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('user-email')).toHaveText(`amina.hassan@${domain}`);
+
+  await page.keyboard.press('g');
+  await page.keyboard.press('l');
+  await expect(page).toHaveURL(new RegExp(`${adminBase}/en/admin/listings$`));
+  await page.keyboard.press('?');
+  await expect(page.getByTestId('shortcuts-dialog')).toBeVisible();
+});
+
+test('support keeps a note on an account; it is in the account history', async ({ page }) => {
+  await adminLogin(page, `support@${domain}`);
+  await page.goto(`${adminBase}/en/admin/users?q=amina`);
+  await page.getByTestId('user-row').first().locator('a').click();
+  await page.getByTestId('tab-notes').click();
+  await expect(page).toHaveURL(/tab=notes/);
+  await expect(page.getByTestId('user-notes')).toBeVisible();
+  const text = `Called about a missing payout ${Date.now().toString(36)}`;
+  await page.getByTestId('note-body').fill(text);
+  await page.getByTestId('note-submit').click();
+  await expect(page.getByTestId('toast').first()).toContainText('Note added');
+  await expect(page.getByTestId('user-note').filter({ hasText: text })).toBeVisible();
+  // Support cannot change staff roles, and sees no such button.
+  await expect(page.getByTestId('user-roles')).toHaveCount(0);
+  // The audit entry arrives through the outbox and Kafka, so reload until it is there.
+  await page.getByTestId('tab-history').click();
+  await expect(page).toHaveURL(/tab=history/);
+  await expect(async () => {
+    await page.reload();
+    await expect(page.getByTestId('user-history')).toContainText('Note written', { timeout: 2000 });
+  }).toPass({ timeout: 90_000 });
+});
+
+test('operators see the platform health, not people', async ({ page }) => {
+  await adminLogin(page, `operator@${domain}`);
+  await page.getByTestId('admin-nav-operations').click();
+  await expect(page.getByTestId('ops-ready')).toBeVisible();
+  await expect(page.getByTestId('ops-service').filter({ hasText: 'listings' })).toContainText(
+    'Ready',
+  );
+  await expect(page.getByTestId('ops-delivery')).toBeVisible();
+  await expect(page.getByTestId('ops-search')).toBeVisible();
 });

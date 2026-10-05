@@ -34,3 +34,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0027](0027-reports-and-blocking.md)                | Reports and blocking: listings' moderators' queue, blocks in messaging                 | Accepted |
 | [0028](0028-admin-console-staff-roles-and-audit.md) | Admin console: own host and session, staff roles, one-time codes, audit log            | Accepted |
 | [0029](0029-ios-native-look.md)                     | The iOS app uses Apple's native components (Liquid Glass, SF Symbols, SwiftUI, widget) | Accepted |
+| [0030](0030-staff-apis-and-console-workspaces.md)   | Staff APIs (console tokens only, step-up), a console workspace per role                | Accepted |

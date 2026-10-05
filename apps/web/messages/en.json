@@ -717,13 +717,25 @@
     "failed": "The action failed. Please try again."
   },
   "admin": {
-    "title": "Admin",
-    "nav": "Admin menu",
+    "title": "Console",
+    "nav": "Console menu",
     "logout": "Log out",
+    "copy": "Copy",
     "sections": {
       "overview": "Overview",
       "moderation": "Moderation",
+      "users": "Users",
+      "listings": "Listings",
+      "orders": "Orders",
+      "reviews": "Reviews",
+      "operations": "Operations",
+      "staff": "Staff",
       "audit": "Audit log"
+    },
+    "groups": {
+      "workspace": "Workspace",
+      "marketplace": "Marketplace",
+      "platform": "Platform"
     },
     "roles": {
       "moderator": "Moderator",
@@ -731,29 +743,697 @@
       "operator": "Operations",
       "platform-admin": "Administrator"
     },
+    "environment": {
+      "development": "Dev",
+      "production": "Production"
+    },
     "noAccess": {
       "title": "No access",
       "body": "{email} has no role that gives access to the admin console. Ask an administrator."
     },
+    "stepUp": {
+      "explain": "Sensitive actions (suspending, refunds, roles) need a sign-in within the last 15 minutes.",
+      "fresh": "Sensitive actions allowed · {minutes} min",
+      "stale": "Sign in again for sensitive actions"
+    },
+    "palette": {
+      "button": "Search or jump to…",
+      "label": "Command palette",
+      "placeholder": "Search users, listings, orders or sections…",
+      "placeholderNav": "Jump to a section…",
+      "nothing": "Nothing found",
+      "commands": "Commands",
+      "toggleTheme": "Switch light / dark",
+      "shortcuts": "Keyboard shortcuts",
+      "logout": "Log out",
+      "recent": "Recently viewed",
+      "goTo": "Go to",
+      "move": "move",
+      "open": "open",
+      "close": "close",
+      "kinds": {
+        "user": "Users",
+        "listing": "Listings",
+        "order": "Orders"
+      }
+    },
+    "shortcuts": {
+      "title": "Keyboard shortcuts",
+      "palette": "Command palette",
+      "search": "Search",
+      "help": "This list",
+      "close": "Close"
+    },
+    "live": {
+      "updated": "Live · {seconds} s ago",
+      "paused": "Paused",
+      "pause": "Pause automatic updates",
+      "resume": "Resume automatic updates"
+    },
+    "dialog": {
+      "close": "Close",
+      "cancel": "Cancel",
+      "working": "Working…",
+      "stepUpNote": "Needs a sign-in within the last 15 minutes.",
+      "signInAgain": "Sign in again",
+      "typeToConfirm": "Type <b>{text}</b> to confirm."
+    },
+    "result": {
+      "forbidden": "You are not allowed to do that.",
+      "invalid": "Check the form and try again.",
+      "failed": "Something went wrong. Try again.",
+      "notFound": "It no longer exists.",
+      "conflict": "That is not possible in its current state.",
+      "stepUp": "For your safety, sign in again before doing this.",
+      "suspended": "The account is suspended and signed out.",
+      "unsuspended": "The suspension is lifted.",
+      "signedOut": "Signed out everywhere.",
+      "emailSent": "The e-mail is on its way.",
+      "unlocked": "The account is unlocked.",
+      "noteAdded": "Note added.",
+      "rolesChanged": "Roles changed. The person is signed out.",
+      "otpReset": "The authenticator is removed.",
+      "listingRemoved": "Listing removed. The seller is told.",
+      "dismissed": "Reports dismissed.",
+      "reviewRemoved": "Review removed.",
+      "refunded": "Refunded."
+    },
+    "channels": {
+      "email": "E-mail",
+      "push": "Push"
+    },
     "overview": {
       "title": "Overview",
-      "intro": "What needs attention now, for your roles.",
-      "openReports": "Open reports",
-      "listings": "{count, plural, one {# listing} other {# listings}}",
-      "latestAction": "Latest action",
-      "auditHint": "See the full audit log",
+      "greeting": {
+        "morning": "Good morning, {name}",
+        "afternoon": "Good afternoon, {name}",
+        "evening": "Good evening, {name}"
+      },
+      "intro": "Today's numbers and what needs a person, for your roles.",
+      "openReports": "Reported listings",
+      "median": "Median decision time {time}",
+      "handled": "{count, plural, one {# handled this week} other {# handled this week}}",
+      "activeListings": "Active listings",
+      "newToday": "{count, plural, one {# new today} other {# new today}}",
+      "users": "Accounts",
+      "signups": "{count, plural, one {# new in 14 days} other {# new in 14 days}}",
+      "revenue": "Revenue, 30 days",
+      "orders": "{count, plural, one {# order} other {# orders}}",
+      "errorRate": "Server errors",
+      "lastHour": "Share of requests, last hour",
+      "messages": "Messages today",
+      "conversations": "{count, plural, one {# new conversation this week} other {# new conversations this week}}",
+      "attention": "Needs attention",
+      "allClear": "All clear. Nothing is waiting for you.",
+      "myActivity": "Your recent actions",
+      "all": "All",
+      "noActivity": "Nothing yet. Your actions appear here.",
       "tools": "Tools",
       "toolNames": {
         "grafana": "Grafana (monitoring)",
-        "keycloak": "Keycloak (users and roles)"
+        "keycloak": "Keycloak (identity)",
+        "website": "The website"
+      }
+    },
+    "attention": {
+      "alerts": "{count, plural, one {# alert is firing} other {# alerts are firing}}",
+      "reports": "{count, plural, one {# reported listing waits} other {# reported listings wait}}, the oldest for {age}",
+      "stuck": "{count, plural, one {# payment is stuck at the provider} other {# payments are stuck at the provider}}",
+      "delivery": "{channel}: {count, plural, one {# delivery failed} other {# deliveries failed}} in 24 h",
+      "errors": "Server errors are at {rate} of requests"
+    },
+    "users": {
+      "title": "Users",
+      "intro": "Find an account by e-mail, name or id, then help, suspend or sign it out. Every action is in the audit log.",
+      "stats": {
+        "total": "Accounts",
+        "signups": "{count, plural, one {# new in 14 days} other {# new in 14 days}}",
+        "active": "Signed in today",
+        "activeHint": "Accounts per day, 14 days",
+        "suspended": "Suspended",
+        "staff": "{count, plural, one {# staff member} other {# staff members}}"
+      },
+      "filters": {
+        "q": "Search",
+        "qPlaceholder": "E-mail, name or id",
+        "role": "Staff role",
+        "status": "Status",
+        "any": "Any",
+        "apply": "Search"
+      },
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "unverified": "E-mail not verified"
+      },
+      "columns": {
+        "user": "Account",
+        "status": "Status",
+        "roles": "Staff roles",
+        "created": "Created",
+        "lastLogin": "Last sign-in"
+      },
+      "never": "Never",
+      "empty": "No accounts match.",
+      "unavailable": "User administration is temporarily unavailable.",
+      "prev": "Previous",
+      "next": "Next",
+      "range": "{from}–{to} of {total}"
+    },
+    "user": {
+      "back": "← Users",
+      "unavailable": "This information is temporarily unavailable.",
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "emailVerified": "E-mail verified",
+      "emailUnverified": "E-mail not verified",
+      "bankid": "BankID verified",
+      "otp": "Authenticator",
+      "locked": "Locked out",
+      "actions": {
+        "suspend": "Suspend",
+        "unsuspend": "Lift suspension",
+        "signOut": "Sign out everywhere",
+        "passwordReset": "Password reset e-mail",
+        "verifyEmail": "Verification e-mail",
+        "unlock": "Unlock",
+        "roles": "Staff roles",
+        "resetOtp": "Remove authenticator"
+      },
+      "suspend": {
+        "title": "Suspend {name}?",
+        "description": "They cannot sign in, and every session ends now. Their listings stay until you remove them.",
+        "reason": "Reason",
+        "note": "Note for the audit log",
+        "notePlaceholder": "What happened, ticket number…",
+        "duration": "Duration",
+        "untilLifted": "Until lifted",
+        "hours": "{count, plural, one {# hour} other {# hours}}",
+        "days": "{count, plural, one {# day} other {# days}}"
+      },
+      "suspensionReasons": {
+        "fraud": "Fraud",
+        "spam": "Spam",
+        "abuse": "Abuse or harassment",
+        "chargeback": "Chargeback",
+        "impersonation": "Impersonation",
+        "security": "Account security",
+        "other": "Other"
+      },
+      "unsuspend": {
+        "title": "Lift the suspension of {name}?",
+        "description": "They can sign in again at once.",
+        "note": "Why (for the audit log)"
+      },
+      "signOut": {
+        "title": "Sign out everywhere?",
+        "description": "{count, plural, one {Ends # session on the website and in the app. They can sign in again.} other {Ends # sessions on the website and in the app. They can sign in again.}}",
+        "note": "Note (optional)"
+      },
+      "passwordReset": {
+        "title": "Send a password reset e-mail?",
+        "description": "Keycloak sends {email} a link to choose a new password (valid 12 hours).",
+        "send": "Send"
+      },
+      "verifyEmail": {
+        "title": "Send a verification e-mail?",
+        "description": "Keycloak sends {email} a link to confirm the address."
+      },
+      "unlock": {
+        "title": "Unlock the account?",
+        "description": "{count, plural, one {Sign-in was blocked after # failed attempt. Unlock if you have confirmed it is them.} other {Sign-in was blocked after # failed attempts. Unlock if you have confirmed it is them.}}"
+      },
+      "roles": {
+        "title": "Staff roles for {name}",
+        "description": "They are signed out so the new roles apply at once.",
+        "note": "Why (for the audit log)",
+        "explain": {
+          "moderator": "Reported listings and reviews",
+          "support": "Accounts, orders; suspends and signs out",
+          "operator": "Platform health, queues; no user data",
+          "platform-admin": "Everything, incl. refunds, roles and the audit log"
+        }
+      },
+      "resetOtp": {
+        "title": "Remove the authenticator?",
+        "description": "Staff must set up a new one at their next console sign-in. Only do this after confirming who asked.",
+        "note": "How you confirmed who asked"
+      },
+      "suspendedBanner": "Suspended: {reason}",
+      "until": "lifted",
+      "untilLifted": "until lifted by staff",
+      "tabsLabel": "Account sections",
+      "tabs": {
+        "overview": "Overview",
+        "listings": "Listings",
+        "orders": "Orders",
+        "reviews": "Reviews",
+        "security": "Security",
+        "notes": "Notes",
+        "history": "Staff actions"
+      },
+      "kpi": {
+        "listings": "Active listings",
+        "listingsHint": "{sold} sold · {removed} removed by moderators",
+        "rating": "Rating",
+        "ratingHint": "{count, plural, one {# review} other {# reviews}}",
+        "messages": "Messages sent, 30 days",
+        "messagesHint": "{conversations} conversations · blocked by {blocked}",
+        "spent": "Spent on promotion",
+        "ordersHint": "{count, plural, one {# order} other {# orders}}"
+      },
+      "profile": "Profile",
+      "fields": {
+        "id": "Id",
+        "displayName": "Public name",
+        "locale": "Language",
+        "created": "Created",
+        "lastLogin": "Last sign-in",
+        "firstListing": "First listing",
+        "reportsAgainst": "Reports about their listings",
+        "devices": "Devices",
+        "emailMessages": "E-mail on new messages",
+        "requiredActions": "Pending steps",
+        "locked": "Locked out",
+        "failures": "Failed sign-ins",
+        "lastFailure": "Last failure"
+      },
+      "never": "Never",
+      "none": "None",
+      "on": "On",
+      "off": "Off",
+      "yes": "Yes",
+      "no": "No",
+      "notes": {
+        "all": "All notes",
+        "empty": "No notes yet.",
+        "add": "Add a note",
+        "placeholder": "What happened, what you agreed, what to watch for…",
+        "pin": "Pin to the top",
+        "privacy": "Only staff see notes. Write facts, not opinions; the user can ask to see them (GDPR)."
+      },
+      "recentSignIns": "Recent sign-ins",
+      "signIns": "Sign-in events (30 days)",
+      "noEvents": "No sign-in events.",
+      "sessions": "Active sessions",
+      "noSessions": "No active sessions.",
+      "columns": {
+        "ip": "IP address",
+        "clients": "Apps",
+        "started": "Started",
+        "lastAccess": "Last active"
+      },
+      "credentials": "Sign-in methods",
+      "credentialTypes": {
+        "password": "Password",
+        "otp": "Authenticator app",
+        "webauthn": "Security key",
+        "webauthn-passwordless": "Passkey"
+      },
+      "lockout": "Brute-force protection",
+      "noHistory": "No staff actions on this account."
+    },
+    "listings": {
+      "title": "Listings",
+      "intro": "Every listing in any state, with its reports and the seller's history.",
+      "unavailable": "Listings are temporarily unavailable.",
+      "empty": "No listings match.",
+      "stats": {
+        "active": "Active",
+        "sold": "Sold",
+        "reported": "With open reports",
+        "created": "New listings, 14 days"
+      },
+      "filters": {
+        "q": "Search",
+        "qPlaceholder": "Title, seller or id",
+        "status": "Status",
+        "category": "Category",
+        "reported": "Only reported",
+        "any": "Any",
+        "apply": "Search"
+      },
+      "columns": {
+        "listing": "Listing",
+        "seller": "Seller",
+        "category": "Category",
+        "status": "Status",
+        "reports": "Open reports",
+        "created": "Created"
+      },
+      "status": {
+        "active": "Active",
+        "sold": "Sold",
+        "deleted": "Removed"
+      },
+      "removedByModeration": "Removed by moderator",
+      "prev": "Previous",
+      "next": "Next",
+      "range": "{from}–{to} of {total}",
+      "back": "← Listings",
+      "removalReasons": {
+        "fraud": "Fraud or scam",
+        "prohibited": "Prohibited item",
+        "offensive": "Offensive",
+        "wrong_category": "Wrong category",
+        "duplicate": "Duplicate",
+        "spam": "Spam",
+        "other": "Other"
+      },
+      "openReports": "{count, plural, one {# open report} other {# open reports}}",
+      "promoted": "Promoted",
+      "openOnSite": "Open on the website",
+      "dismiss": "Dismiss reports",
+      "dismissTitle": "Dismiss the reports?",
+      "dismissDescription": "{count, plural, one {The listing is fine. # open report is closed.} other {The listing is fine. # open reports are closed.}}",
+      "remove": "Remove listing",
+      "removeTitle": "Remove the listing?",
+      "removeDescription": "The seller is told, its open reports are resolved, and it disappears from search. This cannot be undone.",
+      "reason": "Reason",
+      "note": "Note for the audit log (optional)",
+      "notePlaceholder": "What you saw",
+      "noImages": "No images",
+      "description": "Description",
+      "seller": "Seller",
+      "openAccount": "Open account",
+      "sellerStats": {
+        "active": "active",
+        "sold": "sold",
+        "removed": "removed",
+        "reports": "Reports, ever",
+        "since": "Selling since"
+      },
+      "fields": {
+        "created": "Created",
+        "updated": "Updated",
+        "place": "Place"
+      },
+      "reports": "Reports",
+      "noReports": "Nobody has reported this listing.",
+      "reportStatus": {
+        "open": "Open",
+        "resolved": "Removed",
+        "dismissed": "Dismissed"
+      },
+      "handledBy": "Handled by {name}",
+      "history": "Staff actions",
+      "noHistory": "No staff actions yet."
+    },
+    "moderation": {
+      "title": "Moderation",
+      "intro": "Reported listings, riskiest first. Decide with the keyboard: j/k to move, x to remove, d to dismiss.",
+      "unavailable": "Moderation is temporarily unavailable.",
+      "emptyTitle": "Inbox zero",
+      "empty": "No open reports. Nice!",
+      "queue": "Reported listings",
+      "select": "Select",
+      "selected": "{count, plural, one {# selected} other {# selected}}",
+      "dismissSelected": "Dismiss",
+      "bulkTitle": "{count, plural, one {Dismiss reports on # listing?} other {Dismiss reports on # listings?}}",
+      "bulkDescription": "Use this when the listings are fine, for example after a wave of mistaken reports.",
+      "note": "Note for the audit log (optional)",
+      "notePlaceholder": "What you saw",
+      "count": "{count, plural, one {# report} other {# reports}}",
+      "risk": "Risk score",
+      "riskLabel": "Risk {risk}",
+      "keys": "j/k move · x remove · d dismiss · space select",
+      "dismiss": "Dismiss",
+      "dismissTitle": "Dismiss the reports?",
+      "dismissDescription": "{count, plural, one {The listing is fine. # open report is closed.} other {The listing is fine. # open reports are closed.}}",
+      "templates": {
+        "fine": "Within the rules.",
+        "duplicateReport": "Reported by mistake."
+      },
+      "remove": "Remove",
+      "removeTitle": "Remove the listing?",
+      "removeDescription": "The seller is told, its open reports are resolved, and it disappears from search. This cannot be undone.",
+      "reason": "Reason",
+      "why": "Why it was reported",
+      "sellerHistory": "The seller",
+      "seller": {
+        "active": "active listings",
+        "removed": "removed by us",
+        "reports": "reports, ever",
+        "since": "selling since"
+      },
+      "description": "Description",
+      "openDetail": "Full details",
+      "openOnSite": "Open on the website",
+      "views": "Moderation views",
+      "tabs": {
+        "queue": "Queue",
+        "mine": "My decisions",
+        "history": "Team history"
+      },
+      "stats": {
+        "open": "Listings waiting",
+        "reports": "{count, plural, one {# open report} other {# open reports}}",
+        "oldest": "Oldest waiting",
+        "oldestHint": "Alert after 24 hours",
+        "median": "Median decision time",
+        "medianHint": "First report to decision, 7 days",
+        "handled": "Decisions, 7 days",
+        "split": "{removed} removed · {dismissed} dismissed"
+      },
+      "noHistory": "No decisions yet.",
+      "columns": {
+        "listing": "Listing",
+        "outcome": "Decision",
+        "reports": "Reports",
+        "by": "By",
+        "time": "Time to decide",
+        "when": "When"
+      },
+      "outcome": {
+        "resolved": "Removed",
+        "dismissed": "Dismissed"
+      }
+    },
+    "orders": {
+      "title": "Orders",
+      "intro": "Promotion purchases, their payment status and refunds.",
+      "unavailable": "Orders are temporarily unavailable.",
+      "empty": "No orders match.",
+      "stats": {
+        "revenue": "Revenue",
+        "last30": "Paid orders, 30 days",
+        "refunded": "Refunded, 30 days",
+        "stuck": "{count, plural, one {# stuck at the provider} other {# stuck at the provider}}",
+        "daily": "Revenue per day, 30 days"
+      },
+      "filters": {
+        "q": "Order or provider reference",
+        "qPlaceholder": "Start of the id",
+        "status": "Status",
+        "any": "Any",
+        "apply": "Search"
+      },
+      "columns": {
+        "order": "Order",
+        "product": "Product",
+        "amount": "Amount",
+        "status": "Status",
+        "provider": "Provider",
+        "user": "Buyer",
+        "created": "Created"
+      },
+      "products": {
+        "promote_7d": "Promotion, 7 days",
+        "promote_30d": "Promotion, 30 days"
+      },
+      "status": {
+        "created": "Waiting for payment",
+        "authorized": "Authorized",
+        "captured": "Paid",
+        "refunded": "Refunded",
+        "cancelled": "Cancelled",
+        "expired": "Expired",
+        "failed": "Failed"
+      },
+      "prev": "Previous",
+      "next": "Next",
+      "range": "{from}–{to} of {total}",
+      "back": "← Orders",
+      "refund": "Refund",
+      "refundTitle": "Refund {amount}?",
+      "refundDescription": "The money goes back through the payment provider and the promotion ends. This cannot be undone.",
+      "reason": "Reason",
+      "refundReasons": {
+        "customer_request": "Customer asked",
+        "duplicate": "Paid twice",
+        "service_failure": "Our fault",
+        "fraud": "Fraud",
+        "goodwill": "Goodwill",
+        "other": "Other"
+      },
+      "note": "Note for the audit log (optional)",
+      "details": "Details",
+      "fields": {
+        "id": "Order id",
+        "user": "Buyer",
+        "listing": "Listing",
+        "provider": "Provider",
+        "providerRef": "Provider reference",
+        "created": "Created",
+        "updated": "Updated",
+        "starts": "Starts",
+        "ends": "Ends",
+        "revoked": "Ended early"
+      },
+      "promotion": "Promotion",
+      "noPromotion": "Nothing was promoted (not paid).",
+      "timeline": "Timeline",
+      "sources": {
+        "api": "by the buyer",
+        "webhook": "by the provider",
+        "reconcile": "by reconciliation",
+        "admin": "by staff"
+      }
+    },
+    "reviews": {
+      "title": "Reviews",
+      "intro": "Every review, including removed ones. Remove abusive or fake reviews with a reason.",
+      "unavailable": "Reviews are temporarily unavailable.",
+      "empty": "No reviews match.",
+      "about": "About them",
+      "by": "Written by them",
+      "removed": "Removed",
+      "filters": {
+        "rating": "Stars",
+        "state": "Shown",
+        "visible": "Visible",
+        "removed": "Removed",
+        "user": "Person (id)",
+        "any": "Any",
+        "apply": "Filter"
+      },
+      "stars": "{count, plural, one {# star} other {# stars}}",
+      "roles": {
+        "buyer": "as buyer",
+        "seller": "as seller"
+      },
+      "noComment": "No comment",
+      "removedBy": {
+        "author": "Removed by the author",
+        "moderator": "Removed by a moderator"
+      },
+      "remove": "Remove",
+      "removeTitle": "Remove the review?",
+      "removeDescription": "It disappears from the profile and the rating is recalculated.",
+      "reason": "Reason",
+      "reasons": {
+        "abusive": "Abusive",
+        "personal_data": "Personal data",
+        "not_genuine": "Not genuine",
+        "off_topic": "Off topic",
+        "other": "Other"
+      },
+      "note": "Note for the audit log (optional)",
+      "prev": "Previous",
+      "next": "Next",
+      "range": "{from}–{to} of {total}"
+    },
+    "operations": {
+      "title": "Operations",
+      "intro": "The platform's health: services and their dependencies, traffic, errors, events, delivery and search. Numbers only, no user data.",
+      "unavailable": "Temporarily unavailable.",
+      "stats": {
+        "services": "Services ready",
+        "down": "Not ready: {names}",
+        "allReady": "Every dependency answers",
+        "alerts": "Firing alerts",
+        "noAlerts": "Nothing firing",
+        "lag": "Event lag",
+        "lagHint": "{groups, plural, one {Unread events, # consumer group} other {Unread events, # consumer groups}}",
+        "dlq": "Dead letters",
+        "dlqHint": "Events no service could process",
+        "logins": "Sign-ins, last hour",
+        "loginsHint": "Website, app and console"
+      },
+      "health": "Services",
+      "columns": {
+        "service": "Service",
+        "status": "Readiness",
+        "dependencies": "Dependencies",
+        "rate": "Requests",
+        "errors": "5xx",
+        "p95": "p95 latency",
+        "trend": "Last hour"
+      },
+      "status": {
+        "ok": "Ready",
+        "degraded": "Degraded",
+        "down": "Down"
+      },
+      "pipeline": "Event pipeline",
+      "noMetrics": "No metrics yet.",
+      "lag": "{count, plural, one {# behind} other {# behind}}",
+      "dlqBody": "{count, plural, one {# event is in the dead-letter topic.} other {# events are in the dead-letter topic.}}",
+      "dlqEmpty": "The dead-letter topic is empty.",
+      "dlqLogs": "Logs of dead-lettered events",
+      "delivery": "E-mail and push",
+      "channels": {
+        "email": "E-mail",
+        "push": "Push"
+      },
+      "queue": "{pending} waiting · {sent} sent · {failed} failed (24 h)",
+      "oldest": "Oldest waiting",
+      "noErrors": "No delivery errors in the last 7 days.",
+      "search": "Search index",
+      "index": {
+        "alias": "Index",
+        "documents": "Documents",
+        "size": "Size",
+        "newest": "Newest change",
+        "lag": "Indexing delay (p95)",
+        "drift": "Matches listings",
+        "inSync": "In sync",
+        "off": "{count, plural, =1 {1 more in search} other {# off}}"
+      },
+      "alerts": "Alerts",
+      "noAlerts": "No alerts are firing.",
+      "payments": "Payments stuck at the provider: {stuck}"
+    },
+    "staff": {
+      "title": "Staff",
+      "intro": "Who can do what, and how active they were in the last 14 days. Change roles on the person's page.",
+      "unavailable": "Staff are temporarily unavailable.",
+      "columns": {
+        "person": "Person",
+        "actions": "Actions, 14 days",
+        "lastLogin": "Last sign-in"
+      },
+      "never": "Never",
+      "suspended": "Suspended",
+      "add": "Add a staff member",
+      "find": "Find the person",
+      "findPlaceholder": "E-mail or name",
+      "search": "Search",
+      "openToGrant": "Give roles →",
+      "noMatch": "No account matches. They must sign up first.",
+      "addHint": "Staff use their own account. Give roles on their page; they must set up an authenticator at their first console sign-in.",
+      "matrix": "What each role may do",
+      "explain": {
+        "moderator": "Works the moderation queue: removes listings and reviews, dismisses reports. Sees sellers' listing history, not e-mail addresses.",
+        "support": "Helps customers: finds accounts, reads orders, suspends and signs out accounts, sends account e-mails, keeps notes. Never reads messages.",
+        "operator": "Keeps the platform running: health, queues, event pipeline, search. Sees numbers, never user data.",
+        "platform-admin": "Everything above, plus refunds, staff roles, authenticators and the audit log. Keep this group small."
       }
     },
     "audit": {
       "title": "Audit log",
-      "intro": "Everything staff do to listings, users and payments, newest first. The log cannot be changed.",
+      "intro": "Everything staff do, newest first. The log cannot be changed, not even by administrators.",
       "empty": "No actions match the filter.",
       "older": "Older",
       "unavailable": "The audit log is temporarily unavailable.",
+      "export": "Export CSV",
+      "stats": {
+        "perDay": "{total, plural, one {# action in 14 days} other {# actions in 14 days}}",
+        "actions": "Most frequent",
+        "actors": "Most active"
+      },
       "filters": {
         "action": "Action",
         "targetType": "Concerns",
@@ -763,27 +1443,46 @@
         "apply": "Filter",
         "clear": "Clear"
       },
-      "columns": {
-        "at": "Time",
-        "action": "Action",
-        "target": "Concerns",
-        "actor": "Done by",
-        "reason": "Reason"
-      },
       "actions": {
+        "listing_remove": "removed",
+        "reports_dismiss": "dismissed reports on",
+        "review_remove": "removed",
+        "payment_refund": "refunded",
+        "user_suspend": "suspended",
+        "user_unsuspend": "lifted the suspension of",
+        "user_suspension_expired": "suspension expired for",
+        "user_sign_out": "signed out",
+        "user_password_reset": "sent a password reset to",
+        "user_verify_email": "sent a verification e-mail to",
+        "user_unlock": "unlocked",
+        "user_note": "wrote a note on",
+        "user_roles_change": "changed the roles of",
+        "user_otp_reset": "removed the authenticator of"
+      },
+      "targets": {
+        "listing": "listing",
+        "order": "order",
+        "user": "account",
+        "review": "review",
+        "report": "report",
+        "conversation": "conversation",
+        "system": "system"
+      },
+      "actionNames": {
         "listing_remove": "Listing removed",
         "reports_dismiss": "Reports dismissed",
         "review_remove": "Review removed",
-        "payment_refund": "Payment refunded"
-      },
-      "targets": {
-        "listing": "Listing",
-        "order": "Order",
-        "user": "User",
-        "review": "Review",
-        "report": "Report",
-        "conversation": "Conversation",
-        "system": "System"
+        "payment_refund": "Payment refunded",
+        "user_suspend": "Account suspended",
+        "user_unsuspend": "Suspension lifted",
+        "user_suspension_expired": "Suspension expired",
+        "user_sign_out": "Signed out everywhere",
+        "user_password_reset": "Password reset sent",
+        "user_verify_email": "Verification e-mail sent",
+        "user_unlock": "Account unlocked",
+        "user_note": "Note written",
+        "user_roles_change": "Staff roles changed",
+        "user_otp_reset": "Authenticator removed"
       }
     }
   }

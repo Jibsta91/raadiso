@@ -1,9 +1,14 @@
-import { ShieldCheck } from 'lucide-react';
+import { History } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
-import { ModerationActions } from '@/components/moderation/moderation-actions';
-import { reportQueue, ServiceUnavailableError } from '@/lib/api';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { LiveRefresh } from '@/components/admin/live';
+import { Ago } from '@/components/admin/time';
+import { Empty, PageHeader, Pill, Stat, Table, Tabs, td, Unavailable } from '@/components/admin/ui';
+import { Workbench } from '@/components/admin/workbench';
+import { Link } from '@/i18n/navigation';
+import { listingStats, moderationHistory, settle, staffNames, workbench } from '@/lib/admin/api';
+import { duration } from '@/lib/admin/format';
 import { env } from '@/lib/env';
 import { getSession } from '@/lib/session';
 import { canOpen } from '@/lib/staff';
@@ -11,119 +16,131 @@ import { canOpen } from '@/lib/staff';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('moderation');
-  return { title: t('title'), robots: { index: false } };
+  const t = await getTranslations('admin.sections');
+  return { title: t('moderation'), robots: { index: false } };
 }
 
-/** Moderators' queue of reported listings (ADR-0027), most reported first. */
-export default async function ModerationPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
+/** The moderation workbench and the team's recent decisions (moderators, platform admins). */
+export default async function ModerationPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const [{ locale }, sp] = await Promise.all([params, searchParams]);
   setRequestLocale(locale);
-  // The admin layout already requires a staff session; this section is for moderators.
   const session = await getSession();
   if (!session.authenticated || !canOpen('moderation', session.user.roles)) notFound();
-  const [t, tr, format] = await Promise.all([
-    getTranslations('moderation'),
-    getTranslations('report'),
-    getFormatter(),
+  const t = await getTranslations('admin.moderation');
+  const view = sp.view === 'history' ? 'history' : sp.view === 'mine' ? 'mine' : 'queue';
+
+  const [stats, queue, history] = await Promise.all([
+    settle(listingStats()),
+    view === 'queue' ? settle(workbench()) : null,
+    view !== 'queue'
+      ? settle(moderationHistory(view === 'mine' ? session.user.id : undefined))
+      : null,
   ]);
-  let items;
-  try {
-    items = await reportQueue();
-  } catch (error) {
-    if (!(error instanceof ServiceUnavailableError)) throw error;
-    return (
-      <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-4">
-        {t('unavailable')}
-      </div>
-    );
-  }
-  if (!items) notFound();
+  const mod = stats?.moderation;
+  const names = history ? await staffNames(history.items.map((h) => h.handledBy)) : new Map();
 
   return (
-    <div className="max-w-4xl space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold">{t('title')}</h1>
-        <p className="text-muted-foreground">{t('intro')}</p>
-      </div>
-      {items.length === 0 ? (
-        <div
-          className="flex flex-col items-center gap-3 py-16 text-center"
-          data-testid="moderation-empty"
-        >
-          <ShieldCheck aria-hidden className="size-10 text-muted-foreground" />
-          <p className="text-muted-foreground">{t('empty')}</p>
+    <div className="space-y-6">
+      <PageHeader title={t('title')} intro={t('intro')} actions={<LiveRefresh seconds={20} />} />
+      {mod ? (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Stat
+            label={t('stats.open')}
+            value={mod.listings}
+            hint={t('stats.reports', { count: mod.open })}
+            tone={mod.listings ? 'bad' : 'good'}
+          />
+          <Stat
+            label={t('stats.oldest')}
+            value={
+              mod.oldestAt ? duration((Date.now() - Date.parse(mod.oldestAt)) / 1000, locale) : '–'
+            }
+            hint={t('stats.oldestHint')}
+          />
+          <Stat
+            label={t('stats.median')}
+            value={
+              mod.medianHandleSeconds !== null ? duration(mod.medianHandleSeconds, locale) : '–'
+            }
+            hint={t('stats.medianHint')}
+          />
+          <Stat
+            label={t('stats.handled')}
+            value={mod.handled7d}
+            trend={mod.handled.map((d) => d.count)}
+            hint={t('stats.split', { removed: mod.removed7d, dismissed: mod.dismissed7d })}
+            tone="good"
+          />
         </div>
+      ) : null}
+      <Tabs
+        label={t('views')}
+        current={view}
+        tabs={[
+          { key: 'queue', href: '/admin/moderation', label: t('tabs.queue'), count: mod?.listings },
+          { key: 'mine', href: '/admin/moderation?view=mine', label: t('tabs.mine') },
+          { key: 'history', href: '/admin/moderation?view=history', label: t('tabs.history') },
+        ]}
+      />
+      {view === 'queue' ? (
+        queue ? (
+          <Workbench items={queue.items} publicBaseUrl={`${env.publicBaseUrl}/${locale}`} />
+        ) : (
+          <Unavailable>{t('unavailable')}</Unavailable>
+        )
+      ) : !history ? (
+        <Unavailable>{t('unavailable')}</Unavailable>
+      ) : history.items.length === 0 ? (
+        <Empty icon={History}>{t('noHistory')}</Empty>
       ) : (
-        <ul className="space-y-3" role="list" data-testid="moderation-queue">
-          {items.map((item) => (
-            <li
-              key={item.listing.id}
-              className="flex flex-col gap-4 rounded-3xl border bg-card p-4 sm:flex-row"
-              data-testid="moderation-item"
-            >
-              {item.listing.image ? (
-                <img
-                  src={item.listing.image.thumb}
-                  alt=""
-                  className="h-24 w-32 shrink-0 rounded-2xl object-cover"
-                />
-              ) : null}
-              <div className="min-w-0 flex-1 space-y-2">
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  {/* The listing on the website (the admin host serves only the console). */}
-                  <a
-                    href={`${env.publicBaseUrl}/${locale}/listings/${item.listing.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-semibold hover:underline"
+        <Table
+          testId="moderation-history"
+          head={[
+            t('columns.listing'),
+            t('columns.outcome'),
+            t('columns.reports'),
+            t('columns.by'),
+            t('columns.time'),
+            t('columns.when'),
+          ]}
+        >
+          {history.items.map((h) => {
+            const by = names.get(h.handledBy);
+            return (
+              <tr key={`${h.listingId}-${h.handledAt}`} className="hover:bg-accent/50">
+                <td className={td}>
+                  <Link
+                    href={`/admin/listings/${h.listingId}`}
+                    prefetch={false}
+                    className="font-medium hover:underline"
                   >
-                    {item.listing.title}
-                  </a>
-                  <span className="text-sm text-muted-foreground">
-                    {item.listing.sellerName}
-                    {item.listing.status !== 'active'
-                      ? ` · ${t(`status.${item.listing.status}`)}`
-                      : ''}
-                  </span>
-                </div>
-                <p className="flex flex-wrap gap-1.5 text-xs">
-                  <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-semibold text-destructive">
-                    {t('count', { count: item.count })}
-                  </span>
-                  {Object.entries(item.reasons).map(([reason, n]) => (
-                    <span
-                      key={reason}
-                      className="rounded-full bg-soft px-2 py-0.5 text-soft-foreground"
-                    >
-                      {tr(`reasons.${reason}` as never)} · {n}
-                    </span>
-                  ))}
-                  <span className="text-muted-foreground">
-                    {t('since', {
-                      date: format.dateTime(new Date(item.firstReportedAt), {
-                        dateStyle: 'medium',
-                      }),
-                    })}
-                  </span>
-                </p>
-                {item.comments.length ? (
-                  <ul className="space-y-1 text-sm">
-                    {item.comments.map((c) => (
-                      <li key={c.createdAt} className="border-l-2 pl-3 text-subtle-foreground">
-                        {c.comment}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-              <ModerationActions
-                listingId={item.listing.id}
-                removed={item.listing.status === 'deleted'}
-              />
-            </li>
-          ))}
-        </ul>
+                    {h.title}
+                  </Link>
+                  {h.note ? <p className="text-xs text-muted-foreground">“{h.note}”</p> : null}
+                </td>
+                <td className={td}>
+                  <Pill tone={h.outcome === 'resolved' ? 'bad' : 'good'}>
+                    {t(`outcome.${h.outcome}`)}
+                  </Pill>
+                </td>
+                <td className={`${td} tabular-nums`}>{h.reports}</td>
+                <td className={td}>{by?.name ?? by?.email ?? h.handledBy.slice(0, 8)}</td>
+                <td className={`${td} tabular-nums text-muted-foreground`}>
+                  {duration(h.secondsToDecision, locale)}
+                </td>
+                <td className={`${td} text-muted-foreground`}>
+                  <Ago at={h.handledAt} />
+                </td>
+              </tr>
+            );
+          })}
+        </Table>
       )}
     </div>
   );

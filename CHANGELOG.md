@@ -26,6 +26,16 @@ Each release also has generated notes on GitHub.
   `operator` with demo users; moderation moved from the website's `/moderation` into the console.
 - An append-only audit log of staff actions (removals, dismissed reports, refunds), readable by platform
   admins in the console. New services: `audit`, and `admin-bff` (the identity-bff image).
+- The console got a workspace per role (ADR-0030). Support: find any account and see it across every
+  service (listings, orders, reviews, messaging counts, devices, sessions, sign-in events), suspend it with
+  a reason and optional expiry, sign it out everywhere, send password-reset or verification e-mails, unlock
+  it, and keep internal notes. Moderators: a keyboard-driven workbench (risk-sorted queue, seller history,
+  reason codes, bulk dismiss) and review removal. Operators: one page with every service's readiness and
+  dependencies, request rate, errors and latency, event lag, dead letters, e-mail and push queues, search
+  index drift and firing alerts. Platform admins: refunds, staff roles, authenticator resets, and an audit
+  log with charts and CSV export. ⌘K searches users, listings and orders; `g` + a letter switches section.
+- Staff APIs (`/admin/v1/…`) accept only the console's tokens, and suspensions, refunds and role changes
+  need a sign-in within 15 minutes (RFC 9470 step-up). Audit entries carry what changed (`details`).
 
 - The app's search has each category's own filters (makes, fuel, body type, ranges for year, mileage, area
   and price) in a filter sheet.
@@ -55,6 +65,8 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- Users were signed out after `docker compose up` re-ran keycloak-init ("Session doesn't have required
+  client"): it recreated every Keycloak client. Clients are now updated in place.
 - Refunds asked for a role (`admin`) that did not exist, so nobody could refund. They now need
   `platform-admin` and answer 200.
 - A seller without reviews had no public profile (404), so the "No reviews yet" link on listings led

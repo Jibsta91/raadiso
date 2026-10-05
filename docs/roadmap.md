@@ -18,11 +18,14 @@ Phases 2 and 3 deferred work to Phase 4 in their ADRs. It is collected here so t
 **Before the AI work starts** (admin console slices from
 [ADR-0028](adr/0028-admin-console-staff-roles-and-audit.md); AI review queues are worked in the console):
 
-- Slice 2: user search, suspension and support roles. Slice 3: more moderation tools (reports about users
-  and messages, not only listings). Move the report queue out of listings into a moderation service when
-  reports cover more than listings ([ADR-0027](adr/0027-reports-and-blocking.md)).
-- Slice 4: payments and reviews in the console (refunds and review removal there, not only by API or on the
-  public profile). Slice 5: operations for operators (health, queues, dead letters, reindex).
+- ✅ Done ([ADR-0030](adr/0030-staff-apis-and-console-workspaces.md)): slice 2 (users: search, a 360° page,
+  suspension with expiry, sign out everywhere, account e-mails, unlock, notes, staff roles), slice 4 (orders
+  and refunds, reviews and removal in the console) and slice 5 (operations: readiness, golden signals,
+  consumer lag, dead letters, delivery queues, search index drift, alerts), plus the moderation workbench,
+  ⌘K, keyboard shortcuts and step-up for dangerous actions.
+- Still open: slice 3, reports about users and messages, not only listings; move the report queue out of
+  listings into a moderation service when reports cover more than listings
+  ([ADR-0027](adr/0027-reports-and-blocking.md)). Dead-letter replay (operators see the count and the logs).
 - Every new staff action writes an audit entry. AI decisions that change something (hide, flag, score) are
   recorded in the same audit service, with the model and its version, so the log stays the single record.
 
