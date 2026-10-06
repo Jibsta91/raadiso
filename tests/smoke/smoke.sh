@@ -209,6 +209,22 @@ req GET "$PUBLIC/api/v1/identity/me"
 expect_status 401 "API rejects anonymous requests"
 [[ "$(header content-type)" == application/problem+json* ]] && ok "errors are RFC 9457 problem+json" || fail "problem+json content type"
 
+# Login CSRF: someone signs in, stops at the callback and sends the link to a victim, whose browser
+# would end up in the attacker's account. The callback only works in the browser that started it.
+: > "$JAR"
+req GET "$PUBLIC/auth/login?returnTo=/en&locale=en"
+grep -qi '^set-cookie: raadi_sid_login_[0-9a-f]*=.*HttpOnly' "$HDRS" && ok "login binds the transaction to this browser (HttpOnly cookie)" \
+  || fail "login binding cookie"
+req GET "$(header location)"
+action=$(grep -o '<form[^>]*id="kc-form-login"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')
+req POST "$action" --data-urlencode "username=$USER_EMAIL" --data-urlencode "password=$PASSWORD" --data-urlencode "credentialId="
+attacker_cb="$(header location)"
+: > "$JAR"
+req GET "$attacker_cb"
+[[ "$status" == "302" && "$(header location)" == *"authError=expired"* ]] && ! grep -qi '^set-cookie: raadi_sid=' "$HDRS" \
+  && ok "a sign-in callback from another browser is refused (login CSRF)" || fail "login CSRF" "HTTP $status → $(header location)"
+: > "$JAR"
+
 req GET "$PUBLIC/auth/login?returnTo=/en/account&locale=en"
 loc="$(header location)"
 [[ "$status" == "302" && "$loc" == "$AUTH/realms/$REALM/protocol/openid-connect/auth?"* ]] \
@@ -242,6 +258,8 @@ req GET "$PUBLIC/api/v1/identity/me"
 expect_status 200 "API call authorised via session (token-handler)"
 [[ "$(jq -r .email "$BODY" 2>/dev/null)" == "$USER_EMAIL" ]] && ok "/me returns the profile" || fail "/me profile" "$(cat "$BODY")"
 jq -e '.roles | index("user")' "$BODY" >/dev/null 2>&1 && ok "/me includes realm roles" || fail "/me roles"
+[[ "$(header cache-control)" == "no-store" ]] && ok "personal API answers are never cached (Cache-Control: no-store)" \
+  || fail "cache-control on /me" "$(header cache-control)"
 
 req PATCH "$PUBLIC/api/v1/identity/me" -H 'content-type: application/json' -H 'origin: https://evil.example' --data '{"locale":"en"}'
 expect_status 403 "cross-site state change is rejected (CSRF)"

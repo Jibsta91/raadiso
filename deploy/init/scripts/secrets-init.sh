@@ -59,6 +59,8 @@ for svc in $(jq -r '.services | keys[]' "$MANIFEST"); do
   mkdir -p "${SECRETS_DIR}/approle/${svc}"
   chown "$uid:0" "${SECRETS_DIR}/approle/${svc}"; chmod 0500 "${SECRETS_DIR}/approle/${svc}"
 done
-mkdir -p "${SECRETS_DIR}/_openbao"; chmod 0700 "${SECRETS_DIR}/_openbao"
+# The unsealer runs as 65532 and sees only this directory (deploy/compose/init.yaml).
+mkdir -p "${SECRETS_DIR}/_openbao"
+chown -R 65532:65532 "${SECRETS_DIR}/_openbao"; chmod 0700 "${SECRETS_DIR}/_openbao"
 
 info "secrets ready (${created} generated this run)"

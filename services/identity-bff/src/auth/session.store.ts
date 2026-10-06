@@ -26,6 +26,8 @@ export interface LoginTransaction {
   codeVerifier: string;
   nonce: string;
   returnTo: string;
+  /** Hash of the secret in the browser's login cookie (login CSRF defence, security.ts). */
+  browser?: string;
 }
 
 /**

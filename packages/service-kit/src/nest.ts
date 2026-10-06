@@ -7,6 +7,7 @@ import {
   type ExceptionFilter,
   type ExecutionContext,
   HttpException,
+  type INestApplication,
   HttpStatus,
   Injectable,
   type NestInterceptor,
@@ -22,7 +23,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { trace } from '@opentelemetry/api';
-import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Observable } from 'rxjs';
 import type { z } from 'zod';
 import { AuthzUnavailableError } from './authz.js';
@@ -229,4 +230,17 @@ export class RouteSpanInterceptor implements NestInterceptor {
     }
     return next.handle();
   }
+}
+
+/**
+ * Responses default to `Cache-Control: no-store`: most carry personal data, and no shared cache (a CDN
+ * later) may keep them. Routes whose answers may be cached say so themselves (public search results,
+ * listing pages for visitors). Call before `listen()`.
+ */
+export function noStoreByDefault(app: INestApplication): void {
+  const fastify = app.getHttpAdapter().getInstance() as FastifyInstance;
+  fastify.addHook('onSend', async (_req: FastifyRequest, reply: FastifyReply, payload: unknown) => {
+    if (!reply.hasHeader('cache-control')) void reply.header('cache-control', 'no-store');
+    return payload;
+  });
 }

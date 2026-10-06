@@ -3,7 +3,12 @@ import fastifyCookie from '@fastify/cookie';
 import { ConsoleLogger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
-import { HealthRegistry, installGracefulShutdown, requestId } from '@raadi/service-kit';
+import {
+  HealthRegistry,
+  installGracefulShutdown,
+  noStoreByDefault,
+  requestId,
+} from '@raadi/service-kit';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module.js';
 import { loadAppConfig } from './config.js';
@@ -27,6 +32,7 @@ async function bootstrap(): Promise<void> {
   app.useLogger(logger);
 
   await app.register(fastifyCookie as never);
+  noStoreByDefault(app);
   installGracefulShutdown(app, app.get(HealthRegistry), {
     drainMs: cfg.env.SHUTDOWN_DRAIN_MS,
     log: (msg) => logger.log(msg),

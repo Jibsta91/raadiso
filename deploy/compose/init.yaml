@@ -80,11 +80,20 @@ services:
     <<: *init
     command: ['/opt/raadi/bin/openbao-unsealer.sh']
     restart: unless-stopped
+    # It runs all the time, so it gets only what it needs: a non-root user, no capabilities, a
+    # read-only root file system, and only the OpenBao directory of the secrets volume (the unseal key
+    # and root token it writes on first boot).
+    user: '65532:65532'
+    cap_drop: [ALL]
+    read_only: true
     deploy:
       resources:
         limits: { memory: 32M, cpus: '0.25' }
     volumes:
-      - secrets:/secrets
+      - type: volume
+        source: secrets
+        target: /secrets/_openbao
+        volume: { subpath: _openbao }
     depends_on:
       secrets-init: { condition: service_completed_successfully }
       openbao: { condition: service_started }

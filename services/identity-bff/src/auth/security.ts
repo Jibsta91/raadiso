@@ -1,5 +1,7 @@
 /** Pure security helpers (unit tested). */
 
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+
 const SUPPORTED = ['nb', 'en', 'so'] as const;
 export type Locale = (typeof SUPPORTED)[number];
 
@@ -70,4 +72,32 @@ export function isCsrfSafe(
 
 function first(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v;
+}
+
+const sha256 = (value: string) => createHash('sha256').update(value).digest();
+
+/**
+ * Login CSRF defence (RFC 9700 §4.7): the callback must come back to the browser that started the
+ * login. The browser keeps a random secret in a short-lived cookie; the login transaction keeps only
+ * its hash. Without it, someone could send a victim their own callback URL and sign the victim into the
+ * attacker's account (and a BankID check done there would verify the attacker).
+ */
+export function newBrowserBinding(): { secret: string; hash: string } {
+  const secret = randomBytes(32).toString('base64url');
+  return { secret, hash: sha256(secret).toString('base64url') };
+}
+
+export function browserBindingMatches(
+  secret: string | undefined,
+  hash: string | undefined,
+): boolean {
+  if (!secret || !hash) return false;
+  const expected = Buffer.from(hash, 'base64url');
+  const actual = sha256(secret);
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
+}
+
+/** One cookie per login in progress, so two tabs signing in at once do not overwrite each other. */
+export function loginCookieName(sessionCookie: string, state: string): string {
+  return `${sessionCookie}_login_${sha256(state).toString('hex').slice(0, 16)}`;
 }

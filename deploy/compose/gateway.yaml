@@ -28,6 +28,7 @@ services:
       RAADI_DOMAIN: ${RAADI_DOMAIN}
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_ADMIN_PUBLIC: ${KEYCLOAK_ADMIN_PUBLIC}
+      DEV_TOOLS_ROUTED: ${DEV_TOOLS_ROUTED}
       WEB_DEV_MODE: 'false'
       TZ: ${TZ}
     volumes:

@@ -87,6 +87,8 @@ services:
   blackbox:
     <<: *hardening
     image: prom/blackbox-exporter:v0.28.0
+    # The image runs as root by default; its probes are plain HTTP, which needs no privileges.
+    user: '65534:65534'
     command: ['--config.file=/etc/blackbox/blackbox.yml']
     volumes:
       - ./deploy/observability/blackbox:/etc/blackbox:ro
