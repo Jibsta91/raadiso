@@ -396,6 +396,32 @@
       "realmRoles": ["user"]
     },
     {
+      "id": "5d3b8e1f-2a6c-4f9d-8b07-3e1c9a4d6f52",
+      "username": "smoke-target@${DEMO_EMAIL_DOMAIN}",
+      "email": "smoke-target@${DEMO_EMAIL_DOMAIN}",
+      "firstName": "Smoke",
+      "lastName": "Target",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "locale": ["en"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${DEMO_USER_PASSWORD}",
+          "temporary": false
+        },
+        {
+          "type": "otp",
+          "userLabel": "Demo authenticator (development only)",
+          "secretData": "{\"value\":\"${DEMO_OTP_SECRET}\"}",
+          "credentialData": "{\"subType\":\"totp\",\"digits\":6,\"counter\":0,\"period\":30,\"algorithm\":\"HmacSHA256\"}"
+        }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
       "id": "1a9e3c5b-7d2f-4e8a-b6c1-9f0d4a2e7b44",
       "username": "moderator@${DEMO_EMAIL_DOMAIN}",
       "email": "moderator@${DEMO_EMAIL_DOMAIN}",

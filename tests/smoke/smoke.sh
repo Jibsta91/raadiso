@@ -700,14 +700,13 @@ req GET "$ADMIN/api/v1/listings/moderation/reports"
 : > "$JAR"
 req GET "$ADMIN/auth/login?returnTo=/en/admin&locale=en"; req GET "$(header location)"
 mfa_action=$(grep -o '<form[^>]*id="kc-form-login"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')
-req POST "$mfa_action" --data-urlencode "username=moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" --data-urlencode "password=$PASSWORD" --data-urlencode "credentialId="
+# smoke-target@ is a test-only account: a wrong code makes Keycloak lock the account for a minute
+# (quick-login check), which must not hit the staff accounts the rest of the run signs in with.
+req POST "$mfa_action" --data-urlencode "username=smoke-target@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" --data-urlencode "password=$PASSWORD" --data-urlencode "credentialId="
 grep -q 'kc-otp-login-form' "$BODY" && ok "the console requires a one-time code (MFA)" || fail "admin MFA" "HTTP $status"
 req POST "$(grep -o '<form[^>]*id="kc-otp-login-form"[^>]*>' "$BODY" | grep -o 'action="[^"]*"' | head -1 | sed -e 's/^action="//' -e 's/"$//' -e 's/&amp;/\&/g')" --data-urlencode "otp=000000"
 grep -q 'kc-otp-login-form' "$BODY" && [[ "$(header location)" != *"/auth/callback"* ]] \
   && ok "a wrong one-time code is refused" || fail "wrong OTP accepted"
-# Keycloak locks an account for a minute after two failures within a second (quick-login check);
-# the next sign-in may retry a code already used in this window, so leave a gap.
-sleep 2
 login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" "$ADMIN" || fail "admin console login"
 req GET "$ADMIN/auth/session"
 [[ "$(json '.user.roles | index("moderator") != null')" == "true" ]] && ok "staff sign in to the console through admin-bff" || fail "admin session" "$(head -c 200 "$BODY")"
@@ -730,25 +729,27 @@ web_token="$(token_from identity-bff raadi_sid)"
   && ok "a website token never opens staff APIs, even a platform admin's" || fail "website token accepted" "$(head -c 200 "$BODY")"
 login_as "support@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" "$ADMIN" || fail "console login as support"
 support_token="$(token_from admin-bff raadi_admin_sid)"
-[[ "$(staff_api "$support_token" GET "http://admin-bff:4000/admin/v1/users?q=amina")" == "200" ]] \
-  && [[ "$(json '.items[0].email')" == amina.hassan@* ]] && ok "support finds an account through admin-bff (Keycloak service account)" \
+# Suspension and the other account actions use smoke-target@, a test-only account: if the run stops
+# halfway, no demo user is left suspended.
+[[ "$(staff_api "$support_token" GET "http://admin-bff:4000/admin/v1/users?q=smoke-target")" == "200" ]] \
+  && [[ "$(json '.items[0].email')" == smoke-target@* ]] && ok "support finds an account through admin-bff (Keycloak service account)" \
   || fail "user search" "$(head -c 200 "$BODY")"
-amina="$(json '.items[0].id')"
+target="$(json '.items[0].id')"
 [[ "$(staff_api "$support_token" GET http://listings:4000/admin/v1/listings/workbench)" == "403" ]] \
   && ok "support cannot work the moderation queue" || fail "support moderation" "HTTP $(head -c 100 "$BODY")"
-[[ "$(staff_api "$support_token" POST "http://admin-bff:4000/admin/v1/users/$amina/suspend" '{"reasonCode":"spam","note":"smoke"}')" == "204" ]] \
+[[ "$(staff_api "$support_token" POST "http://admin-bff:4000/admin/v1/users/$target/suspend" '{"reasonCode":"spam","note":"smoke"}')" == "204" ]] \
   && ok "support suspends an account (fresh sign-in passes step-up)" || fail "suspend" "$(head -c 200 "$BODY")"
-staff_api "$support_token" GET "http://admin-bff:4000/admin/v1/users/$amina" >/dev/null
+staff_api "$support_token" GET "http://admin-bff:4000/admin/v1/users/$target" >/dev/null
 [[ "$(json '.suspended')" == "true" && "$(json '.suspension.reasonCode')" == "spam" ]] \
   && ok "the account shows as suspended, with the reason" || fail "suspension state" "$(head -c 200 "$BODY")"
-[[ "$(staff_api "$support_token" POST "http://admin-bff:4000/admin/v1/users/$amina/unsuspend" '{"note":"smoke over"}')" == "204" ]] \
+[[ "$(staff_api "$support_token" POST "http://admin-bff:4000/admin/v1/users/$target/unsuspend" '{"note":"smoke over"}')" == "204" ]] \
   && ok "support lifts the suspension" || fail "unsuspend" "$(head -c 200 "$BODY")"
 moderator_id="1a9e3c5b-7d2f-4e8a-b6c1-9f0d4a2e7b44"
 [[ "$(staff_api "$support_token" POST "http://admin-bff:4000/admin/v1/users/$moderator_id/suspend" '{"reasonCode":"spam"}')" == "403" ]] \
   && ok "support cannot suspend staff" || fail "support suspended staff" "$(head -c 200 "$BODY")"
-[[ "$(staff_api "$support_token" PUT "http://admin-bff:4000/admin/v1/users/$amina/roles" '{"roles":["support"],"note":"nope"}')" == "403" ]] \
+[[ "$(staff_api "$support_token" PUT "http://admin-bff:4000/admin/v1/users/$target/roles" '{"roles":["support"],"note":"nope"}')" == "403" ]] \
   && ok "only platform admins change staff roles" || fail "roles by support" "$(head -c 200 "$BODY")"
-req GET "$ADMIN/en/admin/users/$amina"
+req GET "$ADMIN/en/admin/users/$target"
 expect_status 200 "support opens an account in the console"
 req GET "$ADMIN/en/admin/operations"
 expect_status 404 "support cannot open operations"
@@ -760,7 +761,7 @@ expect_status 404 "an operator never sees user data"
 operator_token="$(token_from admin-bff raadi_admin_sid)"
 [[ "$(staff_api "$operator_token" GET http://notifications:4000/admin/v1/notifications/queues)" == "200" ]] \
   && ok "an operator reads the delivery queues" || fail "queues" "$(head -c 200 "$BODY")"
-[[ "$(staff_api "$operator_token" GET "http://admin-bff:4000/admin/v1/users/$amina")" == "403" ]] \
+[[ "$(staff_api "$operator_token" GET "http://admin-bff:4000/admin/v1/users/$target")" == "403" ]] \
   && ok "an operator cannot read accounts" || fail "operator account read" "$(head -c 200 "$BODY")"
 
 section "Journeys, SLOs and account security (ADR-0031)"
@@ -781,8 +782,10 @@ kari_token="$(token_from identity-bff raadi_sid)"
 [[ "$(staff_api "$kari_token" GET http://identity-bff:4000/api/v1/identity/me/security)" == "200" ]] \
   && [[ "$(json '[.sessions[] | select(.current)] | length')" == "1" ]] \
   && ok "the security page reads my sessions from Keycloak with my own token" || fail "security overview" "$(head -c 200 "$BODY")"
-[[ "$(staff_api "$kari_token" DELETE http://identity-bff:4000/api/v1/identity/me/credentials/aaaaaaaa-0000-0000-0000-000000000000)" =~ ^(401|404)$ ]] \
-  && ok "removing a sign-in method needs a recent sign-in or an existing method" || fail "credential removal" "$(head -c 200 "$BODY")"
+# Kari signed in a moment ago, so the step-up check passes and Keycloak looks the method up: 404. A 401
+# here would mean the fresh sign-in was not recognised (the stale case is a unit test).
+[[ "$(staff_api "$kari_token" DELETE http://identity-bff:4000/api/v1/identity/me/credentials/aaaaaaaa-0000-0000-0000-000000000000)" == "404" ]] \
+  && ok "a recent sign-in passes the step-up; an unknown sign-in method is not found" || fail "credential removal" "$(head -c 200 "$BODY")"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Audit log (ADR-0028)"
@@ -797,7 +800,7 @@ audited() {
 eventually "the refund is in the audit log (outbox -> Kafka -> audit)" 90 audited payment.refund "$order_id"
 eventually "the moderator's removal is in the audit log" 90 audited listing.remove "$listing"
 eventually "dismissed reports are in the audit log" 90 audited reports.dismiss "$kari_listing"
-eventually "the suspension is in the audit log (admin-bff outbox)" 90 audited user.suspend "$amina"
+eventually "the suspension is in the audit log (admin-bff outbox)" 90 audited user.suspend "$target"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Operations"

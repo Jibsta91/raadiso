@@ -35,6 +35,7 @@ test('a seller promotes a listing: pay, get a receipt, rank first in search', as
 
   // Back in Raadi: the webhook confirms the payment and the order is captured.
   await expect(page).toHaveURL(/\/en\/payments\/[0-9a-f-]{36}$/);
+  const orderId = new URL(page.url()).pathname.split('/').pop()!;
   await expect(page.getByTestId('order-status')).toHaveAttribute('data-status', 'captured', {
     timeout: 30_000,
   });
@@ -55,7 +56,8 @@ test('a seller promotes a listing: pay, get a receipt, rank first in search', as
   // A receipt (always sent) with the price and VAT.
   await expect(async () => {
     const res = await page.request.get(
-      `http://mailpit:8025/api/v1/search?query=${encodeURIComponent(`to:"amina.hassan@${domain}" subject:receipt`)}`,
+      // This order's receipt, not one from an earlier run.
+      `http://mailpit:8025/api/v1/search?query=${encodeURIComponent(`to:"amina.hassan@${domain}" subject:receipt ${orderId}`)}`,
     );
     const body = (await res.json()) as { messages: Array<{ ID: string }> };
     expect(body.messages.length).toBeGreaterThan(0);

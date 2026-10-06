@@ -74,6 +74,8 @@ services:
       IMGPROXY_MAX_SRC_RESOLUTION: '40'
       IMGPROXY_MAX_SRC_FILE_SIZE: '12582912'
       IMGPROXY_STRIP_METADATA: 'true'
+      # imgproxy keeps copyright tags by default; they often name the photographer (personal data).
+      IMGPROXY_KEEP_COPYRIGHT: 'false'
       IMGPROXY_STRIP_COLOR_PROFILE: 'false'
       IMGPROXY_AUTO_ROTATE: 'true'
       IMGPROXY_ENFORCE_WEBP: 'false'

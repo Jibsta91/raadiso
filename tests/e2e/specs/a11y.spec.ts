@@ -32,7 +32,26 @@ const PUBLIC_PAGES = [
   ['category', '/en/bil'],
   ['status', '/en/status'],
   ['terms', '/en/terms'],
+  ['front page (Somali)', '/so'],
+  ['category (Norwegian)', '/nb/torget'],
 ] as const;
+
+// Most people use Raadiso on a phone: the main pages again at an iPhone's width.
+test('public pages pass axe on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [name, path] of [
+    ['front page', '/nb'],
+    ['search', '/nb/search?q=sykkel'],
+    ['category', '/so/bil'],
+  ] as const) {
+    await page.goto(path);
+    await page.waitForLoadState('networkidle');
+    await audit(page, `${name} (phone)`);
+  }
+  await page.getByTestId('listing-card').first().click();
+  await page.waitForURL(/\/listings\//);
+  await audit(page, 'listing (phone)');
+});
 
 for (const scheme of ['light', 'dark'] as const) {
   test(`public pages pass axe (${scheme})`, async ({ page }) => {
