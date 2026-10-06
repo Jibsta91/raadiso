@@ -53,6 +53,8 @@ const row: ListingRow = {
   updated_at: new Date(),
   published_at: new Date(),
   promoted_until: null,
+  removed_by: null,
+  removal_reason: null,
 };
 
 describe('OpenAPI contract', () => {
@@ -66,6 +68,18 @@ describe('OpenAPI contract', () => {
     assert.equal(listing.location.name, 'Bergen');
     const withViewer = { ...listing, viewer: { isOwner: true, canEdit: true, canDelete: true } };
     assert.ok(validate(withViewer), JSON.stringify(validate.errors));
+  });
+
+  it('a listing a moderator removed tells its owner why; one the owner deleted does not', () => {
+    const validate = validator('Listing');
+    const removed = toListing(
+      { ...row, status: 'deleted', removed_by: 'moderation', removal_reason: 'fraud' },
+      signer,
+    );
+    assert.deepEqual(removed.removal, { reason: 'fraud' });
+    assert.ok(validate(removed), JSON.stringify(validate.errors));
+    const deleted = toListing({ ...row, status: 'deleted', removed_by: 'owner' }, signer);
+    assert.equal(deleted.removal, undefined);
   });
 
   it('request validation agrees with the CreateListing schema', () => {

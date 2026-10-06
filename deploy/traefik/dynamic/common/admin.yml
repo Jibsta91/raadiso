@@ -5,6 +5,9 @@
 {{ $d := env "RAADI_DOMAIN" }}
 http:
   routers:
+    {{- if ne (env "DEV_TOOLS_ROUTED") "false" }}
+    # Not served in phone mode (./raadi phone), where the gateway is on the Wi-Fi and the demo staff
+    # logins and one-time-code secret are public.
     admin-auth:
       rule: Host(`admin.{{ $d }}`) && PathPrefix(`/auth/`) && !Path(`/auth/forward`)
       entryPoints: [web, websecure]
@@ -30,6 +33,7 @@ http:
       service: web
       middlewares: [security-headers, admin-headers, web-csp, ratelimit-default, compress]
       priority: 1
+    {{- end }}
 
   middlewares:
     # Staff pages: never indexed, never cached, no device features.

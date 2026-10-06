@@ -18,42 +18,6 @@ tags:
   - name: audit
 security: [{ bearer: [] }, { session: [] }]
 paths:
-  /api/v1/audit/entries:
-    get:
-      tags: [audit]
-      operationId: auditEntries
-      summary: Audit entries, newest first, filtered (platform admins)
-      parameters:
-        - { name: actor, in: query, schema: { type: string, format: uuid } }
-        - { name: action, in: query, schema: { type: string, maxLength: 60 } }
-        - { name: targetType, in: query, schema: { type: string, maxLength: 30 } }
-        - { name: targetId, in: query, schema: { type: string, maxLength: 100 } }
-        - {
-            name: before,
-            in: query,
-            description: Only entries older than this (the previous page's last `at`),
-            schema: { type: string, format: date-time },
-          }
-        - {
-            name: limit,
-            in: query,
-            schema: { type: integer, minimum: 1, maximum: 200, default: 50 },
-          }
-      responses:
-        '200':
-          description: A page of entries
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: false
-                required: [items, hasMore]
-                properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/AuditEntry' } }
-                  hasMore: { type: boolean }
-        '400': { $ref: '#/components/responses/Problem' }
-        '401': { $ref: '#/components/responses/Problem' }
-        '403': { $ref: '#/components/responses/Problem' }
   /admin/v1/audit/entries:
     get:
       tags: [audit]
@@ -74,6 +38,12 @@ paths:
             description: Only entries older than this (the previous page's last `at`),
             schema: { type: string, format: date-time },
           }
+        - name: after
+          in: query
+          description: >-
+            The next page: entries after this one, newest first (the previous page's last `id`). Exact
+            where `before` is not (entries can share a time).
+          schema: { type: string, format: uuid }
         - {
             name: limit,
             in: query,

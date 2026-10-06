@@ -30,13 +30,13 @@ export function AdminNavLink({
       {children}
       {count ? (
         <span
-          className={`ml-auto rounded-full px-1.5 text-xs font-semibold tabular-nums ${active ? 'bg-ink-foreground/20' : 'bg-destructive/12 text-destructive'}`}
+          className={`ms-auto rounded-full px-1.5 text-xs font-semibold tabular-nums ${active ? 'bg-ink-foreground/20' : 'bg-destructive/12 text-destructive'}`}
           data-testid={`${testId}-count`}
         >
           {count}
         </span>
       ) : hotkey ? (
-        <span className="ml-auto hidden font-mono text-[10px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 md:inline">
+        <span className="ms-auto hidden font-mono text-[10px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 md:inline">
           g {hotkey}
         </span>
       ) : null}

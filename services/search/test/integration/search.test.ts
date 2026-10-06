@@ -99,6 +99,23 @@ describe('SearchIndex + SearchService', () => {
     );
   });
 
+  it('finds the last part of compound words ("sykkel" finds "Terrengsykkel")', async () => {
+    const doc = snapshot(59, {
+      version: 2,
+      title: 'Terrengsykkel fra Trek, 29 tommer',
+      description: 'Lite brukt, nye dekk.',
+    });
+    await index.upsert(toDocument(doc), 2);
+    await index.client.indices.refresh({ index: 'raadi-listings' });
+    for (const q of ['sykkel', 'Terrengsykkel', 'trek sykkel']) {
+      const r = await search({ q });
+      assert.ok(
+        r.items.some((h) => h.id === doc.id),
+        `${q} should find ${doc.title}`,
+      );
+    }
+  });
+
   it('filters by radius and sorts by distance', async () => {
     const r = await search({ near: 'oslo', radiusKm: '600', sort: 'distance' });
     const d = r.items.map((h) => h.distanceKm!);

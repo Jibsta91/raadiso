@@ -1,7 +1,7 @@
 # Event pipeline (outbox → Debezium → Kafka → consumers)
 
 **Alerts:** `DeadLettersGrowing`, `ConsumerLagHigh`, `ConsumerGroupEmpty`, `SearchIndexLagHigh`,
-`EmailQueueBacklog`, `EmailsGivenUp`.
+`EmailQueueBacklog`, `EmailsGivenUp`, `OutboxRelayStalled`, `OutboxRelayLagging`, `OutboxRelayUnmonitored`.
 **Severity:** warning/critical. **Dashboard:** Grafana → Raadi → _Marketplace_.
 
 Background: [ADR-0012](../adr/0012-event-backbone.md). Services write events to their `outbox` table, Debezium
@@ -28,18 +28,22 @@ media (`media-listing-sync`), notifications, trust, saved, audit and listings. E
      --consumer.config /tmp/admin.properties --topic raadi.dlq --from-beginning \
      --property print.headers=true --max-messages 20 --timeout-ms 10000
    ```
-   A dead letter is either a producer bug (the event violates its contract: fix the producer, which also
-   fails its contract tests) or a reference to something that no longer exists (usually harmless). After a
-   fix, replay by re-publishing the payloads to the original topic. Consumers are idempotent, so a replay
-   is safe.
+   A dead letter is a producer bug (the event violates its contract: fix the producer, which also fails
+   its contract tests), a consumer bug (a TypeError, an SQL constraint or syntax error: the consumer gave
+   up after five attempts instead of stopping its partition), or a reference to something that no longer
+   exists (usually harmless). After a fix, replay by re-publishing the payloads to the original topic.
+   Consumers are idempotent and apply only newer listing versions, so a replay is safe.
 4. **Nothing arrives at all** (lag 0, but listings do not appear in search): check the Debezium connectors.
    ```bash
    docker compose exec kafka-connect curl -s 'http://localhost:8083/connectors?expand=status' \
      | jq -c 'to_entries[] | {name: .key, tasks: [.value.status.tasks[] | {state, trace: (.trace // "" | .[0:300])}]}'
    docker compose run --rm connect-init      # re-applies the config and restarts failed tasks
    ```
-   A replication slot whose connector is down holds WAL in PostgreSQL. Check `pg_replication_slots` if the
-   disk fills up.
+   A replication slot whose connector is down holds WAL in PostgreSQL (`OutboxRelayStalled`,
+   `OutboxRelayLagging`; the collector reads `pg_replication_slots` every 30 s). At 2 GB behind,
+   PostgreSQL drops the slot (`max_slot_wal_keep_size`) and the unread events are lost, so restart the
+   connector first. Old outbox rows are deleted after 7 days (`startEventTableJanitor`); that does not
+   affect Debezium, which reads the WAL and is only sent inserts.
 5. **Rebuild the search index** (mapping change): bump `INDEX_VERSION` in
    `services/search/src/search/index-definition.ts` and redeploy search. On start it creates the new index,
    copies the documents from the old one and moves the alias atomically. If the new mapping needs data the

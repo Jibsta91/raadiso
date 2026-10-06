@@ -127,7 +127,7 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row" data-testid="admin-console">
-      <aside className="flex shrink-0 flex-col gap-4 border-b bg-card/60 p-3 md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r">
+      <aside className="flex shrink-0 flex-col gap-4 border-b bg-card/60 p-3 md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-e">
         <div className="flex items-center justify-between gap-2 px-2 pt-1">
           <div>
             <p className="font-display text-xl font-extrabold tracking-[-0.04em]">

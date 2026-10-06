@@ -109,7 +109,7 @@ export function Workbench({
         ) : null}
         <ul
           aria-label={t('queue')}
-          className="max-h-[calc(100vh-14rem)] space-y-1.5 overflow-y-auto pr-1"
+          className="max-h-[calc(100vh-14rem)] space-y-1.5 overflow-y-auto pe-1"
         >
           {items.map((item, i) => (
             <li
@@ -141,7 +141,7 @@ export function Workbench({
                 type="button"
                 onClick={() => setIndex(i)}
                 aria-current={i === index ? 'true' : undefined}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex min-w-0 flex-1 items-center gap-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {item.listing.image ? (
                   <img
@@ -283,7 +283,7 @@ export function Workbench({
                 .filter((r) => r.comment)
                 .slice(0, 6)
                 .map((r) => (
-                  <li key={r.id} className="border-l-2 pl-3 text-subtle-foreground">
+                  <li key={r.id} className="border-s-2 ps-3 text-subtle-foreground">
                     {r.comment}
                   </li>
                 ))}

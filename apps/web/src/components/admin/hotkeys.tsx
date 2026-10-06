@@ -85,7 +85,7 @@ export function Hotkeys({
       {pending ? (
         <div
           aria-live="polite"
-          className="fixed bottom-4 right-4 z-40 rounded-full bg-ink px-3 py-1.5 font-mono text-xs text-ink-foreground shadow-float"
+          className="fixed bottom-4 end-4 z-40 rounded-full bg-ink px-3 py-1.5 font-mono text-xs text-ink-foreground shadow-float"
         >
           g …
         </div>

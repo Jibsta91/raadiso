@@ -233,7 +233,7 @@ reachable only on the internal Docker network.
 | notifications                          | 3                    | 4000                                  | `/api/v1/notifications/*`; SMTP out                                |
 | payments / payments-mock               | 3                    | 4000 / 4000                           | `/api/v1/payments/*`; `pay.raadi.localhost/pay/` (mock, dev)       |
 | saved                                  | 3                    | 4000                                  | `/api/v1/saved/*`                                                  |
-| audit                                  | 3                    | 4000                                  | `/api/v1/audit/*` (platform admins)                                |
+| audit                                  | 3                    | 4000                                  | `/admin/v1/audit/*` (console tokens only, not routed)              |
 | admin-bff                              | 3                    | 4000                                  | `admin.raadi.localhost/auth/*`; console at `admin.raadi.localhost` |
 | push-mock                              | 3                    | 4000                                  | `push.raadi.localhost/messages` (read-only, dev)                   |
 | trust                                  | 3                    | 4000                                  | `/api/v1/trust/*`; BankID OIDC (mock realm in dev)                 |

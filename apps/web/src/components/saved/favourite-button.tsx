@@ -11,10 +11,13 @@ import { useState } from 'react';
  */
 export function FavouriteButton({
   listingId,
+  title,
   initial,
   variant = 'overlay',
 }: {
   listingId: string;
+  /** The listing's title, so each button on a results page has its own name. */
+  title: string;
   initial: boolean;
   variant?: 'overlay' | 'inline';
 }) {
@@ -46,14 +49,15 @@ export function FavouriteButton({
     <button
       type="button"
       onClick={toggle}
+      // A toggle keeps one name; aria-pressed says whether it is on.
       aria-pressed={saved}
-      aria-label={saved ? t('remove') : t('add')}
+      aria-label={t('toggle', { title })}
       title={saved ? t('remove') : t('add')}
       data-testid="favourite-toggle"
       className={cn(
         'flex items-center justify-center rounded-full transition-[transform,background-color] active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         variant === 'overlay'
-          ? 'glass absolute right-2.5 top-2.5 z-10 size-9 sm:right-3 sm:top-3'
+          ? 'glass absolute end-2.5 top-2.5 z-10 size-9 sm:end-3 sm:top-3'
           : 'size-11 border bg-card hover:bg-accent',
       )}
     >

@@ -64,4 +64,11 @@ describe('staff endpoints (ADR-0030)', () => {
     const missing = guardFor({ azp: 'raadi-admin' }, ['platform-admin']);
     await assert.rejects(missing('refund'), (e: unknown) => e instanceof StepUpRequiredException);
   });
+
+  it('cannot be declared with @Roles, which a website token would pass', () => {
+    for (const role of ['moderator', 'support', 'operator', 'platform-admin']) {
+      assert.throws(() => Roles('user', role), /staff roles belong in @Staff/);
+    }
+    assert.doesNotThrow(() => Roles('user'));
+  });
 });

@@ -21,8 +21,9 @@ import {
 /**
  * Throw from a handler when an event can never succeed (invalid contract,
  * reference to something that cannot exist). The event goes to the
- * dead-letter topic and processing continues. Any other error is treated as
- * transient and retried with backoff, without skipping the event.
+ * dead-letter topic and processing continues. A bug (see `isBug`) goes there
+ * after a few attempts. Any other error is treated as transient and retried
+ * with backoff, without skipping the event.
  */
 export class PermanentEventError extends Error {
   constructor(message: string, options?: { cause?: unknown }) {
@@ -57,6 +58,34 @@ export interface EventConsumerOptions {
   };
   /** Backoff cap for transient failures (default 30s). */
   maxBackoffMs?: number;
+  /** Attempts before an event that hits a bug goes to the dead-letter topic (default 5). */
+  maxBugAttempts?: number;
+}
+
+/** SQLSTATE classes that retrying cannot fix: data exceptions, constraint violations, bad SQL. */
+const PERMANENT_SQL = /^(22|23|42)[0-9A-Z]{3}$/;
+
+/**
+ * Errors that come from the code or the data, not from a dependency being down: retrying the same
+ * event will fail the same way. Before, they were retried forever and stopped the partition (every
+ * later event waited behind the broken one). A dependency that is down (connection errors, 5xx,
+ * timeouts, an open circuit) is never a bug: those events wait until it is back.
+ */
+export function isBug(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  // fetch() reports a network failure as a TypeError with this message; that is a dependency, not a bug.
+  if (error instanceof TypeError && error.message === 'fetch failed') return false;
+  if (
+    error instanceof TypeError ||
+    error instanceof ReferenceError ||
+    error instanceof SyntaxError ||
+    error instanceof RangeError ||
+    error.name === 'ZodError'
+  ) {
+    return true;
+  }
+  const code = (error as { code?: unknown }).code;
+  return typeof code === 'string' && PERMANENT_SQL.test(code);
 }
 
 const meter = metrics.getMeter('raadi-events');
@@ -202,10 +231,12 @@ export class EventConsumer {
         await this.opts.handle(event);
         return 'ok';
       } catch (error) {
-        if (error instanceof PermanentEventError) {
-          span.recordException(error);
-          span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
-          await this.deadLetter(message, headers, error);
+        const bugGivesUp = isBug(error) && attempt + 1 >= (this.opts.maxBugAttempts ?? 5);
+        if (error instanceof PermanentEventError || bugGivesUp) {
+          const cause = error as Error;
+          span.recordException(cause);
+          span.setStatus({ code: SpanStatusCode.ERROR, message: cause.message });
+          await this.deadLetter(message, headers, cause);
           return 'dead_lettered';
         }
         if (this.stopping) throw error;

@@ -70,3 +70,21 @@ person is staff.
 - Support notes and suspension notes are personal data: they belong to the GDPR export and erasure slice.
 - Later: reports about users and messages (a moderation service, ADR-0027), dead-letter replay, and AI
   scores in the moderation workbench (recorded in the audit log with the model and its version).
+
+## Amendment (2026-10-06): no staff powers on the public API
+
+A review found that the older staff routes from ADR-0027 and ADR-0028 were still served under `/api/v1` and
+routed by the gateway: the report queue and dismissal (`moderator`), refunds (`platform-admin`) and the audit
+log (`platform-admin`). They accepted a website session, so they skipped the console token, step-up and reason
+this ADR requires. Listings also projected staff roles onto OpenFGA as contextual tuples on every public
+request, so a moderator's website session could delete any listing and a platform admin's could edit one,
+without a reason or an audit entry.
+
+- Those routes are gone; the console's `/admin/v1` routes are the only way to do these things. The audit
+  service has no public route at all, so the gateway no longer routes `/api/v1/audit/`.
+- The public listings API grants nothing for staff roles: only the owner edits or deletes there. Moderators
+  remove listings with `POST /admin/v1/listings/{id}/remove`, with a reason and an audit entry.
+- `@Roles()` refuses staff roles (moderator, support, operator, platform-admin) when a service starts, so a
+  staff role can only be used through `@Staff()`, which demands a console token.
+- The smoke test drives staff actions with console tokens and checks that the old routes answer 404 and that
+  a moderator's website session cannot delete someone else's listing.

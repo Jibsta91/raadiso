@@ -64,17 +64,22 @@ Each release also has generated notes on GitHub.
   `ReportsSpike` and `WebSocketOriginRejected`; runbooks for notifications (push), moderation, saved,
   messaging and the audit log. Listings reports the moderation backlog (`raadi.listings.reports_open`,
   `raadi.listings.reports_oldest_age`).
-- An AI team for Claude Code: eleven specialist subagents in `.claude/agents/` (project manager, architect,
-  backend, frontend, mobile, platform, AI, internationalization, security, QA and a code reviewer), with
-  [docs/ai-team.md](docs/ai-team.md) on how they work together.
+- An AI team for Claude Code: twelve specialist subagents in `.claude/agents/` (project manager, architect,
+  backend, frontend, mobile, platform, AI, internationalization, security, legal, QA and a code reviewer),
+  with [docs/ai-team.md](docs/ai-team.md) on how they work together.
 
 ### Changed
 
 - The app's tab bar is Home · Alerts · Sell · Messages · Account: Sell sits in the middle, and the in-app
   notifications are a tab with an unread badge. Search left the tab bar: the home screen's search field and
   categories stay pinned at the top while the listings scroll underneath, and search opens as its own screen.
+- Licensing policy (ADR-0009, amended): every component must be free of charge and run offline, OSI first.
+  Free licences that allow commercial use (BSL, SSPL, Elastic, Llama/Gemma) are allowed and recorded; free
+  non-commercial ones only until Phase 5. Previously only OSI-approved licences were allowed.
 - Direction: Raadi grows from a marketplace for Norway into one marketplace for many countries, like Locanto
   (ADR-0032). The roadmap lists the follow-up decisions.
+- Raadiso belongs to Horumar Group, and its first market is Somaliland (ADR-0033). The code and the demo data
+  stay Norwegian until Somaliland's configuration exists.
 - E-mails and pushes come in the language chosen on the website or in the app: the choice is saved to the
   profile, and `preferences_changed` events carry the new language (optional field). The app remembers its
   language setting.
@@ -84,12 +89,46 @@ Each release also has generated notes on GitHub.
 - The README, threat model and runbook index cover the Phase 3 services (payments, saved, audit, the admin
   console, push).
 
+### Security
+
+- Staff powers only through the admin console (ADR-0030 amended): the old report-queue, refund and audit
+  routes under `/api/v1` are gone, a moderator's or admin's website session no longer edits or removes
+  other people's listings, and `@Roles()` refuses staff roles.
+- Sign-in is bound to the browser that started it (login CSRF).
+- Phone mode keeps the admin console and the dev tools off the Wi-Fi (`PHONE_TOOLS=1` keeps them).
+- Post-login redirects refuse control characters; query strings (sign-in codes, search terms) no longer
+  reach Loki or Tempo; API answers default to `Cache-Control: no-store`; the OpenBao unsealer and the
+  blackbox exporter no longer run as root.
+
 ### Fixed
 
 - Photo uploads from the app failed. Expo's fetch rejected the app's file part (uploads now use React
   Native's XMLHttpRequest), and the gateway answered 500 to any upload over 1 MB: its upload buffer could not
   write to the read-only container (Traefik now has a small in-memory /tmp). iPhone HEIC photos are sent as
   JPEG.
+- Stored photos lost their GPS position and camera details but kept copyright tags, which often name the
+  photographer; imgproxy now drops them too (`IMGPROXY_KEEP_COPYRIGHT=false`), with a test.
+- Tests: smoke suspends and locks out a test-only account (`smoke-target@`) instead of a demo user; e2e tests
+  make their own listings and clean them up; a test pins down which console actions need a recent sign-in;
+  flaky tests fail CI runs; accessibility checks cover Somali, Norwegian and a phone screen.
+- Event consumers: a bug (TypeError, SQL constraint or syntax error) no longer stops a partition for good; the
+  event goes to the dead-letter topic after five attempts. A dependency being down still waits.
+- The media service applies only newer listing versions, so a late or replayed event cannot undo a change.
+- Old `outbox` (7 days) and `processed_events` (30 days) rows are deleted; the outbox publication sends
+  Debezium inserts only.
+- Missing indexes for messages by sender, reviews by reviewer and every report of a listing.
+- Staff user search pages suspended and active accounts correctly, without one Keycloak call per suspension.
+- The audit log pages by entry, so entries that share a time are never skipped.
+- Alerts when Debezium stops reading or falls behind on a database (`OutboxRelayStalled`,
+  `OutboxRelayLagging`).
+- Every third-party image is pinned by digest, and Renovate keeps the digests current (ADR-0010).
+- Search finds the last part of Norwegian compound words ("sykkel" finds "Terrengsykkel"), typo tolerance no
+  longer matches unrelated words, and an empty search offers to search everywhere or pick a category.
+- The website: translated error pages, title and price first on listing pages on phones, a full-screen photo
+  gallery with swipe and arrow keys, a share button, search controls that work before the page's script has
+  loaded, translated and accessible form errors, and owners see why a moderator removed their listing.
+- SEO basics: `robots.txt`, a sitemap, canonical and language links, link previews and product data.
+- Public pages no longer download the admin console's text; layout classes are right-to-left ready.
 - Keycloak's admin console (`auth.<domain>/admin/`) stayed blank: the gateway sent `X-Frame-Options: DENY` on
   Keycloak's pages, which blocked the console's own same-origin frames. Keycloak's routes now allow same-origin
   framing, as Keycloak itself does; the website still cannot be framed.

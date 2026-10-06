@@ -5,10 +5,12 @@ import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ListingCard } from '@/components/listings/listing-card';
 import { Link } from '@/i18n/navigation';
+import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
 import { makeLabel } from '@/lib/format';
 import { logger } from '@/lib/logger';
 import { href } from '@/lib/search-params';
+import { localeAlternates } from '@/lib/seo';
 import { CATEGORY_ICONS, SHORTCUTS, SUBCATEGORY_ICONS } from '@/lib/taxonomy-icons';
 
 export const dynamic = 'force-dynamic';
@@ -19,14 +21,15 @@ const isCategory = (value: string): value is Category =>
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ category: string }>;
+  params: Promise<{ locale: string; category: string }>;
 }): Promise<Metadata> {
-  const { category } = await params;
+  const { locale, category } = await params;
   if (!isCategory(category)) return {};
   const t = await getTranslations('home');
   return {
     title: t(`categories.${category}.name`),
     description: t(`categories.${category}.description`),
+    alternates: localeAlternates(routing, locale, `/${category}`),
   };
 }
 
@@ -59,7 +62,7 @@ export default async function CategoryPage({
   return (
     <div className="space-y-14" data-testid="category-page">
       <section className="space-y-6 pt-2 sm:pt-6">
-        <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+        <nav aria-label={t('nav.breadcrumb')} className="text-sm text-muted-foreground">
           <ol className="flex items-center gap-1">
             <li>
               <Link href="/" className="hover:underline">
@@ -97,7 +100,7 @@ export default async function CategoryPage({
           <label htmlFor="category-q" className="sr-only">
             {t('categoryPage.searchIn', { category: name })}
           </label>
-          <Search aria-hidden className="ml-3 size-5 shrink-0 text-subtle-foreground" />
+          <Search aria-hidden className="ms-3 size-5 shrink-0 text-subtle-foreground" />
           <input
             id="category-q"
             name="q"

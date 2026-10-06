@@ -17,7 +17,8 @@ The tag is the only source of the version. `RAADI_VERSION=dev` in `.env` marks l
 ## Tags
 
 - Tags are **annotated and signed** (`git tag -s`, the same SSH key as commits), named `vX.Y.Z` or
-  `vX.Y.Z-alpha.N`, and placed only on commits on `main` whose CI is green.
+  `vX.Y.Z-alpha.N`, and placed only on commits on `main` whose gates pass
+  (run locally while GitHub Actions are switched off).
 - A tag ruleset protects `v*`: tags cannot be moved, deleted or created unsigned. A broken release gets a
   new version, never a moved tag.
 - Each tag has a **GitHub Release**. Pre-releases (`-alpha.N`) are marked as such. The notes are generated
@@ -28,7 +29,7 @@ The tag is the only source of the version. `RAADI_VERSION=dev` in `.env` marks l
 
 ```bash
 git switch main && git pull --ff-only
-# check that CI is green for HEAD, then:
+# check that the gates pass for HEAD (locally while GitHub Actions are off), then:
 git tag -s v0.3.0-alpha.2 -m "v0.3.0-alpha.2: <one-line summary>"
 git push origin v0.3.0-alpha.2
 # then create the GitHub Release from the tag (generated notes), and add the entry to CHANGELOG.md

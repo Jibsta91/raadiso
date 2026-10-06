@@ -44,3 +44,8 @@
 - The domain's public DNS holds a private LAN address. That reveals nothing reachable, but some routers'
   DNS-rebinding protection blocks such answers (see docs/mobile.md).
 - While phone mode runs, the development stack, with its demo passwords, is reachable from the LAN.
+  Since 2026-10-06 phone mode serves only what a phone needs (the website and API, sign-in, the mock
+  payment page and the push mock's read-only log). The admin console, Keycloak's admin console, Mailpit,
+  OpenBao, the Traefik dashboard and Prometheus stay off the network (`DEV_TOOLS_ROUTED=false`,
+  `KEYCLOAK_ADMIN_PUBLIC=false`), because the demo staff logins and the one-time-code secret are public in
+  this repository. `PHONE_TOOLS=1 ./raadi phone` serves them anyway.

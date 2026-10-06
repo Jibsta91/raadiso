@@ -69,13 +69,6 @@ export class PaymentsController {
     return this.payments.getOrder(req.principal!, id);
   }
 
-  @Post('orders/:id/refund')
-  @Roles('platform-admin')
-  @HttpCode(200)
-  refund(@Req() req: AuthenticatedRequest, @Param('id', uuidPipe) id: string) {
-    return this.payments.refund(req.principal!, id);
-  }
-
   /**
    * Provider webhooks. No user token: requests are authenticated by the
    * provider's signature over the raw body.

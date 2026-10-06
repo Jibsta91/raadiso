@@ -101,14 +101,19 @@ export class KeycloakAdmin {
   }
 
   // -- users ------------------------------------------------------------------------------
-  searchUsers(q: string, first: number, max: number): Promise<KcUser[]> {
+  /** `enabled` narrows to enabled (or disabled) accounts, so pages and totals stay right. */
+  searchUsers(q: string, first: number, max: number, enabled?: boolean): Promise<KcUser[]> {
     const p = new URLSearchParams({ first: String(first), max: String(max) });
     if (q) p.set('search', q);
+    if (enabled !== undefined) p.set('enabled', String(enabled));
     return this.request('GET', `/users?${p}&briefRepresentation=false`);
   }
 
-  async countUsers(q: string): Promise<number> {
-    return this.request('GET', `/users/count${q ? `?search=${encodeURIComponent(q)}` : ''}`);
+  async countUsers(q: string, enabled?: boolean): Promise<number> {
+    const p = new URLSearchParams();
+    if (q) p.set('search', q);
+    if (enabled !== undefined) p.set('enabled', String(enabled));
+    return this.request('GET', `/users/count${p.size ? `?${p}` : ''}`);
   }
 
   getUser(id: string): Promise<KcUser> {

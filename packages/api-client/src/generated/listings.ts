@@ -130,40 +130,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/listings/moderation/reports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Open reports grouped by listing, most reported first (moderators) */
-        get: operations["reportQueue"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/listings/moderation/reports/{id}/dismiss": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** The listing is fine; close its open reports (moderators). Removing it resolves them instead. */
-        post: operations["dismissReports"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/v1/listings": {
         parameters: {
             query?: never;
@@ -525,6 +491,11 @@ export interface components {
              * @description End of a running paid promotion; null when not promoted (ADR-0020)
              */
             promotedUntil: string | null;
+            /** @description On the owner's own list only - a moderator removed the listing, and why */
+            removal?: {
+                /** @enum {string|null} */
+                reason: "fraud" | "prohibited" | "offensive" | "wrong_category" | "duplicate" | "spam" | "other" | null;
+            };
             viewer?: {
                 isOwner: boolean;
                 canEdit: boolean;
@@ -582,34 +553,6 @@ export interface components {
         ReportInput: {
             reason: components["schemas"]["ReportReason"];
             comment?: string;
-        };
-        ReportQueueItem: {
-            listing: {
-                /** Format: uuid */
-                id: string;
-                title: string;
-                /** @enum {string} */
-                status: "active" | "sold" | "deleted";
-                sellerName: string;
-                image?: {
-                    thumb: string;
-                    card: string;
-                };
-            };
-            count: number;
-            /** @description Open reports per reason */
-            reasons: {
-                [key: string]: number;
-            };
-            /** @description The five most recent comments, without who wrote them */
-            comments: {
-                reason: components["schemas"]["ReportReason"];
-                comment: string;
-                /** Format: date-time */
-                createdAt: string;
-            }[];
-            /** Format: date-time */
-            firstReportedAt: string;
         };
         Problem: {
             type: string;
@@ -679,6 +622,8 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                /** @description Also listings a moderator removed in the last 90 days, with `removal` */
+                removed?: "true" | "false";
             };
             header?: never;
             path?: never;
@@ -884,56 +829,6 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-        };
-    };
-    reportQueue: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The queue */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: components["schemas"]["ReportQueueItem"][];
-                    };
-                };
-            };
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-        };
-    };
-    dismissReports: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Listing id */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Dismissed */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
         };
     };
     adminSearchListings: {

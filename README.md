@@ -1,11 +1,12 @@
 # Raadiso
 
 Raadiso ([raadiso.com](https://raadiso.com); from _raadi_, "search" in Somali) is an open-source classifieds
-marketplace in the spirit of Finn.no. It starts in Norway and grows into one marketplace for many countries,
-like Locanto ([ADR-0032](docs/adr/0032-multi-country-marketplace.md)). In the code it keeps its working
+marketplace by Horumar Group, in the spirit of Finn.no. It starts in Somaliland and grows into one marketplace
+for many countries, like Locanto ([ADR-0032](docs/adr/0032-multi-country-marketplace.md),
+[ADR-0033](docs/adr/0033-horumar-group-and-somaliland-first.md)). In the code it keeps its working
 name, `raadi` (packages, the `./raadi` command, the Keycloak realm). It has a web app, a mobile app, domain
 microservices and four AI pillars: governance, cybersecurity, data management and IaC operations. All of it
-is 100% OSI-licensed and runs fully offline on a laptop, with **Docker as the only prerequisite**.
+is free of charge, open source first, and runs fully offline on a laptop, with **Docker as the only prerequisite**.
 
 ## Quickstart
 
@@ -105,7 +106,7 @@ Compose network.
 | notifications (NestJS)             | 4000                    | /api/v1/notifications/\* (in-app, preferences); e-mail via SMTP         |
 | trust (NestJS)                     | 4000                    | /api/v1/trust/\* (reviews, profiles, BankID verification)               |
 | payments (NestJS)                  | 4000                    | /api/v1/payments/\* (promoted listings, provider webhooks)              |
-| saved · audit (NestJS)             | 4000 each               | /api/v1/saved/\* (favourites, saved searches) · /api/v1/audit           |
+| saved · audit (NestJS)             | 4000 each               | /api/v1/saved/\* (favourites, saved searches) · audit: console only     |
 | Admin console (web + admin-bff)    | 3000 · 4000             | http://admin.raadi.localhost (staff, one-time code)                     |
 | payments-mock · push-mock (dev)    | 4000 each               | http://pay.raadi.localhost/pay/… · http://push.raadi.localhost/messages |
 | Expo dev server (Metro)            | 8081                    | `./raadi phone` (Expo Go on the same Wi-Fi, docs/mobile.md)             |
@@ -138,7 +139,7 @@ Each command is available as `./raadi <command>` or `make <command>`. Everything
 | `./raadi lint` · `typecheck` · `test`        | quality checks in the toolbox                                         |
 | `./raadi test-integration`                   | Testcontainers tests (PostgreSQL, Valkey, OpenSearch)                 |
 | `./raadi smoke` · `e2e`                      | smoke test and Playwright tests against the running stack             |
-| `./raadi security` · `iac-scan` · `licenses` | Trivy, Gitleaks, OSV-Scanner · Checkov · OSI license gate             |
+| `./raadi security` · `iac-scan` · `licenses` | Trivy, Gitleaks, OSV-Scanner · Checkov · license gate                 |
 | `./raadi toolbox`                            | shell with pnpm, uv, tofu, ansible, checkov, trivy, playwright…       |
 | `./raadi secret <name>` · `ca-cert`          | read a generated secret · export the dev CA                           |
 
@@ -182,5 +183,5 @@ app (Expo) runs on iPhone and Android. Phase 4 (the AI pillars) is next; see the
 
 ## License
 
-[Apache-2.0](LICENSE). All third-party components are under OSI-approved licenses
-([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
+[Apache-2.0](LICENSE). All third-party components are free of charge and mostly under OSI-approved licenses;
+[ADR-0009](docs/adr/0009-open-source-licensing-policy.md) sets the rules for the exceptions and where they are listed.

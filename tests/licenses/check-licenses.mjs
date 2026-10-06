@@ -1,5 +1,6 @@
-// Fails when any npm dependency (prod or dev) is not under an OSI-approved
-// license. Non-code data packages with CC licenses are allowed explicitly.
+// Fails when any npm dependency (prod or dev) is neither under an OSI-approved
+// license nor allow-listed. ADR-0009: non-code data packages with CC licenses,
+// and free non-OSI packages admitted with their class, are allowed explicitly.
 import { execFileSync } from 'node:child_process';
 
 const OSI = new Set([
@@ -60,8 +61,8 @@ for (const [license, pkgs] of Object.entries(byLicense)) {
 }
 if (violations.length) {
   console.error(
-    `✘ ${violations.length} package(s) without an OSI-approved license:\n  ${violations.join('\n  ')}`,
+    `✘ ${violations.length} package(s) neither OSI-approved nor allow-listed (ADR-0009):\n  ${violations.join('\n  ')}`,
   );
   process.exit(1);
 }
-console.log(`✔ ${count} packages, all OSI-approved (or allow-listed data packages)`);
+console.log(`✔ ${count} packages, all OSI-approved or allow-listed (ADR-0009)`);

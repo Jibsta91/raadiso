@@ -27,7 +27,7 @@ Raadi toolbox — usage: docker compose run --rm toolbox <command> [args]
   e2e                Playwright end-to-end tests against the running stack
   security           Trivy (fs + config), Gitleaks, OSV-Scanner
   iac-scan           Checkov + Trivy misconfiguration scan (compose, Dockerfiles, infra/)
-  licenses           fail on dependencies without an OSI-approved license
+  licenses           fail on dependencies neither OSI-approved nor allow-listed
   sbom               write SBOMs (SPDX JSON) to ./sbom
   versions           print tool versions
   <any command>      run it inside the toolbox (tofu, ansible, trivy, pnpm, uv ...)

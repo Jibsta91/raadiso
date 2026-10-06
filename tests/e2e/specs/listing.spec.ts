@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
-import { domain, login, openAccountMenu } from './support.js';
+import { createListing, domain, login, openAccountMenu } from './support.js';
 
 const fixture = fileURLToPath(new URL('../../fixtures/images/listing.jpg', import.meta.url));
 
@@ -67,21 +67,19 @@ test('a seller creates a listing with an image, marks it sold and deletes it', a
 test('another user sees no owner actions', async ({ browser }) => {
   const owner = await browser.newPage();
   await login(owner, `ola.nordmann@${domain}`);
-  await owner.goto('/en/my/listings');
-  const href = await owner
-    .getByTestId('my-listings')
-    .getByRole('link')
-    .first()
-    .getAttribute('href');
-  expect(href).toBeTruthy();
-  await owner.goto(href!);
-  await expect(owner.getByTestId('listing-actions')).toContainText('Your listing');
-  await owner.close();
+  const listing = await createListing(owner, `Eiers annonse e2e ${Date.now().toString(36)}`);
+  try {
+    await owner.goto(listing.href);
+    await expect(owner.getByTestId('listing-actions')).toContainText('Your listing');
 
-  const other = await browser.newPage();
-  await login(other, `kari.nordmann@${domain}`);
-  await other.goto(href!);
-  await expect(other.getByTestId('listing-title')).toBeVisible();
-  await expect(other.getByTestId('listing-actions')).toHaveCount(0);
-  await other.close();
+    const other = await browser.newPage();
+    await login(other, `kari.nordmann@${domain}`);
+    await other.goto(listing.href);
+    await expect(other.getByTestId('listing-title')).toBeVisible();
+    await expect(other.getByTestId('listing-actions')).toHaveCount(0);
+    await other.close();
+  } finally {
+    await listing.remove();
+    await owner.close();
+  }
 });

@@ -291,6 +291,8 @@ export interface AuditQuery {
   targetType?: string;
   targetId?: string;
   before?: string;
+  /** The previous page's last entry: the next page starts after it. */
+  after?: string;
   limit?: number;
 }
 export const adminAudit = (query: AuditQuery): Promise<{ items: AuditEntry[]; hasMore: boolean }> =>

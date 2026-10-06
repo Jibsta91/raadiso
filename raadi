@@ -248,12 +248,19 @@ case "$cmd" in
     # Demo logins stay kari.nordmann@raadi.localhost etc., so they are the same in every mode.
     demo_domain="${DEMO_EMAIL_DOMAIN:-$(sed -n 's/^RAADI_DOMAIN=//p' .env)}"
     export LAN_IP="$lan_ip" RAADI_DOMAIN="$phone_domain" DEMO_EMAIL_DOMAIN="$demo_domain" PUBLIC_SCHEME=https BIND_ADDRESS="$lan_ip"
+    # Everyone on the Wi-Fi can reach the gateway, and the demo passwords and the staff one-time-code
+    # secret are public in this repository. So the admin console, Keycloak's admin console and the dev
+    # tools (Mailpit, OpenBao, Traefik, Prometheus) stay off the network; PHONE_TOOLS=1 keeps them.
+    if [[ "${PHONE_TOOLS:-}" != 1 ]]; then export DEV_TOOLS_ROUTED=false KEYCLOAK_ADMIN_PUBLIC=false; fi
     "${DC[@]}" -f compose.yaml -f compose.phone.yaml up -d --wait "$@"
+    tools="off the network (PHONE_TOOLS=1 ./raadi phone serves them)"
+    [[ "${PHONE_TOOLS:-}" == 1 ]] && tools="ON: anyone on this Wi-Fi can sign in to them with the demo logins"
     cat <<PHONE
 
   Phone mode: https://${phone_domain}  (laptop and phone on the same Wi-Fi)
     On the phone, open Expo Go and enter:  exp://${lan_ip}:8081
     Demo logins as usual. Back to raadi.localhost:  ./raadi up
+    Admin console and dev tools: ${tools}
 PHONE
     ;;
   ca-cert)

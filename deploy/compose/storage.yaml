@@ -13,7 +13,7 @@ x-hardening: &hardening
 services:
   seaweedfs:
     <<: *hardening
-    image: chrislusf/seaweedfs:4.48
+    image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
     user: '1000:1000'
     entrypoint: ['/usr/bin/weed']
     command:
@@ -74,6 +74,8 @@ services:
       IMGPROXY_MAX_SRC_RESOLUTION: '40'
       IMGPROXY_MAX_SRC_FILE_SIZE: '12582912'
       IMGPROXY_STRIP_METADATA: 'true'
+      # imgproxy keeps copyright tags by default; they often name the photographer (personal data).
+      IMGPROXY_KEEP_COPYRIGHT: 'false'
       IMGPROXY_STRIP_COLOR_PROFILE: 'false'
       IMGPROXY_AUTO_ROTATE: 'true'
       IMGPROXY_ENFORCE_WEBP: 'false'

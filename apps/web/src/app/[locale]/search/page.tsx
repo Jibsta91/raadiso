@@ -18,6 +18,7 @@ import { FilterPanel } from '@/components/search/filter-panel';
 import { SaveSearchButton } from '@/components/saved/saved-search-controls';
 import { SearchControls } from '@/components/search/search-controls';
 import { Link } from '@/i18n/navigation';
+import { CATEGORY_ICONS } from '@/lib/taxonomy-icons';
 import { savedSearches, searchListings, ServiceUnavailableError } from '@/lib/api';
 import { sameSearch, savedParams, searchLabels } from '@/lib/search-labels';
 import { flatParams, makeLabel } from '@/lib/format';
@@ -246,7 +247,7 @@ export default async function SearchPage({
 
         <section aria-labelledby="results-heading" className="space-y-4">
           {only ? (
-            <nav aria-label="breadcrumb" className="text-sm text-muted-foreground">
+            <nav aria-label={t('nav.breadcrumb')} className="text-sm text-muted-foreground">
               <ol className="flex flex-wrap items-center gap-1">
                 <li>
                   <Link href={`/${only}`} className="hover:underline" data-testid="crumb-category">
@@ -258,7 +259,7 @@ export default async function SearchPage({
                     <li aria-hidden>
                       <ChevronRight className="size-3.5" />
                     </li>
-                    <li className="text-foreground">
+                    <li aria-current="page" className="text-foreground">
                       {t(`taxonomy.subcategories.${subcategories[0]}` as never)}
                     </li>
                   </>
@@ -286,6 +287,36 @@ export default async function SearchPage({
               <SearchX aria-hidden className="size-10" />
               <p className="font-medium text-foreground">{t('search.noResults')}</p>
               <p>{t('search.noResultsHint')}</p>
+              {current.q && filtered ? (
+                <Link
+                  href={href({ q: current.q })}
+                  prefetch={false}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                  data-testid="search-everywhere"
+                >
+                  {t('search.searchEverywhere', { q: current.q })}
+                </Link>
+              ) : null}
+              <nav aria-label={t('search.browseCategories')} className="mt-4 space-y-3">
+                <p className="text-sm">{t('search.browseCategories')}</p>
+                <ul className="flex flex-wrap justify-center gap-2" role="list">
+                  {CATEGORY_KEYS.map((key) => {
+                    const Icon = CATEGORY_ICONS[key];
+                    return (
+                      <li key={key}>
+                        <Link
+                          href={href({ category: key })}
+                          prefetch={false}
+                          className="inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm text-foreground hover:bg-muted"
+                        >
+                          <Icon aria-hidden className="size-4" />
+                          {t(`taxonomy.categories.${key}` as never)}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
             </div>
           ) : (
             <ul

@@ -5,8 +5,10 @@
 
 ## Decision
 
-Everything is pinned to exact versions (images by tag, distroless by digest, npm with `save-exact`, CLI tools
-with checksum verification in the toolbox). Renovate proposes upgrades. Deliberate choices that deviate from
+Everything is pinned to exact versions: container images by tag **and digest** (`name:tag@sha256:…`, the
+multi-arch index digest, since 2026-10-06), npm with `save-exact`, CLI tools with checksum verification in the
+toolbox. A tag alone can be moved by its publisher; the digest cannot. Renovate (`docker:pinDigests`) proposes
+upgrades and keeps the digests current. Deliberate choices that deviate from
 "latest":
 
 | Component      | Pinned  | Why not latest                                                                             |
@@ -20,4 +22,10 @@ with checksum verification in the toolbox). Renovate proposes upgrades. Delibera
 
 ## Consequences
 
-Builds are reproducible, and upgrades are explicit PRs with CI evidence.
+Builds are reproducible, and upgrades are explicit PRs with CI evidence. With GitHub Actions off
+(2026-10-05), that evidence is the local gates run before the merge.
+
+## History
+
+- 2026-10-01: images pinned by tag, distroless by digest.
+- 2026-10-06: every third-party image by tag and digest (found in the review of 2026-10-05).

@@ -10,12 +10,15 @@ import {
   ShoppingBag,
   Sparkles,
 } from 'lucide-react';
+import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthErrorBanner } from '@/components/auth-error-banner';
 import { ListingCard } from '@/components/listings/listing-card';
 import { Link } from '@/i18n/navigation';
+import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
 import { logger } from '@/lib/logger';
+import { localeAlternates } from '@/lib/seo';
 
 // A bento grid: Marketplace is the tall ink tile; Property and Travel span two columns on wide screens.
 const CATEGORIES = [
@@ -53,6 +56,15 @@ const TRUST = [
   { key: 'ai', Icon: Sparkles },
   { key: 'privacy', Icon: Lock },
 ] as const;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return { alternates: localeAlternates(routing, locale, '') };
+}
 
 export default async function HomePage({
   params,
@@ -92,7 +104,7 @@ export default async function HomePage({
           <label htmlFor="home-q" className="sr-only">
             {t('searchPlaceholder')}
           </label>
-          <Search aria-hidden className="ml-3 size-[22px] shrink-0 text-subtle-foreground" />
+          <Search aria-hidden className="ms-3 size-[22px] shrink-0 text-subtle-foreground" />
           <input
             id="home-q"
             name="q"

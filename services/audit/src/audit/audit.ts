@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { metrics } from '@opentelemetry/api';
 import { parseEvent } from '@raadi/events';
-import { type AuthenticatedRequest, Roles, Staff, ZodValidationPipe } from '@raadi/service-kit';
+import { type AuthenticatedRequest, Staff, ZodValidationPipe } from '@raadi/service-kit';
 import { PermanentEventError, type ReceivedEvent } from '@raadi/service-kit/kafka';
 import type pg from 'pg';
 import { z } from 'zod';
@@ -63,6 +63,11 @@ export const querySchema = z
     targetId: z.string().max(100).optional(),
     /** Entries older than this (the previous page's last `at`). */
     before: z.iso.datetime({ offset: true }).optional(),
+    /**
+     * Entries after this one, newest first (the previous page's last `id`). Exact where `before` is
+     * not: several entries can share a time, and `at` reaches clients rounded to milliseconds.
+     */
+    after: z.uuid().optional(),
     limit: z.coerce.number().int().min(1).max(200).default(50),
   })
   .strict();
@@ -132,10 +137,16 @@ export class AuditService {
     if (q.targetType) add('target_type = ?', q.targetType);
     if (q.targetId) add('target_id = ?', q.targetId);
     if (q.before) add('at < ?', q.before);
+    if (q.after) {
+      add(
+        '(at, action_id) < (SELECT at, action_id FROM audit_entries WHERE action_id = ?)',
+        q.after,
+      );
+    }
     args.push(q.limit + 1);
     const { rows } = await this.pool.query<AuditRow>(
       `SELECT * FROM audit_entries ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
-        ORDER BY at DESC, action_id LIMIT $${args.length}`,
+        ORDER BY at DESC, action_id DESC LIMIT $${args.length}`,
       args,
     );
     return { items: rows.slice(0, q.limit).map(toEntry), hasMore: rows.length > q.limit };
@@ -170,18 +181,6 @@ export class AuditService {
       actors: actors.rows.map((r) => ({ id: r.id, count: Number(r.count) })),
       total: daysOut.reduce((n, d) => n + d.count, 0),
     };
-  }
-}
-
-@Controller('api/v1/audit')
-export class AuditController {
-  constructor(private readonly audit: AuditService) {}
-
-  /** The audit log, newest first (platform admins). */
-  @Get('entries')
-  @Roles('platform-admin')
-  entries(@Query(new ZodValidationPipe(querySchema)) q: AuditQuery) {
-    return this.audit.query(q);
   }
 }
 

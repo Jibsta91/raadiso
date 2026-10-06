@@ -13,7 +13,7 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0006](0006-gateway-file-provider-and-dev-tls.md)      | Traefik with file provider, `*.localhost`, local dev CA                                | Accepted |
 | [0007](0007-observability-pipeline.md)                 | OpenTelemetry everywhere through one collector                                         | Accepted |
 | [0008](0008-database-per-service-and-outbox.md)        | Database per service, dbmate migrations, transactional outbox                          | Accepted |
-| [0009](0009-open-source-licensing-policy.md)           | OSI-only licensing policy                                                              | Accepted |
+| [0009](0009-open-source-licensing-policy.md)           | Licensing policy: free, OSI first                                                      | Accepted |
 | [0010](0010-pinned-versions.md)                        | Version pinning and deliberate version choices                                         | Accepted |
 | [0011](0011-resource-budget.md)                        | 16 GB laptop resource budget and profiles                                              | Accepted |
 | [0012](0012-event-backbone.md)                         | Event backbone: Kafka, Debezium outbox, Apicurio contracts                             | Accepted |
@@ -37,3 +37,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0030](0030-staff-apis-and-console-workspaces.md)      | Staff APIs (console tokens only, step-up), a console workspace per role                | Accepted |
 | [0031](0031-foundation-slos-security-centre-doctor.md) | Foundation revisited: SLOs and journey probes, security centre, doctor, accessibility  | Accepted |
 | [0032](0032-multi-country-marketplace.md)              | One marketplace for many countries; country separate from language                     | Accepted |
+| [0033](0033-horumar-group-and-somaliland-first.md)     | Horumar Group owns Raadiso; Somaliland is the first market                             | Accepted |

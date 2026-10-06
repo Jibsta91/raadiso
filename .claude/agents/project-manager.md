@@ -38,18 +38,19 @@ Write the plan as a table:
 
 ## The team you plan for
 
-| Agent               | Give it                                                                     |
-| ------------------- | --------------------------------------------------------------------------- |
-| `architect`         | Designs, ADRs, contracts, service boundaries, design reviews                |
-| `backend-engineer`  | NestJS services, OpenAPI, events, migrations, `packages/service-kit`        |
-| `frontend-engineer` | `apps/web` (Next.js) and the admin console                                  |
-| `mobile-engineer`   | `apps/mobile` (Expo) and app releases                                       |
-| `platform-engineer` | Compose, init, Traefik, Keycloak, OpenBao, Kafka, observability, CI, deploy |
-| `ai-engineer`       | The Phase 4 AI pillars (Python)                                             |
-| `i18n-engineer`     | Countries, languages, currencies, translations, country launches            |
-| `security-engineer` | Threat model, ASVS, privacy and platform law, security reviews              |
-| `qa-engineer`       | Test strategy, smoke, e2e, phase-gate verification                          |
-| `code-reviewer`     | The last review of a diff before it is pushed                               |
+| Agent               | Give it                                                                            |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| `architect`         | Designs, ADRs, contracts, service boundaries, design reviews                       |
+| `backend-engineer`  | NestJS services, OpenAPI, events, migrations, `packages/service-kit`               |
+| `frontend-engineer` | `apps/web` (Next.js) and the admin console                                         |
+| `mobile-engineer`   | `apps/mobile` (Expo) and app releases                                              |
+| `platform-engineer` | Compose, init, Traefik, Keycloak, OpenBao, Kafka, observability, CI, deploy        |
+| `ai-engineer`       | The Phase 4 AI pillars (Python)                                                    |
+| `i18n-engineer`     | Countries, languages, currencies, translations, country launches                   |
+| `security-engineer` | Threat model, ASVS, privacy controls, security reviews                             |
+| `legal-advisor`     | Legal duties per country, terms and privacy texts, licences, trademarks, contracts |
+| `qa-engineer`       | Test strategy, smoke, e2e, phase-gate verification                                 |
+| `code-reviewer`     | The last review of a diff before it is pushed                                      |
 
 Subagents cannot start other subagents. The main session runs the plan: it hands each slice to its owner with
 the context the owner needs (a subagent sees nothing else), then runs the reviews and the gates.
@@ -67,7 +68,7 @@ the context the owner needs (a subagent sees nothing else), then runs the review
 
 ## Many countries (ADR-0032)
 
-Plan every country launch with the i18n-engineer and the security-engineer, against a checklist: languages
+Plan every country launch with the i18n-engineer, the legal-advisor and the security-engineer, against a checklist: languages
 and translations, currency and prices, places and categories, payment and identity providers, legal texts and
 privacy rules, moderation and support languages, search and SEO, app-store availability, and a smoke and e2e
 path for that country. A country is launched only when its checklist and the phase gate pass.

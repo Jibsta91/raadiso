@@ -106,7 +106,7 @@ export default async function StatusPage({ params }: { params: Promise<{ locale:
                       key={i}
                       title={`${hourLabel(i)} · ${v === null ? t('noData') : pct(v)}`}
                       className={cn(
-                        'flex-1 rounded-[2px] first:rounded-l-md last:rounded-r-md',
+                        'flex-1 rounded-[2px] first:rounded-s-md last:rounded-e-md',
                         hourTone(v),
                       )}
                     />

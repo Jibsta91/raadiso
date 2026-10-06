@@ -185,6 +185,7 @@ export class MediaService {
         await this.repo.syncListingImages(
           parsed.id,
           listing.id,
+          listing.version,
           listing.status === 'deleted'
             ? null
             : { ownerId: listing.ownerId, imageIds: listing.imageIds },
@@ -193,7 +194,12 @@ export class MediaService {
       }
       case 'no.raadi.listings.listing.deleted.v1':
         // Detached images become orphans and are garbage-collected after the TTL.
-        await this.repo.syncListingImages(parsed.id, parsed.data.listingId, null);
+        await this.repo.syncListingImages(
+          parsed.id,
+          parsed.data.listingId,
+          parsed.data.version,
+          null,
+        );
         return;
       default:
         return;

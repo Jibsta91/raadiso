@@ -41,7 +41,7 @@ no-store`.
   action, target type and id, optional reason, time) to their outbox in the same transaction as the change,
   with service-kit's `audit()`. A new `audit` service consumes `raadi.audit.events` (30-day retention in
   Kafka) into a table whose triggers refuse UPDATE, DELETE and TRUNCATE, and serves
-  `GET /api/v1/audit/entries` to platform admins, filtered by actor, action, target and time. Today it records
+  the entries to platform admins (`GET /admin/v1/audit/entries` since ADR-0030; first under `/api/v1`), filtered by actor, action, target and time. Today it records
   removals by moderators, dismissed reports and refunds.
 
 ## Alternatives considered

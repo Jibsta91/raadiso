@@ -113,3 +113,37 @@ export async function cardPrices(cards: Locator): Promise<number[]> {
     .filter((digits) => digits !== '')
     .map(Number);
 }
+
+/**
+ * A listing of the signed-in user, made through the API for one test. Tests that need "a listing of
+ * Kari's" must not take the newest one: other tests running in parallel create and delete theirs.
+ * Call `remove` in a `finally`, so failed runs do not leave listings behind (50 active at most).
+ */
+export async function createListing(
+  page: Page,
+  title: string,
+): Promise<{ id: string; href: string; remove: () => Promise<void> }> {
+  const origin = new URL(page.url()).origin;
+  const res = await page.request.post('/api/v1/listings', {
+    headers: { origin },
+    data: {
+      category: 'torget',
+      subcategory: 'hobby',
+      title,
+      description: 'Laget av en e2e-test.',
+      priceNok: 100,
+      attributes: { condition: 'good' },
+      placeId: 'oslo',
+      imageIds: [],
+    },
+  });
+  expect(res.status()).toBe(201);
+  const { id } = (await res.json()) as { id: string };
+  return {
+    id,
+    href: `/en/listings/${id}`,
+    remove: async () => {
+      await page.request.delete(`/api/v1/listings/${id}`, { headers: { origin } });
+    },
+  };
+}

@@ -3,9 +3,16 @@ import fastifyMultipart from '@fastify/multipart';
 import { ConsoleLogger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
-import { HealthRegistry, installGracefulShutdown, requestId } from '@raadi/service-kit';
+import {
+  HealthRegistry,
+  installGracefulShutdown,
+  noStoreByDefault,
+  requestId,
+  startEventTableJanitor,
+} from '@raadi/service-kit';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module.js';
+import { PG_POOL } from './tokens.js';
 import { loadAppConfig } from './config.js';
 
 async function bootstrap(): Promise<void> {
@@ -28,10 +35,13 @@ async function bootstrap(): Promise<void> {
   await app.register(fastifyMultipart as never, {
     limits: { fileSize: cfg.env.MAX_UPLOAD_BYTES, files: 1, fields: 0, parts: 1, headerPairs: 50 },
   });
+  noStoreByDefault(app);
   installGracefulShutdown(app, app.get(HealthRegistry), {
     drainMs: cfg.env.SHUTDOWN_DRAIN_MS,
     log: (msg) => logger.log(msg),
   });
+  // Old outbox and processed_events rows: no endless growth, no stale personal data.
+  startEventTableJanitor(app.get(PG_POOL), { log: (obj, msg) => logger.log(obj, msg) });
   await app.listen(cfg.env.PORT, '0.0.0.0');
   logger.log(`media listening on :${cfg.env.PORT}`);
 }

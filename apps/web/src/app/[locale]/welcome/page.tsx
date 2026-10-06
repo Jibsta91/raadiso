@@ -5,19 +5,12 @@ import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { VerifyButton } from '@/components/trust/verification';
 import { Link } from '@/i18n/navigation';
+import { safePath } from '@/lib/safe-path';
 import { getSession } from '@/lib/session';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('welcome');
   return { title: t('title'), robots: { index: false } };
-}
-
-/** Only same-site paths are followed (no open redirects such as "//evil.com"). */
-function safeNext(value: string | undefined, fallback: string): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) {
-    return fallback;
-  }
-  return value;
 }
 
 /** Shown once, after a new user's first login (identity-bff redirects here). */
@@ -35,7 +28,7 @@ export default async function WelcomePage({
     redirect(`/auth/login?returnTo=${encodeURIComponent(`/${locale}/welcome`)}&locale=${locale}`);
   }
   const t = await getTranslations('welcome');
-  const next = safeNext((await searchParams).next, `/${locale}`);
+  const next = safePath((await searchParams).next, `/${locale}`);
   const firstName = session.user.name?.split(' ')[0];
 
   return (

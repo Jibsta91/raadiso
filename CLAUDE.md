@@ -1,13 +1,14 @@
 # Raadi: working notes for AI coding sessions
 
 Raadi is a Finn.no-style classifieds marketplace (web, mobile, domain microservices, four AI pillars). Users
-see it as **Raadiso** (raadiso.com): the brand in UI text, e-mails, login pages and the app name. Code keeps the
-working name `raadi` (packages, `./raadi`, realm, databases, images). In Somali text, "raadi" is also the verb
+see it as **Raadiso** (raadiso.com), owned by Horumar Group (horumargroup.com): the brand in UI text, e-mails,
+login pages and the app name. Code keeps the working name `raadi` (packages, `./raadi`, realm, databases,
+images). In Somali text, "raadi" is also the verb
 "search": leave those strings alone. It is built in six phases; [docs/roadmap.md](docs/roadmap.md) holds the
 scope and status of each. Read that first, then [docs/development.md](docs/development.md) (layout, service
 checklist, conventions) and [docs/adr/README.md](docs/adr/README.md) (decisions already made; don't
 re-litigate them without a new ADR). Specialist subagents (project manager, architect, engineers, security,
-QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says who does what.
+legal, QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says who does what.
 
 ## Non-negotiables
 
@@ -19,18 +20,23 @@ QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says
   idempotently. Exact version pins (never `:latest`; digests for base images), memory limits that fit a
   16 GB laptop ([ADR-0011](docs/adr/0011-resource-budget.md)), heavy extras behind compose profiles. New
   services must appear in the `summary` output.
-- **Licensing:** 100% OSI-licensed and runs offline ([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
-  No BSL/SSPL/Elastic-licensed components.
+- **Licensing:** free of charge and runs offline, OSI first ([ADR-0009](docs/adr/0009-open-source-licensing-policy.md)).
+  Free licences that allow commercial use (BSL, SSPL, Elastic, Llama/Gemma) are allowed and recorded; free
+  non-commercial ones (CC-BY-NC models) only until Phase 5. Never paid licences or cloud API keys.
 - **Services:** 12-factor; OTel traces, metrics and logs everywhere; transactional outbox with CloudEvents; one
   database per service; retries, circuit breakers and rate limits; non-root distroless images; multi-arch.
 - **Security:** OIDC everywhere (Keycloak), zero trust between services, secrets only from OpenBao, TLS at the
   edge, OWASP ASVS L2, GDPR (no PII in logs or events).
-- **Git:** `main` is protected (PR only, both CI jobs green, signed commits, squash merge). Work on a branch,
-  push it, open a PR and merge it through the GitHub API once CI passes. Never push to `main` directly.
+- **Git:** `main` takes changes only through PRs (signed commits, squash merge). GitHub Actions are switched
+  off since 2026-10-05 (too slow): run the gates locally (`./raadi lint typecheck test`, then `licenses`,
+  `security` and `iac-scan`, plus `smoke` and `e2e` for anything beyond docs), then push the branch, open a PR
+  and merge it through the GitHub API. `.github/workflows/ci.yaml` stays, so CI can be switched back on.
+  Never push to `main` directly.
 - **Stack is settled:** Keycloak + OpenBao (Authentik/Bitwarden were considered and rejected). No Kubernetes.
 - **Many countries** ([ADR-0032](docs/adr/0032-multi-country-marketplace.md)): one marketplace for many
-  countries, like Locanto, with Norway first. Country and language are separate dimensions; never hard-code a
-  country, currency, locale, time zone, phone or address format.
+  countries, like Locanto, with Somaliland first
+  ([ADR-0033](docs/adr/0033-horumar-group-and-somaliland-first.md)). Country and language are separate
+  dimensions; never hard-code a country, currency, locale, time zone, phone or address format.
 - **Phase gate:** a phase is done only when a cold `docker compose up` is green and smoke, e2e, lint,
   typecheck, unit, integration, licenses, security and iac-scan all pass. No TODO placeholders. Write an ADR
   for each decision.

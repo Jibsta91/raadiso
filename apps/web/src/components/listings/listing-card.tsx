@@ -1,18 +1,12 @@
 import type { SearchHit } from '@raadi/api-client';
-import { Briefcase, Car, House, ImageOff, Plane, ShoppingBag, type LucideIcon } from 'lucide-react';
+import type { Category } from '@raadi/catalog';
+import { ImageOff } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { FavouriteButton } from '@/components/saved/favourite-button';
 import { Link } from '@/i18n/navigation';
 import { favouriteIds } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
-
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
-  torget: ShoppingBag,
-  bil: Car,
-  eiendom: House,
-  jobb: Briefcase,
-  reise: Plane,
-};
+import { CATEGORY_ICONS } from '@/lib/taxonomy-icons';
 
 /** What a card shows: a search hit, or a favourite (which may be sold). */
 export type CardListing = Pick<SearchHit, 'id' | 'title' | 'priceNok' | 'category' | 'image'> & {
@@ -32,10 +26,10 @@ export async function ListingCard({ hit }: { hit: CardListing }) {
     getLocale(),
     favouriteIds(),
   ]);
-  const NoPhoto = CATEGORY_ICONS[hit.category] ?? ImageOff;
+  const NoPhoto = CATEGORY_ICONS[hit.category as Category] ?? ImageOff;
   return (
     <div className="relative flex w-full">
-      <FavouriteButton listingId={hit.id} initial={favourites.has(hit.id)} />
+      <FavouriteButton listingId={hit.id} title={hit.title} initial={favourites.has(hit.id)} />
       <Link
         href={`/listings/${hit.id}`}
         className="group flex w-full flex-col gap-2.5 rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
@@ -62,21 +56,21 @@ export async function ListingCard({ hit }: { hit: CardListing }) {
           )}
           {hit.sold ? (
             <span
-              className="absolute left-3 top-3 rounded-full bg-ink px-2.5 py-1 text-xs font-bold text-ink-foreground"
+              className="absolute start-3 top-3 rounded-full bg-ink px-2.5 py-1 text-xs font-bold text-ink-foreground"
               data-testid="listing-card-sold"
             >
               {t('listing.sold')}
             </span>
           ) : hit.promoted ? (
             <span
-              className="absolute left-3 top-3 rounded-full bg-highlight px-2.5 py-1 text-xs font-bold text-highlight-foreground"
+              className="absolute start-3 top-3 rounded-full bg-highlight px-2.5 py-1 text-xs font-bold text-highlight-foreground"
               data-testid="listing-card-promoted"
             >
               {t('listing.promoted')}
             </span>
           ) : null}
           <p
-            className="glass absolute bottom-2.5 left-2.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums sm:bottom-3 sm:left-3 sm:py-1.5 sm:text-base"
+            className="glass absolute bottom-2.5 start-2.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums sm:bottom-3 sm:start-3 sm:py-1.5 sm:text-base"
             data-testid="listing-card-price"
           >
             {hit.priceNok === null ? t('listing.noPrice') : formatPrice(hit.priceNok, locale)}

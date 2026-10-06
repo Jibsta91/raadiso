@@ -15,7 +15,7 @@ import {
   RouteSpanInterceptor,
 } from '@raadi/service-kit';
 import { LoggerModule } from 'nestjs-pino';
-import { AuditAdminController, AuditController, AuditService } from './audit/audit.js';
+import { AuditAdminController, AuditService } from './audit/audit.js';
 import { AuditWorkers } from './audit/workers.js';
 import type { AppConfig } from './config.js';
 import { Lifecycle } from './lifecycle.js';
@@ -48,7 +48,7 @@ export class AppModule {
           skipIf: (ctx) => ctx.getClass() === HealthController,
         }),
       ],
-      controllers: [AuditController, AuditAdminController, HealthController],
+      controllers: [AuditAdminController, HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
         { provide: PG_POOL, useFactory: () => createPgPool(env, secrets.db_password, 'audit') },
