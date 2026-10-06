@@ -3,7 +3,7 @@
 # Runtime configuration is read from the environment at request time, so the
 # same image runs locally, in staging and in production.
 
-FROM --platform=$BUILDPLATFORM node:24.21.0-trixie-slim AS base
+FROM --platform=$BUILDPLATFORM node:24.21.0-trixie-slim@sha256:173f125896c3b47ddf056734c7ea789d04595a6a08769a8f78e0df642781fb66 AS base
 RUN npm install -g pnpm@10.34.6 turbo@2.11.6 >/dev/null 2>&1
 ENV PNPM_HOME=/pnpm CI=true TURBO_TELEMETRY_DISABLED=1 NEXT_TELEMETRY_DISABLED=1
 WORKDIR /repo

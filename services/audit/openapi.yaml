@@ -38,6 +38,12 @@ paths:
             description: Only entries older than this (the previous page's last `at`),
             schema: { type: string, format: date-time },
           }
+        - name: after
+          in: query
+          description: >-
+            The next page: entries after this one, newest first (the previous page's last `id`). Exact
+            where `before` is not (entries can share a time).
+          schema: { type: string, format: uuid }
         - {
             name: limit,
             in: query,

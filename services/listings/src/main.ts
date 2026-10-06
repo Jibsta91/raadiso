@@ -7,9 +7,11 @@ import {
   installGracefulShutdown,
   noStoreByDefault,
   requestId,
+  startEventTableJanitor,
 } from '@raadi/service-kit';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module.js';
+import { PG_POOL } from './tokens.js';
 import { loadAppConfig } from './config.js';
 
 async function bootstrap(): Promise<void> {
@@ -32,6 +34,8 @@ async function bootstrap(): Promise<void> {
     drainMs: cfg.env.SHUTDOWN_DRAIN_MS,
     log: (msg) => logger.log(msg),
   });
+  // Old outbox and processed_events rows: no endless growth, no stale personal data.
+  startEventTableJanitor(app.get(PG_POOL), { log: (obj, msg) => logger.log(obj, msg) });
   await app.listen(cfg.env.PORT, '0.0.0.0');
   logger.log(`listings listening on :${cfg.env.PORT}`);
 }

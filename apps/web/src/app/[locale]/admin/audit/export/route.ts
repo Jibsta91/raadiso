@@ -35,9 +35,9 @@ export async function GET(req: Request): Promise<Response> {
       'id',
     ],
   ].map((r) => r.map(csvCell).join(','));
-  let before: string | undefined;
+  let after: string | undefined;
   for (let n = 0; n < MAX;) {
-    const page = await adminAudit({ ...filters, ...(before ? { before } : {}), limit: 200 });
+    const page = await adminAudit({ ...filters, ...(after ? { after } : {}), limit: 200 });
     for (const e of page.items) {
       rows.push(
         [
@@ -58,7 +58,7 @@ export async function GET(req: Request): Promise<Response> {
     }
     n += page.items.length;
     if (!page.hasMore || !page.items.length) break;
-    before = page.items.at(-1)!.at;
+    after = page.items.at(-1)!.id;
   }
   const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
   return new Response(`${rows.join('\r\n')}\r\n`, {

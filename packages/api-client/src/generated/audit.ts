@@ -161,6 +161,8 @@ export interface operations {
                 targetId?: string;
                 /** @description Only entries older than this (the previous page's last `at`) */
                 before?: string;
+                /** @description The next page: entries after this one, newest first (the previous page's last `id`). Exact where `before` is not (entries can share a time). */
+                after?: string;
                 limit?: number;
             };
             header?: never;

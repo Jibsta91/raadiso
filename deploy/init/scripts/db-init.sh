@@ -91,9 +91,12 @@ CREATE TABLE IF NOT EXISTS public.cdc_heartbeat (id int PRIMARY KEY, beat_at tim
 INSERT INTO public.cdc_heartbeat VALUES (1, now()) ON CONFLICT (id) DO NOTHING;
 SELECT format('GRANT SELECT, UPDATE ON public.cdc_heartbeat TO %I', :'role')
 \gexec
-SELECT 'CREATE PUBLICATION dbz_outbox FOR TABLE public.outbox'
+SELECT 'CREATE PUBLICATION dbz_outbox FOR TABLE public.outbox WITH (publish = ''insert'')'
  WHERE NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'dbz_outbox')
 \gexec
+-- Only inserts are events. The services prune old outbox rows (startEventTableJanitor); those deletes
+-- must not reach Debezium, whose outbox router would warn about each one.
+ALTER PUBLICATION dbz_outbox SET (publish = 'insert');
 SQL
   info "database ${db} published for CDC (outbox)"
 done

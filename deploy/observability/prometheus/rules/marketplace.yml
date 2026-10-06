@@ -12,6 +12,32 @@ groups:
           summary: '{{ $value }} new events went to raadi.dlq in the last 15 minutes'
           description: A consumer gave up on events it can never process (contract violation or bad reference).
           runbook_url: docs/runbooks/event-pipeline.md
+      # The outbox relay (Debezium). It writes a heartbeat every minute, so an attached connector keeps
+      # its slot close to the WAL's end; postgres keeps at most 2 GB for a slot (max_slot_wal_keep_size),
+      # after which the slot is lost and events with it.
+      - alert: OutboxRelayStalled
+        expr: min by (slot_name) (raadi_cdc_slot_active) == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Debezium is not reading {{ $labels.slot_name }}: that service's events stop"
+          description: No connector is attached to the replication slot, so no outbox event of that database reaches Kafka.
+          runbook_url: docs/runbooks/event-pipeline.md
+      - alert: OutboxRelayLagging
+        expr: max by (slot_name) (raadi_cdc_slot_lag_bytes) > 512 * 1024 * 1024
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: '{{ $labels.slot_name }} is {{ $value | humanize1024 }}B behind the WAL'
+          description: At 2 GB PostgreSQL drops the slot and its unread events; fix the connector before that.
+          runbook_url: docs/runbooks/event-pipeline.md
+      - alert: OutboxRelayUnmonitored
+        expr: absent(raadi_cdc_slot_active)
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: Replication slot metrics are missing (collector's sql_query/cdc receiver)
+          runbook_url: docs/runbooks/event-pipeline.md
       - alert: ConsumerLagHigh
         expr: max by (group, topic) (kafka_consumer_group_lag_sum_ratio) > 500
         for: 10m

@@ -39,7 +39,7 @@ services:
         limits: { memory: 512M, cpus: '2.0' }
 
   valkey:
-    image: valkey/valkey:9.1.2-alpine3.24
+    image: valkey/valkey:9.1.2-alpine3.24@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11
     restart: unless-stopped
     logging: *logging
     user: '999:1000'
@@ -82,7 +82,7 @@ services:
         limits: { memory: 128M, cpus: '0.5' }
 
   openbao:
-    image: openbao/openbao:2.7.1
+    image: openbao/openbao:2.7.1@sha256:6d2b93856e3fcf7b18ad855a0b51eaba474dc8b79cf554379ea32034797d2acf
     command: ['server']
     restart: unless-stopped
     logging: *logging
@@ -105,7 +105,7 @@ services:
         limits: { memory: 256M, cpus: '0.5' }
 
   mailpit:
-    image: axllent/mailpit:v1.31.3
+    image: axllent/mailpit:v1.31.3@sha256:ed9b00c609e77e99c79b93f1178255ebc271868920f2c69a8d166bd5634ed10d
     restart: unless-stopped
     logging: *logging
     user: '65532:65532'
