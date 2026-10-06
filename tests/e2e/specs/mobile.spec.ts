@@ -13,12 +13,13 @@ test('app: search, open a listing, sign in, my listings, log out back to the app
   await page.goto('/m/');
   await expect(page.getByTestId('tab-bar')).toBeVisible();
 
-  await page.getByTestId('tab-search').click();
-  await expect(page).toHaveURL(/\/m\/search/);
-  await page.getByTestId('search-input').fill('Kawasaki');
-  await page.getByTestId('search-input').press('Enter');
+  // Search lives in the home screen's pinned bar (the tab bar has Notifications instead).
+  await expect(page.getByTestId('tab-notifications')).toBeVisible();
+  await expect(page.getByTestId('tab-search')).toHaveCount(0);
+  await page.getByTestId('home-search').fill('Kawasaki');
+  await page.getByTestId('home-search').press('Enter');
   await expect(page).toHaveURL(/\/m\/search\?q=Kawasaki/);
-  // Tab screens stay mounted: scope to the search screen, not the home tab underneath.
+  // Scope to the search screen, not the home screen underneath.
   const card = page.getByTestId('search-results').getByTestId('listing-card').first();
   await expect(card).toBeVisible();
   await card.click();

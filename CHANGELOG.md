@@ -70,6 +70,9 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- The app's tab bar is Home · Alerts · Sell · Messages · Account: Sell sits in the middle, and the in-app
+  notifications are a tab with an unread badge. Search left the tab bar: the home screen's search field and
+  categories stay pinned at the top while the listings scroll underneath, and search opens as its own screen.
 - Licensing policy (ADR-0009, amended): every component must be free of charge and run offline, OSI first.
   Free licences that allow commercial use (BSL, SSPL, Elastic, Llama/Gemma) are allowed and recorded; free
   non-commercial ones only until Phase 5. Previously only OSI-approved licences were allowed.
@@ -99,6 +102,10 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- Photo uploads from the app failed. Expo's fetch rejected the app's file part (uploads now use React
+  Native's XMLHttpRequest), and the gateway answered 500 to any upload over 1 MB: its upload buffer could not
+  write to the read-only container (Traefik now has a small in-memory /tmp). iPhone HEIC photos are sent as
+  JPEG.
 - Stored photos lost their GPS position and camera details but kept copyright tags, which often name the
   photographer; imgproxy now drops them too (`IMGPROXY_KEEP_COPYRIGHT=false`), with a test.
 - Tests: smoke suspends and locks out a test-only account (`smoke-target@`) instead of a demo user; e2e tests
