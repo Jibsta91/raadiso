@@ -25,7 +25,7 @@ ADR-0018, ADR-0020, ADR-0028, ADR-0030, ADR-0031, ADR-0032, and the code under r
 - **Privacy:** no personal data in logs or events, data minimisation, export and erasure for every store (the
   GDPR table in the roadmap), retention timers, and a DPIA for high-risk processing such as AI scoring and
   identity checks.
-- **Supply chain:** exact pins, OSI licences, `./raadi security` (Trivy, Gitleaks, OSV-Scanner),
+- **Supply chain:** exact pins, licences per ADR-0009, `./raadi security` (Trivy, Gitleaks, OSV-Scanner),
   `./raadi iac-scan` (Checkov) and `./raadi licenses`, each as a separate call.
 - **Many countries (ADR-0032):** GDPR stays the baseline everywhere. The legal-advisor lists each launch
   country's legal duties (privacy law, data residency, age limits, consumer rules, the EU Digital Services Act,

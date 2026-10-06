@@ -86,5 +86,6 @@ percolator if checking them becomes a cost ([ADR-0026](adr/0026-favourites-and-s
   through tool calls and output handling go into the threat model, with guardrail tests.
 - Somali and Norwegian quality: an evaluation set per language for every model-backed feature, tracked in
   Langfuse or MLflow.
-- Python dependencies get the license gate ([ADR-0009](adr/0009-open-source-licensing-policy.md)); LiteLLM and
-  Langfuse only in their OSI-licensed form.
+- Python dependencies and model weights get the license gate ([ADR-0009](adr/0009-open-source-licensing-policy.md),
+  amended 2026-10-05): free non-OSI models are allowed and recorded, non-commercial ones only until Phase 5.
+  LiteLLM and Langfuse without their enterprise directories.
