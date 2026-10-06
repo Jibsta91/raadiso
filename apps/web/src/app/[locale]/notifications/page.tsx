@@ -65,7 +65,7 @@ export default async function NotificationsPage({
                 </p>
                 <time
                   dateTime={n.createdAt}
-                  className={`text-xs text-muted-foreground ${n.read ? '' : 'pl-4'}`}
+                  className={`text-xs text-muted-foreground ${n.read ? '' : 'ps-4'}`}
                 >
                   {format.relativeTime(new Date(n.createdAt))}
                 </time>

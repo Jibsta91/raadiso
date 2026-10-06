@@ -45,6 +45,10 @@ test('owner is notified in the app when a moderator removes their listing', asyn
   await expect(owner.getByTestId('nav-alerts')).toBeVisible();
   await owner.getByTestId('notification-item').filter({ hasText: title }).click();
   await expect(owner).toHaveURL(/\/en\/my\/listings$/);
+  // The listing is still in their list, marked as removed, with the moderator's reason.
+  const removed = owner.getByTestId('my-listings').getByRole('listitem').filter({ hasText: title });
+  await expect(removed.getByTestId('my-listing-removed')).toHaveText('Removed by Raadiso');
+  await expect(removed.getByTestId('my-listing-removal')).toContainText('fraud or a scam');
 
   // Message alert preferences save immediately.
   await owner.goto('/en/notifications');

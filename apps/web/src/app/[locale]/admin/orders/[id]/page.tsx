@@ -152,9 +152,9 @@ export default async function OrderPage({
         </Panel>
       </div>
       <Panel title={t('timeline')} icon={CircleDot} testId="order-timeline">
-        <ol className="relative space-y-4 border-l pl-5">
+        <ol className="relative space-y-4 border-s ps-5">
           <li className="relative text-sm">
-            <span className="absolute -left-[26px] top-1 size-3 rounded-full border-2 border-background bg-muted-foreground" />
+            <span className="absolute -start-[26px] top-1 size-3 rounded-full border-2 border-background bg-muted-foreground" />
             <p className="font-medium">{t('status.created')}</p>
             <p className="text-xs text-muted-foreground">
               <Ago at={o.createdAt} />
@@ -162,7 +162,7 @@ export default async function OrderPage({
           </li>
           {o.events.map((e, i) => (
             <li key={i} className="relative text-sm">
-              <span className="absolute -left-[26px] top-1 size-3 rounded-full border-2 border-background bg-primary" />
+              <span className="absolute -start-[26px] top-1 size-3 rounded-full border-2 border-background bg-primary" />
               <p className="font-medium">
                 {t(`status.${e.to}` as never)}{' '}
                 <span className="text-muted-foreground">· {t(`sources.${e.source}` as never)}</span>
@@ -176,7 +176,7 @@ export default async function OrderPage({
             const actor = names.get(e.actor.id);
             return (
               <li key={e.id} className="relative text-sm">
-                <span className="absolute -left-[26px] top-1 size-3 rounded-full border-2 border-background bg-destructive" />
+                <span className="absolute -start-[26px] top-1 size-3 rounded-full border-2 border-background bg-destructive" />
                 <p className="font-medium">
                   {ta(`actionNames.${e.action.replace(/\./g, '_')}` as never)}
                 </p>

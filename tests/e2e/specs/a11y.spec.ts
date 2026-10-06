@@ -25,7 +25,10 @@ async function audit(page: Page, name: string) {
 
 const PUBLIC_PAGES = [
   ['front page', '/en'],
+  // "sykkel" finds the compound words (Terrengsykkel); the second search finds nothing on purpose.
   ['search', '/en/search?q=sykkel'],
+  ['search without results', '/en/search?q=zzqxv&category=bil'],
+  ['search (Norwegian)', '/nb/search?q=sykkel'],
   ['category', '/en/bil'],
   ['status', '/en/status'],
   ['terms', '/en/terms'],

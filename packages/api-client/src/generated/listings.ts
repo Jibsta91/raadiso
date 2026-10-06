@@ -491,6 +491,11 @@ export interface components {
              * @description End of a running paid promotion; null when not promoted (ADR-0020)
              */
             promotedUntil: string | null;
+            /** @description On the owner's own list only - a moderator removed the listing, and why */
+            removal?: {
+                /** @enum {string|null} */
+                reason: "fraud" | "prohibited" | "offensive" | "wrong_category" | "duplicate" | "spam" | "other" | null;
+            };
             viewer?: {
                 isOwner: boolean;
                 canEdit: boolean;
@@ -617,6 +622,8 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                /** @description Also listings a moderator removed in the last 90 days, with `removal` */
+                removed?: "true" | "false";
             };
             header?: never;
             path?: never;

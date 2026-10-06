@@ -97,6 +97,13 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- Search finds the last part of Norwegian compound words ("sykkel" finds "Terrengsykkel"), typo tolerance no
+  longer matches unrelated words, and an empty search offers to search everywhere or pick a category.
+- The website: translated error pages, title and price first on listing pages on phones, a full-screen photo
+  gallery with swipe and arrow keys, a share button, search controls that work before the page's script has
+  loaded, translated and accessible form errors, and owners see why a moderator removed their listing.
+- SEO basics: `robots.txt`, a sitemap, canonical and language links, link previews and product data.
+- Public pages no longer download the admin console's text; layout classes are right-to-left ready.
 - Keycloak's admin console (`auth.<domain>/admin/`) stayed blank: the gateway sent `X-Frame-Options: DENY` on
   Keycloak's pages, which blocked the console's own same-origin frames. Keycloak's routes now allow same-origin
   framing, as Keycloak itself does; the website still cannot be framed.

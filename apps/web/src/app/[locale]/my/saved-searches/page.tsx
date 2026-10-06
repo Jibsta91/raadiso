@@ -101,7 +101,7 @@ export default async function SavedSearchesPage({
                   ) : null}
                   <ChevronRight
                     aria-hidden
-                    className="ml-auto size-4 shrink-0 text-muted-foreground sm:hidden"
+                    className="ms-auto size-4 shrink-0 text-muted-foreground sm:hidden"
                   />
                 </span>
                 <span className="flex flex-wrap gap-1.5">

@@ -83,8 +83,8 @@ export class ListingsService {
     };
   }
 
-  async mine(principal: Principal, limit: number, offset: number) {
-    const { rows, total } = await this.repo.listByOwner(principal.sub, limit, offset);
+  async mine(principal: Principal, limit: number, offset: number, withRemoved = false) {
+    const { rows, total } = await this.repo.listByOwner(principal.sub, limit, offset, withRemoved);
     return { total, limit, offset, items: rows.map((r) => toListing(r, this.signer)) };
   }
 

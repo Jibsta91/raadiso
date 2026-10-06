@@ -252,7 +252,7 @@ export default async function ListingPage({
                           <span className="size-7 rounded-md bg-placeholder" />
                         )}
                         <span className="truncate">{o.title}</span>
-                        <Pill tone={o.status === 'active' ? 'good' : 'neutral'} className="ml-auto">
+                        <Pill tone={o.status === 'active' ? 'good' : 'neutral'} className="ms-auto">
                           {t(`status.${o.status}`)}
                         </Pill>
                       </Link>
@@ -282,12 +282,12 @@ export default async function ListingPage({
                         >
                           {t(`reportStatus.${r.status}`)}
                         </Pill>
-                        <span className="ml-auto text-xs text-muted-foreground">
+                        <span className="ms-auto text-xs text-muted-foreground">
                           <Ago at={r.createdAt} />
                         </span>
                       </p>
                       {r.comment ? (
-                        <p className="border-l-2 pl-3 text-subtle-foreground">{r.comment}</p>
+                        <p className="border-s-2 ps-3 text-subtle-foreground">{r.comment}</p>
                       ) : null}
                       {r.handledAt ? (
                         <p className="text-xs text-muted-foreground">

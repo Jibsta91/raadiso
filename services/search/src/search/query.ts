@@ -56,13 +56,32 @@ export function buildSearch(p: SearchParams) {
 
   if (p.q) {
     must.push({
-      multi_match: {
-        query: p.q,
-        fields: ['title^3', 'title.std^2', 'description'],
-        type: 'best_fields',
-        operator: 'and',
-        fuzziness: 'AUTO',
-        prefix_length: 1,
+      bool: {
+        should: [
+          {
+            multi_match: {
+              query: p.q,
+              fields: ['title^3', 'title.std^2', 'description'],
+              type: 'best_fields',
+              operator: 'and',
+              // One typo up to seven letters, two from eight: with AUTO's two edits at six letters,
+              // "sykler" matched "stoler".
+              fuzziness: 'AUTO:4,8',
+              prefix_length: 1,
+            },
+          },
+          // The last part of a compound word: "sykkel" finds "Terrengsykkel". Exact, so it adds hits
+          // without the noise fuzziness would bring on word endings.
+          {
+            multi_match: {
+              query: p.q,
+              fields: ['title.suffix^2', 'description.suffix'],
+              type: 'best_fields',
+              operator: 'and',
+            },
+          },
+        ],
+        minimum_should_match: 1,
       },
     });
   }

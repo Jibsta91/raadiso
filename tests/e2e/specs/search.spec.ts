@@ -11,6 +11,24 @@ test('full-text search from the front page tolerates typos', async ({ page }) =>
   await expect(page.getByTestId('listing-card-title').first()).toContainText(/langrenn/i);
 });
 
+test('a word finds the compounds it ends; an empty search shows a way on', async ({ page }) => {
+  // Norwegian compounds put the main word last: "sykkel" finds "Terrengsykkel" (seed data).
+  await page.goto('/nb/search?q=sykkel');
+  await expect(
+    page
+      .getByTestId('listing-card-title')
+      .filter({ hasText: /sykkel/i })
+      .first(),
+  ).toBeVisible();
+
+  // Nothing matches in this category: search everywhere, or pick a category.
+  await page.goto('/en/search?q=sykkel&category=jobb');
+  await expect(page.getByTestId('result-count')).toHaveText('No results');
+  await page.getByTestId('search-everywhere').click();
+  await expect(page).toHaveURL(/\/en\/search\?q=sykkel$/);
+  await expect(page.getByTestId('listing-card-title').first()).toBeVisible();
+});
+
 test('sorting by price orders the results', async ({ page }) => {
   await page.goto('/en/search?category=torget');
   await page.getByTestId('sort').selectOption('price_asc');

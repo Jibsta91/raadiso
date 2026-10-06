@@ -6,6 +6,7 @@
   "nav": {
     "main": "Hovedmeny",
     "skip": "Hopp til innhold",
+    "breadcrumb": "Brødsmulesti",
     "status": "Status",
     "language": "Språk",
     "login": "Logg inn",
@@ -23,7 +24,8 @@
     "favourites": "Favoritter",
     "savedSearches": "Lagrede søk",
     "moderation": "Moderering",
-    "admin": "Admin"
+    "admin": "Admin",
+    "newAlerts": "{count, plural, one {# nytt varsel} other {# nye varsler}}"
   },
   "home": {
     "heroTitle": "Finn det. Selg det. <brand>Raadiso.</brand>",
@@ -173,6 +175,14 @@
     "terms": "Vilkår",
     "links": "Om Raadiso"
   },
+  "errors": {
+    "title": "Noe gikk galt",
+    "body": "Siden kunne ikke lastes akkurat nå. Prøv igjen om litt.",
+    "retry": "Prøv igjen",
+    "home": "Tilbake til forsiden",
+    "console": "Tilbake til konsollens start",
+    "loading": "Laster …"
+  },
   "notFound": {
     "title": "Fant ikke siden",
     "body": "Siden du leter etter finnes ikke.",
@@ -306,12 +316,16 @@
     "results": "{total, plural, =0 {Ingen treff} one {# treff} other {# treff}}",
     "noResults": "Ingen annonser passet til søket.",
     "noResultsHint": "Prøv færre ord eller fjern noen filtre.",
+    "searchEverywhere": "Søk i alle kategorier og steder etter «{q}»",
+    "controlsHint": "Resultatene endres med en gang du velger sted, avstand eller rekkefølge.",
+    "apply": "Bruk",
+    "nearMeFailed": "Vi fant ikke posisjonen din. Velg et sted i stedet.",
+    "browseCategories": "Eller se på en kategori",
     "filters": "Filtre",
     "clearFilters": "Fjern filtre",
     "price": "Pris",
     "priceMin": "Fra (kr)",
     "priceMax": "Til (kr)",
-    "apply": "Bruk",
     "location": "Sted",
     "near": "I nærheten av",
     "anywhere": "Hele Norge",
@@ -378,6 +392,14 @@
     "updated": "Oppdatert {date}",
     "images": "{count, plural, one {# bilde} other {# bilder}}",
     "imageAlt": "Bilde {n} av {count}: {title}",
+    "gallery": "bildegalleri",
+    "previousImage": "Forrige bilde",
+    "nextImage": "Neste bilde",
+    "openImage": "Vis bilde {n} av {count} i fullskjerm",
+    "closeImage": "Lukk bildet",
+    "imagePosition": "{n} / {count}",
+    "share": "Del",
+    "shareCopied": "Lenken er kopiert",
     "yours": "Din annonse",
     "edit": "Rediger",
     "markSold": "Marker som solgt",
@@ -433,6 +455,16 @@
         "invalid_image": "Filen kunne ikke leses som et bilde.",
         "too_large": "Bildet er større enn 10 MB.",
         "generic": "Bildet kunne ikke lastes opp."
+      },
+      "fields": {
+        "category": "Velg en kategori.",
+        "subcategory": "Velg en underkategori.",
+        "title": "Skriv en tittel på 3 til 120 tegn.",
+        "description": "Skriv en beskrivelse (høyst 5 000 tegn).",
+        "priceNok": "Skriv prisen i hele kroner, eller la feltet stå tomt.",
+        "placeId": "Velg hvor tingen er.",
+        "attributes": "Sjekk denne opplysningen.",
+        "generic": "Sjekk dette feltet."
       }
     },
     "pickCategory": "Hva vil du legge ut?",
@@ -461,7 +493,18 @@
     "create": "Lag din første annonse",
     "status": {
       "active": "Aktiv",
-      "sold": "Solgt"
+      "sold": "Solgt",
+      "removed": "Fjernet av Raadiso"
+    },
+    "removedBecause": "Årsak: {reason}. Vi har sendt deg en e-post med detaljer.",
+    "removalReasons": {
+      "fraud": "svindel",
+      "prohibited": "en forbudt vare",
+      "offensive": "støtende innhold",
+      "wrong_category": "feil kategori",
+      "duplicate": "en dobbel annonse",
+      "spam": "spam",
+      "other": "brudd på reglene våre"
     }
   },
   "messages": {
@@ -696,7 +739,8 @@
     "browse": "Finn noe å like",
     "add": "Lagre som favoritt",
     "remove": "Fjern fra favoritter",
-    "unavailable": "Favorittene er midlertidig utilgjengelige. Prøv igjen om litt."
+    "unavailable": "Favorittene er midlertidig utilgjengelige. Prøv igjen om litt.",
+    "toggle": "Favoritt: {title}"
   },
   "savedSearches": {
     "title": "Lagrede søk",

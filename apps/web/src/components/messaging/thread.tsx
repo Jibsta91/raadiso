@@ -168,7 +168,7 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
 
   return (
     <div className="flex flex-col gap-4" data-testid="thread" data-live={live}>
-      <div ref={list} className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto pr-1">
+      <div ref={list} className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto pe-1">
         {hasMore ? (
           <Button
             variant="ghost"
@@ -185,10 +185,10 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
               key={m.id}
               data-testid="thread-message"
               data-from={m.fromMe ? 'me' : 'them'}
-              className={`max-w-[80%] rounded-3xl px-4 py-2.5 ${m.fromMe ? 'self-end rounded-br-lg bg-primary text-primary-foreground' : 'self-start rounded-bl-lg border bg-card'}`}
+              className={`max-w-[80%] rounded-3xl px-4 py-2.5 ${m.fromMe ? 'self-end rounded-ee-lg bg-primary text-primary-foreground' : 'self-start rounded-es-lg border bg-card'}`}
             >
               <p className="whitespace-pre-line break-words">{m.body}</p>
-              <p className="mt-1 text-right text-xs opacity-70">
+              <p className="mt-1 text-end text-xs opacity-70">
                 <time dateTime={m.sentAt}>
                   {format.dateTime(new Date(m.sentAt), { dateStyle: 'short', timeStyle: 'short' })}
                 </time>

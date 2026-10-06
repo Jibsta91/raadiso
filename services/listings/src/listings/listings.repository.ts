@@ -14,7 +14,8 @@ import {
 
 const COLUMNS = `id, owner_id, seller_name, category, subcategory, title, description, price_nok,
   attributes, place_id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lon,
-  image_ids, status, version, created_at, updated_at, published_at, promoted_until`;
+  image_ids, status, version, created_at, updated_at, published_at, promoted_until, removed_by,
+  removal_reason`;
 
 export class VersionConflictError extends Error {}
 
@@ -42,15 +43,21 @@ export class ListingsRepository {
     ownerId: string,
     limit: number,
     offset: number,
+    withRemoved = false,
   ): Promise<{ rows: ListingRow[]; total: number }> {
+    // The owner sees what a moderator removed for 90 days, with the reason (DSA Art. 17); what they
+    // deleted themselves is gone.
+    const visible = withRemoved
+      ? `(status <> 'deleted' OR (removed_by = 'moderation' AND updated_at > now() - interval '90 days'))`
+      : `status <> 'deleted'`;
     const [page, count] = await Promise.all([
       this.pool.query<ListingRow>(
-        `SELECT ${COLUMNS} FROM listings WHERE owner_id = $1 AND status <> 'deleted'
+        `SELECT ${COLUMNS} FROM listings WHERE owner_id = $1 AND ${visible}
           ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
         [ownerId, limit, offset],
       ),
       this.pool.query<{ n: string }>(
-        `SELECT count(*) AS n FROM listings WHERE owner_id = $1 AND status <> 'deleted'`,
+        `SELECT count(*) AS n FROM listings WHERE owner_id = $1 AND ${visible}`,
         [ownerId],
       ),
     ]);

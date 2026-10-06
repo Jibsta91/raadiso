@@ -370,7 +370,7 @@ export default async function OperationsPage({ params }: { params: Promise<{ loc
                   <p className="flex items-center gap-2">
                     <Pill tone={a.severity === 'critical' ? 'bad' : 'warn'}>{a.severity}</Pill>
                     <span className="font-semibold">{a.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
+                    <span className="ms-auto text-xs text-muted-foreground">
                       <Ago at={a.startsAt} />
                     </span>
                   </p>

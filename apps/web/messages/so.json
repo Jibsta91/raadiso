@@ -6,6 +6,7 @@
   "nav": {
     "main": "Liiska ugu muhiimsan",
     "skip": "U gudub nuxurka",
+    "breadcrumb": "Jidka bogga",
     "status": "Xaaladda",
     "language": "Luqadda",
     "login": "Gal",
@@ -23,7 +24,8 @@
     "favourites": "Kuwa aan jeclahay",
     "savedSearches": "Raadinta la keydiyay",
     "moderation": "Maamul",
-    "admin": "Maamul"
+    "admin": "Maamul",
+    "newAlerts": "{count, plural, one {# ogeysiis cusub} other {# ogeysiisyo cusub}}"
   },
   "home": {
     "heroTitle": "<brand>Raadiso.</brand> Hel. Iibi.",
@@ -173,6 +175,14 @@
     "terms": "Shuruudaha",
     "links": "Ku saabsan Raadiso"
   },
+  "errors": {
+    "title": "Wax baa khaldamay",
+    "body": "Boggan hadda lama soo shubi karo. Isku day mar kale dhowaan.",
+    "retry": "Isku day mar kale",
+    "home": "Ku noqo bogga hore",
+    "console": "Ku noqo bilowga konsoolka",
+    "loading": "Waa la soo shubayaa…"
+  },
   "notFound": {
     "title": "Bogga lama helin",
     "body": "Bogga aad raadinayso ma jiro.",
@@ -306,12 +316,16 @@
     "results": "{total, plural, =0 {Wax natiijo ah ma jiraan} one {# natiijo} other {# natiijo}}",
     "noResults": "Wax xayeysiis ah oo raadintaada la jaanqaada lama helin.",
     "noResultsHint": "Isku day erayo yar ama ka saar shaandhooyinka qaarkood.",
+    "searchEverywhere": "Ka raadi «{q}» dhammaan qaybaha iyo meelaha",
+    "controlsHint": "Natiijooyinku way isbeddelaan isla markaad doorato meel, masaafo ama kala horrayn.",
+    "apply": "Codso",
+    "nearMeFailed": "Ma helin goobtaada. Dooro meel kale.",
+    "browseCategories": "Ama fiiri qayb",
     "filters": "Shaandhooyin",
     "clearFilters": "Tirtir shaandhooyinka",
     "price": "Qiimaha",
     "priceMin": "Laga bilaabo (kr)",
     "priceMax": "Ilaa (kr)",
-    "apply": "Codso",
     "location": "Goobta",
     "near": "Meel u dhow",
     "anywhere": "Noorweey oo dhan",
@@ -378,6 +392,14 @@
     "updated": "La cusboonaysiiyay {date}",
     "images": "{count, plural, one {# sawir} other {# sawirro}}",
     "imageAlt": "Sawirka {n} ee {count}: {title}",
+    "gallery": "sawirada",
+    "previousImage": "Sawirkii hore",
+    "nextImage": "Sawirka xiga",
+    "openImage": "Muuji sawirka {n} ee {count} shaashad buuxda",
+    "closeImage": "Xir sawirka",
+    "imagePosition": "{n} / {count}",
+    "share": "La wadaag",
+    "shareCopied": "Xiriirka waa la koobiyeeyay",
     "yours": "Xayeysiiskaaga",
     "edit": "Wax ka beddel",
     "markSold": "U calaamadee la iibiyay",
@@ -433,6 +455,16 @@
         "invalid_image": "Faylka looma akhrin karo sawir ahaan.",
         "too_large": "Sawirku wuu ka weyn yahay 10 MB.",
         "generic": "Sawirka lama soo gelin karin."
+      },
+      "fields": {
+        "category": "Dooro qayb.",
+        "subcategory": "Dooro qayb-hoosaad.",
+        "title": "Qor cinwaan u dhexeeya 3 ilaa 120 xaraf.",
+        "description": "Qor sharaxaad (ugu badnaan 5,000 xaraf).",
+        "priceNok": "Geli qiimaha karoonno dhan, ama banaan ka dhig.",
+        "placeId": "Dooro meesha shaygu yaal.",
+        "attributes": "Hubi xogtan.",
+        "generic": "Hubi goobtan."
       }
     },
     "pickCategory": "Maxaad rabtaa inaad soo dhigto?",
@@ -461,7 +493,18 @@
     "create": "Samee xayeysiiskaagii ugu horreeyay",
     "status": {
       "active": "Firfircoon",
-      "sold": "La iibiyay"
+      "sold": "La iibiyay",
+      "removed": "Raadiso ayaa ka saaray"
+    },
+    "removedBecause": "Sababta: {reason}. Waxaan kuu dirnay iimayl faahfaahin leh.",
+    "removalReasons": {
+      "fraud": "khiyaano",
+      "prohibited": "shay mamnuuc ah",
+      "offensive": "waxyaabo aflagaado ah",
+      "wrong_category": "qayb khaldan",
+      "duplicate": "xayeysiis labanlaaban",
+      "spam": "spam",
+      "other": "jebinta xeerarkayaga"
     }
   },
   "messages": {
@@ -696,7 +739,8 @@
     "browse": "Raadi wax aad jeceshahay",
     "add": "U keydi kuwa aad jeceshahay",
     "remove": "Ka saar kuwa aad jeceshahay",
-    "unavailable": "Kuwa aad jeceshahay hadda lama heli karo. Fadlan dib isku day dhowaan."
+    "unavailable": "Kuwa aad jeceshahay hadda lama heli karo. Fadlan dib isku day dhowaan.",
+    "toggle": "Kuwa aad jeceshahay: {title}"
   },
   "savedSearches": {
     "title": "Raadinta la keydiyay",

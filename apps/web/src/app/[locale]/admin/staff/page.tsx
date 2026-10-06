@@ -98,7 +98,7 @@ export default async function StaffPage({
               <td className={`${td} whitespace-nowrap text-muted-foreground`}>
                 {s.lastLoginAt ? <Ago at={s.lastLoginAt} /> : t('never')}
                 {s.suspended ? (
-                  <Pill tone="bad" className="ml-2">
+                  <Pill tone="bad" className="ms-2">
                     {t('suspended')}
                   </Pill>
                 ) : null}

@@ -11,13 +11,24 @@ import {
 import { Button } from '@raadi/ui';
 import { Check, ImagePlus, Loader2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type FormEvent, type ReactNode, useId, useState } from 'react';
+import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { CATEGORY_ICONS, SUBCATEGORY_ICONS } from '@/lib/taxonomy-icons';
 
 const FIELDS = ATTRIBUTE_FIELDS;
 
 const PLACES_BY_NAME = [...PLACES].sort((a, b) => a.name.localeCompare(b.name, 'nb'));
+/** Fields with their own error text (form.errors.fields); the rest get a general one. */
+const FIELD_MESSAGES = [
+  'category',
+  'subcategory',
+  'title',
+  'description',
+  'priceNok',
+  'placeId',
+  'attributes',
+];
+
 const POLICY_CODES = [
   'quota_exceeded',
   'price_above_ceiling',
@@ -140,7 +151,8 @@ export function ListingForm({
       if (policy) return setFormError(t(`form.errors.policy.${policy.code}` as never));
       const fieldErrors: Record<string, string> = {};
       for (const err of problem.errors ?? []) {
-        if (err.path) fieldErrors[err.path] = err.message ?? '';
+        // The server's messages are English and technical; each field has its own text.
+        if (err.path) fieldErrors[err.path] = fieldMessage(err.path);
       }
       setErrors(fieldErrors);
       setFormError(t('form.errors.validation'));
@@ -151,6 +163,28 @@ export function ListingForm({
     }
   }
 
+  function fieldMessage(path: string): string {
+    const field = path.startsWith('attributes.') ? 'attributes' : path;
+    return FIELD_MESSAGES.includes(field)
+      ? t(`form.errors.fields.${field}` as never)
+      : t('form.errors.fields.generic');
+  }
+
+  // After a failed save, focus the first field that needs attention (its message is read with it).
+  const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (Object.keys(errors).length === 0) return;
+    formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [errors]);
+
+  /** Marks a field invalid and ties its message (and any hint) to it, for screen readers. */
+  const invalid = (path: string, hintId?: string) => {
+    const described = [hintId, errors[path] ? `${id}-${path}-error` : undefined].filter(Boolean);
+    return {
+      ...(errors[path] ? { 'aria-invalid': true as const } : {}),
+      ...(described.length ? { 'aria-describedby': described.join(' ') } : {}),
+    };
+  };
   const fieldClass = (path: string) =>
     `field h-11 w-full px-4 ${errors[path] ? 'border-destructive' : 'border-input'}`;
   const hint = (path: string) =>
@@ -161,7 +195,13 @@ export function ListingForm({
     ) : null;
 
   return (
-    <form onSubmit={submit} className="space-y-6" noValidate data-testid="listing-form">
+    <form
+      ref={formRef}
+      onSubmit={submit}
+      className="space-y-6"
+      noValidate
+      data-testid="listing-form"
+    >
       {!category ? (
         <fieldset data-testid="pick-category" className="space-y-4">
           <legend className="mb-4 text-xl font-semibold">{t('form.pickCategory')}</legend>
@@ -199,7 +239,7 @@ export function ListingForm({
         </fieldset>
       ) : (
         <div
-          className="flex flex-wrap items-center gap-3 rounded-[1.5rem] border bg-card p-3 pl-4"
+          className="flex flex-wrap items-center gap-3 rounded-[1.5rem] border bg-card p-3 ps-4"
           data-testid="picked-category"
         >
           {(() => {
@@ -280,7 +320,7 @@ export function ListingForm({
                     className="aspect-[4/3] w-full rounded-2xl object-cover"
                   />
                   {n === 0 ? (
-                    <span className="absolute bottom-2 left-2 rounded-full bg-ink/85 px-2 py-0.5 text-[11px] font-semibold text-ink-foreground">
+                    <span className="absolute bottom-2 start-2 rounded-full bg-ink/85 px-2 py-0.5 text-[11px] font-semibold text-ink-foreground">
                       {t('form.mainImage')}
                     </span>
                   ) : null}
@@ -288,7 +328,7 @@ export function ListingForm({
                     type="button"
                     aria-label={t('form.removeImage')}
                     onClick={() => setImages((prev) => prev.filter((i) => i.id !== img.id))}
-                    className="absolute -right-2 -top-2 rounded-full bg-background p-1 shadow ring-1 ring-border"
+                    className="absolute -end-2 -top-2 rounded-full bg-background p-1 shadow ring-1 ring-border"
                   >
                     <X aria-hidden className="size-3" />
                   </button>
@@ -338,7 +378,7 @@ export function ListingForm({
                 defaultValue={listing?.title}
                 placeholder={t(`form.titlePlaceholder.${category}` as never)}
                 data-testid="field-title"
-                aria-describedby={`${id}-title-hint`}
+                {...invalid('title', `${id}-title-hint`)}
                 className={fieldClass('title')}
               />
               <span id={`${id}-title-hint`} className="text-xs text-muted-foreground">
@@ -355,6 +395,7 @@ export function ListingForm({
                 rows={6}
                 defaultValue={listing?.description}
                 data-testid="field-description"
+                {...invalid('description')}
                 className={`field w-full p-4 ${errors.description ? 'border-destructive' : 'border-input'}`}
               />
               {hint('description')}
@@ -380,6 +421,7 @@ export function ListingForm({
                         required={f.required}
                         value={attributes[f.key] ?? ''}
                         data-testid={`field-attr-${f.key}`}
+                        {...invalid(`attributes.${f.key}`)}
                         className={fieldClass(`attributes.${f.key}`)}
                         onChange={(e) => setAttributes((a) => ({ ...a, [f.key]: e.target.value }))}
                       >
@@ -400,7 +442,8 @@ export function ListingForm({
                           max={f.kind === 'number' ? f.max : undefined}
                           value={attributes[f.key] ?? ''}
                           data-testid={`field-attr-${f.key}`}
-                          className={`${fieldClass(`attributes.${f.key}`)} ${f.kind === 'number' && f.unit ? 'pr-12' : ''}`}
+                          {...invalid(`attributes.${f.key}`)}
+                          className={`${fieldClass(`attributes.${f.key}`)} ${f.kind === 'number' && f.unit ? 'pe-12' : ''}`}
                           onChange={(e) =>
                             setAttributes((a) => ({ ...a, [f.key]: e.target.value }))
                           }
@@ -434,7 +477,8 @@ export function ListingForm({
                       required
                       defaultValue={listing?.priceNok ?? undefined}
                       data-testid="field-price"
-                      className={`${fieldClass('priceNok')} pr-12`}
+                      {...invalid('priceNok')}
+                      className={`${fieldClass('priceNok')} pe-12`}
                     />
                     <span className={unitClass}>kr</span>
                   </span>
@@ -448,6 +492,7 @@ export function ListingForm({
                   required
                   defaultValue={listing?.location.placeId ?? ''}
                   data-testid="field-place"
+                  {...invalid('placeId')}
                   className={fieldClass('placeId')}
                 >
                   <option value="">{t('form.choosePlace')}</option>
@@ -489,11 +534,11 @@ export function ListingForm({
 }
 
 const tile =
-  'flex min-h-32 flex-col items-start justify-between gap-4 rounded-[1.6rem] border bg-card p-5 text-left transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+  'flex min-h-32 flex-col items-start justify-between gap-4 rounded-[1.6rem] border bg-card p-5 text-start transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 const tileIcon =
   'flex size-11 items-center justify-center rounded-2xl bg-soft text-soft-foreground';
 const unitClass =
-  'pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-muted-foreground';
+  'pointer-events-none absolute inset-y-0 end-4 flex items-center text-sm text-muted-foreground';
 
 /** A numbered form section on a card. */
 function Section({

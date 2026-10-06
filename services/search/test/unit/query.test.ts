@@ -92,12 +92,15 @@ describe('query builder', () => {
     ]);
   });
 
-  it('full text is fuzzy and boosts titles', () => {
+  it('full text is fuzzy and boosts titles, and also matches the ends of compound words', () => {
     const body = buildSearch(parse({ q: 'langrennski' }));
-    const mm = (body.query.bool.must[0] as { multi_match: { fields: string[]; fuzziness: string } })
-      .multi_match;
-    assert.equal(mm.fuzziness, 'AUTO');
-    assert.equal(mm.fields[0], 'title^3');
+    type MultiMatch = { multi_match: { fields: string[]; fuzziness?: string } };
+    const text = body.query.bool.must[0] as { bool: { should: MultiMatch[] } };
+    const [words, endings] = text.bool.should.map((c) => c.multi_match);
+    assert.equal(words!.fuzziness, 'AUTO:4,8');
+    assert.equal(words!.fields[0], 'title^3');
+    assert.deepEqual(endings!.fields, ['title.suffix^2', 'description.suffix']);
+    assert.equal(endings!.fuzziness, undefined);
   });
 
   it('applies a facet to the hits and to other facets, but not to its own counts', () => {

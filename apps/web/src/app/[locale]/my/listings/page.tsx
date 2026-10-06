@@ -24,8 +24,49 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
       `/auth/login?returnTo=${encodeURIComponent(`/${locale}/my/listings`)}&locale=${locale}`,
     );
   }
-  const [t, page, current] = await Promise.all([getTranslations(), myListings(), getLocale()]);
+  const [t, page, current] = await Promise.all([
+    getTranslations(),
+    myListings(50, 0, true),
+    getLocale(),
+  ]);
   const items = page?.items ?? [];
+
+  /** Photo, title, price and place, and the status (with why, if a moderator removed it). */
+  const content = (l: (typeof items)[number]) => (
+    <>
+      {/* A removed listing's photos are deleted soon after, so it shows the placeholder. */}
+      {l.images[0] && !l.removal ? (
+        <img src={l.images[0].urls.thumb} alt="" className="h-16 w-20 rounded-xl object-cover" />
+      ) : (
+        <div className="flex h-16 w-20 items-center justify-center rounded-xl bg-placeholder">
+          <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
+        </div>
+      )}
+      <div className="flex-1">
+        <p className="font-medium">{l.title}</p>
+        <p className="text-sm text-muted-foreground">
+          {l.priceNok === null ? t('listing.noPrice') : formatPrice(l.priceNok, current)} ·{' '}
+          {l.location.name}
+        </p>
+        {l.removal ? (
+          <p className="text-sm" data-testid="my-listing-removal">
+            {t('my.removedBecause', {
+              reason: t(`my.removalReasons.${l.removal.reason ?? 'other'}`),
+            })}
+          </p>
+        ) : null}
+      </div>
+      {l.removal ? (
+        <Badge variant="destructive" data-testid="my-listing-removed">
+          {t('my.status.removed')}
+        </Badge>
+      ) : (
+        <Badge variant={l.status === 'sold' ? 'secondary' : 'success'}>
+          {t(`my.status.${l.status === 'sold' ? 'sold' : 'active'}`)}
+        </Badge>
+      )}
+    </>
+  );
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -50,32 +91,17 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
         >
           {items.map((l) => (
             <li key={l.id}>
-              <Link
-                href={`/listings/${l.id}`}
-                className="flex items-center gap-4 p-3 hover:bg-accent"
-              >
-                {l.images[0] ? (
-                  <img
-                    src={l.images[0].urls.thumb}
-                    alt=""
-                    className="h-16 w-20 rounded-xl object-cover"
-                  />
-                ) : (
-                  <div className="flex h-16 w-20 items-center justify-center rounded-xl bg-placeholder">
-                    <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <p className="font-medium">{l.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {l.priceNok === null ? t('listing.noPrice') : formatPrice(l.priceNok, current)}{' '}
-                    · {l.location.name}
-                  </p>
-                </div>
-                <Badge variant={l.status === 'sold' ? 'secondary' : 'success'}>
-                  {t(`my.status.${l.status === 'sold' ? 'sold' : 'active'}`)}
-                </Badge>
-              </Link>
+              {/* A removed listing has no page any more: it shows here, with why, but links nowhere. */}
+              {l.removal ? (
+                <div className="flex items-center gap-4 p-3 opacity-90">{content(l)}</div>
+              ) : (
+                <Link
+                  href={`/listings/${l.id}`}
+                  className="flex items-center gap-4 p-3 hover:bg-accent"
+                >
+                  {content(l)}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
