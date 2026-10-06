@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  browserBindingMatches,
   isCsrfSafe,
   afterLoginPath,
   keycloakUiLocale,
+  loginCookieName,
+  newBrowserBinding,
   normaliseLocale,
   safeReturnTo,
 } from '../../src/auth/security.js';
@@ -61,4 +64,29 @@ describe('isCsrfSafe', () => {
   });
   it('rejects unsafe requests without any origin signal', () =>
     assert.ok(!isCsrfSafe('POST', {}, allowed)));
+});
+
+describe('login browser binding (login CSRF)', () => {
+  it('accepts the browser that started the login', () => {
+    const { secret, hash } = newBrowserBinding();
+    assert.ok(browserBindingMatches(secret, hash));
+  });
+  it('refuses another browser, a missing cookie or a transaction without a binding', () => {
+    const mine = newBrowserBinding();
+    const theirs = newBrowserBinding();
+    assert.ok(!browserBindingMatches(theirs.secret, mine.hash));
+    assert.ok(!browserBindingMatches(undefined, mine.hash));
+    assert.ok(!browserBindingMatches(mine.secret, undefined));
+    assert.ok(!browserBindingMatches(mine.secret, 'short'));
+  });
+  it('never stores the secret itself', () => {
+    const { secret, hash } = newBrowserBinding();
+    assert.notEqual(secret, hash);
+    assert.ok(secret.length >= 43);
+  });
+  it('names one cookie per login, safe for cookie names', () => {
+    const a = loginCookieName('raadi_sid', 'state-one-1234567890');
+    assert.match(a, /^raadi_sid_login_[0-9a-f]{16}$/);
+    assert.notEqual(a, loginCookieName('raadi_sid', 'state-two-1234567890'));
+  });
 });

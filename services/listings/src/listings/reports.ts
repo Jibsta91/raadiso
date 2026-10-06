@@ -1,9 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
-  BadRequestException,
   Body,
   Controller,
-  Get,
   HttpCode,
   Inject,
   Injectable,
@@ -12,7 +10,6 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
-  Query,
   Req,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -48,8 +45,6 @@ export const reportSchema = z
     comment: z.string().trim().max(500).default(''),
   })
   .strict();
-
-const queueQuerySchema = z.object({ limit: z.coerce.number().int().min(1).max(100).default(50) });
 
 /**
  * At most this many open reports per person (flooding the queue). Reports a moderator has handled
@@ -230,8 +225,6 @@ export class ReportsService implements OnModuleInit {
   }
 }
 
-const uuid = new ParseUUIDPipe({ version: undefined });
-
 @Controller('api/v1/listings')
 export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
@@ -243,25 +236,10 @@ export class ReportsController {
   @HttpCode(202)
   async report(
     @Req() req: AuthenticatedRequest,
-    @Param('id', uuid) id: string,
+    @Param('id', new ParseUUIDPipe({ version: undefined })) id: string,
     @Body(new ZodValidationPipe(reportSchema)) body: z.infer<typeof reportSchema>,
   ): Promise<{ received: true }> {
     await this.reports.report(req.principal!.sub, id, body);
     return { received: true };
-  }
-
-  @Get('moderation/reports')
-  @Roles('moderator')
-  queue(@Query(new ZodValidationPipe(queueQuerySchema)) q: { limit: number }) {
-    return this.reports.queue(q.limit);
-  }
-
-  /** The listing is fine: close its open reports. */
-  @Post('moderation/reports/:id/dismiss')
-  @Roles('moderator')
-  @HttpCode(204)
-  async dismiss(@Req() req: AuthenticatedRequest, @Param('id', uuid) id: string): Promise<void> {
-    const closed = await this.reports.dismiss(id, req.principal!);
-    if (!closed) throw new BadRequestException('No open reports for this listing');
   }
 }

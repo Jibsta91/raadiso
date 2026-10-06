@@ -19,8 +19,8 @@ export function websocketUrl(baseUrl: string, path: string): string {
 
 /** Only same-app paths may be used as a post-login destination. */
 export function safeAppPath(value: string | undefined, fallback: string): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//') || value.includes('\\')) {
-    return fallback;
-  }
-  return value;
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return fallback;
+  // Control characters too: URL parsers drop tabs and new lines, so "/\t/x" would become "//x".
+  // eslint-disable-next-line no-control-regex -- deliberately rejects control characters
+  return /[\u0000-\u001f\u007f\\]/.test(value) ? fallback : value;
 }

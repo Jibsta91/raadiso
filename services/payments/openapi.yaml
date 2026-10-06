@@ -102,23 +102,6 @@ paths:
               schema: { $ref: '#/components/schemas/Order' }
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
-  /api/v1/payments/orders/{id}/refund:
-    parameters:
-      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
-    post:
-      tags: [orders]
-      operationId: refundOrder
-      summary: Refund a captured order in full and end its promotion (platform admins)
-      responses:
-        '200':
-          description: Refunded
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Order' }
-        '401': { $ref: '#/components/responses/Problem' }
-        '403': { $ref: '#/components/responses/Problem' }
-        '404': { $ref: '#/components/responses/Problem' }
-        '409': { $ref: '#/components/responses/Problem' }
   /api/v1/payments/webhooks/{provider}:
     parameters:
       - {

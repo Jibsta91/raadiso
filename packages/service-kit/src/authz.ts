@@ -128,16 +128,6 @@ export class FgaClient {
   }
 }
 
-/** Contextual tuples that project Keycloak realm roles onto platform:raadi. */
-export function platformRoleTuples(sub: string, roles: string[]): TupleKey[] {
-  const tuples: TupleKey[] = [];
-  if (roles.includes('moderator'))
-    tuples.push({ user: `user:${sub}`, relation: 'moderator', object: 'platform:raadi' });
-  if (roles.includes('platform-admin'))
-    tuples.push({ user: `user:${sub}`, relation: 'admin', object: 'platform:raadi' });
-  return tuples;
-}
-
 // ---------------------------------------------------------------------------
 // OPA: policy decisions (ADR-0013)
 // ---------------------------------------------------------------------------

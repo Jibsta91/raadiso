@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { domain, login } from './support.js';
+import { adminBase, adminLogin, domain, login } from './support.js';
 
 test('owner is notified in the app when a moderator removes their listing', async ({ browser }) => {
   // The owner creates a listing (through the API, with the browser session).
@@ -23,13 +23,17 @@ test('owner is notified in the app when a moderator removes their listing', asyn
   expect(created.status()).toBe(201);
   const { id } = (await created.json()) as { id: string };
 
-  // A moderator removes it from the listing page.
+  // A moderator removes it in the admin console, with a reason (staff act only there, ADR-0030).
   const moderator = await browser.newPage();
-  await login(moderator, `moderator@${domain}`);
-  await moderator.goto(`/en/listings/${id}`);
-  moderator.once('dialog', (dialog) => void dialog.accept());
-  await moderator.getByTestId('delete-listing').click();
-  await expect(moderator).toHaveURL(/\/en\/my\/listings$/);
+  await adminLogin(moderator, `moderator@${domain}`);
+  await moderator.goto(`${adminBase}/en/admin/listings/${id}`);
+  await moderator.getByTestId('listing-remove').click();
+  await moderator
+    .getByTestId('listing-remove-dialog')
+    .getByText('Fraud or scam', { exact: true })
+    .click();
+  await moderator.getByTestId('listing-remove-submit').click();
+  await expect(moderator.getByTestId('toast').first()).toContainText('Listing removed');
 
   // The owner gets an in-app notification (via the event pipeline).
   await expect(async () => {

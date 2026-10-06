@@ -12,7 +12,6 @@ import {
   displayName,
   FgaClient,
   OpaClient,
-  platformRoleTuples,
   type ImgproxySigner,
   type Principal,
   type TupleKey,
@@ -170,33 +169,26 @@ export class ListingsService {
     if (!current || current.status === 'deleted') throw new NotFoundException('Listing not found');
     if (!(await this.can(principal, 'can_delete', id)))
       throw new ForbiddenException('You cannot delete this listing');
-    const byOwner = current.owner_id === principal.sub;
-    // A moderator's removal settles the listing's open reports and is audited (ADR-0027, ADR-0028).
-    await this.repo.softDelete(
-      id,
-      byOwner ? 'owner' : 'moderation',
-      byOwner ? undefined : principal,
-    );
+    // The public API is the owner's. Moderators remove listings in the console, with a reason and an
+    // audit entry (/admin/v1/listings/:id/remove, ADR-0030), so staff roles grant nothing here.
+    await this.repo.softDelete(id, 'owner');
     listingsWritten.add(1, { action: 'delete', category: current.category });
   }
 
   private async viewerFor(row: ListingRow, principal: Principal) {
-    const roles = platformRoleTuples(principal.sub, principal.roles);
-    const [canEdit, canDelete] = await this.fga.checkAll(
-      [
-        { user: `user:${principal.sub}`, relation: 'can_edit', object: `listing:${row.id}` },
-        { user: `user:${principal.sub}`, relation: 'can_delete', object: `listing:${row.id}` },
-      ],
-      roles,
-    );
+    const [canEdit, canDelete] = await this.fga.checkAll([
+      { user: `user:${principal.sub}`, relation: 'can_edit', object: `listing:${row.id}` },
+      { user: `user:${principal.sub}`, relation: 'can_delete', object: `listing:${row.id}` },
+    ]);
     return { isOwner: row.owner_id === principal.sub, canEdit: canEdit!, canDelete: canDelete! };
   }
 
   private can(principal: Principal, relation: string, listingId: string): Promise<boolean> {
-    return this.fga.check(
-      { user: `user:${principal.sub}`, relation, object: `listing:${listingId}` },
-      platformRoleTuples(principal.sub, principal.roles),
-    );
+    return this.fga.check({
+      user: `user:${principal.sub}`,
+      relation,
+      object: `listing:${listingId}`,
+    });
   }
 
   /** Only images the caller uploaded (and that passed scanning) may be attached. */

@@ -105,7 +105,7 @@ Compose network.
 | notifications (NestJS)             | 4000                    | /api/v1/notifications/\* (in-app, preferences); e-mail via SMTP         |
 | trust (NestJS)                     | 4000                    | /api/v1/trust/\* (reviews, profiles, BankID verification)               |
 | payments (NestJS)                  | 4000                    | /api/v1/payments/\* (promoted listings, provider webhooks)              |
-| saved · audit (NestJS)             | 4000 each               | /api/v1/saved/\* (favourites, saved searches) · /api/v1/audit           |
+| saved · audit (NestJS)             | 4000 each               | /api/v1/saved/\* (favourites, saved searches) · audit: console only     |
 | Admin console (web + admin-bff)    | 3000 · 4000             | http://admin.raadi.localhost (staff, one-time code)                     |
 | payments-mock · push-mock (dev)    | 4000 each               | http://pay.raadi.localhost/pay/… · http://push.raadi.localhost/messages |
 | Expo dev server (Metro)            | 8081                    | `./raadi phone` (Expo Go on the same Wi-Fi, docs/mobile.md)             |

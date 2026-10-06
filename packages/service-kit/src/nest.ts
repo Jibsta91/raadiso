@@ -7,6 +7,7 @@ import {
   type ExceptionFilter,
   type ExecutionContext,
   HttpException,
+  type INestApplication,
   HttpStatus,
   Injectable,
   type NestInterceptor,
@@ -22,7 +23,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { trace } from '@opentelemetry/api';
-import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Observable } from 'rxjs';
 import type { z } from 'zod';
 import { AuthzUnavailableError } from './authz.js';
@@ -106,7 +107,20 @@ export class ZodValidationPipe<S extends z.ZodType> implements PipeTransform {
 export const IS_PUBLIC = 'raadi:isPublic';
 export const ROLES = 'raadi:roles';
 export const Public = () => SetMetadata(IS_PUBLIC, true);
-export const Roles = (...roles: string[]) => SetMetadata(ROLES, roles);
+/** The staff roles (ADR-0028). They open staff endpoints only: @Staff, with a console token. */
+export const STAFF_ROLE_NAMES = ['moderator', 'support', 'operator', 'platform-admin'] as const;
+/**
+ * Roles for website and app routes. A staff role here would let a website session act as staff
+ * without the console token, step-up and reason that @Staff requires (ADR-0030), so it fails at
+ * startup instead.
+ */
+export const Roles = (...roles: string[]) => {
+  const staff = roles.filter((r) => (STAFF_ROLE_NAMES as readonly string[]).includes(r));
+  if (staff.length) {
+    throw new Error(`@Roles(${staff.join(', ')}): staff roles belong in @Staff (ADR-0030)`);
+  }
+  return SetMetadata(ROLES, roles);
+};
 
 export const STAFF = 'raadi:staff';
 
@@ -216,4 +230,17 @@ export class RouteSpanInterceptor implements NestInterceptor {
     }
     return next.handle();
   }
+}
+
+/**
+ * Responses default to `Cache-Control: no-store`: most carry personal data, and no shared cache (a CDN
+ * later) may keep them. Routes whose answers may be cached say so themselves (public search results,
+ * listing pages for visitors). Call before `listen()`.
+ */
+export function noStoreByDefault(app: INestApplication): void {
+  const fastify = app.getHttpAdapter().getInstance() as FastifyInstance;
+  fastify.addHook('onSend', async (_req: FastifyRequest, reply: FastifyReply, payload: unknown) => {
+    if (!reply.hasHeader('cache-control')) void reply.header('cache-control', 'no-store');
+    return payload;
+  });
 }

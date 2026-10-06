@@ -95,13 +95,6 @@ http:
       middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
       priority: 100
 
-    api-audit:
-      rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/audit/`)
-      entryPoints: [web, websecure]
-      service: audit
-      middlewares: [security-headers, ratelimit-default, api-body-limit, forward-auth]
-      priority: 100
-
     api-saved:
       rule: Host(`{{ $d }}`) && PathPrefix(`/api/v1/saved/`)
       entryPoints: [web, websecure]
@@ -205,10 +198,6 @@ http:
     trust:
       loadBalancer:
         servers: [{ url: "http://trust:4000" }]
-        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
-    audit:
-      loadBalancer:
-        servers: [{ url: "http://audit:4000" }]
         healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
     saved:
       loadBalancer:

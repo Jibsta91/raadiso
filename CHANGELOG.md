@@ -84,6 +84,17 @@ Each release also has generated notes on GitHub.
 - The README, threat model and runbook index cover the Phase 3 services (payments, saved, audit, the admin
   console, push).
 
+### Security
+
+- Staff powers only through the admin console (ADR-0030 amended): the old report-queue, refund and audit
+  routes under `/api/v1` are gone, a moderator's or admin's website session no longer edits or removes
+  other people's listings, and `@Roles()` refuses staff roles.
+- Sign-in is bound to the browser that started it (login CSRF).
+- Phone mode keeps the admin console and the dev tools off the Wi-Fi (`PHONE_TOOLS=1` keeps them).
+- Post-login redirects refuse control characters; query strings (sign-in codes, search terms) no longer
+  reach Loki or Tempo; API answers default to `Cache-Control: no-store`; the OpenBao unsealer and the
+  blackbox exporter no longer run as root.
+
 ### Fixed
 
 - Keycloak's admin console (`auth.<domain>/admin/`) stayed blank: the gateway sent `X-Frame-Options: DENY` on

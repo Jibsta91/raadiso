@@ -15,8 +15,8 @@ governance (review queues, fraud detection) builds on them.
   prohibited, offensive, wrong category, other) and an optional comment of up to 500 characters
   (`POST /api/v1/listings/{id}/reports`, 202). Each person has one open report per listing; reporting again
   updates it. Owners cannot report their own listings, and each person can have at most 20 open reports at a time (handled reports no longer count).
-- **Moderators work a queue grouped by listing** (`GET /api/v1/listings/moderation/reports`, role
-  `moderator`), most reported first, with counts per reason and the five most recent comments. Reporters'
+- **Moderators work a queue grouped by listing** (since ADR-0030 in the console's workbench,
+  `GET /admin/v1/listings/workbench`; the first version was `GET /api/v1/listings/moderation/reports`), most reported first, with counts per reason and the five most recent comments. Reporters'
   ids are not shown. Two outcomes:
   - **Remove**: the existing moderation removal. The owner is notified as before (ADR-0017) and the reports
     are resolved.

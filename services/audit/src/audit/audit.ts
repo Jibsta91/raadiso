@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { metrics } from '@opentelemetry/api';
 import { parseEvent } from '@raadi/events';
-import { type AuthenticatedRequest, Roles, Staff, ZodValidationPipe } from '@raadi/service-kit';
+import { type AuthenticatedRequest, Staff, ZodValidationPipe } from '@raadi/service-kit';
 import { PermanentEventError, type ReceivedEvent } from '@raadi/service-kit/kafka';
 import type pg from 'pg';
 import { z } from 'zod';
@@ -170,18 +170,6 @@ export class AuditService {
       actors: actors.rows.map((r) => ({ id: r.id, count: Number(r.count) })),
       total: daysOut.reduce((n, d) => n + d.count, 0),
     };
-  }
-}
-
-@Controller('api/v1/audit')
-export class AuditController {
-  constructor(private readonly audit: AuditService) {}
-
-  /** The audit log, newest first (platform admins). */
-  @Get('entries')
-  @Roles('platform-admin')
-  entries(@Query(new ZodValidationPipe(querySchema)) q: AuditQuery) {
-    return this.audit.query(q);
   }
 }
 

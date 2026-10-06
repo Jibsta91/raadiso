@@ -3,7 +3,12 @@ import fastifyMultipart from '@fastify/multipart';
 import { ConsoleLogger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
-import { HealthRegistry, installGracefulShutdown, requestId } from '@raadi/service-kit';
+import {
+  HealthRegistry,
+  installGracefulShutdown,
+  noStoreByDefault,
+  requestId,
+} from '@raadi/service-kit';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module.js';
 import { loadAppConfig } from './config.js';
@@ -28,6 +33,7 @@ async function bootstrap(): Promise<void> {
   await app.register(fastifyMultipart as never, {
     limits: { fileSize: cfg.env.MAX_UPLOAD_BYTES, files: 1, fields: 0, parts: 1, headerPairs: 50 },
   });
+  noStoreByDefault(app);
   installGracefulShutdown(app, app.get(HealthRegistry), {
     drainMs: cfg.env.SHUTDOWN_DRAIN_MS,
     log: (msg) => logger.log(msg),

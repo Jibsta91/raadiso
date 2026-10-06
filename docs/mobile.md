@@ -48,7 +48,8 @@ The native app runs in Expo Go on a phone on the same Wi-Fi as the laptop
 Notes:
 
 - While phone mode runs, the stack (with its demo passwords) is reachable from your LAN. Use it on a
-  network you trust.
+  network you trust. The admin console and the dev tools (Mailpit, OpenBao, Traefik, Prometheus,
+  Keycloak's admin console) are not served in phone mode; `PHONE_TOOLS=1 ./raadi phone` serves them.
 - Fedora's firewall blocks ports 80 and 443 from the network by default. Open them for this session with
   `sudo firewall-cmd --add-service=http --add-service=https`.
 - Some routers block DNS answers that point at private addresses ("DNS rebinding protection"). If the

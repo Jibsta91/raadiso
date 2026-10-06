@@ -2,6 +2,8 @@
 {{ $d := env "RAADI_DOMAIN" }}
 http:
   routers:
+    {{- if ne (env "DEV_TOOLS_ROUTED") "false" }}
+    # Off in phone mode (./raadi phone): no dashboards, mail or secrets on the Wi-Fi.
     traefik-dashboard:
       rule: Host(`traefik.{{ $d }}`)
       entryPoints: [web, websecure]
@@ -16,6 +18,12 @@ http:
       entryPoints: [web, websecure]
       service: openbao
       middlewares: [security-headers]
+    prometheus:
+      rule: Host(`prometheus.{{ $d }}`)
+      entryPoints: [web, websecure]
+      service: prometheus
+      middlewares: [security-headers]
+    {{- end }}
     # The mock payment provider's hosted page (payments-mock, ADR-0020). Only
     # /pay/ is public; its API is reachable on the internal network only.
     payments-mock:
@@ -29,11 +37,6 @@ http:
       entryPoints: [web, websecure]
       service: push-mock
       middlewares: [security-headers, ratelimit-default]
-    prometheus:
-      rule: Host(`prometheus.{{ $d }}`)
-      entryPoints: [web, websecure]
-      service: prometheus
-      middlewares: [security-headers]
   services:
     mailpit:
       loadBalancer:

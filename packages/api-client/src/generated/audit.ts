@@ -4,23 +4,6 @@
  */
 
 export interface paths {
-    "/api/v1/audit/entries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Audit entries, newest first, filtered (platform admins) */
-        get: operations["auditEntries"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/v1/audit/entries": {
         parameters: {
             query?: never;
@@ -169,40 +152,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    auditEntries: {
-        parameters: {
-            query?: {
-                actor?: string;
-                action?: string;
-                targetType?: string;
-                targetId?: string;
-                /** @description Only entries older than this (the previous page's last `at`) */
-                before?: string;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description A page of entries */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: components["schemas"]["AuditEntry"][];
-                        hasMore: boolean;
-                    };
-                };
-            };
-            400: components["responses"]["Problem"];
-            401: components["responses"]["Problem"];
-            403: components["responses"]["Problem"];
-        };
-    };
     adminAuditEntries: {
         parameters: {
             query?: {

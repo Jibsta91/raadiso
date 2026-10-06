@@ -9,10 +9,11 @@ Authorization is split by kind of question:
 
 - **Who may act on which object** is relationship-based, in **OpenFGA** (Apache-2.0, its own database). The
   model (`deploy/openfga/model.fga`) has `listing` and `media` objects with `owner` tuples written by the
-  services when they create an object. Platform roles come from the Keycloak token and are passed as
-  **contextual tuples** on `platform:raadi` (`moderator`, `admin`). They are never stored, so revoking a role
-  in Keycloak takes effect with the next token. Derived permissions (`can_edit`, `can_delete`,
-  `can_view_hidden`, `can_attach`) are what services check.
+  services when they create an object. Derived permissions (`can_edit`, `can_delete`,
+  `can_view_hidden`, `can_attach`) are what services check. The model also has `platform:raadi` relations
+  (`moderator`, `admin`); they were filled from the token as contextual tuples until 2026-10-06. Staff powers
+  now go only through the console's staff APIs ([ADR-0030](0030-staff-apis-and-console-workspaces.md)),
+  so the public API checks ownership alone.
 - **Whether a listing may be published** is policy, in **OPA** (Apache-2.0, Rego in
   `deploy/opa/policies/raadi`): active-listing quota, price ceilings per category, image count, prohibited
   terms. The decision returns machine-readable reasons, which the API returns as `422` error codes and the web

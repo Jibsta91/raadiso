@@ -10,14 +10,19 @@ import { UsersRepository } from '../users/users.repository.js';
 import { ACCOUNT_ACTIONS, type AccountAction, OidcService } from './oidc.service.js';
 import {
   afterLoginPath,
+  browserBindingMatches,
   isCsrfSafe,
   keycloakUiLocale,
+  loginCookieName,
+  newBrowserBinding,
   normaliseLocale,
   safeReturnTo,
 } from './security.js';
 import { type SessionData, SessionStore } from './session.store.js';
 
 const REFRESH_SKEW_SEC = 30;
+/** As long as the login transaction lives in Valkey (session.store.ts). */
+const LOGIN_TX_TTL_SEC = 600;
 const AUTH_THROTTLE = { default: { limit: 20, ttl: 60_000 } };
 
 type Req = FastifyRequest & { cookies: Record<string, string | undefined> };
@@ -43,8 +48,17 @@ export class AuthController {
   async login(@Req() req: Req, @Res() reply: FastifyReply): Promise<void> {
     const query = req.query as Record<string, unknown>;
     const locale = normaliseLocale(query.locale);
-    const tx = this.oidc.newTransaction(safeReturnTo(query.returnTo, `/${locale}`));
+    const binding = newBrowserBinding();
+    const tx = {
+      ...this.oidc.newTransaction(safeReturnTo(query.returnTo, `/${locale}`)),
+      browser: binding.hash,
+    };
     await this.sessions.putLoginTransaction(tx.state, tx);
+    void reply.setCookie(this.loginCookie(tx.state), binding.secret, {
+      ...this.cookieOptions(),
+      path: '/auth/callback',
+      maxAge: LOGIN_TX_TTL_SEC,
+    });
     const signup = query.signup === '1' || query.signup === 'true';
     const action = ACCOUNT_ACTIONS.find((a) => a === query.action) as AccountAction | undefined;
     // `?reauth=1`: ask for the password even with a Keycloak session, for a fresh auth_time (step-up).
@@ -67,8 +81,17 @@ export class AuthController {
     const params = new URLSearchParams(search);
     const state = params.get('state') ?? '';
     const tx = await this.sessions.takeLoginTransaction(state);
+    const cookie = this.loginCookie(state);
+    const secret = req.cookies[cookie];
+    void reply.clearCookie(cookie, { path: '/auth/callback' });
     if (!tx) {
       loginCounter.add(1, { outcome: 'failure', reason: 'invalid_state' });
+      return this.redirect(reply, 302, '/?authError=expired');
+    }
+    // The transaction is used up either way, so a callback URL sent to someone else is worthless.
+    if (!browserBindingMatches(secret, tx.browser)) {
+      loginCounter.add(1, { outcome: 'failure', reason: 'other_browser' });
+      this.logger.warn('login callback from a browser that did not start the login');
       return this.redirect(reply, 302, '/?authError=expired');
     }
     if (params.has('error')) {
@@ -233,6 +256,10 @@ export class AuthController {
       if (latest.accessExpiresAt - REFRESH_SKEW_SEC > now) return latest.accessToken;
     }
     return null;
+  }
+
+  private loginCookie(state: string): string {
+    return loginCookieName(this.cfg.env.SESSION_COOKIE_NAME, state);
   }
 
   private cookieOptions() {
