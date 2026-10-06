@@ -13,7 +13,7 @@ export function SearchButton({ label }: { label: string }) {
       data-testid="open-palette"
     >
       <Search aria-hidden className="size-4" />
-      <span className="flex-1 text-left">{label}</span>
+      <span className="flex-1 text-start">{label}</span>
       <kbd className="rounded border bg-card px-1 font-mono text-[10px]">⌘K</kbd>
     </button>
   );

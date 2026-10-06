@@ -119,6 +119,8 @@ export interface ListingRow {
   published_at: Date;
   /** End of a paid promotion (ADR-0020); in the past or null when not promoted. */
   promoted_until: Date | null;
+  removed_by: 'owner' | 'moderation' | null;
+  removal_reason: RemovalReason | null;
 }
 
 export interface ListingImage {
@@ -145,6 +147,8 @@ export interface Listing {
   promotedUntil: string | null;
   /** Present when the caller is authenticated. */
   viewer?: { isOwner: boolean; canEdit: boolean; canDelete: boolean };
+  /** Only on the owner's list of their listings: a moderator removed it (and why). */
+  removal?: { reason: RemovalReason | null };
 }
 
 function location(row: ListingRow) {
@@ -175,6 +179,9 @@ export function toListing(row: ListingRow, signer: ImgproxySigner): Listing {
     publishedAt: row.published_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
     promotedUntil: activePromotion(row),
+    ...(row.status === 'deleted' && row.removed_by === 'moderation'
+      ? { removal: { reason: row.removal_reason } }
+      : {}),
   };
 }
 

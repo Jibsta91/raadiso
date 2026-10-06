@@ -275,10 +275,10 @@ export default async function AdminOverview({ params }: { params: Promise<{ loca
           {!mine?.items.length ? (
             <Empty>{t('overview.noActivity')}</Empty>
           ) : (
-            <ol className="relative space-y-3 border-l pl-4">
+            <ol className="relative space-y-3 border-s ps-4">
               {mine.items.map((e) => (
                 <li key={e.id} className="relative text-sm">
-                  <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full border-2 border-card bg-primary" />
+                  <span className="absolute -start-[21px] top-1.5 size-2.5 rounded-full border-2 border-card bg-primary" />
                   <p className="font-medium">
                     {t(`audit.actionNames.${e.action.replace(/\./g, '_')}` as never)}
                   </p>

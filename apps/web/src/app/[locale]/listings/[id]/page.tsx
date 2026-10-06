@@ -6,13 +6,17 @@ import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ImageGallery } from '@/components/listings/image-gallery';
 import { ListingActions } from '@/components/listings/listing-actions';
+import { ShareButton } from '@/components/listings/share-button';
 import { ContactSeller } from '@/components/messaging/contact-seller';
 import { ReportListing } from '@/components/moderation/report-listing';
 import { FavouriteButton } from '@/components/saved/favourite-button';
 import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
+import { routing } from '@/i18n/routing';
 import { favouriteIds, getListing } from '@/lib/api';
+import { env } from '@/lib/env';
 import { formatPrice } from '@/lib/format';
+import { jsonLd, localeAlternates, summary } from '@/lib/seo';
 import { getSession } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -32,13 +36,26 @@ const ENUM_ATTRIBUTES = new Set([
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
-  const { id } = await params;
+  const { locale, id } = await params;
   const listing = UUID.test(id) ? await getListing(id) : null;
-  return listing
-    ? { title: listing.title, description: listing.description.slice(0, 160) }
-    : { title: 'Raadiso' };
+  if (!listing) return { title: 'Raadiso' };
+  const description = summary(listing.description);
+  const image = listing.images[0]?.urls.large;
+  return {
+    title: listing.title,
+    description,
+    alternates: localeAlternates(routing, locale, `/listings/${listing.id}`),
+    openGraph: {
+      title: listing.title,
+      description,
+      url: `/${locale}/listings/${listing.id}`,
+      ...(image ? { images: [{ url: image, alt: listing.title }] } : {}),
+    },
+    // Removed and sold listings stay reachable by link but leave search engines.
+    ...(listing.status === 'active' ? {} : { robots: { index: false } }),
+  };
 }
 
 export default async function ListingPage({
@@ -65,9 +82,33 @@ export default async function ListingPage({
     return String(value);
   };
 
+  // What search engines show as a product with a price (schema.org Product and Offer).
+  const structured = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: listing.title,
+    description: summary(listing.description, 500),
+    image: listing.images.map((img) => new URL(img.urls.large, env.publicBaseUrl).href),
+    ...(listing.priceNok === null
+      ? {}
+      : {
+          offers: {
+            '@type': 'Offer',
+            price: listing.priceNok,
+            priceCurrency: 'NOK',
+            availability:
+              listing.status === 'active'
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/SoldOut',
+            url: new URL(`/${locale}/listings/${listing.id}`, env.publicBaseUrl).href,
+          },
+        }),
+  };
+
   return (
     <article className="space-y-6" data-testid="listing-detail">
-      <nav className="text-sm text-muted-foreground" aria-label="breadcrumb">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structured) }} />
+      <nav className="text-sm text-muted-foreground" aria-label={t('nav.breadcrumb')}>
         <Link
           href={`/${listing.category}`}
           className="hover:underline"
@@ -83,8 +124,40 @@ export default async function ListingPage({
           {t(`taxonomy.subcategories.${listing.subcategory}` as never)}
         </Link>
       </nav>
-      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
-        <div className="space-y-6">
+      <div className="grid gap-x-8 gap-y-6 lg:grid-cols-[1fr_22rem] lg:grid-rows-[auto_1fr]">
+        {/* Title and price come first, so phones and screen readers get them before the photos. */}
+        <header className="space-y-2 lg:col-start-2 lg:row-start-1">
+          {listing.status === 'sold' ? (
+            <Badge variant="secondary">{t('listing.sold')}</Badge>
+          ) : null}
+          {listing.promotedUntil && listing.status === 'active' ? (
+            <Badge variant="highlight" data-testid="listing-promoted">
+              {t('listing.promotedUntil', {
+                date: format.dateTime(new Date(listing.promotedUntil), { dateStyle: 'medium' }),
+              })}
+            </Badge>
+          ) : null}
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-2xl font-bold" data-testid="listing-title">
+              {listing.title}
+            </h1>
+            {listing.viewer?.isOwner || listing.status === 'deleted' ? null : (
+              <FavouriteButton
+                listingId={listing.id}
+                title={listing.title}
+                initial={favourites.has(listing.id)}
+                variant="inline"
+              />
+            )}
+          </div>
+          <p className="text-3xl font-bold" data-testid="listing-price">
+            {listing.priceNok === null
+              ? t('listing.noPrice')
+              : formatPrice(listing.priceNok, locale)}
+          </p>
+          <ShareButton title={listing.title} />
+        </header>
+        <div className="space-y-6 lg:col-start-1 lg:row-span-2 lg:row-start-1">
           <ImageGallery images={listing.images} title={listing.title} />
           <section aria-labelledby="desc" className="space-y-2">
             <h2 id="desc" className="text-lg font-semibold">
@@ -113,36 +186,7 @@ export default async function ListingPage({
           ) : null}
         </div>
 
-        <aside className="space-y-4">
-          <div className="space-y-2">
-            {listing.status === 'sold' ? (
-              <Badge variant="secondary">{t('listing.sold')}</Badge>
-            ) : null}
-            {listing.promotedUntil && listing.status === 'active' ? (
-              <Badge variant="highlight" data-testid="listing-promoted">
-                {t('listing.promotedUntil', {
-                  date: format.dateTime(new Date(listing.promotedUntil), { dateStyle: 'medium' }),
-                })}
-              </Badge>
-            ) : null}
-            <div className="flex items-start justify-between gap-3">
-              <h1 className="text-2xl font-bold" data-testid="listing-title">
-                {listing.title}
-              </h1>
-              {listing.viewer?.isOwner || listing.status === 'deleted' ? null : (
-                <FavouriteButton
-                  listingId={listing.id}
-                  initial={favourites.has(listing.id)}
-                  variant="inline"
-                />
-              )}
-            </div>
-            <p className="text-3xl font-bold" data-testid="listing-price">
-              {listing.priceNok === null
-                ? t('listing.noPrice')
-                : formatPrice(listing.priceNok, locale)}
-            </p>
-          </div>
+        <aside className="space-y-4 lg:col-start-2 lg:row-start-2">
           <div className="space-y-3 rounded-lg border p-4 text-sm">
             <dl className="space-y-3">
               <div className="flex items-start gap-2">

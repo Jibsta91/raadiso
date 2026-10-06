@@ -2,7 +2,7 @@
 
 import { PLACES } from '@raadi/catalog';
 import { useTranslations } from 'next-intl';
-import { useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { href, type Params, withParams } from '@/lib/search-params';
 
@@ -10,17 +10,29 @@ const RADII = ['10', '25', '50', '100', '250'];
 const SORTS = ['relevance', 'newest', 'price_asc', 'price_desc', 'distance'] as const;
 const PLACES_BY_NAME = [...PLACES].sort((a, b) => a.name.localeCompare(b.name, 'nb'));
 
-/** Location (place or the browser's position), radius and sort. */
+/** The parameters this form sets; every other one is carried along in hidden fields. */
+const OWN = new Set(['near', 'lat', 'lon', 'radiusKm', 'sort', 'page']);
+
+/**
+ * Location (place or the browser's position), radius and sort. A plain GET form, so it works before the
+ * page's JavaScript has loaded (or when it never does); once it has, a choice applies at once, and the
+ * fields say so beforehand (WCAG 3.2.2).
+ */
 export function SearchControls({ params }: { params: Params }) {
   const t = useTranslations('search');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [hydrated, setHydrated] = useState(false);
+  const [positionFailed, setPositionFailed] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const go = (changes: Record<string, string | undefined>) =>
     startTransition(() => router.push(href(withParams(params, changes)), { scroll: false }));
   const hasCentre = Boolean(params.near || params.lat);
 
-  const nearMe = () =>
-    navigator.geolocation?.getCurrentPosition(
+  const nearMe = () => {
+    setPositionFailed(false);
+    if (!navigator.geolocation) return setPositionFailed(true);
+    navigator.geolocation.getCurrentPosition(
       (pos) =>
         go({
           near: undefined,
@@ -29,15 +41,34 @@ export function SearchControls({ params }: { params: Params }) {
           radiusKm: params.radiusKm ?? '50',
           sort: 'distance',
         }),
-      () => undefined,
+      () => setPositionFailed(true),
       { maximumAge: 600_000, timeout: 10_000 },
     );
+  };
 
   return (
-    <div className="flex flex-wrap items-end gap-3" aria-busy={pending}>
+    <form
+      method="get"
+      className="flex flex-wrap items-end gap-3"
+      aria-busy={pending}
+      onSubmit={(e) => {
+        // With JavaScript the choices have already been applied.
+        if (hydrated) e.preventDefault();
+      }}
+    >
+      {Object.entries(params)
+        .filter(([key, value]) => !OWN.has(key) && value)
+        .map(([key, value]) => (
+          <input key={key} type="hidden" name={key} value={value} />
+        ))}
+      <p id="search-controls-hint" className="sr-only">
+        {t('controlsHint')}
+      </p>
       <label className="flex flex-col gap-1 text-sm">
         <span className="font-medium">{t('near')}</span>
         <select
+          name="near"
+          aria-describedby="search-controls-hint"
           data-testid="filter-near"
           className="h-10 field border-input px-3"
           value={params.near ?? (params.lat ? '__me' : '')}
@@ -54,7 +85,7 @@ export function SearchControls({ params }: { params: Params }) {
           }}
         >
           <option value="">{t('anywhere')}</option>
-          <option value="__me">📍 {t('nearMe')}</option>
+          {hydrated ? <option value="__me">📍 {t('nearMe')}</option> : null}
           {PLACES_BY_NAME.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -66,6 +97,8 @@ export function SearchControls({ params }: { params: Params }) {
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">{t('radius')}</span>
           <select
+            name="radiusKm"
+            aria-describedby="search-controls-hint"
             data-testid="filter-radius"
             className="h-10 field border-input px-3"
             value={params.radiusKm ?? '50'}
@@ -79,9 +112,11 @@ export function SearchControls({ params }: { params: Params }) {
           </select>
         </label>
       ) : null}
-      <label className="ml-auto flex flex-col gap-1 text-sm">
+      <label className="ms-auto flex flex-col gap-1 text-sm">
         <span className="font-medium">{t('sortLabel')}</span>
         <select
+          name="sort"
+          aria-describedby="search-controls-hint"
           data-testid="sort"
           className="h-10 field border-input px-3"
           value={params.sort ?? 'relevance'}
@@ -96,6 +131,16 @@ export function SearchControls({ params }: { params: Params }) {
           ))}
         </select>
       </label>
-    </div>
+      {hydrated ? null : (
+        <button type="submit" className="h-10 rounded-full border px-4 text-sm font-medium">
+          {t('apply')}
+        </button>
+      )}
+      {positionFailed ? (
+        <p role="alert" className="w-full text-sm text-destructive" data-testid="near-me-failed">
+          {t('nearMeFailed')}
+        </p>
+      ) : null}
+    </form>
   );
 }

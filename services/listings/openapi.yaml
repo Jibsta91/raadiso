@@ -58,6 +58,10 @@ paths:
             schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
           }
         - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - name: removed
+          in: query
+          description: Also listings a moderator removed in the last 90 days, with `removal`
+          schema: { type: string, enum: ['true', 'false'], default: 'false' }
       responses:
         '200':
           description: A page of listings
@@ -761,6 +765,15 @@ components:
           type: [string, 'null']
           format: date-time
           description: End of a running paid promotion; null when not promoted (ADR-0020)
+        removal:
+          type: object
+          description: On the owner's own list only - a moderator removed the listing, and why
+          required: [reason]
+          additionalProperties: false
+          properties:
+            reason:
+              type: [string, 'null']
+              enum: [fraud, prohibited, offensive, wrong_category, duplicate, spam, other, null]
         viewer:
           type: object
           required: [isOwner, canEdit, canDelete]

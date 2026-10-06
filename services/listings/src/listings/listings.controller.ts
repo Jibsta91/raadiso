@@ -31,6 +31,11 @@ const pageSchema = z.object({
   offset: z.coerce.number().int().min(0).max(10_000).default(0),
 });
 
+const mineSchema = pageSchema.extend({
+  /** Also listings a moderator removed in the last 90 days, with the reason (the owner's view). */
+  removed: z.enum(['true', 'false']).default('false'),
+});
+
 const WRITE_THROTTLE = { default: { limit: 30, ttl: 60_000 } };
 
 /** ETag carries the version so clients can send If-Match (optimistic concurrency). */
@@ -48,9 +53,9 @@ export class ListingsController {
   @Roles('user')
   mine(
     @Req() req: AuthenticatedRequest,
-    @Query(new ZodValidationPipe(pageSchema)) page: z.infer<typeof pageSchema>,
+    @Query(new ZodValidationPipe(mineSchema)) page: z.infer<typeof mineSchema>,
   ) {
-    return this.listings.mine(req.principal!, page.limit, page.offset);
+    return this.listings.mine(req.principal!, page.limit, page.offset, page.removed === 'true');
   }
 
   @Public()

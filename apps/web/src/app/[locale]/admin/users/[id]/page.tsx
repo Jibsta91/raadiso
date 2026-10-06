@@ -494,7 +494,7 @@ export default async function UserPage({
                     <li key={n.id} className="space-y-0.5 text-sm">
                       <p className="whitespace-pre-wrap">
                         {n.pinned ? (
-                          <Pin aria-hidden className="mr-1 inline size-3 text-primary" />
+                          <Pin aria-hidden className="me-1 inline size-3 text-primary" />
                         ) : null}
                         {n.body}
                       </p>
@@ -650,7 +650,7 @@ async function SignIns({
           {e.client ? <span className="text-muted-foreground">{e.client}</span> : null}
           {e.ip ? <span className="font-mono text-xs text-muted-foreground">{e.ip}</span> : null}
           {e.error ? <span className="text-destructive">{e.error}</span> : null}
-          <span className="ml-auto text-xs text-muted-foreground">
+          <span className="ms-auto text-xs text-muted-foreground">
             <Ago at={e.at} />
           </span>
         </li>
@@ -678,7 +678,7 @@ async function NoteList({
                   {author?.name ?? author?.email ?? n.authorId.slice(0, 8)}
                 </span>{' '}
                 · <Ago at={n.createdAt} />
-                {n.pinned ? <Pin aria-hidden className="ml-1 inline size-3 text-primary" /> : null}
+                {n.pinned ? <Pin aria-hidden className="ms-1 inline size-3 text-primary" /> : null}
               </p>
               <p className="whitespace-pre-wrap text-sm">{n.body}</p>
             </div>
@@ -801,7 +801,7 @@ async function UserReviews({ id }: { id: string }) {
             <Pill tone="neutral">{r.subjectId === id ? t('about') : t('by')}</Pill>
             <span className="text-muted-foreground">{r.listingTitle}</span>
             {r.removedAt ? <Pill tone="bad">{t('removed')}</Pill> : null}
-            <span className="ml-auto text-xs text-muted-foreground">
+            <span className="ms-auto text-xs text-muted-foreground">
               <Ago at={r.createdAt} />
             </span>
           </p>
@@ -822,12 +822,12 @@ async function UserHistory({ id }: { id: string }) {
   if (!page.items.length) return <Empty>{t('noHistory')}</Empty>;
   const names = await staffNames(page.items.map((e) => e.actor.id));
   return (
-    <ol className="relative space-y-4 border-l pl-5" data-testid="user-history">
+    <ol className="relative space-y-4 border-s ps-5" data-testid="user-history">
       {page.items.map((e) => {
         const actor = names.get(e.actor.id);
         return (
           <li key={e.id} className="relative text-sm">
-            <span className="absolute -left-[26px] top-1 size-3 rounded-full border-2 border-background bg-primary" />
+            <span className="absolute -start-[26px] top-1 size-3 rounded-full border-2 border-background bg-primary" />
             <p className="font-semibold">
               {ta(`actionNames.${e.action.replace(/\./g, '_')}` as never)}
             </p>

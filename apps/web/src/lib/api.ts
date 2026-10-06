@@ -64,12 +64,17 @@ export const getListing = cache(async (id: string): Promise<Listing | null> => {
   throw new ServiceUnavailableError(`listings returned ${response.status}`);
 });
 
-export async function myListings(limit = 50, offset = 0): Promise<ListingPage | null> {
+/** The user's listings; with `removed`, also what a moderator removed lately (with the reason). */
+export async function myListings(
+  limit = 50,
+  offset = 0,
+  removed = false,
+): Promise<ListingPage | null> {
   const token = await accessToken();
   if (!token) return null;
   const client = createListingsClient({ baseUrl: env.listingsUrl });
   const { data, response } = await client.GET('/api/v1/listings/mine', {
-    params: { query: { limit, offset } },
+    params: { query: { limit, offset, removed: removed ? 'true' : 'false' } },
     headers: { authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(5000),
     cache: 'no-store',

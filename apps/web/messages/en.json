@@ -6,6 +6,7 @@
   "nav": {
     "main": "Main navigation",
     "skip": "Skip to content",
+    "breadcrumb": "Breadcrumb",
     "status": "Status",
     "language": "Language",
     "login": "Log in",
@@ -23,7 +24,8 @@
     "favourites": "Favourites",
     "savedSearches": "Saved searches",
     "moderation": "Moderation",
-    "admin": "Admin"
+    "admin": "Admin",
+    "newAlerts": "{count, plural, one {# new notification} other {# new notifications}}"
   },
   "home": {
     "heroTitle": "Find it. Sell it. <brand>Raadiso.</brand>",
@@ -173,6 +175,14 @@
     "terms": "Terms",
     "links": "About Raadiso"
   },
+  "errors": {
+    "title": "Something went wrong",
+    "body": "This page could not be loaded right now. Try again in a moment.",
+    "retry": "Try again",
+    "home": "Back to the front page",
+    "console": "Back to the console start",
+    "loading": "Loading…"
+  },
   "notFound": {
     "title": "Page not found",
     "body": "The page you are looking for does not exist.",
@@ -306,12 +316,16 @@
     "results": "{total, plural, =0 {No results} one {# result} other {# results}}",
     "noResults": "Nothing matched your search.",
     "noResultsHint": "Try fewer words or remove some filters.",
+    "searchEverywhere": "Search all categories and places for “{q}”",
+    "controlsHint": "The results change as soon as you choose a place, distance or order.",
+    "apply": "Apply",
+    "nearMeFailed": "We could not find your position. Choose a place instead.",
+    "browseCategories": "Or browse a category",
     "filters": "Filters",
     "clearFilters": "Clear filters",
     "price": "Price",
     "priceMin": "From (kr)",
     "priceMax": "To (kr)",
-    "apply": "Apply",
     "location": "Location",
     "near": "Near",
     "anywhere": "All of Norway",
@@ -378,6 +392,14 @@
     "updated": "Updated {date}",
     "images": "{count, plural, one {# image} other {# images}}",
     "imageAlt": "Image {n} of {count}: {title}",
+    "gallery": "photo gallery",
+    "previousImage": "Previous photo",
+    "nextImage": "Next photo",
+    "openImage": "Show photo {n} of {count} full screen",
+    "closeImage": "Close the photo",
+    "imagePosition": "{n} / {count}",
+    "share": "Share",
+    "shareCopied": "Link copied",
     "yours": "Your listing",
     "edit": "Edit",
     "markSold": "Mark as sold",
@@ -433,6 +455,16 @@
         "invalid_image": "The file could not be read as an image.",
         "too_large": "The image is larger than 10 MB.",
         "generic": "The image could not be uploaded."
+      },
+      "fields": {
+        "category": "Choose a category.",
+        "subcategory": "Choose a subcategory.",
+        "title": "Write a title of 3 to 120 characters.",
+        "description": "Write a description (at most 5,000 characters).",
+        "priceNok": "Enter the price in whole kroner, or leave it empty.",
+        "placeId": "Choose where the item is.",
+        "attributes": "Check this detail.",
+        "generic": "Check this field."
       }
     },
     "pickCategory": "What would you like to post?",
@@ -461,7 +493,18 @@
     "create": "Create your first listing",
     "status": {
       "active": "Active",
-      "sold": "Sold"
+      "sold": "Sold",
+      "removed": "Removed by Raadiso"
+    },
+    "removedBecause": "Reason: {reason}. We sent you an e-mail with the details.",
+    "removalReasons": {
+      "fraud": "fraud or a scam",
+      "prohibited": "a prohibited item",
+      "offensive": "offensive content",
+      "wrong_category": "the wrong category",
+      "duplicate": "a duplicate listing",
+      "spam": "spam",
+      "other": "it broke our rules"
     }
   },
   "messages": {
@@ -696,7 +739,8 @@
     "browse": "Find something you like",
     "add": "Save as favourite",
     "remove": "Remove from favourites",
-    "unavailable": "Favourites are temporarily unavailable. Please try again shortly."
+    "unavailable": "Favourites are temporarily unavailable. Please try again shortly.",
+    "toggle": "Favourite: {title}"
   },
   "savedSearches": {
     "title": "Saved searches",

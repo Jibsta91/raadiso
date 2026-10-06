@@ -1,3 +1,4 @@
+import { CATEGORY_KEYS } from '@raadi/catalog';
 import { Button } from '@raadi/ui';
 import {
   Bell,
@@ -19,14 +20,12 @@ import { getSession } from '@/lib/session';
 import { isStaff } from '@/lib/staff';
 import { AccountMenu } from './account-menu';
 
-const CATEGORIES = ['torget', 'bil', 'eiendom', 'jobb', 'reise'] as const;
-
 const iconButton =
   'relative flex size-11 items-center justify-center rounded-full border bg-card text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-5';
 const countBadge =
-  'absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground';
+  'absolute -end-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground';
 const menuItem =
-  'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4 [&_svg]:text-muted-foreground';
+  'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4 [&_svg]:text-muted-foreground';
 
 // The header and footer appear on every page, and their targets are dynamic,
 // per-user pages. Prefetching them would cost about ten full server renders per
@@ -56,7 +55,7 @@ export async function Header({ locale }: { locale: string }) {
           raadiso<span className="text-primary">.</span>
         </Link>
         <nav aria-label={t('categories')} className="hidden gap-1 lg:flex">
-          {CATEGORIES.map((key) => (
+          {CATEGORY_KEYS.map((key) => (
             <Link
               key={key}
               href={`/${key}`}
@@ -67,7 +66,7 @@ export async function Header({ locale }: { locale: string }) {
             </Link>
           ))}
         </nav>
-        <nav className="ml-auto flex items-center gap-2" aria-label={t('main')}>
+        <nav className="ms-auto flex items-center gap-2" aria-label={t('main')}>
           <Link
             href="/search"
             prefetch={false}
@@ -84,15 +83,14 @@ export async function Header({ locale }: { locale: string }) {
                 prefetch={false}
                 data-testid="nav-messages"
                 className={iconButton}
-                aria-label={t('messages')}
+                // The link's name carries the count: a label on the badge inside it is never read.
+                aria-label={
+                  unread > 0 ? `${t('messages')}, ${t('unread', { count: unread })}` : t('messages')
+                }
               >
                 <MessageCircle aria-hidden />
                 {unread > 0 ? (
-                  <span
-                    className={countBadge}
-                    data-testid="nav-unread"
-                    aria-label={t('unread', { count: unread })}
-                  >
+                  <span aria-hidden className={countBadge} data-testid="nav-unread">
                     {unread > 99 ? '99+' : unread}
                   </span>
                 ) : null}
@@ -102,11 +100,15 @@ export async function Header({ locale }: { locale: string }) {
                 href="/notifications"
                 data-testid="nav-notifications"
                 className={iconButton}
-                aria-label={t('notifications')}
+                aria-label={
+                  alerts > 0
+                    ? `${t('notifications')}, ${t('newAlerts', { count: alerts })}`
+                    : t('notifications')
+                }
               >
                 <Bell aria-hidden />
                 {alerts > 0 ? (
-                  <span className={countBadge} data-testid="nav-alerts">
+                  <span aria-hidden className={countBadge} data-testid="nav-alerts">
                     {alerts > 99 ? '99+' : alerts}
                   </span>
                 ) : null}

@@ -33,3 +33,28 @@ test('browse: home → category page → subcategory → listing detail', async 
   // Anonymous visitors get no owner actions.
   await expect(page.getByTestId('listing-actions')).toHaveCount(0);
 });
+
+test('listing page: title and price first; the photo opens full screen and Escape closes it', async ({
+  page,
+}) => {
+  await page.goto('/en/search?q=sykkel');
+  await page.getByTestId('listing-card-title').first().click();
+  // Title and price come before the photos in the page (phones, screen readers).
+  const order = await page
+    .getByTestId('listing-detail')
+    .evaluate((el) =>
+      ['listing-title', 'listing-price', 'gallery-main'].map((id) =>
+        Array.from(el.querySelectorAll('[data-testid]')).findIndex(
+          (n) => n.getAttribute('data-testid') === id,
+        ),
+      ),
+    );
+  expect(order[0]).toBeLessThan(order[2]!);
+  expect(order[1]).toBeLessThan(order[2]!);
+
+  await page.getByTestId('gallery-open').click();
+  await expect(page.getByTestId('gallery-dialog')).toBeVisible();
+  await expect(page.getByTestId('gallery-close')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('gallery-dialog')).toBeHidden();
+});

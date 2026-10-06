@@ -442,7 +442,7 @@ export function Table({
 }) {
   return (
     <div className="overflow-x-auto rounded-2xl border bg-card">
-      <table className="w-full text-left text-sm" data-testid={testId}>
+      <table className="w-full text-start text-sm" data-testid={testId}>
         <thead className="sticky top-0 border-b bg-card text-xs uppercase tracking-wider text-muted-foreground">
           <tr>
             {head.map((h, i) => (

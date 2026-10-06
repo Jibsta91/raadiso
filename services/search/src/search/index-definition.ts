@@ -4,7 +4,7 @@
  * and moves the alias (SearchIndex.ensureIndex). Fields that are not in the
  * stored documents need a re-read of the topic (docs/runbooks/event-pipeline.md).
  */
-export const INDEX_VERSION = 3;
+export const INDEX_VERSION = 4;
 
 export const indexBody = {
   settings: {
@@ -20,6 +20,18 @@ export const indexBody = {
           tokenizer: 'standard',
           filter: ['lowercase', 'norwegian_stop', 'norwegian_stemmer', 'asciifolding'],
         },
+        // Every ending of every word, from four letters: Norwegian compounds put the main word last, so
+        // "sykkel" finds "Terrengsykkel" and "Elsykkel" (searched with nb_plain, without stemming).
+        nb_suffix: {
+          type: 'custom',
+          tokenizer: 'standard',
+          filter: ['lowercase', 'asciifolding', 'reverse', 'suffix_ngrams', 'reverse'],
+        },
+        nb_plain: {
+          type: 'custom',
+          tokenizer: 'standard',
+          filter: ['lowercase', 'asciifolding'],
+        },
         // Search-as-you-type prefixes for suggestions.
         nb_prefix: {
           type: 'custom',
@@ -31,6 +43,7 @@ export const indexBody = {
         norwegian_stop: { type: 'stop', stopwords: '_norwegian_' },
         norwegian_stemmer: { type: 'stemmer', language: 'light_norwegian' },
         prefix_ngrams: { type: 'edge_ngram', min_gram: 2, max_gram: 15 },
+        suffix_ngrams: { type: 'edge_ngram', min_gram: 4, max_gram: 20, preserve_original: true },
       },
     },
   },
@@ -48,11 +61,16 @@ export const indexBody = {
         fields: {
           std: { type: 'text', analyzer: 'standard' },
           prefix: { type: 'text', analyzer: 'nb_prefix', search_analyzer: 'standard' },
+          suffix: { type: 'text', analyzer: 'nb_suffix', search_analyzer: 'nb_plain' },
           // Exact titles for suggestions (shown as typed).
           raw: { type: 'keyword', ignore_above: 256 },
         },
       },
-      description: { type: 'text', analyzer: 'nb_text' },
+      description: {
+        type: 'text',
+        analyzer: 'nb_text',
+        fields: { suffix: { type: 'text', analyzer: 'nb_suffix', search_analyzer: 'nb_plain' } },
+      },
       priceNok: { type: 'long' },
       attributes: {
         type: 'object',

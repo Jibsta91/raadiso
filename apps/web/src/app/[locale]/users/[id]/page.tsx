@@ -95,7 +95,7 @@ export default async function ProfilePage({
                         style={{ width: `${(count / rating.count) * 100}%` }}
                       />
                     </span>
-                    <span className="w-8 text-right tabular-nums">{count}</span>
+                    <span className="w-8 text-end tabular-nums">{count}</span>
                   </li>
                 );
               })}

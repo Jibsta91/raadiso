@@ -41,7 +41,7 @@ export function AccountMenu({
 
   return (
     <details ref={ref} className="group relative">
-      <summary className="flex h-11 cursor-pointer list-none items-center gap-2 rounded-full border bg-card pl-1.5 pr-3 text-sm font-semibold transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+      <summary className="flex h-11 cursor-pointer list-none items-center gap-2 rounded-full border bg-card ps-1.5 pe-3 text-sm font-semibold transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         <CircleUserRound aria-hidden className="size-8 text-subtle-foreground" strokeWidth={1.5} />
         <span className="sr-only">{label}: </span>
         <span data-testid="nav-account" className="sr-only max-w-40 truncate md:not-sr-only">
@@ -53,7 +53,7 @@ export function AccountMenu({
         />
       </summary>
       <div
-        className="glass absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 rounded-2xl p-2 shadow-float"
+        className="glass absolute end-0 top-[calc(100%+0.5rem)] z-50 w-64 rounded-2xl p-2 shadow-float"
         onClick={(e) => {
           if ((e.target as HTMLElement).closest('a, button[type="submit"]'))
             ref.current?.removeAttribute('open');
