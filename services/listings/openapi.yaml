@@ -17,7 +17,6 @@ tags:
   - name: admin
     description: Admin console (console tokens only, ADR-0030)
   - name: listings
-  - name: moderation
   - name: internal
     description: Service-to-service endpoints, not reachable through the gateway
 paths:
@@ -173,47 +172,6 @@ paths:
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
-  /api/v1/listings/moderation/reports:
-    get:
-      tags: [moderation]
-      operationId: reportQueue
-      summary: Open reports grouped by listing, most reported first (moderators)
-      parameters:
-        - {
-            name: limit,
-            in: query,
-            schema: { type: integer, minimum: 1, maximum: 100, default: 50 },
-          }
-      responses:
-        '200':
-          description: The queue
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [items]
-                properties:
-                  items: { type: array, items: { $ref: '#/components/schemas/ReportQueueItem' } }
-        '401': { $ref: '#/components/responses/Problem' }
-        '403': { $ref: '#/components/responses/Problem' }
-  /api/v1/listings/moderation/reports/{id}/dismiss:
-    post:
-      tags: [moderation]
-      operationId: dismissReports
-      summary: The listing is fine; close its open reports (moderators). Removing it resolves them instead.
-      parameters:
-        - {
-            name: id,
-            in: path,
-            required: true,
-            schema: { type: string, format: uuid },
-            description: Listing id,
-          }
-      responses:
-        '204': { description: Dismissed }
-        '400': { $ref: '#/components/responses/Problem' }
-        '401': { $ref: '#/components/responses/Problem' }
-        '403': { $ref: '#/components/responses/Problem' }
   /admin/v1/listings:
     get:
       tags: [admin]
@@ -881,40 +839,6 @@ components:
       properties:
         reason: { $ref: '#/components/schemas/ReportReason' }
         comment: { type: string, maxLength: 500 }
-    ReportQueueItem:
-      type: object
-      additionalProperties: false
-      required: [listing, count, reasons, comments, firstReportedAt]
-      properties:
-        listing:
-          type: object
-          additionalProperties: false
-          required: [id, title, status, sellerName]
-          properties:
-            id: { type: string, format: uuid }
-            title: { type: string }
-            status: { type: string, enum: [active, sold, deleted] }
-            sellerName: { type: string }
-            image:
-              type: object
-              required: [thumb, card]
-              properties: { thumb: { type: string }, card: { type: string } }
-        count: { type: integer, minimum: 1 }
-        reasons:
-          type: object
-          additionalProperties: { type: integer }
-          description: Open reports per reason
-        comments:
-          type: array
-          description: The five most recent comments, without who wrote them
-          items:
-            type: object
-            required: [reason, comment, createdAt]
-            properties:
-              reason: { $ref: '#/components/schemas/ReportReason' }
-              comment: { type: string }
-              createdAt: { type: string, format: date-time }
-        firstReportedAt: { type: string, format: date-time }
     Problem:
       type: object
       required: [type, title, status]

@@ -106,7 +106,20 @@ export class ZodValidationPipe<S extends z.ZodType> implements PipeTransform {
 export const IS_PUBLIC = 'raadi:isPublic';
 export const ROLES = 'raadi:roles';
 export const Public = () => SetMetadata(IS_PUBLIC, true);
-export const Roles = (...roles: string[]) => SetMetadata(ROLES, roles);
+/** The staff roles (ADR-0028). They open staff endpoints only: @Staff, with a console token. */
+export const STAFF_ROLE_NAMES = ['moderator', 'support', 'operator', 'platform-admin'] as const;
+/**
+ * Roles for website and app routes. A staff role here would let a website session act as staff
+ * without the console token, step-up and reason that @Staff requires (ADR-0030), so it fails at
+ * startup instead.
+ */
+export const Roles = (...roles: string[]) => {
+  const staff = roles.filter((r) => (STAFF_ROLE_NAMES as readonly string[]).includes(r));
+  if (staff.length) {
+    throw new Error(`@Roles(${staff.join(', ')}): staff roles belong in @Staff (ADR-0030)`);
+  }
+  return SetMetadata(ROLES, roles);
+};
 
 export const STAFF = 'raadi:staff';
 

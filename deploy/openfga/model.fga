@@ -1,9 +1,9 @@
 model
   schema 1.1
 
-# Relationship-based access control (ADR-0013). Roles from Keycloak tokens
-# (moderator, platform-admin) arrive as contextual tuples on platform:raadi;
-# ownership is stored as tuples written by the services.
+# Relationship-based access control (ADR-0013). Ownership is stored as tuples
+# written by the services. platform:raadi gets no tuples from public requests:
+# staff act only through the console's staff APIs (ADR-0030).
 
 type user
 

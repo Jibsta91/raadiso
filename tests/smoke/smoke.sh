@@ -85,6 +85,24 @@ totp() {
 }
 expect_status() { [[ "$status" == "$1" ]] && ok "$2" || fail "$2" "expected HTTP $1, got $status: $(head -c 400 "$BODY")"; }
 q() { curl -sf --max-time 10 --get --data-urlencode "query=$1" http://prometheus:9090/api/v1/query | jq -e "$2"; }
+# token_from <bff> <cookie name>: the bearer token the BFF hands out for the jar's session cookie.
+token_from() {
+  local sid; sid="$(awk -v n="$2" '$6 == n { v = $7 } END { print v }' "$JAR")"
+  curl -s -D - -o /dev/null --max-time 10 -H "cookie: $2=$sid" -H 'x-forwarded-method: GET' \
+    "http://$1:4000/auth/forward" | tr -d '\r' | sed -n 's/^[Aa]uthorization: Bearer //p'
+}
+staff_api() { # <token> <method> <url> [body]: prints the HTTP status, body in $BODY
+  local body=()
+  [[ -n "${4:-}" ]] && body=(-H 'content-type: application/json' --data "$4")
+  curl -s -o "$BODY" -w '%{http_code}' --max-time 15 -X "$2" -H "authorization: Bearer $1" \
+    "${body[@]}" "$3"
+}
+# console_token <email>: signs in to the admin console (with the one-time code) and prints its token.
+# Staff actions use the staff APIs with such a token (ADR-0030); a website session never acts as staff.
+console_token() {
+  login_as "$1" "$ADMIN" || return 1
+  token_from admin-bff raadi_admin_sid
+}
 eventually() { # <description> <seconds> <command...>
   local desc="$1" secs="$2"; shift 2
   local end=$((SECONDS + secs))
@@ -339,7 +357,10 @@ req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origi
 
 login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"
 req DELETE "$PUBLIC/api/v1/listings/$listing" -H "origin: $ORIGIN"
-expect_status 204 "a moderator can remove the listing (role as contextual tuple)"
+expect_status 403 "a moderator's website session cannot remove listings (staff act in the console)"
+moderator_token="$(console_token "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}")" || fail "console login as moderator"
+[[ "$(staff_api "$moderator_token" POST "http://listings:4000/admin/v1/listings/$listing/remove" '{"reasonCode":"fraud","note":"smoke"}')" =~ ^20[01]$ ]] \
+  && ok "a moderator removes the listing in the console, with a reason" || fail "console removal" "$(head -c 200 "$BODY")"
 eventually "removed listing disappears from search" 90 \
   bash -c "! curl -sf --connect-to ::$GW -G '$PUBLIC/api/v1/search/listings' --data-urlencode 'q=$title' | jq -e '.items[] | select(.id == \"$listing\")'"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
@@ -534,14 +555,14 @@ req GET "$PUBLIC/api/v1/listings/mine?limit=1"
 req POST "$PUBLIC/api/v1/listings/$(json '.items[0].id')/reports" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"reason":"other"}'
 [[ "$status" == "422" && "$(json '.errors[0].code')" == "own_listing" ]] && ok "nobody reports their own listing" || fail "own report" "HTTP $status"
 req GET "$PUBLIC/api/v1/listings/moderation/reports"
-expect_status 403 "only moderators see the report queue"
-login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"
-req GET "$PUBLIC/api/v1/listings/moderation/reports"
+expect_status 404 "the website's API has no report queue (staff work it in the console)"
+moderator_token="$(console_token "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}")" || fail "console login as moderator"
+staff_api "$moderator_token" GET "http://listings:4000/admin/v1/listings/workbench" >/dev/null
 jq -e --arg id "$kari_listing" '.items[] | select(.listing.id == $id and .reasons.fraud >= 1)' "$BODY" >/dev/null \
   && ok "the moderator sees the report, grouped by listing" || fail "report queue" "$(head -c 300 "$BODY")"
-req POST "$PUBLIC/api/v1/listings/moderation/reports/$kari_listing/dismiss" -H "origin: $ORIGIN"
-expect_status 204 "the moderator dismisses the reports"
-req GET "$PUBLIC/api/v1/listings/moderation/reports"
+[[ "$(staff_api "$moderator_token" POST "http://listings:4000/admin/v1/listings/dismiss" "{\"ids\":[\"$kari_listing\"],\"note\":\"smoke\"}")" =~ ^20[01]$ ]] \
+  && [[ "$(json '.closed')" -ge 1 ]] && ok "the moderator dismisses the reports" || fail "dismiss" "$(head -c 200 "$BODY")"
+staff_api "$moderator_token" GET "http://listings:4000/admin/v1/listings/workbench" >/dev/null
 ! jq -e --arg id "$kari_listing" '.items[] | select(.listing.id == $id)' "$BODY" >/dev/null \
   && ok "dismissed reports leave the queue" || fail "queue after dismiss"
 
@@ -635,11 +656,14 @@ expect_status 401 "unsigned webhooks are refused"
 mock_api=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 --connect-to "::${GW}" "${pay_url%/pay/*}/epayment/v1/payments/$order_id")
 [[ "$mock_api" == "404" ]] && ok "the mock provider's API is not exposed (only its payment page)" || fail "mock API exposed" "HTTP $mock_api"
 req POST "$PUBLIC/api/v1/payments/orders/$order_id/refund" -H "origin: $ORIGIN"
-expect_status 403 "a seller cannot refund their own order"
+expect_status 404 "the website's API cannot refund (staff refund in the console)"
 login_as "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as admin"
 req POST "$PUBLIC/api/v1/payments/orders/$order_id/refund" -H "origin: $ORIGIN"
-[[ "$status" == "200" && "$(json '.status')" == "refunded" ]] \
-  && ok "a platform admin refunds the order (role platform-admin)" || fail "refund" "HTTP $status $(head -c 200 "$BODY")"
+expect_status 404 "not even a platform admin's website session refunds"
+admin_token="$(console_token "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}")" || fail "console login as admin"
+[[ "$(staff_api "$admin_token" POST "http://payments:4000/admin/v1/payments/orders/$order_id/refund" '{"reasonCode":"customer_request","note":"smoke"}')" == "200" ]] \
+  && [[ "$(json '.status')" == "refunded" ]] && ok "a platform admin refunds the order in the console, with a reason" \
+  || fail "refund" "$(head -c 200 "$BODY")"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Admin console host (ADR-0028)"
@@ -680,18 +704,6 @@ req GET "$ADMIN/auth/session"
 [[ "$(json '.authenticated')" == "false" ]] && ok "the website's session does not open the console" || fail "session leak"
 
 section "Console staff APIs (ADR-0030)"
-# token_from <bff> <cookie name>: the bearer token the BFF hands out for the jar's session cookie.
-token_from() {
-  local sid; sid="$(awk -v n="$2" '$6 == n { v = $7 } END { print v }' "$JAR")"
-  curl -s -D - -o /dev/null --max-time 10 -H "cookie: $2=$sid" -H 'x-forwarded-method: GET' \
-    "http://$1:4000/auth/forward" | tr -d '\r' | sed -n 's/^[Aa]uthorization: Bearer //p'
-}
-staff_api() { # <token> <method> <url> [body]: prints the HTTP status, body in $BODY
-  local body=()
-  [[ -n "${4:-}" ]] && body=(-H 'content-type: application/json' --data "$4")
-  curl -s -o "$BODY" -w '%{http_code}' --max-time 15 -X "$2" -H "authorization: Bearer $1" \
-    "${body[@]}" "$3"
-}
 req GET "$PUBLIC/admin/v1/listings"
 [[ "$status" != "200" ]] && ok "staff APIs are not routed by the gateway" || fail "staff API exposed" "HTTP $status"
 login_as "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as admin"
@@ -756,12 +768,14 @@ kari_token="$(token_from identity-bff raadi_sid)"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
 section "Audit log (ADR-0028)"
-login_as "moderator@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as moderator"
-req GET "$PUBLIC/api/v1/audit/entries"
-expect_status 403 "only platform admins read the audit log"
 login_as "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as admin"
-audited() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" -G "$PUBLIC/api/v1/audit/entries" \
-  --data-urlencode "action=$1" --data-urlencode "targetId=$2" | jq -e '.items | length >= 1'; }
+req GET "$PUBLIC/api/v1/audit/entries"
+[[ "$status" != "200" ]] && ok "the audit log is not on the website (console only)" || fail "audit log exposed" "HTTP $status"
+admin_token="$(console_token "admin@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}")" || fail "console login as admin"
+audited() {
+  [[ "$(staff_api "$admin_token" GET "http://audit:4000/admin/v1/audit/entries?action=$1&targetId=$2")" == "200" ]] \
+    && jq -e '.items | length >= 1' "$BODY"
+}
 eventually "the refund is in the audit log (outbox -> Kafka -> audit)" 90 audited payment.refund "$order_id"
 eventually "the moderator's removal is in the audit log" 90 audited listing.remove "$listing"
 eventually "dismissed reports are in the audit log" 90 audited reports.dismiss "$kari_listing"
