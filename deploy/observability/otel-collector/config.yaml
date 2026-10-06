@@ -22,6 +22,27 @@ receivers:
     collection_interval: 30s
     tls:
       insecure: true
+  # Debezium's replication slots (ADR-0008): is each outbox connector attached, and how far behind the
+  # WAL is it? A stopped connector shows no consumer lag (nothing reaches Kafka), so this is the signal.
+  sql_query/cdc:
+    driver: postgres
+    datasource: host=postgres port=5432 dbname=postgres sslmode=disable user=postgres_monitor password=${file:/run/secrets/raadi/postgres_monitor_password}
+    collection_interval: 30s
+    queries:
+      - sql: >-
+          SELECT slot_name, CASE WHEN active THEN 1 ELSE 0 END AS active,
+                 COALESCE(pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn), 0)::bigint AS lag
+            FROM pg_replication_slots
+        metrics:
+          - metric_name: raadi.cdc.slot.active
+            value_column: active
+            attribute_columns: [slot_name]
+            value_type: int
+          - metric_name: raadi.cdc.slot.lag
+            value_column: lag
+            attribute_columns: [slot_name]
+            value_type: int
+            unit: By
   redis/valkey:
     endpoint: valkey:6379
     password: ${file:/run/secrets/raadi/valkey_password}
@@ -113,7 +134,7 @@ service:
       processors: [memory_limiter, resource/env, attributes/scrub, transform/scrub-query, batch]
       exporters: [otlp/tempo]
     metrics:
-      receivers: [otlp, postgresql, redis/valkey, kafkametrics]
+      receivers: [otlp, postgresql, sql_query/cdc, redis/valkey, kafkametrics]
       processors: [memory_limiter, resource/env, batch]
       exporters: [otlp_http/prometheus]
     logs:

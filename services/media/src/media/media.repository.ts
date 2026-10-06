@@ -104,14 +104,15 @@ export class MediaRepository {
   }
 
   /**
-   * Applies a listing event exactly once (inbox table): attaches the listed
-   * images that belong to the listing's owner and detaches the rest (all of
-   * them when `attach` is null, e.g. the listing was deleted). Returns false
-   * if the event was already processed.
+   * Applies a listing event exactly once (inbox table) and only if it is newer than the last one
+   * applied for that listing: attaches the listed images that belong to the listing's owner and
+   * detaches the rest (all of them when `attach` is null, e.g. the listing was deleted). Returns false
+   * if the event was already processed or is older than what is applied.
    */
   async syncListingImages(
     eventId: string,
     listingId: string,
+    version: number,
     attach: { ownerId: string; imageIds: string[] } | null,
   ): Promise<boolean> {
     const imageIds = attach?.imageIds ?? [];
@@ -121,6 +122,13 @@ export class MediaRepository {
         [eventId],
       );
       if (!fresh.rowCount) return false;
+      const newer = await client.query(
+        `INSERT INTO listing_versions (listing_id, version) VALUES ($1, $2)
+         ON CONFLICT (listing_id) DO UPDATE SET version = EXCLUDED.version
+           WHERE listing_versions.version < EXCLUDED.version`,
+        [listingId, version],
+      );
+      if (!newer.rowCount) return false;
       await client.query(
         `UPDATE media SET listing_id = NULL, attached_at = NULL
           WHERE listing_id = $1 AND NOT (id = ANY($2::uuid[]))`,

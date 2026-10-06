@@ -208,29 +208,38 @@ export class UserAdminService implements OnModuleInit, OnApplicationShutdown {
       const all = (await this.kc.roleUsers(q.role)).filter((u) => matches(u, q.q));
       total = all.length;
       users = all.slice(q.first, q.first + q.max);
-    } else if (q.status === 'suspended') {
-      const { rows } = await this.pool.query<{ user_id: string }>(
-        'SELECT user_id FROM user_suspensions ORDER BY suspended_at DESC',
-      );
+    } else if (q.status === 'suspended' && !q.q) {
+      // Paged in SQL: one Keycloak call per account shown, not per suspension.
+      const [page, count] = await Promise.all([
+        this.pool.query<{ user_id: string }>(
+          'SELECT user_id FROM user_suspensions ORDER BY suspended_at DESC LIMIT $1 OFFSET $2',
+          [q.max, q.first],
+        ),
+        this.pool.query<{ n: string }>('SELECT count(*) AS n FROM user_suspensions'),
+      ]);
       const found = await Promise.all(
-        rows.map((r) => this.kc.getUser(r.user_id).catch(() => null)),
+        page.rows.map((r) => this.kc.getUser(r.user_id).catch(() => null)),
       );
-      const all = found.filter((u): u is KcUser => !!u && matches(u, q.q));
-      total = all.length;
-      users = all.slice(q.first, q.first + q.max);
-    } else {
+      users = found.filter((u): u is KcUser => !!u);
+      total = Number(count.rows[0]!.n);
+    } else if (q.status === 'suspended') {
+      // Suspended accounts are disabled in Keycloak, which searches them by name or e-mail.
       [users, total] = await Promise.all([
-        this.kc.searchUsers(q.q, q.first, q.max),
-        this.kc.countUsers(q.q),
+        this.kc.searchUsers(q.q, q.first, q.max, false),
+        this.kc.countUsers(q.q, false),
+      ]);
+    } else {
+      // "Active" is filtered by Keycloak before paging, so pages are full and the total is right.
+      const enabled = q.status === 'active' ? true : undefined;
+      [users, total] = await Promise.all([
+        this.kc.searchUsers(q.q, q.first, q.max, enabled),
+        this.kc.countUsers(q.q, enabled),
       ]);
       // Service accounts are not people.
       users = users.filter((u) => !u.username.startsWith('service-account-'));
     }
     const items = await this.summaries(users);
-    return {
-      items: q.status === 'active' ? items.filter((u) => !u.suspended) : items,
-      total,
-    };
+    return { items, total };
   }
 
   async detail(id: string): Promise<UserDetail> {

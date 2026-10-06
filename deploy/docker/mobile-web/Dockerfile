@@ -2,7 +2,7 @@
 # The Expo app's web export, served under /m by a small static server on distroless Node (non-root,
 # read-only). The gateway routes /m here; the app signs in through the website's session (ADR-0021).
 
-FROM --platform=$BUILDPLATFORM node:24.21.0-trixie-slim AS base
+FROM --platform=$BUILDPLATFORM node:24.21.0-trixie-slim@sha256:173f125896c3b47ddf056734c7ea789d04595a6a08769a8f78e0df642781fb66 AS base
 RUN npm install -g pnpm@10.34.6 turbo@2.11.6 >/dev/null 2>&1
 ENV PNPM_HOME=/pnpm CI=true TURBO_TELEMETRY_DISABLED=1 EXPO_NO_TELEMETRY=1
 WORKDIR /repo

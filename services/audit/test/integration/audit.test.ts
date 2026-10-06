@@ -89,6 +89,24 @@ describe('audit log', () => {
     assert.equal(byTarget.items[0]!.source, 'urn:raadi:listings');
   });
 
+  it('pages exactly by entry, even when entries share a time', async () => {
+    const mod = randomUUID();
+    const at = new Date('2026-10-05T12:00:00.123Z');
+    for (let i = 0; i < 5; i++) {
+      await service.onEvent(received(action(mod, 'reports.dismiss', randomUUID(), at)));
+    }
+    const seen: string[] = [];
+    let after: string | undefined;
+    for (;;) {
+      const page = await service.query({ actor: mod, limit: 2, ...(after ? { after } : {}) });
+      seen.push(...page.items.map((e) => e.id));
+      if (!page.hasMore) break;
+      after = page.items.at(-1)!.id;
+    }
+    assert.equal(seen.length, 5, 'every entry once');
+    assert.equal(new Set(seen).size, 5, 'no entry twice');
+  });
+
   it('is append-only: entries cannot be changed or deleted', async () => {
     await assert.rejects(pool.query("UPDATE audit_entries SET action = 'tampered'"), /append-only/);
     await assert.rejects(pool.query('DELETE FROM audit_entries'), /append-only/);

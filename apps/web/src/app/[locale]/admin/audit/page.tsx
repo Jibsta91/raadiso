@@ -44,7 +44,7 @@ export default async function AuditPage({
   if (!session.authenticated || !canOpen('audit', session.user.roles)) notFound();
   const [t, format] = await Promise.all([getTranslations('admin.audit'), getFormatter()]);
   const filters: AuditQuery = Object.fromEntries(
-    (['actor', 'action', 'targetType', 'targetId', 'before'] as const)
+    (['actor', 'action', 'targetType', 'targetId', 'before', 'after'] as const)
       .map((k) => [k, sp[k]?.trim()])
       .filter(([, v]) => v),
   );
@@ -76,7 +76,7 @@ export default async function AuditPage({
         intro={t('intro')}
         actions={
           <a
-            href={`/${locale}/admin/audit/export?${query({ before: undefined })}`}
+            href={`/${locale}/admin/audit/export?${query({ before: undefined, after: undefined })}`}
             className="inline-flex h-9 items-center gap-1.5 rounded-full border bg-card px-4 text-sm font-semibold hover:bg-accent"
             data-testid="audit-export"
           >
@@ -99,7 +99,7 @@ export default async function AuditPage({
               {stats.actions.map((a) => (
                 <li key={a.action}>
                   <Link
-                    href={`/admin/audit?${query({ action: a.action, before: undefined })}`}
+                    href={`/admin/audit?${query({ action: a.action, before: undefined, after: undefined })}`}
                     prefetch={false}
                   >
                     <Pill tone={filters.action === a.action ? 'ink' : 'neutral'}>
@@ -117,7 +117,7 @@ export default async function AuditPage({
                 return (
                   <li key={a.id}>
                     <Link
-                      href={`/admin/audit?${query({ actor: a.id, before: undefined })}`}
+                      href={`/admin/audit?${query({ actor: a.id, before: undefined, after: undefined })}`}
                       prefetch={false}
                       className="flex items-center gap-2 hover:underline"
                     >
@@ -210,7 +210,7 @@ export default async function AuditPage({
                       <div className="min-w-0 flex-1 space-y-1">
                         <p className="flex flex-wrap items-baseline gap-x-2">
                           <Link
-                            href={`/admin/audit?${query({ actor: e.actor.id, before: undefined })}`}
+                            href={`/admin/audit?${query({ actor: e.actor.id, before: undefined, after: undefined })}`}
                             prefetch={false}
                             className="font-semibold hover:underline"
                           >
@@ -261,7 +261,7 @@ export default async function AuditPage({
       )}
       {page?.hasMore && last ? (
         <Link
-          href={`/admin/audit?${query({ before: last.at })}`}
+          href={`/admin/audit?${query({ before: undefined, after: last.id })}`}
           prefetch={false}
           className="font-semibold text-primary hover:underline"
         >

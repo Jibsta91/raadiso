@@ -2,10 +2,10 @@
 # Raadi toolbox: every dev/ops CLI at a pinned version, so the host needs only
 # Docker. Usage:  docker compose run --rm toolbox <command>   (or ./raadi / make)
 # Base: the official Playwright image (Node + browsers for E2E tests).
-FROM docker:29.8.2-cli AS dockercli
-FROM ghcr.io/astral-sh/uv:0.12.22 AS uv
+FROM docker:29.8.2-cli@sha256:b1805116a6a86cc591b5d5f60a910a0715cdcc9d18d866ad68b1457ead25c35c AS dockercli
+FROM ghcr.io/astral-sh/uv:0.12.22@sha256:f513a91fc62fe7c17567eee97230dd198e43edb8a9fbecca843714a4358fe1bc AS uv
 
-FROM mcr.microsoft.com/playwright:v1.63.0-noble
+FROM mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
 ARG TARGETARCH
 ARG PNPM_VERSION=10.34.6
 ARG TURBO_VERSION=2.11.6

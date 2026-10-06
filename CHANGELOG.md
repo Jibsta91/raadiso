@@ -97,6 +97,17 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- Event consumers: a bug (TypeError, SQL constraint or syntax error) no longer stops a partition for good; the
+  event goes to the dead-letter topic after five attempts. A dependency being down still waits.
+- The media service applies only newer listing versions, so a late or replayed event cannot undo a change.
+- Old `outbox` (7 days) and `processed_events` (30 days) rows are deleted; the outbox publication sends
+  Debezium inserts only.
+- Missing indexes for messages by sender, reviews by reviewer and every report of a listing.
+- Staff user search pages suspended and active accounts correctly, without one Keycloak call per suspension.
+- The audit log pages by entry, so entries that share a time are never skipped.
+- Alerts when Debezium stops reading or falls behind on a database (`OutboxRelayStalled`,
+  `OutboxRelayLagging`).
+- Every third-party image is pinned by digest, and Renovate keeps the digests current (ADR-0010).
 - Search finds the last part of Norwegian compound words ("sykkel" finds "Terrengsykkel"), typo tolerance no
   longer matches unrelated words, and an empty search offers to search everywhere or pick a category.
 - The website: translated error pages, title and price first on listing pages on phones, a full-screen photo

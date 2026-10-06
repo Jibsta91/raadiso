@@ -5,7 +5,7 @@
 # Build stages run on the build platform; production dependencies are pure JS,
 # so the multi-arch result needs no emulation.
 
-FROM --platform=$BUILDPLATFORM node:24.21.0-alpine3.24 AS base
+FROM --platform=$BUILDPLATFORM node:24.21.0-alpine3.24@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS base
 RUN npm install -g pnpm@10.34.6 turbo@2.11.6 >/dev/null 2>&1
 ENV PNPM_HOME=/pnpm CI=true TURBO_TELEMETRY_DISABLED=1
 WORKDIR /repo
