@@ -244,3 +244,25 @@ export function noStoreByDefault(app: INestApplication): void {
     return payload;
   });
 }
+
+/** What a controller's staff routes declare (for tests that pin down which actions need step-up). */
+export function staffRoutes(
+  controller: abstract new (...args: never[]) => unknown,
+): Array<{ handler: string; method: string; roles: string[]; stepUp: boolean }> {
+  const proto = controller.prototype as Record<string, unknown>;
+  return Object.getOwnPropertyNames(proto)
+    .filter((name) => name !== 'constructor' && typeof proto[name] === 'function')
+    .map((name) => ({ name, fn: proto[name] as object }))
+    .filter(({ fn }) => Reflect.getMetadata('path', fn) !== undefined)
+    .map(({ name, fn }) => {
+      const staff = Reflect.getMetadata(STAFF, fn) as { stepUp: boolean } | undefined;
+      return {
+        handler: name,
+        method:
+          ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'][Reflect.getMetadata('method', fn) as number] ??
+          '?',
+        roles: (Reflect.getMetadata(ROLES, fn) as string[] | undefined) ?? [],
+        stepUp: staff?.stepUp ?? false,
+      };
+    });
+}

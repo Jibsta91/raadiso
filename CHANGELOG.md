@@ -97,6 +97,11 @@ Each release also has generated notes on GitHub.
 
 ### Fixed
 
+- Stored photos lost their GPS position and camera details but kept copyright tags, which often name the
+  photographer; imgproxy now drops them too (`IMGPROXY_KEEP_COPYRIGHT=false`), with a test.
+- Tests: smoke suspends and locks out a test-only account (`smoke-target@`) instead of a demo user; e2e tests
+  make their own listings and clean them up; a test pins down which console actions need a recent sign-in;
+  flaky tests fail CI runs; accessibility checks cover Somali, Norwegian and a phone screen.
 - Event consumers: a bug (TypeError, SQL constraint or syntax error) no longer stops a partition for good; the
   event goes to the dead-letter topic after five attempts. A dependency being down still waits.
 - The media service applies only newer listing versions, so a late or replayed event cannot undo a change.

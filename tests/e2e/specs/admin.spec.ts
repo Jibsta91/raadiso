@@ -51,28 +51,58 @@ test('each role sees its own sections, and nothing else opens', async ({ browser
   }
 });
 
-test('the admin host serves only the console, and the audit log filters', async ({ page }) => {
+test('the admin host serves only the console, and the audit log filters', async ({
+  browser,
+  page,
+}) => {
+  // Something to find: a listing a moderator removes (an audited action) in this test.
+  const owner = await browser.newPage();
+  await login(owner, `amina.hassan@${domain}`);
+  const created = await owner.request.post('/api/v1/listings', {
+    headers: { origin: new URL(owner.url()).origin },
+    data: {
+      category: 'torget',
+      subcategory: 'hobby',
+      title: `Revisjon e2e ${Date.now().toString(36)}`,
+      description: 'Laget av e2e-testen for revisjonsloggen.',
+      priceNok: 10,
+      attributes: { condition: 'good' },
+      placeId: 'oslo',
+      imageIds: [],
+    },
+  });
+  expect(created.status()).toBe(201);
+  const { id } = (await created.json()) as { id: string };
+  await owner.close();
+
   await adminLogin(page, `admin@${domain}`);
   await page.goto(`${adminBase}/en/search`);
   await expect(page).toHaveURL(new RegExp(`${adminBase}/en/admin$`));
+  await page.goto(`${adminBase}/en/admin/listings/${id}`);
+  await page.getByTestId('listing-remove').click();
+  await page.getByTestId('listing-remove-dialog').getByText('Duplicate', { exact: true }).click();
+  await page.getByTestId('listing-remove-submit').click();
+  await expect(page.getByTestId('toast').first()).toContainText('Listing removed');
 
   await page.getByTestId('admin-nav-audit').click();
   await expect(page).toHaveURL(new RegExp(`${adminBase}/en/admin/audit$`));
   await page
     .getByTestId('audit-filters')
     .locator('select[name="targetType"]')
-    .selectOption('order');
+    .selectOption('listing');
   await page.getByTestId('audit-filters').getByRole('button').click();
-  await expect(page).toHaveURL(/targetType=order/);
-  // Either refunds are listed (all about orders) or none match yet.
+  await expect(page).toHaveURL(/targetType=listing/);
+  // The removal arrives through the outbox and Kafka; every row shown is about a listing.
   const entries = page.getByTestId('audit-entry');
-  if (await entries.count()) {
-    for (const row of await entries.all()) await expect(row).toContainText('order');
-  } else {
-    await expect(page.getByTestId('audit-empty')).toBeVisible();
-  }
+  await expect(async () => {
+    await page.reload();
+    await expect(entries.filter({ hasText: id.slice(0, 8) }).first()).toBeVisible({
+      timeout: 1_000,
+    });
+  }).toPass({ timeout: 60_000 });
+  for (const row of await entries.all()) await expect(row).toContainText('listing');
   // The export keeps the filter.
-  await expect(page.getByTestId('audit-export')).toHaveAttribute('href', /targetType=order/);
+  await expect(page.getByTestId('audit-export')).toHaveAttribute('href', /targetType=listing/);
 });
 
 test('⌘K finds an account and opens it; g then a letter switches sections', async ({ page }) => {
