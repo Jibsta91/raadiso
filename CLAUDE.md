@@ -1,13 +1,14 @@
 # Raadi: working notes for AI coding sessions
 
 Raadi is a Finn.no-style classifieds marketplace (web, mobile, domain microservices, four AI pillars). Users
-see it as **Raadiso** (raadiso.com): the brand in UI text, e-mails, login pages and the app name. Code keeps the
-working name `raadi` (packages, `./raadi`, realm, databases, images). In Somali text, "raadi" is also the verb
+see it as **Raadiso** (raadiso.com), owned by Horumar Group (horumargroup.com): the brand in UI text, e-mails,
+login pages and the app name. Code keeps the working name `raadi` (packages, `./raadi`, realm, databases,
+images). In Somali text, "raadi" is also the verb
 "search": leave those strings alone. It is built in six phases; [docs/roadmap.md](docs/roadmap.md) holds the
 scope and status of each. Read that first, then [docs/development.md](docs/development.md) (layout, service
 checklist, conventions) and [docs/adr/README.md](docs/adr/README.md) (decisions already made; don't
 re-litigate them without a new ADR). Specialist subagents (project manager, architect, engineers, security,
-QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says who does what.
+legal, QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says who does what.
 
 ## Non-negotiables
 
@@ -33,8 +34,9 @@ QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.md) says
   Never push to `main` directly.
 - **Stack is settled:** Keycloak + OpenBao (Authentik/Bitwarden were considered and rejected). No Kubernetes.
 - **Many countries** ([ADR-0032](docs/adr/0032-multi-country-marketplace.md)): one marketplace for many
-  countries, like Locanto, with Norway first. Country and language are separate dimensions; never hard-code a
-  country, currency, locale, time zone, phone or address format.
+  countries, like Locanto, with Somaliland first
+  ([ADR-0033](docs/adr/0033-horumar-group-and-somaliland-first.md)). Country and language are separate
+  dimensions; never hard-code a country, currency, locale, time zone, phone or address format.
 - **Phase gate:** a phase is done only when a cold `docker compose up` is green and smoke, e2e, lint,
   typecheck, unit, integration, licenses, security and iac-scan all pass. No TODO placeholders. Write an ADR
   for each decision.

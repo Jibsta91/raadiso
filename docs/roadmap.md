@@ -13,8 +13,10 @@ Each phase ends with `docker compose up` green: the smoke test, Playwright E2E a
 
 ## Many countries (ADR-0032)
 
-On 2026-10-05 the goal changed: one marketplace for many countries, like Locanto, with Norway as the first
-country ([ADR-0032](adr/0032-multi-country-marketplace.md)). Country is now a dimension of its own, separate
+On 2026-10-05 the goal changed: one marketplace for many countries, like Locanto
+([ADR-0032](adr/0032-multi-country-marketplace.md)). The first market is Somaliland, and Raadiso belongs to
+Horumar Group ([ADR-0033](adr/0033-horumar-group-and-somaliland-first.md)); Norway stays the configuration
+the code and the demo use until Somaliland's exists. Country is now a dimension of its own, separate
 from language, and new code must not assume one country, currency, locale or time zone.
 
 The follow-up decisions (brand and domain, country URLs, the data model, money, identity checks, law and
