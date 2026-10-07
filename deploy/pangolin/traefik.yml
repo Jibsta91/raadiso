@@ -18,10 +18,12 @@ experimental:
     # Pangolin's authentication middleware (MIT), fetched from the Traefik plugin catalogue at start.
     badger:
       moduleName: github.com/fosrl/badger
+      # renovate: datasource=github-tags depName=fosrl/badger
       version: v1.7.0
     # CrowdSec's bouncer (Apache-2.0, ADR-0035): the AppSec (WAF) check at the edge.
     crowdsec:
       moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+      # renovate: datasource=github-tags depName=maxlerebourg/crowdsec-bouncer-traefik-plugin
       version: v1.7.1
 
 entryPoints:

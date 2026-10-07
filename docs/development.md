@@ -110,6 +110,22 @@ Setting it up once:
 The runner's version is pinned and doesn't update itself: GitHub stops accepting very old runners, so bump
 `deploy/ci-runner/Dockerfile` (Renovate does) and register again if it is ever refused.
 
+## Dependency updates (Renovate)
+
+Renovate ([ADR-0037](adr/0037-renovate-dependency-updates.md)) opens pull requests for new versions of
+everything pinned in the repository, configured in `renovate.json`. It runs every Monday morning on the
+self-hosted runner, or now with `./raadi renovate` (`./raadi renovate --dry-run=full` only reports).
+Majors wait until you tick them on the "Dependency Dashboard" issue. Image updates get the `full-stack`
+label, so CI runs the whole stack on them. The Expo SDK is excluded: upgrade it with `expo upgrade`.
+
+To pin a version Renovate can't find on its own, put a comment above it:
+`# renovate: datasource=github-releases depName=owner/repo extractVersion=^v(?<version>.+)$`.
+
+Setting it up once: create a fine-grained token at github.com → Settings → Developer settings →
+Fine-grained tokens, for this repository only, with read and write access to Contents, Pull requests,
+Issues and Workflows. Store it with `./raadi secret-set renovate_token` (for `./raadi renovate`) and as the
+repository secret `RENOVATE_TOKEN` (Settings → Secrets and variables → Actions, for the weekly run).
+
 ## Browser automation for AI coding sessions (MCP)
 
 `.mcp.json` registers the [Playwright MCP server](https://github.com/microsoft/playwright-mcp) (Apache-2.0)
