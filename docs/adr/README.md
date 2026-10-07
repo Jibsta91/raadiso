@@ -39,3 +39,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0032](0032-multi-country-marketplace.md)              | One marketplace for many countries; country separate from language                     | Accepted |
 | [0033](0033-horumar-group-and-somaliland-first.md)     | Horumar Group owns Raadiso; Somaliland is the first market                             | Accepted |
 | [0034](0034-tunnel-mode-pangolin.md)                   | Tunnel mode: Pangolin on the laptop for public access and a VPN                        | Accepted |
+| [0035](0035-crowdsec-waf-at-the-tunnel-edge.md)        | CrowdSec as a WAF at the tunnel's edge (no IP bans yet)                                | Accepted |

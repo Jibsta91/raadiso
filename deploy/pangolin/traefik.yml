@@ -19,19 +19,27 @@ experimental:
     badger:
       moduleName: github.com/fosrl/badger
       version: v1.7.0
+    # CrowdSec's bouncer (Apache-2.0, ADR-0035): the AppSec (WAF) check at the edge.
+    crowdsec:
+      moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+      version: v1.7.1
 
 entryPoints:
   web:
     address: ':80'
+    http:
+      middlewares: [crowdsec@file]
   websecure:
     address: ':443'
     transport:
       respondingTimeouts:
         # Long-lived WebSockets (messaging) and slow uploads.
         readTimeout: 30m
-    # TLS from the file certificates only (dynamic/pangolin.yml); no ACME resolver.
+    # TLS from the file certificates only (dynamic/pangolin.yml); no ACME resolver. Every request,
+    # Pangolin's routes included, passes CrowdSec's WAF first.
     http:
       tls: {}
+      middlewares: [crowdsec@file]
       encodedCharacters:
         allowEncodedSlash: true
         allowEncodedQuestionMark: true

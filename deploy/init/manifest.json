@@ -56,7 +56,8 @@
     "kafka_audit_password",
     "pangolin_server_secret",
     "pangolin_setup_token",
-    "pangolin_site_secret"
+    "pangolin_site_secret",
+    "crowdsec_bouncer_key"
   ],
   "fileConsumers": {
     "postgres": {
@@ -138,6 +139,14 @@
     "pangolin-site": {
       "uid": 65532,
       "secrets": ["pangolin_site_secret"]
+    },
+    "pangolin-edge": {
+      "uid": 65532,
+      "secrets": ["crowdsec_bouncer_key"]
+    },
+    "crowdsec": {
+      "uid": 0,
+      "secrets": ["crowdsec_bouncer_key"]
     }
   },
   "templates": [
