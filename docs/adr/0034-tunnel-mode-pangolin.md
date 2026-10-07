@@ -68,7 +68,9 @@ on the laptop, and we don't rent a server before Phase 5.
 - The home's public address is in public DNS while tunnel mode is in use (it stays there afterwards until
   the record changes).
 - All tunnel traffic reaches our gateway from one address (the site connector), so the gateway's per-client
-  rate limits are shared by everyone using the tunnel, as with the Playwright workers.
+  rate limits are shared by everyone using the tunnel, as with the Playwright workers. Pangolin's edge
+  doesn't see visitors' addresses either: Docker Desktop's port forwarding replaces them with the Docker
+  gateway's. Pangolin's IP and country rules and its rate limits can't tell visitors apart (ADR-0035).
 - Resources added by hand in the dashboard can reach only the gateway (the site connector sees nothing
   else). The blueprint overwrites them only when names collide, and doesn't delete resources it no longer
   lists: remove those in the dashboard.

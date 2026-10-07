@@ -74,6 +74,8 @@ grows with each phase; Phase 6 adds a full ASVS checklist.
   sign-in, Keycloak's `/admin` is refused, and the admin console, dev tools and Metro are VPN only. The
   home's public address is published in DNS, all tunnel users share the gateway's per-client rate limits,
   and the stack still has the public demo passwords. Use it for testing, and `./raadi up` closes it.
+  Behind Docker Desktop every visitor arrives from one address, so the edge can't ban attackers; CrowdSec
+  blocks known exploit requests instead (ADR-0035).
 - **Deleted listings keep their OpenFGA owner tuple.** This is harmless because checks also require the
   listing to exist ([ADR-0013](adr/0013-authorization.md)).
 

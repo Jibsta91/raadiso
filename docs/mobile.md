@@ -118,6 +118,9 @@ Notes:
   Wi-Fi needs the router to support NAT loopback (most do); the VPN works either way.
 - Everyone using the tunnel reaches the gateway from the same address, so they share its per-client rate
   limits.
+- A WAF (CrowdSec, [ADR-0035](adr/0035-crowdsec-waf-at-the-tunnel-edge.md)) answers 403 to requests that
+  look like known exploits. If something legitimate is blocked, `docker exec raadi-crowdsec-1 cscli alerts
+list` shows which rule matched.
 
 ## Development build (iPhone)
 

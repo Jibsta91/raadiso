@@ -195,9 +195,16 @@ services:
         read_only: true
         volume: { subpath: dynamic }
       - tunnel-certs:/certs:ro
+      # The CrowdSec bouncer's key (crowdsecLapiKeyFile in dynamic.yml.tmpl).
+      - type: volume
+        source: secrets
+        target: /run/secrets
+        read_only: true
+        volume: { subpath: pangolin-edge }
     depends_on:
       gerbil: { condition: service_healthy }
       tunnel-certs: { condition: service_completed_successfully }
+      crowdsec: { condition: service_healthy }
     healthcheck:
       test: ['CMD', 'traefik', 'healthcheck', '--configFile=/etc/traefik/traefik.yml']
       interval: 10s
@@ -207,6 +214,49 @@ services:
     deploy:
       resources:
         limits: { memory: 128M, cpus: '1.0' }
+
+  # CrowdSec (MIT, ADR-0035) as a WAF for Pangolin's Traefik: its AppSec component checks each request
+  # against virtual patches for known CVEs. No log scenarios or IP bans (Docker Desktop hides visitors'
+  # addresses), and no CrowdSec online API: nothing is sent to CrowdSec's servers. The rules come from
+  # the CrowdSec hub at start.
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.8.1@sha256:0f2523fa61ef507f15d953045cface490cc880670c62f2755ced17524107f71a
+    entrypoint: ['bash', '-c']
+    # Registers the edge's bouncer with the generated key (secrets-init).
+    command:
+      - >-
+        export BOUNCER_KEY_pangolin_edge="$$(cat /run/secrets/crowdsec_bouncer_key)" &&
+        exec /bin/bash /docker_start.sh
+    restart: unless-stopped
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    environment:
+      COLLECTIONS: crowdsecurity/appsec-virtual-patching
+      DISABLE_ONLINE_API: 'true'
+      TZ: ${TZ}
+    volumes:
+      - crowdsec-config:/etc/crowdsec
+      - crowdsec-data:/var/lib/crowdsec/data
+      - ./deploy/crowdsec/acquis.d/appsec.yaml:/etc/crowdsec/acquis.d/appsec.yaml:ro
+      - type: volume
+        source: secrets
+        target: /run/secrets
+        read_only: true
+        volume: { subpath: crowdsec }
+    networks: [tunnel]
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', 'cscli', 'lapi', 'status']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '0.5' }
 
   # Admin, organisation, site and resources, from deploy/pangolin/blueprint.json.tmpl.
   pangolin-init:
@@ -304,6 +354,8 @@ networks:
         - subnet: 10.213.47.0/28
 
 volumes:
+  crowdsec-config: {}
+  crowdsec-data: {}
   pangolin-data: {}
   pangolin-edge: {}
   gerbil-data: {}
