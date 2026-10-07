@@ -70,6 +70,17 @@ cat <<BANNER
 
 BANNER
 
+# Tunnel mode (compose.tunnel.yaml, ADR-0034).
+if [[ -n "${TUNNEL_DASHBOARD_URL:-}" ]]; then
+  cat <<TUNNEL
+  Tunnel (Pangolin)
+    Dashboard .......... ${TUNNEL_DASHBOARD_URL}   (password: ./raadi secret pangolin_admin_password)
+    Public ............. ${PUBLIC_BASE_URL}, ${AUTH_BASE_URL}, ${S}://pay.${D}   (Pangolin sign-in first)
+    VPN only ........... every other ${S}://*.${D} host, and Metro: ${TUNNEL_METRO_URL:-}
+
+TUNNEL
+fi
+
 # Stay up as a readiness sentinel: healthy == platform verified, so
 # `docker compose up --wait` returns only when everything above is true.
 touch /tmp/ready

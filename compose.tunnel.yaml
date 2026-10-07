@@ -1,0 +1,310 @@
+# Tunnel mode: reach the stack on this laptop from anywhere through Pangolin (ADR-0034, docs/mobile.md).
+#   ./raadi tunnel       (sets the variables below and starts compose.yaml + compose.phone.yaml + this file)
+# Pangolin, Gerbil and Pangolin's Traefik run here too, on their own network, published on the laptop's
+# LAN address; the home router forwards TCP 80/443 and UDP 51820/21820 to it. pangolin-site (newt) joins
+# the tunnel network and the small edge network, where it reaches only our gateway: public resources
+# (website, sign-in, test payments, behind a Pangolin sign-in) and, for devices signed in to the Pangolin
+# app, every host of the gateway, Metro included (VPN).
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+x-init: &init
+  image: ${RAADI_IMAGE_PREFIX}/init:${RAADI_VERSION}
+  pull_policy: build
+  restart: 'no'
+  logging: *logging
+  user: '0:0'
+  security_opt: ['no-new-privileges:true']
+
+services:
+  # dev.raadiso.com and *.dev.raadiso.com point at the home router instead of the laptop.
+  phone-dns:
+    environment:
+      TARGET_IP: ${PUBLIC_IP:?run ./raadi tunnel}
+      ADDRESS_KIND: public
+
+  # The Pangolin dashboard's name, outside the VPN's *.dev.raadiso.com alias.
+  pangolin-dns:
+    <<: *init
+    command: ['/opt/raadi/bin/dns-point.sh']
+    environment:
+      DNS_NAME: ${PANGOLIN_DOMAIN}
+      DNS_ZONE: ${DNS_ZONE}
+      TARGET_IP: ${PUBLIC_IP:?run ./raadi tunnel}
+      ADDRESS_KIND: public
+    volumes:
+      - secrets:/secrets:ro
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '0.25' }
+
+  # Let's Encrypt wildcards for Pangolin's Traefik, in their own volume (it never sees the dev CA). The
+  # dev.raadiso.com one is phone-cert's (same lineage, no new order); the dashboard's is its own.
+  tunnel-certs:
+    <<: *init
+    entrypoint: ['bash', '-c']
+    command:
+      - >-
+        CERT_DOMAIN="$$RAADI_DOMAIN" CERT_NAME=phone INSTALL_NAME=dev /opt/raadi/bin/acme-cert.sh &&
+        CERT_DOMAIN="$$PANGOLIN_DOMAIN" CERT_NAME=pangolin INSTALL_NAME=pangolin /opt/raadi/bin/acme-cert.sh
+    environment:
+      RAADI_DOMAIN: ${RAADI_DOMAIN}
+      PANGOLIN_DOMAIN: ${PANGOLIN_DOMAIN}
+      DNS_ZONE: ${DNS_ZONE}
+      INSTALL: '1'
+      INSTALL_DIR: /tunnel-certs
+    volumes:
+      - secrets:/secrets:ro
+      - acme:/acme
+      - tunnel-certs:/tunnel-certs
+    depends_on:
+      # One lego at a time on the acme volume.
+      phone-cert: { condition: service_completed_successfully }
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.5' }
+
+  pangolin-config:
+    <<: *init
+    command: ['/opt/raadi/bin/pangolin-config.sh']
+    environment:
+      RAADI_DOMAIN: ${RAADI_DOMAIN}
+      PANGOLIN_DOMAIN: ${PANGOLIN_DOMAIN}
+    volumes:
+      - secrets:/secrets
+      - pangolin-data:/pangolin
+      - pangolin-edge:/edge
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '0.25' }
+
+  # Pangolin (AGPL-3.0 community edition): dashboard, API, the integration API and Badger's checks.
+  pangolin:
+    image: fosrl/pangolin:1.24.0@sha256:17774ddbb4bf13f4a2b9e813cc2dfc3ca8ded1c5745823624af632bab0376488
+    entrypoint: ['sh', '-c']
+    # The setup token is read only from the environment, the server secret also from a file. Both come
+    # from the secrets volume (secrets-init).
+    command:
+      - >-
+        export PANGOLIN_SETUP_TOKEN="$$(cut -c1-32 /run/secrets/pangolin_setup_token)" &&
+        exec npm run start
+    restart: unless-stopped
+    logging: *logging
+    user: '65532:65532'
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    environment:
+      SERVER_SECRET_FILE: /run/secrets/pangolin_server_secret
+      # Not read by Pangolin: pangolin-config renders them into config.yml, and listing them here makes
+      # compose recreate Pangolin when they change. After editing deploy/pangolin/config.yml.tmpl, run
+      # ./raadi tunnel, then docker restart raadi-pangolin-1.
+      RAADI_DOMAIN: ${RAADI_DOMAIN}
+      PANGOLIN_DOMAIN: ${PANGOLIN_DOMAIN}
+      HOME: /tmp
+      npm_config_cache: /tmp/npm
+      TZ: ${TZ}
+    tmpfs: ['/tmp:mode=1777']
+    volumes:
+      - pangolin-data:/app/config
+      - type: volume
+        source: secrets
+        target: /run/secrets
+        read_only: true
+        volume: { subpath: pangolin }
+    networks: [tunnel]
+    depends_on:
+      pangolin-config: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', 'curl', '-sf', '-o', '/dev/null', 'http://127.0.0.1:3001/api/v1/']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { memory: 768M, cpus: '1.0' }
+
+  # WireGuard for sites and VPN clients, and the network namespace Pangolin's Traefik serves from.
+  gerbil:
+    image: fosrl/gerbil:1.5.2@sha256:1f6e64eaba7997282c7067ba19922fc7e46b5f73e1a27add3dd66a591d50512f
+    command:
+      - --reachableAt=http://gerbil:3004
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/
+    restart: unless-stopped
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    # WireGuard interfaces and routes. It needs root inside its own namespace, nothing more.
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN]
+    sysctls:
+      net.ipv4.ip_forward: '1'
+      net.ipv4.conf.all.src_valid_mark: '1'
+      # Pangolin's Traefik shares this namespace and runs without root.
+      net.ipv4.ip_unprivileged_port_start: '0'
+    ports:
+      - '${LAN_IP:?run ./raadi tunnel}:80:80'
+      - '${LAN_IP:?run ./raadi tunnel}:443:443'
+      - '${LAN_IP:?run ./raadi tunnel}:51820:51820/udp'
+      - '${LAN_IP:?run ./raadi tunnel}:21820:21820/udp'
+    volumes:
+      - gerbil-data:/var/config
+    networks:
+      tunnel:
+        # Inside the stack the site reaches Pangolin directly, not round the home router.
+        aliases: ['${PANGOLIN_DOMAIN}']
+    depends_on:
+      pangolin: { condition: service_healthy }
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '3004']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '0.5' }
+
+  # Pangolin's Traefik: the public edge. Same image as our gateway.
+  pangolin-edge:
+    image: traefik:v3.7.13@sha256:24841fe2de7304c149343d877d2923b4c8800a38ba015dea9174c23b20e344a0
+    command: ['--configFile=/etc/traefik/traefik.yml']
+    restart: unless-stopped
+    logging: *logging
+    network_mode: service:gerbil
+    user: '65532:65532'
+    read_only: true
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    # Traefik downloads the Badger plugin into ./plugins-storage at start.
+    working_dir: /tmp
+    tmpfs: ['/tmp:mode=1777']
+    environment:
+      USER: traefik
+      TZ: ${TZ}
+    volumes:
+      - ./deploy/pangolin/traefik.yml:/etc/traefik/traefik.yml:ro
+      - type: volume
+        source: pangolin-edge
+        target: /etc/traefik/dynamic
+        read_only: true
+        volume: { subpath: dynamic }
+      - tunnel-certs:/certs:ro
+    depends_on:
+      gerbil: { condition: service_healthy }
+      tunnel-certs: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', 'traefik', 'healthcheck', '--configFile=/etc/traefik/traefik.yml']
+      interval: 10s
+      timeout: 6s
+      retries: 12
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '1.0' }
+
+  # Admin, organisation, site and resources, from deploy/pangolin/blueprint.json.tmpl.
+  pangolin-init:
+    <<: *init
+    command: ['/opt/raadi/bin/pangolin-init.sh']
+    environment:
+      RAADI_DOMAIN: ${RAADI_DOMAIN}
+      PANGOLIN_ADMIN_EMAIL: ${PANGOLIN_ADMIN_EMAIL}
+      # The gateway's fixed edge address below (Pangolin needs an IP to give a VPN alias a wildcard).
+      TUNNEL_GATEWAY_IP: 10.213.47.10
+    volumes:
+      - secrets:/secrets:ro
+    networks: [tunnel]
+    depends_on:
+      pangolin: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '0.25' }
+
+  # The site connector (newt, inside the Pangolin CLI): a user-space WireGuard tunnel out to Gerbil, and
+  # the only path from Pangolin into the stack. It reaches only the targets in the blueprint.
+  pangolin-site:
+    image: fosrl/pangolin-cli:0.18.1@sha256:c64847e840302eab60cb3ec6fec0ee57e6a3534c23bff80621ad0c4b5e1dee27
+    entrypoint: ['sh', '-c']
+    command:
+      - >-
+        export SITE_ID="$$(cut -c1-15 /run/secrets/pangolin_site_secret)"
+        SITE_SECRET="$$(cut -c16- /run/secrets/pangolin_site_secret)" &&
+        exec pangolin-cli up site
+    restart: unless-stopped
+    logging: *logging
+    user: '65532:65532'
+    read_only: true
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    environment:
+      PANGOLIN_ENDPOINT: https://${PANGOLIN_DOMAIN}
+      HEALTH_FILE: /tmp/healthy
+      DISABLE_SSH: 'true'
+      HOME: /tmp
+      LOG_LEVEL: INFO
+    tmpfs: ['/tmp:mode=1777']
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets
+        read_only: true
+        volume: { subpath: pangolin-site }
+    networks: [edge, tunnel]
+    depends_on:
+      pangolin-init: { condition: service_completed_successfully }
+      pangolin-dns: { condition: service_completed_successfully }
+      pangolin-edge: { condition: service_healthy }
+      traefik: { condition: service_healthy }
+    healthcheck:
+      test: ['CMD', 'test', '-f', '/tmp/healthy']
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.5' }
+
+  # Our gateway on the edge network, at the address the blueprint targets. It also serves Metro as
+  # https://metro.${RAADI_DOMAIN}, which only VPN devices reach (deploy/traefik/dynamic/dev/dev-tools.yml).
+  traefik:
+    environment:
+      METRO_ROUTED: 'true'
+    networks:
+      default: {}
+      edge: { ipv4_address: 10.213.47.10 }
+
+  # Metro behind the gateway over HTTPS instead of on the LAN address: iOS development builds refuse
+  # plain http to a host name. The manifest and bundle URLs use the proxy URL.
+  expo:
+    environment:
+      REACT_NATIVE_PACKAGER_HOSTNAME: metro.${RAADI_DOMAIN}
+      EXPO_PACKAGER_PROXY_URL: https://metro.${RAADI_DOMAIN}
+    ports: !reset []
+
+  summary:
+    environment:
+      TUNNEL_DASHBOARD_URL: https://${PANGOLIN_DOMAIN}
+      TUNNEL_METRO_URL: https://metro.${RAADI_DOMAIN}
+    depends_on:
+      pangolin-site: { condition: service_healthy }
+
+networks:
+  # Pangolin, Gerbil and Pangolin's Traefik.
+  tunnel: {}
+  # Only the gateway and the site connector.
+  edge:
+    ipam:
+      config:
+        - subnet: 10.213.47.0/28
+
+volumes:
+  pangolin-data: {}
+  pangolin-edge: {}
+  gerbil-data: {}
+  tunnel-certs: {}

@@ -1,0 +1,54 @@
+{
+  "public-resources": {
+    "web": {
+      "name": "Raadiso website and API",
+      "mode": "http",
+      "full-domain": "${RAADI_DOMAIN}",
+      "ssl": true,
+      "auth": { "sso-enabled": true, "sso-users": ["${PANGOLIN_ADMIN_EMAIL}"] },
+      "targets": [{ "site": "laptop", "hostname": "${TUNNEL_GATEWAY_IP}", "port": 443, "method": "https" }]
+    },
+    "auth": {
+      "name": "Raadiso sign-in (Keycloak)",
+      "mode": "http",
+      "full-domain": "auth.${RAADI_DOMAIN}",
+      "ssl": true,
+      "auth": { "sso-enabled": true, "sso-users": ["${PANGOLIN_ADMIN_EMAIL}"] },
+      "rules": [
+        { "action": "deny", "match": "path", "value": "/admin", "priority": 1 },
+        { "action": "deny", "match": "path", "value": "/admin/*", "priority": 2 }
+      ],
+      "targets": [{ "site": "laptop", "hostname": "${TUNNEL_GATEWAY_IP}", "port": 443, "method": "https" }]
+    },
+    "pay": {
+      "name": "Raadiso test payments",
+      "mode": "http",
+      "full-domain": "pay.${RAADI_DOMAIN}",
+      "ssl": true,
+      "auth": { "sso-enabled": true, "sso-users": ["${PANGOLIN_ADMIN_EMAIL}"] },
+      "targets": [{ "site": "laptop", "hostname": "${TUNNEL_GATEWAY_IP}", "port": 443, "method": "https" }]
+    }
+  },
+  "private-resources": {
+    "stack": {
+      "name": "Raadiso stack (VPN)",
+      "mode": "host",
+      "sites": ["laptop"],
+      "destination": "${TUNNEL_GATEWAY_IP}",
+      "alias": "${RAADI_DOMAIN}",
+      "tcp-ports": "443",
+      "disable-icmp": true,
+      "users": ["${PANGOLIN_ADMIN_EMAIL}"]
+    },
+    "stack-hosts": {
+      "name": "Raadiso stack hosts (VPN)",
+      "mode": "host",
+      "sites": ["laptop"],
+      "destination": "${TUNNEL_GATEWAY_IP}",
+      "alias": "*.${RAADI_DOMAIN}",
+      "tcp-ports": "443",
+      "disable-icmp": true,
+      "users": ["${PANGOLIN_ADMIN_EMAIL}"]
+    }
+  }
+}

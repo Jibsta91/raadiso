@@ -31,4 +31,6 @@ regexes = [
   '''943b421c9eb07c830af81030552c86009268de4e532ba2ee2eab8247c6da0881''',
   # RFC 6455 sample WebSocket handshake nonce ("the sample nonce"), used by the smoke test
   '''Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==''',
+  # Pangolin's fixed CSRF header value, the same for everyone (deploy/init/scripts/pangolin-init.sh)
+  '''X-CSRF-Token: x-csrf-protection''',
 ]

@@ -8,6 +8,12 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Tunnel mode (ADR-0034): `./raadi tunnel` makes the stack on the laptop reachable from anywhere through a
+  self-hosted Pangolin on the same laptop (the home router forwards TCP 80/443 and UDP 51820/21820). The
+  website, sign-in and test payments are public behind a Pangolin sign-in; with the Pangolin app (VPN), every
+  `*.dev.raadiso.com` host works too, Metro included (`https://metro.dev.raadiso.com`, for development builds
+  and Expo Go). The admin, organisation, site and resources are
+  set up by an init job from `deploy/pangolin/blueprint.json.tmpl`. `./raadi up` closes the tunnel.
 - Service level objectives (ADR-0031): six SLOs over 7 days (website and API availability, page and search
   latency, sign-ins, synthetic journeys) with error budgets and multi-window burn-rate alerts, a Grafana
   **Raadi · SLOs** dashboard and a runbook. A blackbox exporter probes six journeys through the gateway

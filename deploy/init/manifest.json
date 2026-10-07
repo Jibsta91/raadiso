@@ -53,7 +53,10 @@
     "payments_vipps_webhook_secret",
     "kafka_listings_password",
     "kafka_saved_password",
-    "kafka_audit_password"
+    "kafka_audit_password",
+    "pangolin_server_secret",
+    "pangolin_setup_token",
+    "pangolin_site_secret"
   ],
   "fileConsumers": {
     "postgres": {
@@ -127,6 +130,14 @@
     "opa": {
       "uid": 1000,
       "secrets": []
+    },
+    "pangolin": {
+      "uid": 65532,
+      "secrets": ["pangolin_server_secret", "pangolin_setup_token"]
+    },
+    "pangolin-site": {
+      "uid": 65532,
+      "secrets": ["pangolin_site_secret"]
     }
   },
   "templates": [

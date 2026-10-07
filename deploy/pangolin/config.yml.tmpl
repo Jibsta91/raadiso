@@ -1,0 +1,49 @@
+# Pangolin's own configuration (ADR-0034). Rendered by pangolin-config into the pangolin-data volume;
+# ${…} values come from the environment of `./raadi tunnel`. Secrets are not here: SERVER_SECRET_FILE and
+# PANGOLIN_SETUP_TOKEN come from the secrets volume (compose.tunnel.yaml).
+app:
+  dashboard_url: 'https://${PANGOLIN_DOMAIN}'
+  log_level: info
+  telemetry:
+    anonymous_usage: false
+  notifications:
+    product_updates: false
+    new_releases: false
+
+domains:
+  dev:
+    base_domain: '${RAADI_DOMAIN}'
+
+server:
+  # Badger reaches the internal API by this name on the tunnel network.
+  internal_hostname: pangolin
+  cors:
+    origins: ['https://${PANGOLIN_DOMAIN}']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
+    allowed_headers: ['X-CSRF-Token', 'Content-Type']
+    credentials: false
+
+gerbil:
+  # Sites and VPN clients dial this name. Inside the stack it is an alias of the gerbil container,
+  # outside it resolves to the home router's public address.
+  base_endpoint: '${PANGOLIN_DOMAIN}'
+  start_port: 51820
+  clients_start_port: 21820
+
+traefik:
+  # No ACME resolver: certificates come from our DNS-01 job (tunnel-certs), loaded as files by Pangolin's
+  # Traefik. With a resolver named, Traefik also ordered certificates for each resource by HTTP-01.
+  cert_resolver: ''
+  prefer_wildcard_cert: false
+
+flags:
+  require_email_verification: false
+  disable_signup_without_invite: true
+  disable_user_create_org: true
+  allow_raw_resources: false
+  disable_local_sites: true
+  disable_basic_wireguard_sites: true
+  disable_product_help_banners: true
+  disable_enterprise_features: true
+  # Traefik's acme.json stays empty (file certificates), so there is nothing to sync.
+  enable_acme_cert_sync: false

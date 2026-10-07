@@ -1,0 +1,61 @@
+# Pangolin's Traefik, file provider (ADR-0034): the Pangolin dashboard and the certificates. Rendered by
+# pangolin-config into the pangolin-edge volume. Resource routes come from Pangolin's HTTP provider.
+http:
+  middlewares:
+    badger:
+      plugin:
+        badger:
+          disableForwardAuth: true
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+
+  routers:
+    dashboard-redirect:
+      rule: 'Host(`${PANGOLIN_DOMAIN}`)'
+      entryPoints: [web]
+      middlewares: [redirect-to-https]
+      service: next-service
+    dashboard:
+      rule: 'Host(`${PANGOLIN_DOMAIN}`) && !PathPrefix(`/api/v1`)'
+      entryPoints: [websecure]
+      middlewares: [badger]
+      service: next-service
+      tls: {}
+    dashboard-api:
+      rule: 'Host(`${PANGOLIN_DOMAIN}`) && PathPrefix(`/api/v1`)'
+      entryPoints: [websecure]
+      middlewares: [badger]
+      service: api-service
+      tls: {}
+    # Sites and clients keep a WebSocket open to the API.
+    dashboard-ws:
+      rule: 'Host(`${PANGOLIN_DOMAIN}`)'
+      entryPoints: [websecure]
+      middlewares: [badger]
+      service: api-service
+      tls: {}
+
+  services:
+    next-service:
+      loadBalancer:
+        servers:
+          - url: 'http://pangolin:3002'
+    api-service:
+      loadBalancer:
+        servers:
+          - url: 'http://pangolin:3000'
+
+# Let's Encrypt wildcards from tunnel-certs (DNS-01): *.${RAADI_DOMAIN} and ${RAADI_DOMAIN}, and
+# *.${PANGOLIN_DOMAIN} and ${PANGOLIN_DOMAIN}.
+tls:
+  certificates:
+    - certFile: /certs/dev.crt
+      keyFile: /certs/dev.key
+    - certFile: /certs/pangolin.crt
+      keyFile: /certs/pangolin.key
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/dev.crt
+        keyFile: /certs/dev.key

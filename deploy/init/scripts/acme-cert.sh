@@ -24,7 +24,8 @@ key="$(find /acme -name "${NAME}.key" | head -1)"
 [[ -s "$crt" && -s "$key" ]] || die "lego finished but left no certificate for ${NAME} in /acme"
 info "certificate for ${DOMAIN} and *.${DOMAIN} valid until $(openssl x509 -in "$crt" -noout -enddate | cut -d= -f2)"
 if [[ "${INSTALL:-0}" == 1 ]]; then
-  install -m 0444 -o 65532 -g 0 "$crt" /certs/tls.crt
-  install -m 0400 -o 65532 -g 0 "$key" /certs/tls.key
-  info "installed as Traefik's default certificate"
+  dir="${INSTALL_DIR:-/certs}"; as="${INSTALL_NAME:-tls}"
+  install -m 0444 -o 65532 -g 0 "$crt" "${dir}/${as}.crt"
+  install -m 0400 -o 65532 -g 0 "$key" "${dir}/${as}.key"
+  info "installed as ${dir}/${as}.crt"
 fi

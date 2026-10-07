@@ -24,6 +24,14 @@ http:
       service: prometheus
       middlewares: [security-headers]
     {{- end }}
+    {{- if eq (env "METRO_ROUTED") "true" }}
+    # Metro over HTTPS, tunnel mode only (ADR-0034): iOS lets a development build load plain http only from
+    # IP addresses. Reached through the Pangolin VPN; it is not a public resource.
+    metro:
+      rule: Host(`metro.{{ $d }}`)
+      entryPoints: [websecure]
+      service: metro
+    {{- end }}
     # The mock payment provider's hosted page (payments-mock, ADR-0020). Only
     # /pay/ is public; its API is reachable on the internal network only.
     payments-mock:
@@ -38,6 +46,9 @@ http:
       service: push-mock
       middlewares: [security-headers, ratelimit-default]
   services:
+    metro:
+      loadBalancer:
+        servers: [{ url: "http://expo:8081" }]
     mailpit:
       loadBalancer:
         servers: [{ url: "http://mailpit:8025" }]
