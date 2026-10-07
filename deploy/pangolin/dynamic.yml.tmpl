@@ -9,6 +9,23 @@ http:
     redirect-to-https:
       redirectScheme:
         scheme: https
+    # ADR-0035. WAF only ("appsec" mode): each request is checked against CrowdSec's virtual patches for
+    # known CVEs and blocked with 403 when it matches. No IP bans: Docker Desktop's port forwarding hides
+    # visitors' addresses, so every request arrives from the same Docker gateway address. If CrowdSec is
+    # down the edge stays open: this is a development tunnel, and Pangolin's sign-in still applies.
+    crowdsec:
+      plugin:
+        crowdsec:
+          enabled: true
+          logLevel: INFO
+          crowdsecMode: appsec
+          crowdsecLapiScheme: http
+          crowdsecLapiHost: crowdsec:8080
+          crowdsecLapiKeyFile: /run/secrets/crowdsec_bouncer_key
+          crowdsecAppsecEnabled: true
+          crowdsecAppsecHost: crowdsec:7422
+          crowdsecAppsecFailureBlock: false
+          crowdsecAppsecUnreachableBlock: false
 
   routers:
     dashboard-redirect:

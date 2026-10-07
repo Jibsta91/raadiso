@@ -14,6 +14,9 @@ Each release also has generated notes on GitHub.
   `*.dev.raadiso.com` host works too, Metro included (`https://metro.dev.raadiso.com`, for development builds
   and Expo Go). The admin, organisation, site and resources are
   set up by an init job from `deploy/pangolin/blueprint.json.tmpl`. `./raadi up` closes the tunnel.
+- A WAF at the tunnel's edge (ADR-0035): CrowdSec's virtual patches for known CVEs check every public
+  request and answer 403 to exploit probes (`/.env`, `/.git/config`, PHPUnit and others). No IP bans:
+  Docker Desktop hides visitors' addresses.
 - Service level objectives (ADR-0031): six SLOs over 7 days (website and API availability, page and search
   latency, sign-ins, synthetic journeys) with error budgets and multi-window burn-rate alerts, a Grafana
   **Raadi · SLOs** dashboard and a runbook. A blackbox exporter probes six journeys through the gateway
