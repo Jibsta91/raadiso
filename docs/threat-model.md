@@ -11,6 +11,9 @@ grows with each phase; Phase 6 adds a full ASVS checklist.
 4. **Operators → admin surfaces** (Grafana SSO; Keycloak admin, OpenBao UI and Traefik dashboard are dev-only routes).
 5. **User uploads → media pipeline** (untrusted bytes: scanned and re-encoded before anyone else sees them).
 6. **Services → event backbone** (Kafka with one SCRAM principal and least-privilege ACLs per client).
+7. **Internet → Pangolin, in tunnel mode only** ([ADR-0034](adr/0034-tunnel-mode-pangolin.md)): Pangolin's
+   edge on the laptop's LAN address, its sign-in in front of three public hosts, and WireGuard for VPN
+   clients. The site connector reaches only the gateway, on a separate edge network.
 
 ## Threats and mitigations
 
@@ -67,6 +70,10 @@ grows with each phase; Phase 6 adds a full ASVS checklist.
   imgproxy is the second line of defence. Air-gapped installs update signatures with new images.
 - **Kafka and OpenSearch traffic is not encrypted** on the internal network (SASL/SCRAM and HTTP basic auth
   only). TLS for both is planned with the service mTLS work.
+- **Tunnel mode puts the development stack on the internet** (ADR-0034). Public hosts sit behind Pangolin's
+  sign-in, Keycloak's `/admin` is refused, and the admin console, dev tools and Metro are VPN only. The
+  home's public address is published in DNS, all tunnel users share the gateway's per-client rate limits,
+  and the stack still has the public demo passwords. Use it for testing, and `./raadi up` closes it.
 - **Deleted listings keep their OpenFGA owner tuple.** This is harmless because checks also require the
   listing to exist ([ADR-0013](adr/0013-authorization.md)).
 

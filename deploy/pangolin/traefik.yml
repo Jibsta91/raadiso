@@ -1,0 +1,57 @@
+# Static configuration of Pangolin's Traefik (ADR-0034): the public edge in tunnel mode. It shares the
+# gerbil container's network namespace, so the ports published on gerbil are its ports. Routes come from
+# Pangolin (HTTP provider) and from dynamic/ (the dashboard and the certificates).
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+providers:
+  http:
+    endpoint: 'http://pangolin:3001/api/v1/traefik-config'
+    pollInterval: 5s
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+experimental:
+  plugins:
+    # Pangolin's authentication middleware (MIT), fetched from the Traefik plugin catalogue at start.
+    badger:
+      moduleName: github.com/fosrl/badger
+      version: v1.7.0
+
+entryPoints:
+  web:
+    address: ':80'
+  websecure:
+    address: ':443'
+    transport:
+      respondingTimeouts:
+        # Long-lived WebSockets (messaging) and slow uploads.
+        readTimeout: 30m
+    # TLS from the file certificates only (dynamic/pangolin.yml); no ACME resolver.
+    http:
+      tls: {}
+      encodedCharacters:
+        allowEncodedSlash: true
+        allowEncodedQuestionMark: true
+  # Health checks only; not published.
+  ping:
+    address: ':8082'
+
+ping:
+  entryPoint: ping
+
+# Targets are newt's tunnel addresses; the TLS name check happens at our own gateway behind it.
+serversTransport:
+  insecureSkipVerify: true
+
+log:
+  level: INFO
+  format: json
+
+accessLog:
+  format: json
+  fields:
+    headers:
+      defaultMode: drop

@@ -50,6 +50,8 @@ Domain (raadiso.com via GoDaddy, docs/domain.md)
 Phone (docs/mobile.md)
   phone              serve the stack on this Wi-Fi as https://$PHONE_DOMAIN and start
                      Metro for Expo Go; ./raadi up returns to raadi.localhost
+  tunnel             like phone, but reachable from anywhere through Pangolin on this laptop:
+                     public website and sign-in, the rest over the Pangolin VPN (ADR-0034)
 USAGE
 }
 
@@ -164,6 +166,13 @@ status() {
     "$(( $(docker info --format '{{.MemTotal}}') / 1024 / 1024 / 1024 ))" "$N"
 }
 
+# lan_ip <command> — this laptop's LAN address (LAN_IP overrides), for phone and tunnel mode.
+lan_ip() {
+  local ip="${LAN_IP:-$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "src") print $(i + 1)}')}"
+  [[ -n "$ip" ]] || { echo "could not find this laptop's LAN address; run LAN_IP=<address> ./raadi $1" >&2; exit 2; }
+  echo "$ip"
+}
+
 cmd="${1:-help}"; shift || true
 case "$cmd" in
   help|-h|--help) usage ;;
@@ -173,7 +182,8 @@ case "$cmd" in
       cat /tmp/raadi-doctor.$$; rm -f /tmp/raadi-doctor.$$; exit 1
     fi
     rm -f /tmp/raadi-doctor.$$
-    "${DC[@]}" up -d --wait "$@"
+    # --remove-orphans stops phone and tunnel mode's extra services (Metro, Pangolin's public edge).
+    "${DC[@]}" up -d --wait --remove-orphans "$@"
     "${DC[@]}" logs --no-log-prefix summary | sed -n '/┌/,$p'
     ;;
   down) "${DC[@]}" down "$@" ;;
@@ -242,8 +252,7 @@ case "$cmd" in
     CERT_DOMAIN="$domain" INSTALL="$install" "${DC[@]}" --progress quiet --profile ops run --rm --no-deps acme-cert
     ;;
   phone)
-    lan_ip="${LAN_IP:-$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "src") print $(i + 1)}')}"
-    [[ -n "$lan_ip" ]] || { echo "could not find this laptop's LAN address; run LAN_IP=<address> ./raadi phone" >&2; exit 2; }
+    lan_ip="$(lan_ip phone)" || exit 2
     phone_domain="${PHONE_DOMAIN:-$(sed -n 's/^PHONE_DOMAIN=//p' .env)}"
     # Demo logins stay kari.nordmann@raadi.localhost etc., so they are the same in every mode.
     demo_domain="${DEMO_EMAIL_DOMAIN:-$(sed -n 's/^RAADI_DOMAIN=//p' .env)}"
@@ -252,7 +261,7 @@ case "$cmd" in
     # secret are public in this repository. So the admin console, Keycloak's admin console and the dev
     # tools (Mailpit, OpenBao, Traefik, Prometheus) stay off the network; PHONE_TOOLS=1 keeps them.
     if [[ "${PHONE_TOOLS:-}" != 1 ]]; then export DEV_TOOLS_ROUTED=false KEYCLOAK_ADMIN_PUBLIC=false; fi
-    "${DC[@]}" -f compose.yaml -f compose.phone.yaml up -d --wait "$@"
+    "${DC[@]}" -f compose.yaml -f compose.phone.yaml up -d --wait --remove-orphans "$@"
     tools="off the network (PHONE_TOOLS=1 ./raadi phone serves them)"
     [[ "${PHONE_TOOLS:-}" == 1 ]] && tools="ON: anyone on this Wi-Fi can sign in to them with the demo logins"
     cat <<PHONE
@@ -262,6 +271,38 @@ case "$cmd" in
     Demo logins as usual. Back to raadi.localhost:  ./raadi up
     Admin console and dev tools: ${tools}
 PHONE
+    ;;
+  tunnel)
+    lan_ip="$(lan_ip tunnel)" || exit 2
+    # The home network's public address, as the internet sees it (asked from inside a container, so
+    # the host needs nothing but Docker).
+    public_ip="${PUBLIC_IP:-$("${DC[@]}" --progress quiet run --rm --no-deps -T --entrypoint curl secrets-init \
+      -fsS --max-time 10 https://api.ipify.org || true)}"
+    [[ "$public_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] \
+      || { echo "could not find this network's public address; run PUBLIC_IP=<address> ./raadi tunnel" >&2; exit 2; }
+    phone_domain="${PHONE_DOMAIN:-$(sed -n 's/^PHONE_DOMAIN=//p' .env)}"
+    pangolin_domain="${PANGOLIN_DOMAIN:-$(sed -n 's/^PANGOLIN_DOMAIN=//p' .env)}"
+    demo_domain="${DEMO_EMAIL_DOMAIN:-$(sed -n 's/^RAADI_DOMAIN=//p' .env)}"
+    # The gateway stays on 127.0.0.1: Pangolin's edge owns ports 80/443 of the LAN address, and the
+    # stack is reached only through the site connector (public resources, or the VPN). That is also why
+    # the admin console and the dev tools stay routed: only signed-in VPN devices reach those hosts.
+    export LAN_IP="$lan_ip" PUBLIC_IP="$public_ip" RAADI_DOMAIN="$phone_domain" DEMO_EMAIL_DOMAIN="$demo_domain" \
+      PUBLIC_SCHEME=https
+    "${DC[@]}" -f compose.yaml -f compose.phone.yaml -f compose.tunnel.yaml up -d --wait --remove-orphans "$@"
+    admin="$(sed -n 's/^PANGOLIN_ADMIN_EMAIL=//p' .env)"
+    cat <<TUNNEL
+
+  Tunnel mode: Pangolin on this laptop (public address ${public_ip}, LAN ${lan_ip})
+    Your router must forward TCP 80 and 443 and UDP 51820 and 21820 to ${lan_ip} (docs/mobile.md).
+
+    Public, after a Pangolin sign-in:  https://${phone_domain}  https://auth.${phone_domain}  https://pay.${phone_domain}
+    Pangolin dashboard:                https://${pangolin_domain}
+      user ${admin:-\$PANGOLIN_ADMIN_EMAIL}, password: ./raadi secret pangolin_admin_password
+    VPN: sign in to the Pangolin app (server https://${pangolin_domain}) and connect; then every
+      https://*.${phone_domain} host works, admin console and dev tools included.
+    Metro, over the VPN:  development build: https://metro.${phone_domain}  Expo Go: exps://metro.${phone_domain}
+    Back to raadi.localhost (and the tunnel closed):  ./raadi up
+TUNNEL
     ;;
   ca-cert)
     mkdir -p deploy/certs

@@ -50,6 +50,11 @@ private and reserved addresses, which belong in phone mode. Use `--dry-run` to s
 ./raadi dns 203.0.113.10 --dry-run
 ```
 
+Phone and tunnel mode manage their own records: `dev` and `*.dev` (the laptop's LAN address in phone
+mode, the home's public address in tunnel mode), and `pangolin` and `*.pangolin` for the Pangolin
+dashboard in tunnel mode ([ADR-0034](adr/0034-tunnel-mode-pangolin.md)). They have their own wildcard
+certificates in the same `acme` volume.
+
 Today `raadiso.com` shows GoDaddy's parking page (an A record with the value `Parked`), and the wildcard has
 no record. The first real `./raadi dns` with the server's address replaces both. Keep the TTL at 600 seconds
 (GoDaddy's minimum) while moving servers.

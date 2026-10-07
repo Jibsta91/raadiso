@@ -58,6 +58,67 @@ Notes:
 - Metro runs in a container, where file changes on the host don't always arrive. After editing app code,
   reload in Expo Go (shake → Reload) or run `./raadi restart expo`.
 
+## Tunnel mode (from anywhere)
+
+Tunnel mode is phone mode reachable from outside the home network, for example on mobile data or for
+someone else ([ADR-0034](adr/0034-tunnel-mode-pangolin.md)). The stack keeps running on the laptop, and
+a self-hosted [Pangolin](https://docs.pangolin.net) runs next to it. It gives two ways in:
+
+| Way in                               | Who                                   | What                                                                                                               |
+| ------------------------------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Public**, after a Pangolin sign-in | anyone you give a Pangolin account    | `https://dev.raadiso.com` (website, API, `/m/`), `https://auth.dev.raadiso.com`, `https://pay.dev.raadiso.com`     |
+| **VPN**, in the Pangolin app         | devices signed in to the Pangolin app | every `https://*.dev.raadiso.com` host (admin console and dev tools too), Metro at `https://metro.dev.raadiso.com` |
+
+The native app in Expo Go always goes over the VPN: an API cannot show a sign-in page.
+
+1. **Once, on the router:** forward TCP 80 and 443 and UDP 51820 and 21820 (both UDP: 21820 is the VPN
+   clients' WireGuard port) to the laptop's LAN address
+   (`./raadi tunnel` prints it). Give the laptop a fixed address (a DHCP reservation) so the rule keeps
+   working. This needs a public IPv4 address from your ISP: if the router's WAN address differs from the
+   one at <https://ifconfig.me>, or starts with `100.64`–`100.127`, you are behind carrier-grade NAT and
+   tunnel mode cannot work from home.
+2. **Once, on the laptop:** the GoDaddy token from phone mode (`./raadi secret-set godaddy_pat`) and, on
+   Fedora, the firewall:
+   `sudo firewall-cmd --add-service=http --add-service=https`, then
+   `sudo firewall-cmd --add-port=51820/udp --add-port=21820/udp` (firewalld doesn't take services and ports
+   in one call; run both again with `--permanent` to keep them).
+3. **Each time:** `./raadi tunnel`. This:
+   - points `dev.raadiso.com`, `*.dev.raadiso.com` and `pangolin.raadiso.com` at the home's public
+     address (only when it changed);
+   - gets or renews the Let's Encrypt wildcards with DNS-01;
+   - starts the stack as `https://dev.raadiso.com`, plus Pangolin, Gerbil, Pangolin's Traefik and the site
+     connector, and Metro;
+   - creates the Pangolin admin, the organisation and the site on the first run, and applies the
+     resources in `deploy/pangolin/blueprint.json.tmpl` every time.
+4. **Sign in:** open `https://pangolin.raadiso.com` as `admin@raadiso.com` (`PANGOLIN_ADMIN_EMAIL`) with
+   the password from `./raadi secret pangolin_admin_password`. The same account opens the public
+   resources.
+5. **VPN on a phone or laptop:** install the Pangolin app (App Store, Google Play, or pangolin.net for
+   desktops), add the server `https://pangolin.raadiso.com`, sign in and connect. Then open Expo Go and
+   open the app:
+   - **Development build** (Raadiso): "Enter URL manually" → `https://metro.dev.raadiso.com`.
+   - **Expo Go:** `exps://metro.dev.raadiso.com`.
+
+   Metro is served over HTTPS through the gateway because iOS (App Transport Security) lets a development
+   build load plain `http://` only from IP addresses, as in phone mode. Any `https://*.dev.raadiso.com` page
+   works over the VPN too.
+
+6. **Back to normal:** `./raadi up` stops Pangolin and returns to `raadi.localhost`.
+
+Giving someone access: in the dashboard, invite a user (Organisation → Users → Invite; without e-mail,
+copy the invite link). Then add them to the public resources (Resources → the resource → Authentication),
+or to the private resources for the VPN. A user added by hand stays until you remove them; the blueprint
+manages only the admin.
+
+Notes:
+
+- The tunnel works only while the laptop is on the network that forwards the ports. When the home address
+  changes, run `./raadi tunnel` again to update DNS.
+- At home, `dev.raadiso.com` now points at the router. Opening it from the laptop or a phone on the same
+  Wi-Fi needs the router to support NAT loopback (most do); the VPN works either way.
+- Everyone using the tunnel reaches the gateway from the same address, so they share its per-client rate
+  limits.
+
 ## Development build (iPhone)
 
 Instead of Expo Go, the iPhone can run our own app: **Raadiso (Development Build)**, bundle ID
