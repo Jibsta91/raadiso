@@ -11,7 +11,8 @@
   "dependencyDashboard": true,
   "rangeStrategy": "pin",
   "docker-compose": {
-    "enabled": true
+    "enabled": true,
+    "managerFilePatterns": ["/(^|/)compose[^/]*\\.ya?ml$/", "/^deploy/compose/[^/]+\\.ya?ml$/"]
   },
   "dockerfile": {
     "enabled": true
@@ -19,19 +20,12 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Toolbox CLI versions (ARG <TOOL>_VERSION=x.y.z)",
-      "managerFilePatterns": ["/^deploy/toolbox/Dockerfile$/"],
+      "description": "Versions marked with a '# renovate:' comment: toolbox CLIs (ARG <TOOL>_VERSION) and Pangolin's Traefik plugins",
+      "managerFilePatterns": ["/(^|/)Dockerfile$/", "/^deploy/pangolin/traefik\\.yml$/"],
       "matchStrings": [
-        "ARG TOFU_VERSION=(?<currentValue>.+)\\n",
-        "ARG TFLINT_VERSION=(?<currentValue>.+)\\n",
-        "ARG TRIVY_VERSION=(?<currentValue>.+)\\n",
-        "ARG GITLEAKS_VERSION=(?<currentValue>.+)\\n",
-        "ARG OSV_SCANNER_VERSION=(?<currentValue>.+)\\n",
-        "ARG SYFT_VERSION=(?<currentValue>.+)\\n"
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\n\\s*(ARG\\s+[A-Z_]+=|version:\\s*)(?<currentValue>\\S+)"
       ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "{{#if (containsString matchString 'TOFU')}}opentofu/opentofu{{else if (containsString matchString 'TFLINT')}}terraform-linters/tflint{{else if (containsString matchString 'TRIVY')}}aquasecurity/trivy{{else if (containsString matchString 'GITLEAKS')}}gitleaks/gitleaks{{else if (containsString matchString 'OSV')}}google/osv-scanner{{else}}anchore/syft{{/if}}",
-      "extractVersionTemplate": "^v?(?<version>.*)$"
+      "extractVersionTemplate": "{{#if extractVersion}}{{{extractVersion}}}{{else}}^(?<version>.+)${{/if}}"
     },
     {
       "customType": "regex",
@@ -39,6 +33,15 @@
       "managerFilePatterns": ["/^\\.mcp\\.json$/"],
       "matchStrings": [
         "\"(?<depName>mcr\\.microsoft\\.com/playwright/mcp):(?<currentValue>v[\\d.]+)@(?<currentDigest>sha256:[a-f0-9]{64})\""
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Images pinned inside workflow run steps (docker run in .github/workflows)",
+      "managerFilePatterns": ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "\\s(?<depName>[a-z0-9.-]+/[a-z0-9./-]+):(?<currentValue>[A-Za-z0-9._-]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
     }
@@ -79,8 +82,29 @@
       "allowedVersions": "<25"
     },
     {
+      "description": "Images change what runs: CI runs the full stack on these pull requests (ADR-0036)",
+      "matchManagers": ["docker-compose", "dockerfile"],
+      "addLabels": ["full-stack"]
+    },
+    {
+      "description": "The Expo SDK moves as one: upgrade it with expo upgrade (docs/mobile.md), not package by package",
+      "matchFileNames": ["apps/mobile/package.json"],
+      "matchPackageNames": [
+        "expo",
+        "expo-*",
+        "@expo/*",
+        "react-native",
+        "react-native-*",
+        "@react-native/*",
+        "react",
+        "react-dom"
+      ],
+      "enabled": false
+    },
+    {
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
     }
-  ]
+  ],
+  "description": "Dependency updates as pull requests (ADR-0037): ./raadi renovate, or weekly on the self-hosted runner."
 }
