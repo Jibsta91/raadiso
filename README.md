@@ -11,7 +11,7 @@ is free of charge, open source first, and runs fully offline on a laptop, with *
 ## Quickstart
 
 ```bash
-git clone https://github.com/Jibsta91/raadi.com.git raadi && cd raadi
+git clone https://github.com/Jibsta91/raadiso.git raadi && cd raadi
 docker compose up
 ```
 
