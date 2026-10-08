@@ -101,3 +101,12 @@ export function browserBindingMatches(
 export function loginCookieName(sessionCookie: string, state: string): string {
   return `${sessionCookie}_login_${sha256(state).toString('hex').slice(0, 16)}`;
 }
+
+/**
+ * Sign-ins per minute per address (AUTH_LOGIN_RATE_PER_MINUTE): a positive whole number, else 20.
+ * Development raises it so smoke and e2e, which sign in many times from one address, don't wait.
+ */
+export function loginRatePerMinute(raw: string | undefined): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : 20;
+}
