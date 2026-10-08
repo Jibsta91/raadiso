@@ -64,7 +64,10 @@ grows with each phase; Phase 6 adds a full ASVS checklist.
 - **OpenBao unseal key on the same host** (ADR-0005). Upgrade path: KMS/transit seal.
 - **Internal traffic is plain HTTP** on a private Docker network; JWTs are validated on every hop. mTLS between
   services is a later hardening option.
-- **CSP allows `'unsafe-inline'` scripts** for Next.js hydration. Phase 6 moves to nonce-based CSP.
+- **CSP:** since 2026-10-08 the website and the console send a nonce-based policy from the app itself
+  (`apps/web/src/lib/csp.ts`): a fresh nonce per page, `'strict-dynamic'`, no inline script; e2e fails on
+  any violation. Styles keep `'unsafe-inline'` (React style attributes), and the `/m` web app keeps its
+  own nonce-free policy at the gateway (it has no inline scripts).
 - **CrowdSec and the Coraza WAF (OWASP CRS)** arrive in Phase 6.
 - **ClamAV signatures can lag** behind new malware, and freshclam needs internet access. Re-encoding through
   imgproxy is the second line of defence. Air-gapped installs update signatures with new images.

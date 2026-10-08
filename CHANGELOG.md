@@ -8,6 +8,9 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- A strict Content-Security-Policy on the website and the console: a fresh nonce per page and
+  `'strict-dynamic'` instead of `'unsafe-inline'` scripts, sent by the app (Traefik's copy is gone).
+  e2e checks the header, the nonce on every server-sent script, and that nothing violates it.
 - `./raadi api-check`: fails when the generated API client or event schemas are stale, or when an
   OpenAPI change would break clients (oasdiff against `main`; `API_BREAKING_OK=1` for a planned break).
   Tests for OPA's system policies (who may query decisions; masking typed text in decision logs).

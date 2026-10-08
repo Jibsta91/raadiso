@@ -7,7 +7,8 @@ http:
       rule: Host(`{{ $d }}`)
       entryPoints: [web, websecure]
       service: web
-      middlewares: [security-headers, web-csp, ratelimit-default, compress]
+      # The page CSP comes from the web app itself, with a nonce per request (apps/web/src/lib/csp.ts).
+      middlewares: [security-headers, ratelimit-default, compress]
       priority: 1
 
     # Next.js build output: content-hashed, immutable chunks (about 20 per page

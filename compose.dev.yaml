@@ -332,10 +332,6 @@ services:
       resources:
         limits: { memory: 1536M }
 
-  traefik:
-    environment:
-      WEB_DEV_MODE: 'true'
-
 volumes:
   nm-root: {}
   nm-web: {}

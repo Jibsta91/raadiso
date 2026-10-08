@@ -31,7 +31,7 @@ http:
       rule: Host(`admin.{{ $d }}`)
       entryPoints: [web, websecure]
       service: web
-      middlewares: [security-headers, admin-headers, web-csp, ratelimit-default, compress]
+      middlewares: [security-headers, admin-headers, ratelimit-default, compress]
       priority: 1
     {{- end }}
 

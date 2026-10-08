@@ -2,6 +2,7 @@ import { COUNTIES, type County } from '@raadi/catalog';
 import { Badge } from '@raadi/ui';
 import { MapPin, User } from 'lucide-react';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ImageGallery } from '@/components/listings/image-gallery';
@@ -10,6 +11,7 @@ import { ShareButton } from '@/components/listings/share-button';
 import { ContactSeller } from '@/components/messaging/contact-seller';
 import { ReportListing } from '@/components/moderation/report-listing';
 import { FavouriteButton } from '@/components/saved/favourite-button';
+import { nonceFrom } from '@/lib/csp';
 import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
@@ -107,7 +109,11 @@ export default async function ListingPage({
 
   return (
     <article className="space-y-6" data-testid="listing-detail">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structured) }} />
+      <script
+        type="application/ld+json"
+        nonce={nonceFrom((await headers()).get('content-security-policy'))}
+        dangerouslySetInnerHTML={{ __html: jsonLd(structured) }}
+      />
       <nav className="text-sm text-muted-foreground" aria-label={t('nav.breadcrumb')}>
         <Link
           href={`/${listing.category}`}
