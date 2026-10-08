@@ -127,13 +127,23 @@ export class SearchService {
     const country = countryOf(params, this.defaultCountry);
     span?.setAttribute('raadi.search.country', country);
     // Read the query (ADR-0041) unless asked not to; `effective` is what is searched.
-    const reading = params.understand === false ? undefined : understand(params, country);
-    const effective = reading?.params ?? params;
-    const matching: Matching = {
+    let reading = params.understand === false ? undefined : understand(params, country);
+    let effective = reading?.params ?? params;
+    let matching: Matching = {
       boostCategories: reading?.boostCategories,
       boostValues: reading?.boostValues,
     };
     let res = await this.index.search(buildSearch(effective, country, matching));
+    // Reading the query must never hide what its words alone find (a bike filed under Hobby).
+    if (res.hits.total.value === 0 && reading?.understood.length) {
+      const literal = await this.index.search(buildSearch(params, country));
+      if (literal.hits.total.value > 0) {
+        res = literal;
+        reading = undefined;
+        effective = params;
+        matching = {};
+      }
+    }
     let relaxed = false;
     // No dead ends: with no hits, let any one word match.
     if (res.hits.total.value === 0 && effective.q) {

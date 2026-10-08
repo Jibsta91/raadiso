@@ -148,6 +148,19 @@ describe('autocomplete', () => {
 });
 
 describe('no dead ends', () => {
+  it('drops what it read into the query when that hides what the words alone find', async () => {
+    // "car" reads as Cars, but the remote-control car is a toy: the words alone find it.
+    const r = await service.search(
+      searchParamsSchema.parse({ q: 'remote control car', country: 'XS' }),
+    );
+    assert.ok(r.items.length > 0, 'found');
+    assert.ok(
+      r.items.every((h) => /remote-control car/i.test(h.title)),
+      JSON.stringify(r.items),
+    );
+    assert.deepEqual(r.query.understood, [], 'and says it read nothing into them');
+  });
+
   it('retries with any word allowed when no listing has them all, and says so', async () => {
     const r = await service.search(
       searchParamsSchema.parse({ q: 'toyota zebra stripes', country: 'XS' }),
