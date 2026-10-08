@@ -1,0 +1,29 @@
+{
+  "name": "llm-mock",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Development stand-in for a language-model API (OpenAI-compatible): deterministic chat completions and embeddings, test scenarios, and a request log for tests (ADR-0039).",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json && (tsc -p tsconfig.build.json --watch --preserveWatchOutput & node --watch-path=dist --import ./dist/telemetry.js dist/main.js)",
+    "start": "node --import ./dist/telemetry.js dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "tsc -p tsconfig.json && node --test --test-reporter=spec '.build/test/unit/**/*.test.js'"
+  },
+  "dependencies": {
+    "@raadi/service-kit": "workspace:*",
+    "pino": "10.3.1"
+  },
+  "devDependencies": {
+    "@raadi/config": "workspace:*",
+    "@types/node": "24.19.1",
+    "eslint": "10.11.0",
+    "typescript": "6.0.3"
+  }
+}

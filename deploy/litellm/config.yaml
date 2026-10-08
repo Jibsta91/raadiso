@@ -1,0 +1,26 @@
+# LiteLLM, the gateway to every language model (ADR-0039). Services call two aliases and never a model by
+# name, so the backend is configuration: the LLM mock by default, Ollama under --profile ai (./raadi ai).
+model_list:
+  - model_name: raadi-chat
+    litellm_params:
+      model: os.environ/RAADI_CHAT_MODEL
+      api_base: os.environ/RAADI_CHAT_API_BASE
+      api_key: os.environ/RAADI_MODEL_API_KEY
+  - model_name: raadi-embed
+    litellm_params:
+      model: os.environ/RAADI_EMBED_MODEL
+      api_base: os.environ/RAADI_EMBED_API_BASE
+      api_key: os.environ/RAADI_MODEL_API_KEY
+
+litellm_settings:
+  # Nothing leaves the machine: no LiteLLM telemetry, the model price list from the image (not GitHub).
+  telemetry: false
+  # Traces go to our collector (OpenTelemetry), without prompts or answers: those may hold personal data.
+  callbacks: ['otel']
+  turn_off_message_logging: true
+  drop_params: true
+  request_timeout: 60
+  num_retries: 1
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

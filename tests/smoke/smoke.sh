@@ -807,6 +807,26 @@ eventually "dismissed reports are in the audit log" 90 audited reports.dismiss "
 eventually "the suspension is in the audit log (admin-bff outbox)" 90 audited user.suspend "$target"
 req POST "$PUBLIC/auth/logout" -H "origin: $ORIGIN"
 
+section "AI gateway (ADR-0039)"
+# Services reach models only through LiteLLM's aliases; by default the LLM mock answers behind them.
+ai_key="sk-$(cat /run/secrets/raadi/litellm_master_key 2>/dev/null)"
+ai() { # <path> <json body> [key]: prints the HTTP status, body in $BODY
+  curl -s -o "$BODY" -w '%{http_code}' --max-time 60 -H "authorization: Bearer ${3-$ai_key}" \
+    -H 'content-type: application/json' "http://litellm:4000$1" --data "$2"
+}
+status=$(ai /v1/chat/completions '{"model":"raadi-chat","messages":[{"role":"user","content":"smoke: is the sofa still for sale?"}]}')
+[[ "$status" == 200 && -n "$(json '.choices[0].message.content // empty')" ]] \
+  && ok "raadi-chat answers through LiteLLM" || fail "raadi-chat answers through LiteLLM" "HTTP $status: $(head -c 300 "$BODY")"
+status=$(ai /v1/embeddings '{"model":"raadi-embed","input":["red leather sofa"]}')
+[[ "$status" == 200 && "$(json '.data[0].embedding | length')" == 1024 ]] \
+  && ok "raadi-embed returns 1024-dimension vectors (bge-m3 size)" || fail "raadi-embed returns 1024-dimension vectors" "HTTP $status: $(head -c 300 "$BODY")"
+# Without a database LiteLLM can't look virtual keys up and says 400 instead of 401: refused either way.
+status=$(ai /v1/chat/completions '{"model":"raadi-chat","messages":[{"role":"user","content":"x"}]}' 'sk-wrong')
+[[ "$status" =~ ^4[0-9][0-9]$ ]] && ok "LiteLLM refuses a wrong key" \
+  || fail "LiteLLM refuses a wrong key" "expected 4xx, got $status: $(head -c 300 "$BODY")"
+curl -sf --max-time 10 http://llm-mock:4000/v1/models | jq -e '.data | length == 2' >/dev/null \
+  && ok "the LLM mock serves its two models" || fail "the LLM mock serves its two models"
+
 section "Operations"
 req GET "$GRAFANA/api/health"
 expect_status 200 "Grafana healthy via gateway"

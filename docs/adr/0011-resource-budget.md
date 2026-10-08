@@ -9,18 +9,19 @@ Every container has a memory limit (`deploy.resources.limits`). Go services also
 JVM a `MaxRAMPercentage`, so they stay under their limits. The default profile must leave room for the host OS,
 an IDE and a browser on a 16 GB laptop (Docker Desktop with ~8–10 GB).
 
-| Phase                        | Measured steady-state RSS (default profile)                                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1                            | ≈ 1.9 GB across 15 containers (Keycloak ≈ 600 MB is the largest)                                                               |
-| 2                            | ≈ 5.8 GB across 28 containers (ClamAV ≈ 950 MB, OpenSearch ≈ 660 MB, Keycloak ≈ 600 MB, Kafka Connect and Kafka ≈ 420 MB each) |
-| 3 (messaging, notifications) | ≈ 6.0 GB across 30 containers (messaging ≈ 120 MB, notifications ≈ 150 MB, Valkey and Mailpit ≈ 10 MB each)                    |
-| 3 (+ trust)                  | ≈ 6.2 GB across 31 containers (trust ≈ 150 MB; the BankID mock is a realm in the existing Keycloak, no new container)          |
-| 3 (+ payments)               | ≈ 6.3 GB across 33 containers (payments ≈ 115 MB, payments-mock ≈ 110 MB; the mock runs in development only)                   |
-| 3 (+ mobile web)             | ≈ 6.4 GB across 34 containers (mobile-web ≈ 60 MB of its 96 MB limit)                                                          |
-| 3 (+ push)                   | ≈ 6.5 GB across 35 containers (push-mock ≈ 70 MB of its 128 MB limit, development only; notifications ≈ 145 MB)                |
-| 3 (+ saved)                  | ≈ 6.7 GB across 36 containers (saved ≈ 180 MB of its 256 MB limit)                                                             |
-| 3 (+ admin console)          | ≈ 6.7 GB across 38 containers (admin-bff ≈ 120 MB and audit ≈ 130 MB, each of a 192 MB limit)                                  |
-| 3 (+ journey probes)         | ≈ 6.8 GB across 39 containers (blackbox exporter ≈ 25 MB of its 48 MB limit, ADR-0031)                                         |
+| Phase                        | Measured steady-state RSS (default profile)                                                                                                                                                                                |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1                            | ≈ 1.9 GB across 15 containers (Keycloak ≈ 600 MB is the largest)                                                                                                                                                           |
+| 2                            | ≈ 5.8 GB across 28 containers (ClamAV ≈ 950 MB, OpenSearch ≈ 660 MB, Keycloak ≈ 600 MB, Kafka Connect and Kafka ≈ 420 MB each)                                                                                             |
+| 3 (messaging, notifications) | ≈ 6.0 GB across 30 containers (messaging ≈ 120 MB, notifications ≈ 150 MB, Valkey and Mailpit ≈ 10 MB each)                                                                                                                |
+| 3 (+ trust)                  | ≈ 6.2 GB across 31 containers (trust ≈ 150 MB; the BankID mock is a realm in the existing Keycloak, no new container)                                                                                                      |
+| 3 (+ payments)               | ≈ 6.3 GB across 33 containers (payments ≈ 115 MB, payments-mock ≈ 110 MB; the mock runs in development only)                                                                                                               |
+| 3 (+ mobile web)             | ≈ 6.4 GB across 34 containers (mobile-web ≈ 60 MB of its 96 MB limit)                                                                                                                                                      |
+| 3 (+ push)                   | ≈ 6.5 GB across 35 containers (push-mock ≈ 70 MB of its 128 MB limit, development only; notifications ≈ 145 MB)                                                                                                            |
+| 3 (+ saved)                  | ≈ 6.7 GB across 36 containers (saved ≈ 180 MB of its 256 MB limit)                                                                                                                                                         |
+| 3 (+ admin console)          | ≈ 6.7 GB across 38 containers (admin-bff ≈ 120 MB and audit ≈ 130 MB, each of a 192 MB limit)                                                                                                                              |
+| 3 (+ journey probes)         | ≈ 6.8 GB across 39 containers (blackbox exporter ≈ 25 MB of its 48 MB limit, ADR-0031)                                                                                                                                     |
+| 4 (+ GlitchTip, AI gateway)  | ≈ 8.6 GiB across 43 containers by `docker stats`, file cache included, after an e2e run (GlitchTip ≈ 210 MB, ADR-0038; LiteLLM ≈ 550 MB and the LLM mock ≈ 70 MB, ADR-0039). Over budget: freeing ≈ 1 GB is a Phase 4 task |
 
 Later phases add Kafka, OpenSearch and Ollama, the expensive ones. They get tight limits and small defaults (a
 3–4B instruct model, small JVM heaps). Heavy extras (OpenMetadata, full lakehouse) are under `--profile full`.

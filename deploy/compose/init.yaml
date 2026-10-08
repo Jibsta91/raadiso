@@ -212,6 +212,7 @@ services:
       clamav: { condition: service_healthy }
       opa: { condition: service_healthy }
       glitchtip-init: { condition: service_completed_successfully }
+      litellm: { condition: service_healthy }
 
   # End-to-end smoke test against the running stack (CI and `./raadi smoke`).
   smoke:
@@ -219,6 +220,13 @@ services:
     profiles: [test]
     command: ['/opt/raadi/bin/smoke.sh']
     user: '65532:65532'
+    # Only the AI gateway's key (ADR-0039), to call LiteLLM like a service would.
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: smoke }
     depends_on:
       summary: { condition: service_healthy }
 
