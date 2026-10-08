@@ -25,6 +25,17 @@ import {
   type SearchParams,
 } from './query.js';
 import { fold, lexicon, type Understood, understand } from './understand.js';
+import {
+  type DealRating,
+  groupKey,
+  LOOSENESS,
+  type PriceStats,
+  type PriceTarget,
+  rate,
+  readStats,
+  statsBody,
+  unitPrice,
+} from './price.js';
 import type { SearchResponse } from './search.index.js';
 import { SearchIndex, toDocument } from './search.index.js';
 
@@ -61,6 +72,8 @@ export interface SearchHit {
     lon: number;
   };
   distanceKm?: number;
+  /** A good price against comparable listings (ADR-0043); only good news is shown in lists. */
+  deal?: 'great' | 'good';
   image?: { thumb: string; card: string };
   imageCount: number;
   attributes: Record<string, string | number | boolean>;
@@ -77,6 +90,16 @@ export interface Autocomplete {
   categories: Array<{ category: string; subcategory?: string; count: number }>;
   queries: string[];
   places: Array<{ placeId: string; name: string }>;
+}
+
+/** A listing's price against comparable listings (ADR-0043). */
+export interface PriceInsight {
+  listingId: string;
+  currency: string;
+  /** The listing's price per unit, in minor units. */
+  unitPrice: number;
+  rating: DealRating;
+  stats: PriceStats;
 }
 
 /** One listing in the ranking lab: its score taken apart (ADR-0042). */
@@ -212,6 +235,8 @@ export class SearchService {
       count: res.aggregations.price?.values.buckets[i]?.doc_count ?? 0,
     }));
 
+    const deals = await this.deals(res).catch(() => new Map<string, 'great' | 'good'>());
+
     return {
       country,
       currency,
@@ -241,6 +266,7 @@ export class SearchService {
             lon: s.location.lon,
           },
           ...(geo && distance !== undefined ? { distanceKm: Math.round(distance * 10) / 10 } : {}),
+          ...(deals.has(s.id) ? { deal: deals.get(s.id) } : {}),
           ...(first
             ? { image: (({ thumb, card }) => ({ thumb, card }))(imageUrls(this.signer, first)) }
             : {}),
@@ -302,6 +328,113 @@ export class SearchService {
         };
       }),
     };
+  }
+
+  /** Price statistics per comparable group, for a minute (ADR-0043). */
+  private priceCache = new Map<string, { at: number; stats: PriceStats | undefined }>();
+
+  /** Statistics for many targets at once: cached groups first, the rest in one multi-search each pass. */
+  private async statsFor(targets: PriceTarget[]): Promise<Array<PriceStats | undefined>> {
+    const out: Array<PriceStats | undefined> = targets.map(() => undefined);
+    let todo = targets.map((t, i) => ({ t, i }));
+    for (const level of LOOSENESS) {
+      const missing = new Map<string, PriceTarget>();
+      const next: typeof todo = [];
+      for (const { t, i } of todo) {
+        const key = groupKey(t, level);
+        const hit = this.priceCache.get(key);
+        if (hit && Date.now() - hit.at < 60_000) {
+          if (hit.stats) out[i] = hit.stats;
+          else next.push({ t, i });
+        } else {
+          missing.set(key, t);
+          next.push({ t, i });
+        }
+      }
+      if (missing.size) {
+        const keys = [...missing.keys()];
+        const body = keys.flatMap((k) => [
+          { index: this.index.alias },
+          statsBody({ ...missing.get(k)!, id: undefined }, level),
+        ]);
+        const res = await this.index.client.msearch({ body } as never);
+        const responses = (res.body as { responses: Array<Record<string, unknown>> }).responses;
+        keys.forEach((k, n) => {
+          const r = responses[n] as {
+            hits?: { total: { value: number } };
+            aggregations?: Record<string, unknown>;
+          };
+          const stats = r.hits ? readStats(missing.get(k)!, level, r as never) : undefined;
+          this.priceCache.set(k, { at: Date.now(), stats });
+        });
+      }
+      todo = [];
+      for (const { t, i } of next) {
+        const stats = this.priceCache.get(groupKey(t, level))?.stats;
+        if (stats) out[i] = stats;
+        else todo.push({ t, i });
+      }
+      if (!todo.length) break;
+    }
+    return out;
+  }
+
+  /** "Great price" and "good price" for a page of hits (only good news in lists). */
+  private async deals(res: SearchResponse): Promise<Map<string, 'great' | 'good'>> {
+    const priced = res.hits.hits.map((h) => h._source).filter((s) => s.priceMinor !== null);
+    const targets = priced.map((s) => ({
+      country: s.country,
+      category: s.category,
+      subcategory: s.subcategory,
+      region: s.region,
+      attributes: s.attributes,
+    }));
+    const stats = await this.statsFor(targets);
+    const out = new Map<string, 'great' | 'good'>();
+    priced.forEach((s, i) => {
+      const st = stats[i];
+      const unit = st && unitPrice(s.priceMinor!, st.unit, s.attributes);
+      if (!st || unit === undefined) return;
+      const rating = rate(unit, st);
+      if (rating === 'great' || rating === 'good') out.set(s.id, rating);
+    });
+    return out;
+  }
+
+  /** A listing's price against its comparables (the listing excluded); null without enough. */
+  async priceInsight(id: string): Promise<PriceInsight | null> {
+    const res = await this.index.search({ size: 1, query: { ids: { values: [id] } } });
+    const doc = res.hits.hits[0]?._source;
+    if (!doc || doc.priceMinor === null || doc.currency === null) return null;
+    const target: PriceTarget = {
+      id,
+      country: doc.country,
+      category: doc.category,
+      subcategory: doc.subcategory,
+      region: doc.region,
+      attributes: doc.attributes,
+    };
+    for (const level of LOOSENESS) {
+      const r = await this.index.search(statsBody(target, level) as Record<string, unknown>);
+      const stats = readStats(target, level, r);
+      if (!stats) continue;
+      const price = unitPrice(doc.priceMinor, stats.unit, doc.attributes);
+      if (price === undefined) return null;
+      return {
+        listingId: id,
+        currency: doc.currency,
+        unitPrice: Math.round(price),
+        rating: rate(price, stats),
+        stats,
+      };
+    }
+    return null;
+  }
+
+  /** What comparable listings cost, for a seller filling in the form (ADR-0043). */
+  async priceGuide(t: PriceTarget): Promise<(PriceStats & { currency: string }) | null> {
+    const [stats] = await this.statsFor([t]);
+    return stats ? { ...stats, currency: COUNTRIES[t.country as CountryCode].currency } : null;
   }
 
   /** Listings per category and subcategory, per country, for autocomplete (cached for a minute). */

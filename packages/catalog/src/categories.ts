@@ -58,8 +58,22 @@ export type PriceRule = 'required' | 'optional' | 'none';
 /** What the price is per, for rentals and stays. */
 export type PriceUnit = 'month' | 'night';
 
+/** What makes two listings comparable for price statistics (ADR-0043). */
+export interface CompareRule {
+  /** Details that must be equal (make and model, brand and storage). */
+  same?: readonly string[];
+  /** Numbers that must be close: the key and how far off (model year within 2). */
+  near?: Readonly<Record<string, number>>;
+  /** Compare within the listing's region (property). */
+  region?: boolean;
+  /** The unit of the price: per square metre (`areaM2`) or per animal (`head`). */
+  per?: 'areaM2' | 'head';
+}
+
 export interface CategoryNode {
   id: string;
+  /** How listings here compare on price (ADR-0043); a subcategory's rule replaces its category's. */
+  compare?: CompareRule;
   /** Attributes of every listing in this node (and, on a category, in all its subcategories). */
   attributes?: readonly AttributeDef[];
   price?: PriceRule;
@@ -135,6 +149,7 @@ const leaves = (...ids: string[]): CategoryNode[] => ids.map((id) => ({ id }));
 const NORWAY: readonly CategoryNode[] = [
   {
     id: 'torget',
+    compare: { same: ['condition'] },
     attributes: [condition],
     children: leaves(
       'elektronikk',
@@ -151,6 +166,7 @@ const NORWAY: readonly CategoryNode[] = [
   },
   {
     id: 'bil',
+    compare: { same: ['make', 'model'], near: { year: 2 } },
     attributes: [
       make,
       model,
@@ -165,6 +181,7 @@ const NORWAY: readonly CategoryNode[] = [
   },
   {
     id: 'eiendom',
+    compare: { same: ['propertyType'], region: true, per: 'areaM2' },
     attributes: [
       select('propertyType', PROPERTY_TYPES),
       area(true),
@@ -173,7 +190,11 @@ const NORWAY: readonly CategoryNode[] = [
     ],
     children: [
       { id: 'salg' },
-      { id: 'utleie', priceUnit: 'month' },
+      {
+        id: 'utleie',
+        priceUnit: 'month',
+        compare: { same: ['propertyType'], near: { bedrooms: 1 }, region: true },
+      },
       { id: 'fritid' },
       { id: 'tomt' },
       { id: 'nybygg' },
@@ -214,6 +235,7 @@ const SOMALILAND: readonly CategoryNode[] = [
     children: [
       {
         id: 'cars',
+        compare: { same: ['make', 'model'], near: { year: 2 } },
         attributes: [
           make,
           model,
@@ -226,9 +248,14 @@ const SOMALILAND: readonly CategoryNode[] = [
           select('bodyType', BODY_TYPES, false),
         ],
       },
-      { id: 'motorcycles', attributes: [make, year(false), select('usage', USAGES)] },
+      {
+        id: 'motorcycles',
+        compare: { same: ['make'] },
+        attributes: [make, year(false), select('usage', USAGES)],
+      },
       {
         id: 'trucks-buses',
+        compare: { same: ['make'], near: { year: 3 } },
         attributes: [
           make,
           year(true),
@@ -246,6 +273,7 @@ const SOMALILAND: readonly CategoryNode[] = [
       {
         id: 'houses-rent',
         priceUnit: 'month',
+        compare: { same: ['propertyType'], near: { bedrooms: 1 }, region: true },
         attributes: [
           select('propertyType', HOME_TYPES),
           bedrooms,
@@ -254,9 +282,14 @@ const SOMALILAND: readonly CategoryNode[] = [
       },
       {
         id: 'houses-sale',
+        compare: { same: ['propertyType'], near: { bedrooms: 1 }, region: true },
         attributes: [select('propertyType', HOME_TYPES), bedrooms, area(false)],
       },
-      { id: 'land', attributes: [area(true), select('landUse', LAND_USES)] },
+      {
+        id: 'land',
+        compare: { same: ['landUse'], region: true, per: 'areaM2' },
+        attributes: [area(true), select('landUse', LAND_USES)],
+      },
       {
         id: 'commercial-property',
         attributes: [
@@ -274,6 +307,7 @@ const SOMALILAND: readonly CategoryNode[] = [
     children: [
       {
         id: 'mobile-phones',
+        compare: { same: ['brand', 'storageGb'] },
         attributes: [
           select('brand', PHONE_BRANDS),
           {
@@ -314,6 +348,7 @@ const SOMALILAND: readonly CategoryNode[] = [
   },
   {
     id: 'livestock',
+    compare: { per: 'head' },
     attributes: [
       {
         key: 'head',
@@ -565,4 +600,10 @@ export function sortsOf(category: Category, subcategory?: Subcategory): string[]
   const perArea =
     attrs.some((a) => a.key === 'areaM2') && priceRuleOf(category, subcategory) !== 'none';
   return [...BASE_SORTS, ...own, ...(perArea ? [PRICE_PER_AREA_SORT] : [])];
+}
+
+/** The price comparison rule of a subcategory (its own, else its category's, else none: ADR-0043). */
+export function compareRuleOf(category: Category, subcategory: Subcategory): CompareRule {
+  const sub = SUBCATEGORY_INDEX.get(subcategory)?.node;
+  return sub?.compare ?? findCategory(category)?.compare ?? {};
 }

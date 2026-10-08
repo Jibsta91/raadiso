@@ -16,8 +16,9 @@ import { nonceFrom } from '@/lib/csp';
 import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
-import { favouriteIds, getListing } from '@/lib/api';
+import { favouriteIds, getListing, priceInsight } from '@/lib/api';
 import { env } from '@/lib/env';
+import { PriceInsight } from '@/components/listings/price-insight';
 import { formatPrice } from '@/lib/format';
 import { jsonLd, localeAlternates, summary } from '@/lib/seo';
 import { getSession } from '@/lib/session';
@@ -65,11 +66,12 @@ export default async function ListingPage({
   if (!UUID.test(id)) notFound();
   const listing = await getListing(id);
   if (!listing) notFound();
-  const [t, format, session, favourites] = await Promise.all([
+  const [t, format, session, favourites, insight] = await Promise.all([
     getTranslations(),
     getFormatter(),
     getSession(),
     favouriteIds(),
+    listing.price && listing.status === 'active' ? priceInsight(listing.id) : null,
   ]);
   const canContact = listing.status === 'active' && !listing.viewer?.isOwner;
 
@@ -196,6 +198,7 @@ export default async function ListingPage({
         </div>
 
         <aside className="space-y-4 lg:col-start-2 lg:row-start-2">
+          {insight ? <PriceInsight insight={insight} /> : null}
           <div className="space-y-3 rounded-lg border p-4 text-sm">
             <dl className="space-y-3">
               <div className="flex items-start gap-2">

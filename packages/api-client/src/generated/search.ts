@@ -41,6 +41,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search/listings/{id}/price-insight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A listing's price against comparable listings (ADR-0043) */
+        get: operations["priceInsight"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search/price-guide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What comparable listings cost, for a seller filling in the form (ADR-0043)
+         * @description Other query parameters are the draft's details by attribute key (make, model, year, brand, …).
+         */
+        get: operations["priceGuide"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search/suggest": {
         parameters: {
             query?: never;
@@ -135,6 +172,11 @@ export interface components {
                 lon: number;
             };
             distanceKm?: number;
+            /**
+             * @description A good price against comparable listings (ADR-0043)
+             * @enum {string}
+             */
+            deal?: "great" | "good";
             image?: {
                 thumb: string;
                 card: string;
@@ -147,6 +189,34 @@ export interface components {
             };
             /** Format: date-time */
             publishedAt: string;
+        };
+        PriceStats: {
+            comparables: number;
+            /** @description Minor units per unit */
+            p25: number;
+            median: number;
+            p75: number;
+            /** @enum {string} */
+            unit: "listing" | "areaM2" | "head";
+            basis: {
+                same: string[];
+                near: string[];
+                region: boolean;
+                loosened: boolean;
+            };
+        };
+        PriceGuide: components["schemas"]["PriceStats"] & {
+            currency: string;
+        };
+        PriceInsight: {
+            /** Format: uuid */
+            listingId: string;
+            currency: string;
+            /** @description The listing's price per unit */
+            unitPrice: number;
+            /** @enum {string} */
+            rating: "unusually_low" | "great" | "good" | "fair" | "high";
+            stats: components["schemas"]["PriceStats"];
         };
         /** @description One part of the query read as a filter or a sort (ADR-0041) */
         Understood: {
@@ -386,6 +456,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Autocomplete"];
+                };
+            };
+            400: components["responses"]["Problem"];
+        };
+    };
+    priceInsight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The insight, or null without enough comparables */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        insight: components["schemas"]["PriceInsight"] | null;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+        };
+    };
+    priceGuide: {
+        parameters: {
+            query: {
+                country: "XS" | "NO";
+                category: string;
+                subcategory: string;
+                placeId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The guide, or null without enough comparables */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        guide: components["schemas"]["PriceGuide"] | null;
+                    };
                 };
             };
             400: components["responses"]["Problem"];

@@ -1964,5 +1964,29 @@
       "console": "Ansattkonsoll",
       "grafana": "Grafana"
     }
+  },
+  "price": {
+    "title": "Prissjekk",
+    "rating": {
+      "unusually_low": "Uvanlig lav",
+      "great": "Veldig god pris",
+      "good": "God pris",
+      "fair": "Rimelig pris",
+      "high": "Over lignende"
+    },
+    "per": {
+      "areaM2": "per m²",
+      "head": "per dyr"
+    },
+    "region": "region",
+    "range": "Sammenlignet med {count, plural, one {# lignende annonse} other {# lignende annonser}}: de fleste koster {from}–{to}, midten {median}.",
+    "compared": "Samme {what}.",
+    "warning": "Langt under lignende annonser. Vær forsiktig: møt selgeren, se varen før du betaler, og betal aldri på forskudd.",
+    "safety": "Tips om trygg handel",
+    "deal": {
+      "great": "Veldig god pris",
+      "good": "God pris"
+    },
+    "guide": "Lignende annonser: {from}–{to} (midten {median})."
   }
 }

@@ -13,6 +13,8 @@ export type CardListing = Pick<SearchHit, 'id' | 'title' | 'price' | 'category' 
   location: { name: string };
   promoted?: boolean;
   distanceKm?: number;
+  /** A good price against comparable listings (ADR-0043). */
+  deal?: 'great' | 'good';
   sold?: boolean;
 };
 
@@ -89,6 +91,15 @@ export async function ListingCard({ hit }: { hit: CardListing }) {
               ? ` · ${t('search.distance', { km: Math.round(hit.distanceKm) })}`
               : ''}
           </p>
+          {hit.deal ? (
+            <p
+              className="text-sm font-semibold text-primary"
+              data-testid="listing-card-deal"
+              data-deal={hit.deal}
+            >
+              {t(`price.deal.${hit.deal}`)}
+            </p>
+          ) : null}
         </div>
       </Link>
     </div>

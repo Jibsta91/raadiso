@@ -24,6 +24,7 @@ import {
   type SecurityOverview,
   type TrustProfile,
   type TrustSummary,
+  type PriceInsight,
 } from '@raadi/api-client';
 import { COUNTRIES } from '@raadi/catalog/countries';
 import { cache } from 'react';
@@ -63,6 +64,19 @@ export async function searchListings(query: SearchQuery): Promise<SearchResult> 
   }
   logger.warn({ status: response.status, error }, 'search failed');
   throw new ServiceUnavailableError('search unavailable');
+}
+
+/** A listing's price against comparable listings (ADR-0043); null without enough, or on failure. */
+export async function priceInsight(id: string): Promise<PriceInsight | null> {
+  const client = createSearchClient({ baseUrl: env.searchUrl });
+  const { data } = await client
+    .GET('/api/v1/search/listings/{id}/price-insight', {
+      params: { path: { id } },
+      signal: AbortSignal.timeout(3000),
+      cache: 'no-store',
+    })
+    .catch(() => ({ data: undefined }));
+  return data?.insight ?? null;
 }
 
 export const getListing = cache(async (id: string): Promise<Listing | null> => {
