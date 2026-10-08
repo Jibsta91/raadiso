@@ -1,24 +1,38 @@
-# Phase 1 CI: the same ./raadi commands developers run locally, all in containers.
-# Phase 5 extends this with multi-arch builds, SBOMs, signing, CodeQL/Semgrep,
-# ZAP and path-based job selection.
+# CI: the same ./raadi commands developers run locally, all in containers, on the self-hosted runner on the
+# development laptop (ADR-0036, ./raadi runner start). Phase 5 extends this with multi-arch builds, SBOMs,
+# signing, CodeQL/Semgrep, ZAP and path-based job selection.
+#
+# The repository is public, so the runner must never run code from a fork: every job checks that the pull
+# request comes from this repository. CI uses its own compose project and image names, so it never touches
+# the developer's running stack, its volumes or its images.
 name: ci
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.ref }}-${{ github.event.action == 'labeled' && 'stack' || 'all' }}
   cancel-in-progress: true
+
+env:
+  COMPOSE_PROJECT_NAME: raadi-ci
+  RAADI_IMAGE_PREFIX: raadi-ci
+  RAADI_SKIP_DOCTOR: '1'
 
 jobs:
   quality:
     name: Lint, types, tests, scans
-    runs-on: ubuntu-24.04
+    if: >-
+      github.event.action != 'labeled' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: [self-hosted, raadi]
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -32,10 +46,23 @@ jobs:
       - run: ./raadi security
       - run: ./raadi iac-scan
 
+  # A second full stack next to the developer's needs about 7 GB more in Docker, so it runs only on request:
+  # the "full-stack" label on a pull request, a push to main, or a manual run. A pull request opened with the
+  # label sends "opened" and "labeled" at once; only "labeled" starts the stack, so it runs once.
   stack:
     name: Full stack (compose up, smoke, Playwright)
-    runs-on: ubuntu-24.04
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) &&
+      (github.event_name != 'pull_request' ||
+        (github.event.action == 'labeled' && github.event.label.name == 'full-stack') ||
+        (github.event.action != 'labeled' && github.event.action != 'opened' &&
+          contains(github.event.pull_request.labels.*.name, 'full-stack')))
+    runs-on: [self-hosted, raadi]
     timeout-minutes: 60
+    env:
+      # Off the developer's ports (127.0.0.1:80/443).
+      HTTP_PORT: '18080'
+      HTTPS_PORT: '18443'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: docker compose up --wait
@@ -58,3 +85,6 @@ jobs:
             compose-logs.txt
             tests/e2e/playwright-report/
           retention-days: 7
+      - name: Remove the CI stack and its data
+        if: always()
+        run: docker compose --profile tools --profile test down -v --remove-orphans

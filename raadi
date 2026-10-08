@@ -52,6 +52,10 @@ Phone (docs/mobile.md)
                      Metro for Expo Go; ./raadi up returns to raadi.localhost
   tunnel             like phone, but reachable from anywhere through Pangolin on this laptop:
                      public website and sign-in, the rest over the Pangolin VPN (ADR-0034)
+CI (docs/development.md)
+  runner register|start|stop|status
+                     the self-hosted GitHub Actions runner on this laptop (ADR-0036); register
+                     once with a token from GitHub (input hidden), then start
 USAGE
 }
 
@@ -303,6 +307,22 @@ PHONE
     Metro, over the VPN:  development build: https://metro.${phone_domain}  Expo Go: exps://metro.${phone_domain}
     Back to raadi.localhost (and the tunnel closed):  ./raadi up
 TUNNEL
+    ;;
+  runner)
+    case "${1:-status}" in
+      register)
+        mkdir -p "${HOME}/.cache/raadi-runner"
+        echo "Registration token (Settings → Actions → Runners → New self-hosted runner, or"
+        echo "  gh api -X POST repos/\$GITHUB_REPOSITORY/actions/runners/registration-token --jq .token):"
+        read -rs token; echo
+        printf '%s\n' "$token" | "${DC[@]}" --profile ci run --rm --build -T ci-runner register
+        unset token
+        ;;
+      start) mkdir -p "${HOME}/.cache/raadi-runner"; "${DC[@]}" --profile ci up -d --build ci-runner ;;
+      stop) "${DC[@]}" --profile ci rm -sf ci-runner ;;
+      status) "${DC[@]}" --profile ci ps -a ci-runner; "${DC[@]}" --profile ci logs --tail 20 ci-runner ;;
+      *) echo "usage: ./raadi runner register|start|stop|status" >&2; exit 2 ;;
+    esac
     ;;
   ca-cert)
     mkdir -p deploy/certs

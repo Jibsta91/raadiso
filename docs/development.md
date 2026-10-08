@@ -78,6 +78,38 @@ Contract tests validate controller output against the service's `openapi.yaml`, 
 generates `@raadi/api-client`. `./raadi generate` rebuilds that client and the event JSON Schemas in
 `packages/events/schemas` (from the zod contracts); run it after changing either.
 
+## CI on this laptop (self-hosted runner)
+
+Pull requests are checked by `.github/workflows/ci.yaml` on a GitHub Actions runner that runs on the
+development laptop ([ADR-0036](adr/0036-self-hosted-ci-runner.md)). The jobs run the same `./raadi`
+commands as above, under their own compose project and image names (`raadi-ci`), so they never touch your
+running stack.
+
+| Job                       | Runs on                                                                | Steps                                                                 |
+| ------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Lint, types, tests, scans | every pull request and push to `main`                                  | lint, typecheck, test, test-integration, licenses, security, iac-scan |
+| Full stack                | the `full-stack` label on a pull request, a push to `main`, or by hand | `compose up`, smoke, e2e on ports 18080/18443, then `down -v`         |
+
+The full stack job needs about 7 GB more in Docker next to your own stack; stop yours (`./raadi down`) on a
+small machine. Pull requests from forks never run: the repository is public, and the runner has the
+Docker socket.
+
+Setting it up once:
+
+1. In the repository settings, turn GitHub Actions on (Settings → Actions → General → Allow actions), and
+   under "Fork pull request workflows from outside collaborators" choose **Require approval for all
+   external contributors**.
+2. `./raadi runner register` and paste a registration token (Settings → Actions → Runners → New
+   self-hosted runner, or `gh api -X POST repos/Jibsta91/raadiso/actions/runners/registration-token --jq
+.token`; it is valid for one hour). The runner keeps its own credentials in the `ci-runner-config`
+   volume; no GitHub token is stored.
+3. `./raadi runner start`. It shows up under Settings → Actions → Runners as `raadi-…`, idle.
+4. Optional: make "Lint, types, tests, scans" a required check for `main` (Settings → Branches).
+
+`./raadi runner stop` stops it; jobs then wait in GitHub's queue. Jobs run only while the laptop is on.
+The runner's version is pinned and doesn't update itself: GitHub stops accepting very old runners, so bump
+`deploy/ci-runner/Dockerfile` (Renovate does) and register again if it is ever refused.
+
 ## Browser automation for AI coding sessions (MCP)
 
 `.mcp.json` registers the [Playwright MCP server](https://github.com/microsoft/playwright-mcp) (Apache-2.0)

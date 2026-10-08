@@ -68,6 +68,35 @@ services:
     depends_on:
       summary: { condition: service_healthy }
 
+  # The GitHub Actions runner for this repository (ADR-0036): ./raadi runner register once, then
+  # ./raadi runner start. Jobs use the Docker socket, so the work folder has the same path inside and
+  # outside (bind mounts in jobs are resolved by Docker, which sees only /home).
+  ci-runner:
+    image: ${RAADI_IMAGE_PREFIX}/ci-runner:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/ci-runner/Dockerfile
+    profiles: [ci]
+    restart: unless-stopped
+    # The Docker socket is root:root 0660 inside Docker Desktop's VM.
+    group_add: ['0']
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+    security_opt: ['no-new-privileges:true']
+    environment:
+      GITHUB_REPOSITORY: ${GITHUB_REPOSITORY}
+      RUNNER_WORK: ${HOME:?}/.cache/raadi-runner/work
+    volumes:
+      # The runner's own credentials from the registration (no GitHub token is stored).
+      - ci-runner-config:/config
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOME:?}/.cache/raadi-runner:${HOME:?}/.cache/raadi-runner
+    deploy:
+      resources:
+        limits: { memory: 1G, cpus: '2.0' }
+
 volumes:
   nm-root: {}
   nm-web: {}
@@ -92,3 +121,4 @@ volumes:
   nm-config: {}
   nm-e2e: {}
   pnpm-store: {}
+  ci-runner-config: {}

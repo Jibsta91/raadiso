@@ -1,0 +1,9 @@
+# The AppSec component (WAF): Pangolin's Traefik asks it about each request before forwarding it.
+source: appsec
+name: edge-appsec
+listen_addr: 0.0.0.0:7422
+# Only the virtual patches for known CVEs (low false positives); appsec-default also wants rule packs we
+# do not install.
+appsec_config: crowdsecurity/virtual-patching
+labels:
+  type: appsec
