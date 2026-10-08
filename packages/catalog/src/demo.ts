@@ -855,6 +855,23 @@ const PHONE_BRAND_OF: Array<[RegExp, string]> = [
   [/huawei/i, 'huawei'],
 ];
 
+/** Item types a title names (a seller picks the type that fits; the demo does the same). */
+const ITEM_TYPE_OF: Array<[RegExp, string]> = [
+  [/elitebook|latitude|macbook|laptop/i, 'laptop'],
+  [/printer/i, 'printer'],
+  [/monitor/i, 'monitor'],
+  [/panel/i, 'panel'],
+  [/battery/i, 'battery'],
+  [/inverter/i, 'inverter'],
+  [/kit/i, 'kit'],
+  [/light/i, 'light'],
+  [/fridge/i, 'fridge'],
+  [/air conditioner/i, 'air_conditioner'],
+  [/washing/i, 'washing_machine'],
+  [/dispenser/i, 'water_dispenser'],
+  [/cooker/i, 'cooker'],
+];
+
 /** Plausible numbers per attribute: [min, max, step]. */
 const XS_NUMBERS: Record<string, [number, number, number]> = {
   year: [2004, 2022, 1],
@@ -886,8 +903,13 @@ function xsAttributes(rng: Rng, category: Category, sub: Subcategory, title: str
         pick(rng, def.kind === 'select' ? def.options : ['other']);
     else if (def.key === 'head') out.head = between(rng, ...(HEAD[sub] ?? [1, 10]));
     else if (def.key === 'areaM2' && sub === 'land') out.areaM2 = between(rng, 200, 5000, 50);
-    else if (def.kind === 'select') out[def.key] = pick(rng, def.options);
-    else if (def.kind === 'number') {
+    else if (def.kind === 'select') {
+      // Drawn either way, so the rest of the dataset stays the same; the title wins where it says.
+      const drawn = pick(rng, def.options);
+      const named =
+        def.key === 'itemType' ? ITEM_TYPE_OF.find(([re]) => re.test(title))?.[1] : undefined;
+      out[def.key] = named && def.options.includes(named) ? named : drawn;
+    } else if (def.kind === 'number') {
       const [min, max, step] = XS_NUMBERS[def.key] ?? [
         def.min,
         Math.min(def.max, def.min + 100),

@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthErrorBanner } from '@/components/auth-error-banner';
 import { ListingCard } from '@/components/listings/listing-card';
+import { SearchBox } from '@/components/search/search-box';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
@@ -54,7 +55,8 @@ export default async function HomePage({
   setRequestLocale(locale);
   const { authError } = await searchParams;
   const t = await getTranslations('home');
-  const categories = categoriesOf(await currentCountry()).map(({ id }, i) => ({
+  const country = await currentCountry();
+  const categories = categoriesOf(country).map(({ id }, i) => ({
     key: id,
     Icon: CATEGORY_ICONS[id] ?? ShoppingBag,
     large: i === 0,
@@ -84,17 +86,14 @@ export default async function HomePage({
           role="search"
           className="flex max-w-3xl flex-wrap items-center gap-2 rounded-[28px] border bg-card/85 p-2 shadow-float backdrop-blur-xl"
         >
-          <label htmlFor="home-q" className="sr-only">
-            {t('searchPlaceholder')}
-          </label>
           <Search aria-hidden className="ms-3 size-[22px] shrink-0 text-subtle-foreground" />
-          <input
-            id="home-q"
-            name="q"
-            type="search"
+          <SearchBox
+            country={country}
             placeholder={t('searchPlaceholder')}
-            data-testid="home-search-input"
-            className="h-13 min-w-0 flex-[1_1_14rem] bg-transparent text-lg placeholder:text-muted-foreground focus:outline-none"
+            label={t('searchPlaceholder')}
+            testId="home-search-input"
+            className="min-w-0 flex-[1_1_14rem]"
+            inputClassName="h-13 w-full bg-transparent text-lg placeholder:text-muted-foreground focus:outline-none"
           />
           <button
             type="submit"

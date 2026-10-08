@@ -38,7 +38,12 @@ test('listing page: title and price first; the photo opens full screen and Escap
   page,
 }) => {
   await page.goto('/en/search?q=sykkel');
-  await page.getByTestId('listing-card-title').first().click();
+  // A listing with photos (listings made by other tests may have none).
+  await page
+    .getByTestId('listing-card')
+    .filter({ has: page.locator('img') })
+    .first()
+    .click();
   // Title and price come before the photos in the page (phones, screen readers).
   const order = await page
     .getByTestId('listing-detail')

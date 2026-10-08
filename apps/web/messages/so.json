@@ -574,7 +574,20 @@
     "removeFilter": "Ka saar shaandhada {filter}",
     "showResults": "{total, plural, =0 {Wax natiijo ah ma jiraan} one {Muuji # natiijo} other {Muuji # natiijo}}",
     "closeFilters": "Xir shaandhooyinka",
-    "showAll": "Muuji dhammaan ({count})"
+    "showAll": "Muuji dhammaan ({count})",
+    "suggestions": {
+      "title": "Talooyin",
+      "category": "Qaybaha",
+      "query": "Raadin",
+      "place": "Meelaha",
+      "recent": "Raadintii u dambaysay",
+      "nearby": "agagaarka"
+    },
+    "understoodAs": "Natiijooyinka “{q}” waxaa loo fahmay:",
+    "exactWords": "Raadi erayada saxda ah",
+    "relaxed": "Xayeysiis kasta ma waafaqin erayada oo dhan, kuwani qaar bay la jaan qaadaan.",
+    "didYouMean": "Ma waxaad ula jeeddaa {suggestion}?",
+    "nearPlace": "u dhow {place}"
   },
   "listing": {
     "noPrice": "Mushahar heshiis ah",

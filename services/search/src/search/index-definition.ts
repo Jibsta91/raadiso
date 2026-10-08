@@ -1,4 +1,4 @@
-import { ALL_ATTRIBUTES } from '@raadi/catalog';
+import { ALL_ATTRIBUTES, SYNONYMS } from '@raadi/catalog';
 
 /**
  * The listings index. Bump INDEX_VERSION when the mapping changes: on start
@@ -7,11 +7,11 @@ import { ALL_ATTRIBUTES } from '@raadi/catalog';
  * that are not in the stored documents need a re-read of the topic
  * (docs/runbooks/event-pipeline.md).
  */
-export const INDEX_VERSION = 5;
+export const INDEX_VERSION = 6;
 
 /**
- * Painless script applied while copying documents from an older index: version 5 (ADR-0040) adds the
- * country, money in minor units and the region. Everything indexed before it is Norwegian, in kroner.
+ * Painless script applied while copying documents from an older index: version 5 (ADR-0040) added the
+ * country, money in minor units and the region (version 6, ADR-0041, adds analysis only). Everything indexed before it is Norwegian, in kroner.
  * Idempotent: documents that already have the new fields pass unchanged.
  */
 export const MIGRATE_SCRIPT = `
@@ -68,12 +68,70 @@ export const indexBody = {
           tokenizer: 'standard',
           filter: ['lowercase', 'asciifolding', 'prefix_ngrams'],
         },
+        // The same with the lexicon's synonyms, at search time only (ADR-0041).
+        nb_search: {
+          type: 'custom',
+          tokenizer: 'standard',
+          filter: [
+            'lowercase',
+            'nb_synonyms',
+            'norwegian_stop',
+            'norwegian_stemmer',
+            'asciifolding',
+          ],
+        },
+        // English: light stemming ("phones" finds "phone"), possessives and stop words removed.
+        en_text: {
+          type: 'custom',
+          tokenizer: 'standard',
+          filter: [
+            'english_possessive',
+            'lowercase',
+            'english_stop',
+            'asciifolding',
+            'english_stemmer',
+          ],
+        },
+        en_search: {
+          type: 'custom',
+          tokenizer: 'standard',
+          filter: [
+            'english_possessive',
+            'lowercase',
+            'en_synonyms',
+            'english_stop',
+            'asciifolding',
+            'english_stemmer',
+          ],
+        },
+        // Somali: no stemmer exists, so whole words, folded, with the lexicon's synonyms.
+        so_text: {
+          type: 'custom',
+          tokenizer: 'standard',
+          filter: ['lowercase', 'asciifolding', 'somali_stop'],
+        },
+        so_search: {
+          type: 'custom',
+          tokenizer: 'standard',
+          filter: ['lowercase', 'asciifolding', 'so_synonyms', 'somali_stop'],
+        },
       },
       filter: {
         norwegian_stop: { type: 'stop', stopwords: '_norwegian_' },
         norwegian_stemmer: { type: 'stemmer', language: 'light_norwegian' },
         prefix_ngrams: { type: 'edge_ngram', min_gram: 2, max_gram: 15 },
         suffix_ngrams: { type: 'edge_ngram', min_gram: 4, max_gram: 20, preserve_original: true },
+        english_stop: { type: 'stop', stopwords: '_english_' },
+        english_stemmer: { type: 'stemmer', language: 'light_english' },
+        english_possessive: { type: 'stemmer', language: 'possessive_english' },
+        // Words that only connect others in Somali listings ("and", "of", "is", "for sale").
+        somali_stop: {
+          type: 'stop',
+          stopwords: ['iyo', 'ah', 'oo', 'ee', 'ka', 'ku', 'la', 'u', 'waa'],
+        },
+        en_synonyms: { type: 'synonym_graph', lenient: true, synonyms: [...(SYNONYMS.en ?? [])] },
+        so_synonyms: { type: 'synonym_graph', lenient: true, synonyms: [...(SYNONYMS.so ?? [])] },
+        nb_synonyms: { type: 'synonym_graph', lenient: true, synonyms: [...(SYNONYMS.nb ?? [])] },
       },
     },
   },
@@ -90,8 +148,11 @@ export const indexBody = {
       title: {
         type: 'text',
         analyzer: 'nb_text',
+        search_analyzer: 'nb_search',
         fields: {
           std: { type: 'text', analyzer: 'standard' },
+          en: { type: 'text', analyzer: 'en_text', search_analyzer: 'en_search' },
+          so: { type: 'text', analyzer: 'so_text', search_analyzer: 'so_search' },
           prefix: { type: 'text', analyzer: 'nb_prefix', search_analyzer: 'standard' },
           suffix: { type: 'text', analyzer: 'nb_suffix', search_analyzer: 'nb_plain' },
           // Exact titles for suggestions (shown as typed).
@@ -101,7 +162,12 @@ export const indexBody = {
       description: {
         type: 'text',
         analyzer: 'nb_text',
-        fields: { suffix: { type: 'text', analyzer: 'nb_suffix', search_analyzer: 'nb_plain' } },
+        search_analyzer: 'nb_search',
+        fields: {
+          suffix: { type: 'text', analyzer: 'nb_suffix', search_analyzer: 'nb_plain' },
+          en: { type: 'text', analyzer: 'en_text', search_analyzer: 'en_search' },
+          so: { type: 'text', analyzer: 'so_text', search_analyzer: 'so_search' },
+        },
       },
       /** Minor units of `currency` (the country's), absent when there is no price. */
       priceMinor: { type: 'long' },

@@ -574,7 +574,20 @@
     "removeFilter": "Fjern filteret {filter}",
     "showResults": "{total, plural, =0 {Ingen treff} one {Vis # treff} other {Vis # treff}}",
     "closeFilters": "Lukk filtre",
-    "showAll": "Vis alle ({count})"
+    "showAll": "Vis alle ({count})",
+    "suggestions": {
+      "title": "Forslag",
+      "category": "Kategorier",
+      "query": "Søk",
+      "place": "Steder",
+      "recent": "Nylige søk",
+      "nearby": "i nærheten"
+    },
+    "understoodAs": "Viser treff for «{q}» som:",
+    "exactWords": "Søk etter de nøyaktige ordene i stedet",
+    "relaxed": "Ingen annonser passet alle ordene, så disse passer noen av dem.",
+    "didYouMean": "Mente du {suggestion}?",
+    "nearPlace": "nær {place}"
   },
   "listing": {
     "noPrice": "Lønn etter avtale",

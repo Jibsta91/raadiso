@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ListingCard } from '@/components/listings/listing-card';
+import { SearchBox } from '@/components/search/search-box';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
@@ -100,17 +101,14 @@ export default async function CategoryPage({
           className="flex max-w-3xl items-center gap-2 rounded-[24px] border bg-card/85 p-1.5 shadow-float backdrop-blur-xl"
         >
           <input type="hidden" name="category" value={category} />
-          <label htmlFor="category-q" className="sr-only">
-            {t('categoryPage.searchIn', { category: name })}
-          </label>
           <Search aria-hidden className="ms-3 size-5 shrink-0 text-subtle-foreground" />
-          <input
-            id="category-q"
-            name="q"
-            type="search"
+          <SearchBox
+            country={await currentCountry()}
             placeholder={t('categoryPage.searchIn', { category: name })}
-            data-testid="category-search-input"
-            className="h-12 min-w-0 flex-1 bg-transparent text-base placeholder:text-muted-foreground focus:outline-none"
+            label={t('categoryPage.searchIn', { category: name })}
+            testId="category-search-input"
+            className="min-w-0 flex-1"
+            inputClassName="h-12 w-full bg-transparent text-base placeholder:text-muted-foreground focus:outline-none"
           />
           <button
             type="submit"

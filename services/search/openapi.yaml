@@ -29,6 +29,12 @@ paths:
           description: The marketplace searched (XS is Somaliland); the service's default when absent (ADR-0040)
           schema: { type: string, enum: [XS, NO] }
         - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - name: understand
+          in: query
+          description: >-
+            false searches the words as typed; otherwise categories, places, prices and "cheap" in the
+            query become filters and a sort (ADR-0041), listed in the response's `query.understood`
+          schema: { type: string, enum: ['true', 'false'] }
         - { name: category, in: query, description: Comma-separated, schema: { type: string } }
         - { name: subcategory, in: query, description: Comma-separated, schema: { type: string } }
         - {
@@ -132,6 +138,29 @@ paths:
               schema: { $ref: '#/components/schemas/SearchResult' }
         '400': { $ref: '#/components/responses/Problem' }
         '503': { $ref: '#/components/responses/Problem' }
+  /api/v1/search/autocomplete:
+    get:
+      tags: [search]
+      operationId: autocomplete
+      summary: What to offer while someone types (ADR-0041)
+      description: >-
+        Categories whose words start with the input (with listing counts), title completions and
+        places, in one country.
+      parameters:
+        - {
+            name: q,
+            in: query,
+            required: true,
+            schema: { type: string, minLength: 1, maxLength: 60 },
+          }
+        - { name: country, in: query, schema: { type: string, enum: [XS, NO] } }
+      responses:
+        '200':
+          description: Suggestions
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Autocomplete' }
+        '400': { $ref: '#/components/responses/Problem' }
   /api/v1/search/suggest:
     get:
       tags: [search]
@@ -251,6 +280,31 @@ components:
           type: object
           additionalProperties: { type: [string, number, boolean] }
         publishedAt: { type: string, format: date-time }
+    Autocomplete:
+      type: object
+      additionalProperties: false
+      required: [categories, queries, places]
+      properties:
+        categories:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [category, count]
+            properties:
+              category: { type: string }
+              subcategory: { type: string }
+              count: { type: integer }
+        queries: { type: array, items: { type: string } }
+        places:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [placeId, name]
+            properties:
+              placeId: { type: string }
+              name: { type: string }
     Money:
       type: object
       additionalProperties: false
@@ -262,8 +316,33 @@ components:
     SearchResult:
       type: object
       additionalProperties: false
-      required: [country, currency, total, page, pageSize, items, facets, priceRanges]
+      required:
+        [country, currency, total, page, pageSize, items, facets, priceRanges, query, relaxed]
       properties:
+        query:
+          type: object
+          additionalProperties: false
+          required: [text, understood]
+          description: How the query was read (ADR-0041)
+          properties:
+            text: { type: string, description: The words searched as text }
+            understood:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [kind, words, set]
+                properties:
+                  kind:
+                    type: string
+                    enum: [category, attribute, place, region, sort, price]
+                  words: { type: string, description: The words of the query, as typed }
+                  set:
+                    type: object
+                    description: The search parameters it set
+                    additionalProperties: { type: string }
+        relaxed: { type: boolean, description: No listing matched every word; these match some }
+        suggestion: { type: string, description: A spelling that would match more ("did you mean") }
         country: { type: string, description: The country searched }
         currency: { type: string, description: Its currency (the price ranges are in it) }
         total: { type: integer }

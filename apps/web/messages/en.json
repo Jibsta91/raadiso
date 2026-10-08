@@ -574,7 +574,20 @@
     "removeFilter": "Remove filter {filter}",
     "showResults": "{total, plural, =0 {No results} one {Show # result} other {Show # results}}",
     "closeFilters": "Close filters",
-    "showAll": "Show all ({count})"
+    "showAll": "Show all ({count})",
+    "suggestions": {
+      "title": "Suggestions",
+      "category": "Categories",
+      "query": "Searches",
+      "place": "Places",
+      "recent": "Recent searches",
+      "nearby": "nearby"
+    },
+    "understoodAs": "Showing results for “{q}” as:",
+    "exactWords": "Search for the exact words instead",
+    "relaxed": "No listing matched every word, so these match some of them.",
+    "didYouMean": "Did you mean {suggestion}?",
+    "nearPlace": "near {place}"
   },
   "listing": {
     "noPrice": "Salary by agreement",

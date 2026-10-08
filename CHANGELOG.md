@@ -8,6 +8,19 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Search 2.0 (ADR-0041). Search reads the query: "cheap toyota hargeisa under 5000" becomes cars near
+  Hargeisa, at most $5,000, cheapest first, with "toyota" matched as text. The words come from a lexicon
+  in the catalog (categories, makes and models, values such as electric or right-hand drive, in English,
+  Somali and Norwegian), the gazetteer and price phrases; each part shows as a removable filter, and
+  "search for the exact words" turns it off. Titles and descriptions are searched in the country's
+  languages (English and Somali analyzers next to Norwegian, synonyms at search time), most words must
+  match instead of all, exact phrases rank first, and typo tolerance starts at five letters. A search
+  with no hits retries with any word allowed ("similar listings"), and "did you mean" suggests spellings.
+  The search fields on the website suggest categories with counts, searches and places as you type, and
+  remember recent searches in the browser (an accessible combobox; plain forms without JavaScript). A
+  judged list of 39 queries runs in the integration tests: precision went from 0.59 to 1.00 and queries
+  without results from 11 to 0, and the gates fail below 0.95.
+
 - Countries in the data (ADR-0040), the first slice of the listings programme. A listing belongs to its
   place's country; money is minor units plus a currency (`price: { amountMinor, currency }`), and
   `county` is now `region`. The taxonomy is data, one tree per country, with declarative attributes

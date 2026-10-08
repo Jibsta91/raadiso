@@ -53,47 +53,98 @@ export function centre(p: SearchParams): { lat: number; lon: number } | undefine
   return place ? { lat: place.lat, lon: place.lon } : undefined;
 }
 
+/** How to match words (ADR-0041); the defaults are a normal search. */
+export interface Matching {
+  /** Category and subcategory ids the query named but didn't filter on: ranked higher. */
+  boostCategories?: string[];
+  /** Attribute values the query named but didn't filter on (`attributes.<key>` → values): ranked higher. */
+  boostValues?: Record<string, string[]>;
+  /** The retry after no hits: any one word may match, with more typo tolerance. */
+  relaxed?: boolean;
+}
+
+/** The text fields each country's languages are searched in (Somaliland: English and Somali). */
+const TEXT_FIELDS: Record<
+  CountryCode,
+  { title: string[]; description: string[]; compounds: boolean }
+> = {
+  XS: {
+    title: ['title.en^3', 'title.so^3', 'title.std^2'],
+    description: ['description.en^0.6', 'description.so^0.6'],
+    compounds: false,
+  },
+  NO: {
+    title: ['title^3', 'title.std^2', 'title.en^1.5'],
+    description: ['description^0.6', 'description.en^0.3'],
+    compounds: true,
+  },
+};
+
+/** The full-text part: most words must match (all of up to three, then three in four). */
+export function textQuery(q: string, country: CountryCode, relaxed = false): object {
+  const { title, description, compounds } = TEXT_FIELDS[country];
+  const msm = relaxed ? '1' : '3<-25%';
+  return {
+    bool: {
+      should: [
+        {
+          multi_match: {
+            query: q,
+            fields: [...title, ...description],
+            type: 'best_fields',
+            tie_breaker: 0.3,
+            minimum_should_match: msm,
+            // Typos from five letters (one) and nine (two): shorter words are too often other words.
+            fuzziness: relaxed ? 'AUTO:4,7' : 'AUTO:5,9',
+            prefix_length: 1,
+          },
+        },
+        // Norwegian compounds put the main word last: "sykkel" finds "Terrengsykkel". Exact, so it adds
+        // hits without the noise fuzziness would bring on word endings.
+        ...(compounds
+          ? [
+              {
+                multi_match: {
+                  query: q,
+                  fields: ['title.suffix^2', 'description.suffix'],
+                  type: 'best_fields',
+                  minimum_should_match: msm,
+                },
+              },
+            ]
+          : []),
+      ],
+      minimum_should_match: 1,
+    },
+  };
+}
+
 /**
  * Builds the OpenSearch request. Text, price and geo constraints filter the
  * whole result set. Facet selections are applied as a post_filter, and each
  * facet's aggregation applies every selection except its own, so choosing
  * "bil" still shows the counts for the other categories (standard faceting).
  */
-export function buildSearch(p: SearchParams, country: CountryCode) {
+export function buildSearch(p: SearchParams, country: CountryCode, matching: Matching = {}) {
   const { currency, priceBuckets } = COUNTRIES[country];
   const must: object[] = [];
   const filter: object[] = [{ term: { status: 'active' } }, { term: { country } }];
+  const should: object[] = [];
 
   if (p.q) {
-    must.push({
-      bool: {
-        should: [
-          {
-            multi_match: {
-              query: p.q,
-              fields: ['title^3', 'title.std^2', 'description'],
-              type: 'best_fields',
-              operator: 'and',
-              // One typo up to seven letters, two from eight: with AUTO's two edits at six letters,
-              // "sykler" matched "stoler".
-              fuzziness: 'AUTO:4,8',
-              prefix_length: 1,
-            },
-          },
-          // The last part of a compound word: "sykkel" finds "Terrengsykkel". Exact, so it adds hits
-          // without the noise fuzziness would bring on word endings.
-          {
-            multi_match: {
-              query: p.q,
-              fields: ['title.suffix^2', 'description.suffix'],
-              type: 'best_fields',
-              operator: 'and',
-            },
-          },
-        ],
-        minimum_should_match: 1,
-      },
-    });
+    must.push(textQuery(p.q, country, matching.relaxed));
+    // The words as typed, together in the title, rank first ("land cruiser" before "cruiser ... land").
+    should.push({ match_phrase: { 'title.std': { query: p.q, slop: 2, boost: 4 } } });
+  }
+  const nodes = matching.boostCategories ?? [];
+  if (nodes.length) {
+    should.push(
+      { terms: { subcategory: nodes, boost: 3 } },
+      { terms: { category: nodes, boost: 2 } },
+    );
+  }
+  for (const [field, values] of Object.entries(matching.boostValues ?? {})) {
+    should.push({ terms: { [field]: values, boost: 2 } });
   }
   // Prices are typed in major units of the country's currency; the index holds minor units.
   if (p.priceMin !== undefined || p.priceMax !== undefined) {
@@ -184,9 +235,9 @@ export function buildSearch(p: SearchParams, country: CountryCode) {
       bool: {
         must: must.length ? must : [{ match_all: {} }],
         filter,
-        // Running paid promotions rank first under "relevance" (ADR-0020). An
-        // optional clause: it changes the order, never which listings match.
-        // Explicit sorts (newest, price, distance) stay neutral.
+        // Under "relevance", running paid promotions rank first (ADR-0020), then phrase and category
+        // boosts (ADR-0041). Optional clauses: they change the order, never which listings match.
+        // Explicit sorts (newest, price, distance) don't score, so they get none.
         ...(p.sort === 'relevance'
           ? {
               should: [
@@ -196,6 +247,7 @@ export function buildSearch(p: SearchParams, country: CountryCode) {
                     boost: 1000,
                   },
                 },
+                ...should,
               ],
             }
           : {}),
@@ -206,5 +258,16 @@ export function buildSearch(p: SearchParams, country: CountryCode) {
     sort,
     _source: { excludes: ['description', 'ownerId'] },
     ...(scriptFields ? { script_fields: scriptFields } : {}),
+    // "Did you mean": the most frequent close spelling of each word that titles don't contain.
+    ...(p.q
+      ? {
+          suggest: {
+            text: p.q,
+            spelling: {
+              term: { field: 'title.std', suggest_mode: 'popular', min_word_length: 4, size: 1 },
+            },
+          },
+        }
+      : {}),
   };
 }
