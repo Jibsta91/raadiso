@@ -4,7 +4,8 @@
 # Input:
 #   action:    "create" | "update"
 #   principal: {sub, roles}
-#   listing:   {category, subcategory, title, description, priceNok, imageCount}
+#   listing:   {category, subcategory, title, description, country, price, imageCount}
+#              price: {amountMinor, currency} or null (ADR-0040)
 #   context:   {activeListings}
 package raadi.listings
 
@@ -14,12 +15,27 @@ max_active_listings := 50
 
 max_images := 10
 
-# Upper bounds that catch typos (an extra zero) and obvious scams.
+# Upper bounds that catch typos (an extra zero) and obvious scams, in minor units of the category's
+# currency (øre for Norway, US cents for Somaliland). Categories without one have no ceiling.
 price_ceiling := {
-	"torget": 1000000,
-	"bil": 20000000,
-	"eiendom": 200000000,
-	"reise": 250000,
+	# Norway (NOK)
+	"torget": 100000000,
+	"bil": 2000000000,
+	"eiendom": 20000000000,
+	"reise": 25000000,
+	# Somaliland (USD)
+	"vehicles": 50000000,
+	"property": 300000000,
+	"phones": 500000,
+	"electronics": 2000000,
+	"home": 1000000,
+	"fashion": 1000000,
+	"livestock": 10000000,
+	"agriculture": 5000000,
+	"services": 2000000,
+	"business": 20000000,
+	"kids": 200000,
+	"sports-hobbies": 1000000,
 }
 
 decision := {"allow": count(deny) == 0, "reasons": sort([r | some r in deny])}
@@ -34,7 +50,7 @@ deny contains "quota_exceeded" if {
 
 deny contains "price_above_ceiling" if {
 	ceiling := price_ceiling[input.listing.category]
-	input.listing.priceNok > ceiling
+	input.listing.price.amountMinor > ceiling
 }
 
 deny contains "too_many_images" if input.listing.imageCount > max_images

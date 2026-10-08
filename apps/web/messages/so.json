@@ -51,6 +51,58 @@
       "reise": {
         "name": "Safar",
         "description": "Guryo fasax, safarro iyo dalabyo safar."
+      },
+      "vehicles": {
+        "name": "Gaadiid",
+        "description": "Baabuur, mootooyin, bajaaj, xamuul iyo qalab."
+      },
+      "property": {
+        "name": "Guryo iyo dhul",
+        "description": "Guryo kiro iyo iib ah, dhul, dukaamo iyo xafiisyo."
+      },
+      "phones": {
+        "name": "Taleefanno iyo tablet",
+        "description": "Taleefanno cusub iyo kuwo la isticmaalay iyo qalabkooda."
+      },
+      "electronics": {
+        "name": "Elektaroonig iyo qorrax",
+        "description": "Tamarta qorraxda, kombiyuutarro, qalabka guriga iyo TV."
+      },
+      "home": {
+        "name": "Guriga iyo alaabta",
+        "description": "Alaabta guriga, jikada iyo qurxinta."
+      },
+      "fashion": {
+        "name": "Dharka iyo moodada",
+        "description": "Dhar, kabo, boorsooyin, dahab iyo saacado."
+      },
+      "livestock": {
+        "name": "Xoolo",
+        "description": "Geel, ari iyo ido, lo' iyo digaag."
+      },
+      "agriculture": {
+        "name": "Beeraha iyo cuntada",
+        "description": "Wax-soo-saarka beeraha, calaf iyo qalab."
+      },
+      "jobs": {
+        "name": "Shaqooyin",
+        "description": "Shaqooyin ka socda shaqo-bixiyeyaasha dalkaaga."
+      },
+      "services": {
+        "name": "Adeegyo",
+        "description": "Farsamo, gaadiid, casharro, xaflado iyo dayactir."
+      },
+      "business": {
+        "name": "Ganacsi iyo warshado",
+        "description": "Qalab, mashiinno iyo jumlad."
+      },
+      "kids": {
+        "name": "Carruurta",
+        "description": "Qalabka ilmaha, alaabta ciyaarta iyo dharka carruurta."
+      },
+      "sports-hobbies": {
+        "name": "Isboorti iyo hiwaayado",
+        "description": "Qalabka isboortiga, buugaag iyo qalabka muusikada."
       }
     },
     "trustTitle": "Maxaa Raadiso",
@@ -202,7 +254,20 @@
       "bil": "Baabuur",
       "eiendom": "Hanti ma-guurto ah",
       "jobb": "Shaqo",
-      "reise": "Safar"
+      "reise": "Safar",
+      "vehicles": "Gaadiid",
+      "property": "Guryo iyo dhul",
+      "phones": "Taleefanno iyo tablet",
+      "electronics": "Elektaroonig iyo tamarta qorraxda",
+      "home": "Guriga iyo alaabta",
+      "fashion": "Dharka iyo moodada",
+      "livestock": "Xoolo",
+      "agriculture": "Beeraha iyo cuntada",
+      "jobs": "Shaqooyin",
+      "services": "Adeegyo",
+      "business": "Ganacsi iyo warshado",
+      "kids": "Carruurta",
+      "sports-hobbies": "Isboorti iyo hiwaayado"
     },
     "subcategories": {
       "elektronikk": "Elektaroonig iyo qalabka guriga",
@@ -236,7 +301,62 @@
       "naering": "Hanti ganacsi",
       "kontor": "Xafiis iyo maamul",
       "industri": "Warshado iyo wax soo saar",
-      "reiseliv": "Huteel iyo maqaayad"
+      "reiseliv": "Huteel iyo maqaayad",
+      "cars": "Baabuurta",
+      "motorcycles": "Mootooyin iyo bajaaj",
+      "trucks-buses": "Xamuul iyo basas",
+      "auto-parts": "Qalabka gaadiidka",
+      "houses-rent": "Guryo kiro ah",
+      "houses-sale": "Guryo iib ah",
+      "land": "Dhul iyo boos",
+      "commercial-property": "Dukaamo iyo xafiisyo",
+      "short-stays": "Joogitaan gaaban",
+      "mobile-phones": "Taleefannada gacanta",
+      "tablets": "Tablet",
+      "phone-accessories": "Qalabka taleefanka",
+      "computers": "Kombiyuutarro",
+      "solar-power": "Tamarta qorraxda",
+      "appliances": "Qalabka guriga",
+      "tv-audio": "TV iyo cod",
+      "furniture": "Alaabta guriga",
+      "kitchenware": "Qalabka jikada",
+      "home-decor": "Qurxinta guriga",
+      "mens-clothing": "Dharka ragga",
+      "womens-clothing": "Dharka haweenka",
+      "shoes": "Kabo",
+      "jewellery-watches": "Dahab iyo saacado",
+      "bags": "Boorsooyin",
+      "camels": "Geel",
+      "goats-sheep": "Ari iyo ido",
+      "cattle": "Lo'",
+      "poultry": "Digaag",
+      "farm-produce": "Wax-soo-saarka beeraha",
+      "animal-feed": "Calafka xoolaha",
+      "farm-equipment": "Qalabka beeraha",
+      "ngo-jobs": "Hay'adaha",
+      "it-jobs": "IT iyo isgaarsiin",
+      "sales-jobs": "Iibka iyo dukaamada",
+      "driver-jobs": "Darawalnimo",
+      "teaching-jobs": "Waxbarid",
+      "health-jobs": "Caafimaad",
+      "construction-jobs": "Dhismaha",
+      "hospitality-jobs": "Hudheelo iyo makhaayado",
+      "office-jobs": "Xafiis iyo maaliyad",
+      "building-trades": "Farsamada dhismaha",
+      "transport-logistics": "Gaadiid iyo rarid",
+      "tutoring": "Casharro gaar ah",
+      "it-services": "Adeegyada IT",
+      "events-catering": "Xafladaha iyo cuntada",
+      "beauty-services": "Qurxin",
+      "repair-services": "Dayactir",
+      "business-equipment": "Qalab iyo mashiinno",
+      "wholesale": "Jumlad",
+      "baby-gear": "Qalabka ilmaha",
+      "toys": "Alaabta ciyaarta",
+      "kids-clothing": "Dharka carruurta",
+      "sports-equipment": "Qalabka isboortiga",
+      "books": "Buugaag",
+      "musical-instruments": "Qalabka muusikada"
     },
     "attributes": {
       "condition": "Xaaladda",
@@ -254,7 +374,17 @@
       "guests": "Martida",
       "bodyType": "Qaabka jirka",
       "drivetrain": "Wadista taayirada",
-      "ownership": "Nooca lahaanshaha"
+      "ownership": "Nooca lahaanshaha",
+      "usage": "Isticmaalka",
+      "steering": "Shukaanka",
+      "furnishing": "Alaabta",
+      "landUse": "Ujeedada dhulka",
+      "dealType": "Kiro ama iib",
+      "brand": "Nooca",
+      "storageGb": "Kaydka",
+      "itemType": "Nooca alaabta",
+      "head": "Tirada xoolaha",
+      "sex": "Lab ama dhedig"
     },
     "values": {
       "condition": {
@@ -279,7 +409,13 @@
         "townhouse": "Guri saf ah",
         "cabin": "Aqal",
         "plot": "Dhul",
-        "commercial": "Goob ganacsi"
+        "commercial": "Goob ganacsi",
+        "villa": "Fiilo",
+        "room": "Qol",
+        "shop": "Dukaan",
+        "office": "Xafiis",
+        "warehouse": "Bakhaar",
+        "hotel": "Hudheel"
       },
       "employmentType": {
         "full_time": "Waqti buuxa",
@@ -306,6 +442,63 @@
         "freehold": "Lahaansho buuxda",
         "cooperative": "Iskaashato",
         "shares": "Saami"
+      },
+      "usage": {
+        "brand_new": "Cusub",
+        "foreign_used": "Dibadda laga keenay",
+        "locally_used": "Gudaha lagu isticmaalay"
+      },
+      "steering": {
+        "left": "Shukaan bidix",
+        "right": "Shukaan midig"
+      },
+      "dealType": {
+        "rent": "Kiro",
+        "sale": "Iib"
+      },
+      "furnishing": {
+        "furnished": "Alaab leh",
+        "unfurnished": "Alaab la'aan"
+      },
+      "landUse": {
+        "residential": "Degaan",
+        "commercial": "Ganacsi",
+        "agricultural": "Beero"
+      },
+      "sex": {
+        "male": "Lab",
+        "female": "Dhedig",
+        "mixed": "Isku jira"
+      },
+      "brand": {
+        "apple": "Apple",
+        "samsung": "Samsung",
+        "tecno": "Tecno",
+        "infinix": "Infinix",
+        "xiaomi": "Xiaomi",
+        "huawei": "Huawei",
+        "oppo": "OPPO",
+        "nokia": "Nokia",
+        "itel": "itel",
+        "other": "Kale"
+      },
+      "itemType": {
+        "laptop": "Laptop",
+        "desktop": "Desktop",
+        "monitor": "Shaashado",
+        "printer": "Daabacayaal",
+        "accessory": "Qalab dheeraad ah",
+        "panel": "Looxyada qorraxda",
+        "battery": "Baytariyo",
+        "inverter": "Inverterro",
+        "kit": "Xirmooyin dhammaystiran",
+        "light": "Nalal",
+        "fridge": "Talaagado",
+        "air_conditioner": "Qaboojiyeyaal",
+        "washing_machine": "Mashiinnada dharka",
+        "cooker": "Shoolado",
+        "water_dispenser": "Biyo-qaybiyeyaal",
+        "fan": "Marawaxado"
       }
     }
   },
@@ -372,7 +565,9 @@
       "mileage": "Masaafada",
       "area": "Bedka",
       "bedrooms": "Qolalka jiifka",
-      "guests": "Martida"
+      "guests": "Martida",
+      "storage": "Kaydka",
+      "head": "Xoolaha"
     },
     "rangeFrom": "{filter} laga bilaabo {value}",
     "rangeTo": "{filter} ilaa {value}",
@@ -413,7 +608,11 @@
     "promoted": "La horumariyay",
     "promotedUntil": "La horumariyay ilaa {date}",
     "promote": "Horumari",
-    "extendPromotion": "Kordhi horumarinta"
+    "extendPromotion": "Kordhi horumarinta",
+    "per": {
+      "month": "bishii",
+      "night": "habeenkii"
+    }
   },
   "form": {
     "newTitle": "Xayeysiis cusub",
@@ -461,10 +660,10 @@
         "subcategory": "Dooro qayb-hoosaad.",
         "title": "Qor cinwaan u dhexeeya 3 ilaa 120 xaraf.",
         "description": "Qor sharaxaad (ugu badnaan 5,000 xaraf).",
-        "priceNok": "Geli qiimaha karoonno dhan, ama banaan ka dhig.",
         "placeId": "Dooro meesha shaygu yaal.",
         "attributes": "Hubi xogtan.",
-        "generic": "Hubi goobtan."
+        "generic": "Hubi goobtan.",
+        "price": "Geli qiimaha, ama banaan ka dhig."
       }
     },
     "pickCategory": "Maxaad rabtaa inaad soo dhigto?",
@@ -546,7 +745,7 @@
       "listing_removed": "Xayeysiiskaaga \"{title}\" waxaa saaray maamule sababtoo ah wuxuu jebinayaa xeerarka suuqa.",
       "review_received": "Qof ayaa ku qiimeeyay: {rating} ka mid ah 5 xiddigood.",
       "listing_promoted": "Xayeysiiskaaga hadda waa la horumariyay {days} maalmood. Rasiidka waxaa lagu diray iimaylkaaga.",
-      "favourite_price_drop": "Mid aad jeceshahay qiimihiisa waa la dhimay: hadda {priceNok} kr (hore {previousPriceNok} kr).",
+      "favourite_price_drop": "Mid aad jeceshahay qiimihiisa waa la dhimay: hadda {price} (hore {previousPrice}).",
       "favourite_sold": "Mid ka mid ah kuwa aad jeceshahay waa la iibiyay.",
       "saved_search_match": "{count} xayeysiis oo cusub ayaa ku habboon raadin la keydiyay."
     },
@@ -728,6 +927,33 @@
       "reise": {
         "bigGroups": "6 qof ama ka badan",
         "cabins": "Aqallo"
+      },
+      "vehicles": {
+        "foreignUsed": "Dibadda laga keenay",
+        "rightHand": "Shukaan midig",
+        "automatic": "Gear toos ah"
+      },
+      "property": {
+        "forRent": "Kiro",
+        "threeBedrooms": "Ugu yaraan 3 qol",
+        "plots": "Dhul iyo boos"
+      },
+      "phones": {
+        "iphones": "iPhone",
+        "new": "Cusub",
+        "under100": "Ka yar $100"
+      },
+      "electronics": {
+        "solarKits": "Xirmooyinka qorraxda",
+        "laptops": "Laptopyo"
+      },
+      "livestock": {
+        "camels": "Geel",
+        "goats": "Ari iyo ido"
+      },
+      "jobs": {
+        "fullTime": "Waqti buuxa",
+        "ngo": "Shaqooyinka hay'adaha"
       }
     },
     "newListing": "Xayeysiis ku dhig {category}"

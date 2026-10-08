@@ -30,11 +30,13 @@ const row: ListingRow = {
   id: '6f1c4a52-2a43-4d0d-9b55-2f1f1b0e5a11',
   owner_id: '3f0c5a6e-1b7d-4c2a-9e51-7a0d2b6c4f11',
   seller_name: 'Kari N.',
+  country: 'NO',
   category: 'bil',
   subcategory: 'personbil',
   title: 'Toyota Corolla Hybrid',
   description: 'Service fulgt.',
-  price_nok: '189000',
+  price_minor: '18900000',
+  currency: 'NOK',
   attributes: {
     make: 'Toyota',
     model: 'Corolla',
@@ -64,8 +66,10 @@ describe('OpenAPI contract', () => {
     const validate = validator('Listing');
     const listing = toListing(row, signer);
     assert.ok(validate(listing), JSON.stringify(validate.errors));
-    assert.equal(listing.priceNok, 189000);
+    assert.deepEqual(listing.price, { amountMinor: 18900000, currency: 'NOK' });
+    assert.equal(listing.country, 'NO');
     assert.equal(listing.location.name, 'Bergen');
+    assert.equal(listing.location.region, 'vestland');
     const withViewer = { ...listing, viewer: { isOwner: true, canEdit: true, canDelete: true } };
     assert.ok(validate(withViewer), JSON.stringify(validate.errors));
   });
@@ -89,7 +93,7 @@ describe('OpenAPI contract', () => {
       subcategory: 'sport',
       title: 'Ski',
       description: 'Fine',
-      priceNok: 100,
+      price: { amountMinor: 10000, currency: 'NOK' },
       attributes: { condition: 'good' },
       placeId: 'oslo',
     };
@@ -97,17 +101,34 @@ describe('OpenAPI contract', () => {
     for (const bad of [
       { ...body, ownerId: 'x' },
       { ...body, title: 'x' },
-      { ...body, priceNok: -1 },
+      { ...body, price: { amountMinor: -1, currency: 'NOK' } },
+      { ...body, price: { amountMinor: 100, currency: 'nok' } },
+      { ...body, price: 100 },
     ]) {
       assert.ok(!validate(bad));
       assert.ok(!createListingSchema.safeParse(bad).success);
     }
   });
 
-  it('event snapshots satisfy the published event contract', () => {
+  it('event snapshots satisfy the published event contract, old fields included', () => {
     const data = { listing: toSnapshot(row) };
     assert.ok(contracts['no.raadi.listings.listing.updated.v1'].safeParse(data).success);
     assert.equal(JSON.stringify(data).includes('Kari'), false, 'no seller name in events');
+    assert.equal(data.listing.priceNok, 189000, 'kroner for consumers that predate ADR-0040');
+    assert.equal(data.listing.location.county, 'vestland');
+    const dollars = toSnapshot({
+      ...row,
+      country: 'XS',
+      category: 'phones',
+      subcategory: 'mobile-phones',
+      price_minor: '24000',
+      currency: 'USD',
+      place_id: 'hargeisa',
+    });
+    assert.equal(dollars.priceNok, null, 'no kroner for a dollar price');
+    assert.deepEqual(dollars.price, { amountMinor: 24000, currency: 'USD' });
+    assert.equal(dollars.location.region, 'maroodi-jeex');
+    assert.equal(dollars.country, 'XS');
   });
 });
 

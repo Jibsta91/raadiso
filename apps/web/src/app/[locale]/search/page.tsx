@@ -1,11 +1,6 @@
-import {
-  CATEGORY_KEYS,
-  COUNTIES,
-  FACET_ATTRIBUTES,
-  RANGE_ATTRIBUTES,
-  type Category,
-  type County,
-} from '@raadi/catalog';
+import { categoriesOf, countryOfCategory, facetsOf, rangesOf } from '@raadi/catalog/categories';
+import { currencySymbol } from '@raadi/catalog/money';
+import { regionName } from '@raadi/catalog/places';
 import type { SearchQuery } from '@raadi/api-client';
 import { Button } from '@raadi/ui';
 import { ChevronRight, SearchX } from 'lucide-react';
@@ -20,6 +15,7 @@ import { SearchControls } from '@/components/search/search-controls';
 import { Link } from '@/i18n/navigation';
 import { CATEGORY_ICONS } from '@/lib/taxonomy-icons';
 import { savedSearches, searchListings, ServiceUnavailableError } from '@/lib/api';
+import { currentCountry } from '@/lib/host';
 import { sameSearch, savedParams, searchLabels } from '@/lib/search-labels';
 import { flatParams, makeLabel } from '@/lib/format';
 import { CATEGORY_FILTERS, href, type Params, selected, withParams } from '@/lib/search-params';
@@ -30,7 +26,7 @@ const PASSTHROUGH = [
   'q',
   'category',
   'subcategory',
-  'county',
+  'region',
   ...CATEGORY_FILTERS,
   'priceMin',
   'priceMax',
@@ -41,8 +37,6 @@ const PASSTHROUGH = [
   'sort',
   'page',
 ];
-/** Units shown next to range inputs and in chips (the same in every language). */
-const RANGE_UNITS: Record<string, string> = { mileage: 'km', area: 'm²' };
 const RANGE_KEYS = ['priceMin', 'priceMax', ...CATEGORY_FILTERS.filter((k) => /M(in|ax)$/.test(k))];
 
 export async function generateMetadata({
@@ -64,7 +58,11 @@ export default async function SearchPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const [t, format] = await Promise.all([getTranslations(), getFormatter()]);
+  const [t, format, country] = await Promise.all([
+    getTranslations(),
+    getFormatter(),
+    currentCountry(),
+  ]);
   const all = flatParams(await searchParams);
   const current: Params = Object.fromEntries(
     Object.entries(all).filter(([k]) => PASSTHROUGH.includes(k)),
@@ -72,10 +70,11 @@ export default async function SearchPage({
   // With exactly one category chosen, the sidebar shows that category's own filters (FINN-style).
   const categories = selected(current, 'category');
   const only =
-    categories.length === 1 && (CATEGORY_KEYS as readonly string[]).includes(categories[0]!)
-      ? (categories[0] as Category)
+    categories.length === 1 && countryOfCategory(categories[0]!) === country
+      ? categories[0]!
       : undefined;
   const subcategories = selected(current, 'subcategory');
+  const sub = only && subcategories.length === 1 ? subcategories[0] : undefined;
 
   let result;
   try {
@@ -96,8 +95,8 @@ export default async function SearchPage({
         return t(`taxonomy.categories.${value}` as never);
       case 'subcategory':
         return t(`taxonomy.subcategories.${value}` as never);
-      case 'county':
-        return COUNTIES[value as County] ?? value;
+      case 'region':
+        return regionName(value);
       case 'make':
         return makeLabel(value);
       default:
@@ -106,8 +105,9 @@ export default async function SearchPage({
   };
   const filtered = Object.keys(current).some((k) => k !== 'q' && k !== 'sort' && k !== 'page');
   // Saving a search keeps its filters; "Lagre søk" shows once there is something to keep.
-  const toSave = savedParams(current);
-  const canSave = Object.keys(toSave).length > 0;
+  // A saved search remembers its country, so its alerts search the same marketplace (ADR-0040).
+  const toSave = savedParams({ ...current, country });
+  const canSave = Object.keys(toSave).length > 1;
   const [saveName, alreadySaved] = canSave
     ? await Promise.all([
         searchLabels(toSave).then((l) => l.join(' · ').slice(0, 80) || t('savedSearches.untitled')),
@@ -119,15 +119,12 @@ export default async function SearchPage({
   const facets = [
     'category',
     ...(only || subcategories.length ? ['subcategory'] : []),
-    'county',
-    ...(only ? FACET_ATTRIBUTES[only] : []),
-  ] as Array<Exclude<keyof typeof result.facets, 'price'>>;
+    'region',
+    ...(only ? facetsOf(only, sub).map((f) => f.key) : []),
+  ];
   const ranges = [
-    { param: 'price', unit: 'kr' },
-    ...(only ? RANGE_ATTRIBUTES[only] : []).map((r) => ({
-      param: r.param,
-      unit: RANGE_UNITS[r.param] ?? '',
-    })),
+    { param: 'price', unit: currencySymbol(result.currency, locale) },
+    ...(only ? rangesOf(only, sub) : []).map((r) => ({ param: r.param, unit: r.unit ?? '' })),
   ];
   const rangeTitle = (param: string) =>
     param === 'price' ? t('search.price') : t(`search.ranges.${param}` as never);
@@ -140,7 +137,7 @@ export default async function SearchPage({
     });
   };
   const chips = [
-    ...(['category', 'subcategory', 'county', ...CATEGORY_FILTERS] as const).flatMap((key) =>
+    ...['category', 'subcategory', 'region', ...CATEGORY_FILTERS].flatMap((key) =>
       RANGE_KEYS.includes(key) ? [] : facetChips(current, key, label(key)),
     ),
     ...ranges.flatMap((r) => [
@@ -197,7 +194,7 @@ export default async function SearchPage({
               key={facet}
               name={facet}
               title={t(`search.facets.${facet}`)}
-              values={result.facets[facet]}
+              values={result.facets[facet] ?? []}
               params={current}
               label={label(facet)}
               showAll={(count) => t('search.showAll', { count })}
@@ -229,7 +226,8 @@ export default async function SearchPage({
                       name={`${r.param}${which}`}
                       type="number"
                       min={0}
-                      inputMode="numeric"
+                      step={r.param === 'price' ? 'any' : 1}
+                      inputMode={r.param === 'price' ? 'decimal' : 'numeric'}
                       aria-label={`${rangeTitle(r.param)} ${t(`search.price${which}`)}`}
                       placeholder={t(`search.price${which}`)}
                       defaultValue={current[`${r.param}${which}`]}
@@ -267,7 +265,7 @@ export default async function SearchPage({
               </ol>
             </nav>
           ) : null}
-          <SearchControls params={current} />
+          <SearchControls params={current} country={country} />
           <ActiveFilters
             chips={chips}
             clear={current.q ? { q: current.q } : {}}
@@ -300,8 +298,8 @@ export default async function SearchPage({
               <nav aria-label={t('search.browseCategories')} className="mt-4 space-y-3">
                 <p className="text-sm">{t('search.browseCategories')}</p>
                 <ul className="flex flex-wrap justify-center gap-2" role="list">
-                  {CATEGORY_KEYS.map((key) => {
-                    const Icon = CATEGORY_ICONS[key];
+                  {categoriesOf(country).map(({ id: key }) => {
+                    const Icon = CATEGORY_ICONS[key] ?? SearchX;
                     return (
                       <li key={key}>
                         <Link

@@ -37,7 +37,7 @@ async function main(): Promise<void> {
           subcategory: l.subcategory,
           title: l.title,
           description: l.description,
-          priceNok: l.priceNok,
+          price: l.price,
           attributes: l.attributes as Record<string, unknown>,
           placeId: l.place.id,
           imageIds: l.images.map((img) => img.id),

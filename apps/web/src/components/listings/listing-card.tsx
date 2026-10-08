@@ -9,7 +9,7 @@ import { formatPrice } from '@/lib/format';
 import { CATEGORY_ICONS } from '@/lib/taxonomy-icons';
 
 /** What a card shows: a search hit, or a favourite (which may be sold). */
-export type CardListing = Pick<SearchHit, 'id' | 'title' | 'priceNok' | 'category' | 'image'> & {
+export type CardListing = Pick<SearchHit, 'id' | 'title' | 'price' | 'category' | 'image'> & {
   location: { name: string };
   promoted?: boolean;
   distanceKm?: number;
@@ -73,7 +73,7 @@ export async function ListingCard({ hit }: { hit: CardListing }) {
             className="glass absolute bottom-2.5 start-2.5 rounded-full px-3 py-1 text-sm font-bold tabular-nums sm:bottom-3 sm:start-3 sm:py-1.5 sm:text-base"
             data-testid="listing-card-price"
           >
-            {hit.priceNok === null ? t('listing.noPrice') : formatPrice(hit.priceNok, locale)}
+            {hit.price === null ? t('listing.noPrice') : formatPrice(hit.price, locale)}
           </p>
         </div>
         <div className="flex flex-col gap-0.5 px-1">

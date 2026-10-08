@@ -11,7 +11,7 @@ import { Empty, Id, KeyValues, Panel, Pill, Unavailable } from '@/components/adm
 import { findPlace } from '@raadi/catalog';
 import { Link } from '@/i18n/navigation';
 import { adminAudit, AdminApiError, getAdminListing, settle, staffNames } from '@/lib/admin/api';
-import { nok } from '@/lib/admin/format';
+import { formatMoney } from '@raadi/catalog/money';
 import { REMOVAL_REASONS } from '@/lib/admin/reasons';
 import { env } from '@/lib/env';
 import { getSession } from '@/lib/session';
@@ -98,7 +98,7 @@ export default async function ListingPage({
             ) : null}
             {l.promotedUntil ? <Pill tone="info">{t('promoted')}</Pill> : null}
             <span className="font-semibold tabular-nums">
-              {l.priceNok === null ? '–' : nok(l.priceNok * 100, locale)}
+              {l.price === null ? '–' : formatMoney(l.price, locale)}
             </span>
             <CopyButton value={id} />
           </div>

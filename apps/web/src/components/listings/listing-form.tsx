@@ -2,29 +2,29 @@
 
 import type { Listing, Media } from '@raadi/api-client';
 import {
-  ATTRIBUTE_FIELDS,
   attributePayload as toAttributes,
-  CATEGORIES,
-  PLACES,
-  type Category,
-} from '@raadi/catalog';
+  attributesOf,
+  priceRuleOf,
+  priceUnitOf,
+} from '@raadi/catalog/attributes';
+import { categoriesOf, subcategoriesOf, type Category } from '@raadi/catalog/categories';
+import { COUNTRIES, type CountryCode } from '@raadi/catalog/countries';
+import { currencySymbol, parseMajor, toMajor } from '@raadi/catalog/money';
+import { placeName, placesOf } from '@raadi/catalog/places';
 import { Button } from '@raadi/ui';
 import { Check, ImagePlus, Loader2, X } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { CATEGORY_ICONS, SUBCATEGORY_ICONS } from '@/lib/taxonomy-icons';
 
-const FIELDS = ATTRIBUTE_FIELDS;
-
-const PLACES_BY_NAME = [...PLACES].sort((a, b) => a.name.localeCompare(b.name, 'nb'));
 /** Fields with their own error text (form.errors.fields); the rest get a general one. */
 const FIELD_MESSAGES = [
   'category',
   'subcategory',
   'title',
   'description',
-  'priceNok',
+  'price',
   'placeId',
   'attributes',
 ];
@@ -50,15 +50,23 @@ interface Problem {
 
 /** The create/edit form. A new listing starts with FINN-style category and subcategory tiles. */
 export function ListingForm({
+  country,
   listing,
   initialCategory,
 }: {
+  /** The marketplace the listing is in (ADR-0040): its categories, places and currency. */
+  country: CountryCode;
   listing?: Listing;
   /** Preselected from `?category=` (the "new listing" button on a category page). */
   initialCategory?: Category;
 }) {
   const t = useTranslations();
+  const locale = useLocale();
   const router = useRouter();
+  const { currency } = COUNTRIES[country];
+  const places = [...placesOf(country)].sort((a, b) =>
+    placeName(a, locale as never).localeCompare(placeName(b, locale as never), locale),
+  );
   const id = useId();
   const [category, setCategory] = useState<Category | ''>(
     listing?.category ?? initialCategory ?? '',
@@ -76,7 +84,9 @@ export function ListingForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const isJob = category === 'jobb';
+  const priceRule = category ? priceRuleOf(category, subcategory || undefined) : 'required';
+  const priceUnit = category ? priceUnitOf(category, subcategory || undefined) : undefined;
+  const fields = category && subcategory ? attributesOf(category, subcategory) : [];
 
   async function upload(files: FileList | null) {
     if (!files?.length) return;
@@ -108,19 +118,25 @@ export function ListingForm({
   }
 
   function attributePayload(): Record<string, string | number> {
-    return category ? toAttributes(category, attributes) : {};
+    return category && subcategory ? toAttributes(category, subcategory, attributes) : {};
   }
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    const price = String(form.get('priceNok') ?? '').trim();
+    const typed = String(form.get('price') ?? '').trim();
+    const amountMinor = typed === '' ? undefined : parseMajor(typed, currency);
+    if (typed !== '' && amountMinor === undefined) {
+      setErrors({ price: fieldMessage('price') });
+      setFormError(t('form.errors.validation'));
+      return;
+    }
     const payload = {
       category,
       subcategory,
       title: String(form.get('title') ?? ''),
       description: String(form.get('description') ?? ''),
-      priceNok: isJob || price === '' ? null : Number(price),
+      price: priceRule === 'none' || amountMinor === undefined ? null : { amountMinor, currency },
       attributes: attributePayload(),
       placeId: String(form.get('placeId') ?? ''),
       imageIds: images.map((i) => i.id),
@@ -152,7 +168,10 @@ export function ListingForm({
       const fieldErrors: Record<string, string> = {};
       for (const err of problem.errors ?? []) {
         // The server's messages are English and technical; each field has its own text.
-        if (err.path) fieldErrors[err.path] = fieldMessage(err.path);
+        if (err.path) {
+          const path = err.path.startsWith('price.') ? 'price' : err.path;
+          fieldErrors[path] = fieldMessage(path);
+        }
       }
       setErrors(fieldErrors);
       setFormError(t('form.errors.validation'));
@@ -206,8 +225,8 @@ export function ListingForm({
         <fieldset data-testid="pick-category" className="space-y-4">
           <legend className="mb-4 text-xl font-semibold">{t('form.pickCategory')}</legend>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {(Object.keys(CATEGORIES) as Category[]).map((c) => {
-              const Icon = CATEGORY_ICONS[c];
+            {categoriesOf(country).map(({ id: c }) => {
+              const Icon = CATEGORY_ICONS[c] ?? ImagePlus;
               return (
                 <button
                   key={c}
@@ -243,7 +262,7 @@ export function ListingForm({
           data-testid="picked-category"
         >
           {(() => {
-            const Icon = CATEGORY_ICONS[category];
+            const Icon = CATEGORY_ICONS[category] ?? ImagePlus;
             return (
               <span className="flex size-10 items-center justify-center rounded-xl bg-ink text-ink-foreground">
                 <Icon aria-hidden strokeWidth={1.7} className="size-5" />
@@ -280,8 +299,8 @@ export function ListingForm({
             {t('form.pickSubcategory', { category: t(`taxonomy.categories.${category}`) })}
           </legend>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {CATEGORIES[category].map((sub) => {
-              const Icon = SUBCATEGORY_ICONS[sub];
+            {subcategoriesOf(category).map((sub) => {
+              const Icon = SUBCATEGORY_ICONS[sub] ?? ImagePlus;
               return (
                 <button
                   key={sub}
@@ -376,7 +395,11 @@ export function ListingForm({
                 minLength={3}
                 maxLength={120}
                 defaultValue={listing?.title}
-                placeholder={t(`form.titlePlaceholder.${category}` as never)}
+                placeholder={
+                  t.has(`form.titlePlaceholder.${category}` as never)
+                    ? t(`form.titlePlaceholder.${category}` as never)
+                    : undefined
+                }
                 data-testid="field-title"
                 {...invalid('title', `${id}-title-hint`)}
                 className={fieldClass('title')}
@@ -402,10 +425,10 @@ export function ListingForm({
             </label>
           </Section>
 
-          {FIELDS[category].length ? (
+          {fields.length ? (
             <Section n={3} title={t('form.sections.details')}>
               <div className="grid gap-4 sm:grid-cols-2">
-                {FIELDS[category].map((f) => (
+                {fields.map((f) => (
                   <label key={f.key} className="space-y-1">
                     <span className="text-sm font-medium">
                       {t(`taxonomy.attributes.${f.key}` as never)}
@@ -461,28 +484,43 @@ export function ListingForm({
           ) : null}
 
           <Section
-            n={FIELDS[category].length ? 4 : 3}
-            title={isJob ? t('form.sections.place') : t('form.sections.priceAndPlace')}
+            n={fields.length ? 4 : 3}
+            title={
+              priceRule === 'none' ? t('form.sections.place') : t('form.sections.priceAndPlace')
+            }
           >
             <div className="grid gap-4 sm:grid-cols-2">
-              {!isJob ? (
+              {priceRule !== 'none' ? (
                 <label className="space-y-1">
-                  <span className="text-sm font-medium">{t('form.price')}</span>
+                  <span className="text-sm font-medium">
+                    {t('form.price')}
+                    {priceUnit ? ` (${t(`listing.per.${priceUnit}`)})` : null}
+                    {priceRule === 'optional' ? (
+                      <span className="font-normal text-muted-foreground">
+                        {' '}
+                        ({t('form.optional')})
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="relative block">
                     <input
-                      name="priceNok"
-                      type="number"
-                      min={0}
-                      inputMode="numeric"
-                      required
-                      defaultValue={listing?.priceNok ?? undefined}
+                      name="price"
+                      type="text"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      required={priceRule === 'required'}
+                      defaultValue={
+                        listing?.price
+                          ? String(toMajor(listing.price.amountMinor, listing.price.currency))
+                          : undefined
+                      }
                       data-testid="field-price"
-                      {...invalid('priceNok')}
-                      className={`${fieldClass('priceNok')} pe-12`}
+                      {...invalid('price')}
+                      className={`${fieldClass('price')} pe-12`}
                     />
-                    <span className={unitClass}>kr</span>
+                    <span className={unitClass}>{currencySymbol(currency, locale)}</span>
                   </span>
-                  {hint('priceNok')}
+                  {hint('price')}
                 </label>
               ) : null}
               <label className="space-y-1">
@@ -496,9 +534,9 @@ export function ListingForm({
                   className={fieldClass('placeId')}
                 >
                   <option value="">{t('form.choosePlace')}</option>
-                  {PLACES_BY_NAME.map((p) => (
+                  {places.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name}
+                      {placeName(p, locale as never)}
                     </option>
                   ))}
                 </select>

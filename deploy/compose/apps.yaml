@@ -250,6 +250,7 @@ services:
       PORT: '4000'
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      DEFAULT_COUNTRY: ${DEFAULT_COUNTRY}
     volumes:
       - type: volume
         source: secrets
@@ -569,6 +570,8 @@ services:
       <<: *otel-env
       OTEL_SERVICE_NAME: web
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      COUNTRY_HOSTS: ${COUNTRY_HOSTS}
+      DEFAULT_COUNTRY: ${DEFAULT_COUNTRY}
       GLITCHTIP_PUBLIC_KEY: ${GLITCHTIP_PUBLIC_KEY}
       GLITCHTIP_PROJECT_ID: ${GLITCHTIP_PROJECT_ID}
       # The console's Tools page (which UIs the gateway routes in this mode, and GlitchTip's login).

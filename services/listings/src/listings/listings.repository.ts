@@ -12,7 +12,7 @@ import {
   toSnapshot,
 } from './listing.model.js';
 
-const COLUMNS = `id, owner_id, seller_name, category, subcategory, title, description, price_nok,
+const COLUMNS = `id, owner_id, seller_name, country, category, subcategory, title, description, price_minor, currency,
   attributes, place_id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lon,
   image_ids, status, version, created_at, updated_at, published_at, promoted_until, removed_by,
   removal_reason`;
@@ -121,8 +121,9 @@ export class ListingsRepository {
       const place = findPlace(next.placeId)!;
       const { rows } = await client.query<ListingRow>(
         `UPDATE listings
-            SET category = $3, subcategory = $4, title = $5, description = $6, price_nok = $7,
-                attributes = $8, place_id = $9, location = ST_SetSRID(ST_MakePoint($10, $11), 4326)::geography,
+            SET category = $3, subcategory = $4, title = $5, description = $6, price_minor = $7,
+                currency = $14, attributes = $8, place_id = $9, country = $15,
+                location = ST_SetSRID(ST_MakePoint($10, $11), 4326)::geography,
                 image_ids = $12, status = $13, version = version + 1, updated_at = now()
           WHERE id = $1 AND version = $2 AND status <> 'deleted'
           RETURNING ${COLUMNS}`,
@@ -133,13 +134,15 @@ export class ListingsRepository {
           next.subcategory,
           next.title,
           next.description,
-          next.priceNok,
+          next.price?.amountMinor ?? null,
           next.attributes,
           next.placeId,
           place.lon,
           place.lat,
           next.imageIds,
           next.status,
+          next.price?.currency ?? null,
+          place.country,
         ],
       );
       const row = rows[0];
@@ -234,9 +237,10 @@ export class ListingsRepository {
   private async insert(client: pg.PoolClient, input: NewListing): Promise<ListingRow | null> {
     const place = findPlace(input.placeId)!;
     const { rows } = await client.query<ListingRow>(
-      `INSERT INTO listings (id, owner_id, seller_name, category, subcategory, title, description, price_nok,
-                             attributes, place_id, location, image_ids, published_at, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+      `INSERT INTO listings (id, owner_id, seller_name, category, subcategory, title, description, price_minor,
+                             currency, country, attributes, place_id, location, image_ids, published_at,
+                             created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $15, $16, $9, $10,
                ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography, $13, $14, $14, $14)
        ON CONFLICT (id) DO NOTHING
        RETURNING ${COLUMNS}`,
@@ -248,13 +252,15 @@ export class ListingsRepository {
         input.subcategory,
         input.title,
         input.description,
-        input.priceNok,
+        input.price?.amountMinor ?? null,
         input.attributes,
         input.placeId,
         place.lon,
         place.lat,
         input.imageIds,
         input.publishedAt ?? new Date(),
+        input.price?.currency ?? null,
+        place.country,
       ],
     );
     return rows[0] ?? null;

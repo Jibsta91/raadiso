@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildSearch, searchParamsSchema } from '../../src/search/query.js';
+import { readFileSync } from 'node:fs';
+import { SEARCH_PARAM_NAMES } from '@raadi/catalog';
+import { parse as parseYaml } from 'yaml';
+import { buildSearch as build, facetsFor, searchParamsSchema } from '../../src/search/query.js';
 
 const parse = (q: Record<string, string>) => searchParamsSchema.parse(q);
+/** Norway's queries (the original tests); Somaliland's have their own section. */
+const buildSearch = (p: ReturnType<typeof parse>) => build(p, 'NO');
 
 describe('search parameters', () => {
   it('parses comma-separated facets and defaults', () => {
-    const p = parse({ category: 'bil,torget', county: 'oslo' });
+    const p = parse({ category: 'bil,torget', region: 'oslo' });
     assert.deepEqual(p.category, ['bil', 'torget']);
     assert.equal(p.page, 1);
     assert.equal(p.pageSize, 24);
@@ -25,6 +30,8 @@ describe('search parameters', () => {
       { sort: 'distance' },
       { pageSize: '500' },
       { foo: 'bar' },
+      { county: 'oslo' },
+      { country: 'SO' },
     ]) {
       assert.ok(!searchParamsSchema.safeParse(bad).success, JSON.stringify(bad));
     }
@@ -82,9 +89,10 @@ describe('saved-search window', () => {
 });
 
 describe('query builder', () => {
-  it('only ever returns active listings', () => {
+  it('only ever returns active listings of the country searched', () => {
     const body = buildSearch(parse({}));
     assert.deepEqual(body.query.bool.filter[0], { term: { status: 'active' } });
+    assert.deepEqual(body.query.bool.filter[1], { term: { country: 'NO' } });
     assert.deepEqual(body.query.bool.must, [{ match_all: {} }]);
     // Relevance ranks running promotions first, without filtering anything out.
     assert.deepEqual(body.query.bool.should, [
@@ -104,18 +112,18 @@ describe('query builder', () => {
   });
 
   it('applies a facet to the hits and to other facets, but not to its own counts', () => {
-    const body = buildSearch(parse({ category: 'bil', county: 'oslo' }));
+    const body = buildSearch(parse({ category: 'bil', region: 'oslo' }));
     const post = body.post_filter.bool.filter;
     assert.equal(post.length, 2);
     const catAgg = body.aggs.category as { filter: { bool: { filter: object[] } } };
-    assert.deepEqual(catAgg.filter.bool.filter, [{ terms: { county: ['oslo'] } }]);
-    const countyAgg = body.aggs.county as { filter: { bool: { filter: object[] } } };
-    assert.deepEqual(countyAgg.filter.bool.filter, [{ terms: { category: ['bil'] } }]);
+    assert.deepEqual(catAgg.filter.bool.filter, [{ terms: { region: ['oslo'] } }]);
+    const regionAgg = body.aggs.region as { filter: { bool: { filter: object[] } } };
+    assert.deepEqual(regionAgg.filter.bool.filter, [{ terms: { category: ['bil'] } }]);
   });
 
   it('geo radius around a place, with distance sort and computed distances', () => {
     const body = buildSearch(parse({ near: 'bergen', radiusKm: '25', sort: 'distance' }));
-    assert.deepEqual(body.query.bool.filter[1], {
+    assert.deepEqual(body.query.bool.filter[2], {
       geo_distance: { distance: '25km', location: { lat: 60.3913, lon: 5.3221 } },
     });
     assert.ok('_geo_distance' in (body.sort[0] as object));
@@ -127,5 +135,59 @@ describe('query builder', () => {
     const body = buildSearch(parse({ page: '3', pageSize: '10' }));
     assert.equal(body.from, 20);
     assert.equal(body.size, 10);
+  });
+});
+
+describe('countries (ADR-0040)', () => {
+  it('searches Somaliland in dollars: typed prices become cents, buckets are its own', () => {
+    const body = build(parse({ country: 'XS', priceMin: '50', priceMax: '199.99' }), 'XS');
+    assert.deepEqual(body.query.bool.filter[1], { term: { country: 'XS' } });
+    assert.ok(
+      body.query.bool.filter.some(
+        (f) =>
+          JSON.stringify(f) ===
+          JSON.stringify({ range: { priceMinor: { gte: 5000, lte: 19999 } } }),
+      ),
+    );
+    const price = body.aggs.price as { aggs: { values: { range: { ranges: object[] } } } };
+    assert.deepEqual(price.aggs.values.range.ranges[1], { key: '50-199', from: 5000, to: 20000 });
+  });
+
+  it('counts the facets of the selected category, or of the country’s categories', () => {
+    assert.deepEqual(facetsFor(parse({ category: 'livestock' }), 'XS').sort(), [
+      'category',
+      'region',
+      'sex',
+      'subcategory',
+    ]);
+    const somaliland = facetsFor(parse({}), 'XS');
+    assert.ok(somaliland.includes('usage') && somaliland.includes('brand'));
+    assert.ok(!somaliland.includes('ownership'), 'a Norwegian facet');
+    const vehicles = build(parse({ category: 'vehicles', steering: 'right' }), 'XS');
+    assert.ok(vehicles.aggs.steering && vehicles.aggs.usage && !vehicles.aggs.brand);
+  });
+});
+
+describe('OpenAPI', () => {
+  it('documents every query parameter the service accepts, and no other', () => {
+    const spec = parseYaml(readFileSync(new URL('../../../openapi.yaml', import.meta.url), 'utf8'));
+    const documented = (
+      spec.paths['/api/v1/search/listings'].get.parameters as Array<{ name: string }>
+    ).map((p) => p.name);
+    for (const name of documented) {
+      const sample =
+        name.endsWith('Min') ||
+        name.endsWith('Max') ||
+        /^(page|pageSize|radiusKm|lat|lon)$/.test(name)
+          ? '1'
+          : 'x';
+      const issues = searchParamsSchema.safeParse({ [name]: sample });
+      const unknown =
+        !issues.success && issues.error.issues.some((i) => i.code === 'unrecognized_keys');
+      assert.ok(!unknown, `documented but not accepted: ${name}`);
+    }
+    // Every generated facet and range is documented.
+    for (const name of SEARCH_PARAM_NAMES)
+      assert.ok(documented.includes(name), `not documented: ${name}`);
   });
 });

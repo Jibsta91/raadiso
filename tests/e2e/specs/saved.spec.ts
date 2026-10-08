@@ -15,7 +15,7 @@ test('favourites: heart a listing, find it under Favourites, remove it', async (
       subcategory: 'hobby',
       title,
       description: 'Laget av e2e-testen for favoritter.',
-      priceNok: 250,
+      price: { amountMinor: 25000, currency: 'NOK' },
       attributes: { condition: 'good' },
       placeId: 'oslo',
       imageIds: [],

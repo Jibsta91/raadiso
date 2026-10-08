@@ -1,3 +1,4 @@
+import { noticePrices } from '@raadi/catalog/money';
 import { Bell } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -61,7 +62,13 @@ export default async function NotificationsPage({
                   {n.read ? null : (
                     <span aria-hidden className="mt-2 size-2 shrink-0 rounded-full bg-primary" />
                   )}
-                  {t(`kinds.${n.kind}` as never, n.params as never)}
+                  {t(
+                    `kinds.${n.kind}` as never,
+                    {
+                      ...n.params,
+                      ...noticePrices(n.params, locale),
+                    } as never,
+                  )}
                 </p>
                 <time
                   dateTime={n.createdAt}

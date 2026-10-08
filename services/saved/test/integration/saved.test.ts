@@ -92,6 +92,8 @@ const received = (value: unknown): ReceivedEvent => ({
   value,
 });
 
+const kroner = (n: number) => ({ amountMinor: n * 100, currency: 'NOK' });
+
 function publish(ownerId: string, priceNok = 1000): PublicListing & { ownerId: string } {
   const id = randomUUID();
   const l = {
@@ -101,8 +103,9 @@ function publish(ownerId: string, priceNok = 1000): PublicListing & { ownerId: s
     category: 'torget',
     subcategory: 'sport',
     title: 'Racersykkel',
-    priceNok,
-    location: { name: 'Bergen', county: 'vestland' },
+    country: 'NO',
+    price: kroner(priceNok),
+    location: { name: 'Bergen', region: 'vestland' },
     images: [{ id: randomUUID() }],
     publishedAt: new Date().toISOString(),
   };
@@ -126,8 +129,17 @@ function updated(
     title: 'Racersykkel',
     description: 'Lett og rask.',
     priceNok: 1000,
+    price: kroner(1000),
+    country: 'NO',
     attributes: { condition: 'good' },
-    location: { placeId: 'bergen', name: 'Bergen', county: 'vestland', lat: 60.39, lon: 5.32 },
+    location: {
+      placeId: 'bergen',
+      name: 'Bergen',
+      county: 'vestland',
+      region: 'vestland',
+      lat: 60.39,
+      lon: 5.32,
+    },
     imageIds: [],
     publishedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -142,7 +154,11 @@ function updated(
 
 const alertsFor = async (userId: string) =>
   (
-    await pool.query<{ payload: { data: { kind: string; count?: number; priceNok?: number } } }>(
+    await pool.query<{
+      payload: {
+        data: { kind: string; count?: number; priceNok?: number; price?: { amountMinor: number } };
+      };
+    }>(
       `SELECT payload FROM outbox WHERE aggregate_type = 'alert' AND aggregate_id = $1 ORDER BY created_at`,
       [userId],
     )
@@ -157,7 +173,7 @@ describe('favourites', () => {
     const page = await service.favourites(me, 10, 0);
     assert.equal(page.total, 1);
     assert.equal(page.items[0]!.listing.title, 'Racersykkel');
-    assert.equal(page.items[0]!.listing.location.countyName, 'Vestland');
+    assert.equal(page.items[0]!.listing.location.regionName, 'Vestland');
     assert.match(page.items[0]!.listing.image!.card, /^\/img\//);
     assert.deepEqual((await service.favouriteIds(me)).ids, [l.id]);
     await service.removeFavourite(me, l.id);
@@ -189,29 +205,33 @@ describe('favourites', () => {
     const l = publish(seller, 1000);
     await service.addFavourite(fan, 't', l.id);
 
-    const cheaper = updated(l, 2, { priceNok: 800 });
+    const cheaper = updated(l, 2, { priceNok: 800, price: kroner(800) });
     await service.onEvent(received(cheaper));
     await service.onEvent(received(cheaper)); // redelivery
-    await service.onEvent(received(updated(l, 3, { priceNok: 900 }))); // price up: no alert
-    await service.onEvent(received(updated(l, 2, { priceNok: 1 }))); // stale version: ignored
-    await service.onEvent(received(updated(l, 4, { priceNok: 900, status: 'sold' })));
+    // An event from before ADR-0040 (kroner only): price up, no alert.
+    await service.onEvent(received(updated(l, 3, { priceNok: 900, price: undefined })));
+    await service.onEvent(received(updated(l, 2, { priceNok: 1, price: kroner(1) }))); // stale
+    await service.onEvent(
+      received(updated(l, 4, { priceNok: 900, price: kroner(900), status: 'sold' })),
+    );
 
     const alerts = await alertsFor(fan.sub);
     assert.deepEqual(
       alerts.map((a) => a.kind),
       ['price_drop', 'sold'],
     );
-    assert.equal(alerts[0]!.priceNok, 800);
+    assert.equal(alerts[0]!.price?.amountMinor, 80000);
+    assert.equal(alerts[0]!.priceNok, 800, 'kroner too, for consumers that predate ADR-0040');
     assert.equal((await alertsFor(seller)).length, 0);
     // Sold favourites stay on the list, marked sold.
     const page = await service.favourites(fan, 10, 0);
     assert.equal(page.items[0]!.listing.status, 'sold');
-    assert.equal(page.items[0]!.listing.priceNok, 900);
+    assert.deepEqual(page.items[0]!.listing.price, kroner(900));
   });
 
   it('ignores events for listings nobody has as a favourite, and hides deleted ones', async () => {
     const stranger = publish(randomUUID());
-    await service.onEvent(received(updated(stranger, 2, { priceNok: 1 })));
+    await service.onEvent(received(updated(stranger, 2, { priceNok: 1, price: kroner(1) })));
     assert.equal(
       (await pool.query('SELECT 1 FROM listings WHERE id = $1', [stranger.id])).rowCount,
       0,

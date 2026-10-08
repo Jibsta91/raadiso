@@ -1,8 +1,9 @@
-import { CATEGORY_KEYS, type Category } from '@raadi/catalog';
+import { countryOfCategory } from '@raadi/catalog/categories';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ListingForm } from '@/components/listings/listing-form';
+import { currentCountry } from '@/lib/host';
 import { getSession } from '@/lib/session';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,9 +19,9 @@ export default async function NewListingPage({
   searchParams: Promise<{ category?: string }>;
 }) {
   const [{ locale }, { category }] = await Promise.all([params, searchParams]);
-  const initialCategory = (CATEGORY_KEYS as readonly string[]).includes(category ?? '')
-    ? (category as Category)
-    : undefined;
+  const country = await currentCountry();
+  const initialCategory =
+    category && countryOfCategory(category) === country ? category : undefined;
   setRequestLocale(locale);
   const session = await getSession();
   if (!session.authenticated) {
@@ -32,7 +33,7 @@ export default async function NewListingPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-3xl font-bold">{t('newTitle')}</h1>
-      <ListingForm initialCategory={initialCategory} />
+      <ListingForm country={country} initialCategory={initialCategory} />
     </div>
   );
 }

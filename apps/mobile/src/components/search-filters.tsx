@@ -1,6 +1,6 @@
 import { Icon } from './icon';
 import type { FacetValue } from '@raadi/api-client';
-import { ATTRIBUTE_FIELDS, FACET_ATTRIBUTES, RANGE_ATTRIBUTES } from '@raadi/catalog/attributes';
+import { attributesOf, facetsOf, rangesOf } from '@raadi/catalog/attributes';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,8 +14,8 @@ export type Filters = Record<string, string>;
 /** The filter keys a category has (facets, ranges and price), as search parameters. */
 export function filterKeys(category: CategoryId): string[] {
   return [
-    ...FACET_ATTRIBUTES[category],
-    ...RANGE_ATTRIBUTES[category].flatMap((r) => [`${r.param}Min`, `${r.param}Max`]),
+    ...facetsOf(category).map((f) => f.key),
+    ...rangesOf(category).flatMap((r) => [`${r.param}Min`, `${r.param}Max`]),
     'priceMin',
     'priceMax',
   ];
@@ -62,13 +62,13 @@ export function SearchFilters({
   const options = (k: string): Array<{ value: string; label: string }> => {
     if (k === 'make')
       return makes.map((f) => ({ value: f.value, label: `${makeLabel(f.value)} · ${f.count}` }));
-    const field = ATTRIBUTE_FIELDS[category].find((f) => f.key === k);
+    const field = attributesOf(category).find((f) => f.key === k);
     return field?.kind === 'select'
       ? field.options.map((o) => ({ value: o, label: values[k]?.[o] ?? o }))
       : [];
   };
   const ranges = [
-    ...RANGE_ATTRIBUTES[category].map((r) => ({
+    ...rangesOf(category).map((r) => ({
       param: r.param,
       label: labels[r.field] ?? r.param,
     })),
@@ -107,7 +107,7 @@ export function SearchFilters({
             </Pressable>
           </View>
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-            {FACET_ATTRIBUTES[category].map((k) =>
+            {facetsOf(category).map(({ key: k }) =>
               options(k).length ? (
                 <View key={k} style={styles.group}>
                   <Text style={[styles.label, { color: theme.text }]}>{labels[k] ?? k}</Text>

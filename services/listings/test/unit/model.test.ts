@@ -11,7 +11,7 @@ const valid = {
   subcategory: 'sport',
   title: 'Langrennsski',
   description: 'Lite brukt',
-  priceNok: 1500,
+  price: { amountMinor: 150000, currency: 'NOK' },
   attributes: { condition: 'good' },
   placeId: 'oslo',
 };
@@ -40,16 +40,48 @@ describe('listing validation', () => {
     ]);
   });
 
-  it('requires a price except for jobs, which must have none', () => {
-    assert.deepEqual(issues({ ...valid, priceNok: null }), ['priceNok']);
+  it('follows the category’s price rule: required, none for jobs, optional for services', () => {
+    assert.deepEqual(issues({ ...valid, price: null }), ['price']);
     const job = {
       ...valid,
       category: 'jobb',
       subcategory: 'it',
       attributes: { employer: 'Nordlys AS', employmentType: 'full_time' },
     };
-    assert.deepEqual(issues({ ...job, priceNok: 600000 }), ['priceNok']);
-    assert.deepEqual(issues({ ...job, priceNok: null }), []);
+    assert.deepEqual(issues({ ...job, price: { amountMinor: 60000000, currency: 'NOK' } }), [
+      'price',
+    ]);
+    assert.deepEqual(issues({ ...job, price: null }), []);
+    const tutor = {
+      ...valid,
+      category: 'services',
+      subcategory: 'tutoring',
+      attributes: {},
+      placeId: 'hargeisa',
+    };
+    assert.deepEqual(issues({ ...tutor, price: null }), []);
+    assert.deepEqual(issues({ ...tutor, price: { amountMinor: 1500, currency: 'USD' } }), []);
+  });
+
+  it('takes the country from the place: its taxonomy and its currency (ADR-0040)', () => {
+    const phone = {
+      category: 'phones',
+      subcategory: 'mobile-phones',
+      title: 'Samsung Galaxy A54',
+      description: 'Like new',
+      price: { amountMinor: 24000, currency: 'USD' },
+      attributes: { condition: 'like_new', brand: 'samsung', storageGb: 128 },
+      placeId: 'hargeisa',
+    };
+    assert.deepEqual(issues(phone), []);
+    assert.deepEqual(issues({ ...phone, price: { amountMinor: 24000, currency: 'NOK' } }), [
+      'price.currency',
+    ]);
+    assert.deepEqual(issues({ ...phone, placeId: 'oslo' }), ['category', 'price.currency']);
+    assert.deepEqual(issues({ ...valid, placeId: 'burao' }), ['category', 'price.currency']);
+    assert.deepEqual(issues({ ...phone, attributes: { condition: 'like_new' } }), [
+      'attributes.brand',
+    ]);
   });
 
   it('rejects unknown places, duplicate images and unknown fields', () => {

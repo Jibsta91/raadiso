@@ -1,15 +1,8 @@
-const nok = new Map<string, Intl.NumberFormat>();
+import { formatMoney, type Money } from '@raadi/catalog/money';
 
-/** "1 350 kr" (nb) / "NOK 1,350" (en): whole kroner, locale-aware grouping. */
-export function formatPrice(value: number, locale: string): string {
-  const key = locale === 'nb' ? 'nb-NO' : locale === 'so' ? 'so-SO' : 'en-GB';
-  if (!nok.has(key)) {
-    nok.set(
-      key,
-      new Intl.NumberFormat(key, { style: 'currency', currency: 'NOK', maximumFractionDigits: 0 }),
-    );
-  }
-  return nok.get(key)!.format(value);
+/** "$1,250" (en, USD), "1 350 kr" (nb, NOK): the listing's currency, the reader's format (ADR-0040). */
+export function formatPrice(price: Money, locale: string): string {
+  return formatMoney(price, locale);
 }
 
 /** Search params as a flat record (Next.js gives string | string[] | undefined). */

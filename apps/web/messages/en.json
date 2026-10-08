@@ -51,6 +51,58 @@
       "reise": {
         "name": "Travel",
         "description": "Holiday homes, trips and travel deals."
+      },
+      "vehicles": {
+        "name": "Vehicles",
+        "description": "Cars, motorcycles, tuk-tuks, trucks and parts."
+      },
+      "property": {
+        "name": "Property & land",
+        "description": "Houses to rent or buy, plots, shops and offices."
+      },
+      "phones": {
+        "name": "Phones & tablets",
+        "description": "New and used phones, tablets and accessories."
+      },
+      "electronics": {
+        "name": "Electronics & solar",
+        "description": "Solar power, computers, appliances, TV and audio."
+      },
+      "home": {
+        "name": "Home & furniture",
+        "description": "Furniture, kitchenware and decor."
+      },
+      "fashion": {
+        "name": "Fashion",
+        "description": "Clothes, shoes, bags, jewellery and watches."
+      },
+      "livestock": {
+        "name": "Livestock",
+        "description": "Camels, goats and sheep, cattle and poultry."
+      },
+      "agriculture": {
+        "name": "Agriculture & food",
+        "description": "Farm produce, animal feed and equipment."
+      },
+      "jobs": {
+        "name": "Jobs",
+        "description": "Positions from employers in your country."
+      },
+      "services": {
+        "name": "Services",
+        "description": "Trades, transport, lessons, events and repairs."
+      },
+      "business": {
+        "name": "Business & industry",
+        "description": "Equipment, machinery and wholesale."
+      },
+      "kids": {
+        "name": "Babies & kids",
+        "description": "Baby gear, toys and children's clothes."
+      },
+      "sports-hobbies": {
+        "name": "Sports & hobbies",
+        "description": "Sports equipment, books and instruments."
       }
     },
     "trustTitle": "Why Raadiso",
@@ -202,7 +254,20 @@
       "bil": "Cars",
       "eiendom": "Property",
       "jobb": "Jobs",
-      "reise": "Travel"
+      "reise": "Travel",
+      "vehicles": "Vehicles",
+      "property": "Property & land",
+      "phones": "Phones & tablets",
+      "electronics": "Electronics & solar",
+      "home": "Home & furniture",
+      "fashion": "Fashion",
+      "livestock": "Livestock",
+      "agriculture": "Agriculture & food",
+      "jobs": "Jobs",
+      "services": "Services",
+      "business": "Business & industry",
+      "kids": "Babies & kids",
+      "sports-hobbies": "Sports & hobbies"
     },
     "subcategories": {
       "elektronikk": "Electronics & appliances",
@@ -236,7 +301,62 @@
       "naering": "Commercial property",
       "kontor": "Office & administration",
       "industri": "Industry & production",
-      "reiseliv": "Hotels & restaurants"
+      "reiseliv": "Hotels & restaurants",
+      "cars": "Cars",
+      "motorcycles": "Motorcycles & tuk-tuks",
+      "trucks-buses": "Trucks & buses",
+      "auto-parts": "Parts & accessories",
+      "houses-rent": "Houses & apartments for rent",
+      "houses-sale": "Houses & apartments for sale",
+      "land": "Land & plots",
+      "commercial-property": "Shops & offices",
+      "short-stays": "Short stays",
+      "mobile-phones": "Mobile phones",
+      "tablets": "Tablets",
+      "phone-accessories": "Accessories",
+      "computers": "Computers & laptops",
+      "solar-power": "Solar power",
+      "appliances": "Home appliances",
+      "tv-audio": "TV & audio",
+      "furniture": "Furniture",
+      "kitchenware": "Kitchenware",
+      "home-decor": "Home decor",
+      "mens-clothing": "Men's clothing",
+      "womens-clothing": "Women's clothing",
+      "shoes": "Shoes",
+      "jewellery-watches": "Jewellery & watches",
+      "bags": "Bags",
+      "camels": "Camels",
+      "goats-sheep": "Goats & sheep",
+      "cattle": "Cattle",
+      "poultry": "Poultry",
+      "farm-produce": "Farm produce",
+      "animal-feed": "Animal feed",
+      "farm-equipment": "Farm equipment",
+      "ngo-jobs": "NGO & development",
+      "it-jobs": "IT & telecom",
+      "sales-jobs": "Sales & retail",
+      "driver-jobs": "Drivers & transport",
+      "teaching-jobs": "Teaching",
+      "health-jobs": "Health",
+      "construction-jobs": "Construction",
+      "hospitality-jobs": "Hotels & restaurants",
+      "office-jobs": "Office & finance",
+      "building-trades": "Building & trades",
+      "transport-logistics": "Transport & moving",
+      "tutoring": "Tutoring & lessons",
+      "it-services": "IT & web",
+      "events-catering": "Events & catering",
+      "beauty-services": "Beauty",
+      "repair-services": "Repairs",
+      "business-equipment": "Equipment & machinery",
+      "wholesale": "Wholesale",
+      "baby-gear": "Baby gear",
+      "toys": "Toys",
+      "kids-clothing": "Kids' clothing",
+      "sports-equipment": "Sports equipment",
+      "books": "Books",
+      "musical-instruments": "Musical instruments"
     },
     "attributes": {
       "condition": "Condition",
@@ -254,7 +374,17 @@
       "guests": "Guests",
       "bodyType": "Body type",
       "drivetrain": "Drivetrain",
-      "ownership": "Ownership"
+      "ownership": "Ownership",
+      "usage": "Usage",
+      "steering": "Steering",
+      "furnishing": "Furnishing",
+      "landUse": "Land use",
+      "dealType": "Rent or sale",
+      "brand": "Brand",
+      "storageGb": "Storage",
+      "itemType": "Type",
+      "head": "Number of animals",
+      "sex": "Sex"
     },
     "values": {
       "condition": {
@@ -279,7 +409,13 @@
         "townhouse": "Townhouse",
         "cabin": "Cabin",
         "plot": "Plot",
-        "commercial": "Commercial"
+        "commercial": "Commercial",
+        "villa": "Villa",
+        "room": "Room",
+        "shop": "Shop",
+        "office": "Office",
+        "warehouse": "Warehouse",
+        "hotel": "Hotel"
       },
       "employmentType": {
         "full_time": "Full time",
@@ -306,6 +442,63 @@
         "freehold": "Freehold",
         "cooperative": "Housing co-op",
         "shares": "Shares"
+      },
+      "usage": {
+        "brand_new": "Brand new",
+        "foreign_used": "Foreign used",
+        "locally_used": "Locally used"
+      },
+      "steering": {
+        "left": "Left-hand drive",
+        "right": "Right-hand drive"
+      },
+      "dealType": {
+        "rent": "For rent",
+        "sale": "For sale"
+      },
+      "furnishing": {
+        "furnished": "Furnished",
+        "unfurnished": "Unfurnished"
+      },
+      "landUse": {
+        "residential": "Residential",
+        "commercial": "Commercial",
+        "agricultural": "Agricultural"
+      },
+      "sex": {
+        "male": "Male",
+        "female": "Female",
+        "mixed": "Mixed"
+      },
+      "brand": {
+        "apple": "Apple",
+        "samsung": "Samsung",
+        "tecno": "Tecno",
+        "infinix": "Infinix",
+        "xiaomi": "Xiaomi",
+        "huawei": "Huawei",
+        "oppo": "OPPO",
+        "nokia": "Nokia",
+        "itel": "itel",
+        "other": "Other"
+      },
+      "itemType": {
+        "laptop": "Laptops",
+        "desktop": "Desktops",
+        "monitor": "Monitors",
+        "printer": "Printers",
+        "accessory": "Accessories",
+        "panel": "Solar panels",
+        "battery": "Batteries",
+        "inverter": "Inverters",
+        "kit": "Complete kits",
+        "light": "Lights",
+        "fridge": "Fridges",
+        "air_conditioner": "Air conditioners",
+        "washing_machine": "Washing machines",
+        "cooker": "Cookers",
+        "water_dispenser": "Water dispensers",
+        "fan": "Fans"
       }
     }
   },
@@ -372,7 +565,9 @@
       "mileage": "Mileage",
       "area": "Area",
       "bedrooms": "Bedrooms",
-      "guests": "Guests"
+      "guests": "Guests",
+      "storage": "Storage",
+      "head": "Animals"
     },
     "rangeFrom": "{filter} from {value}",
     "rangeTo": "{filter} up to {value}",
@@ -413,7 +608,11 @@
     "promoted": "Promoted",
     "promotedUntil": "Promoted until {date}",
     "promote": "Promote",
-    "extendPromotion": "Extend promotion"
+    "extendPromotion": "Extend promotion",
+    "per": {
+      "month": "per month",
+      "night": "per night"
+    }
   },
   "form": {
     "newTitle": "New listing",
@@ -461,10 +660,10 @@
         "subcategory": "Choose a subcategory.",
         "title": "Write a title of 3 to 120 characters.",
         "description": "Write a description (at most 5,000 characters).",
-        "priceNok": "Enter the price in whole kroner, or leave it empty.",
         "placeId": "Choose where the item is.",
         "attributes": "Check this detail.",
-        "generic": "Check this field."
+        "generic": "Check this field.",
+        "price": "Enter the price, or leave it empty."
       }
     },
     "pickCategory": "What would you like to post?",
@@ -546,7 +745,7 @@
       "listing_removed": "Your listing \"{title}\" was removed by a moderator because it breaks the marketplace rules.",
       "review_received": "Someone reviewed you: {rating} out of 5 stars.",
       "listing_promoted": "Your listing is now promoted for {days} days. The receipt is in your e-mail.",
-      "favourite_price_drop": "A favourite got cheaper: now {priceNok} kr (was {previousPriceNok} kr).",
+      "favourite_price_drop": "A favourite got cheaper: now {price} (was {previousPrice}).",
       "favourite_sold": "One of your favourites has been sold.",
       "saved_search_match": "{count} new listings match a saved search."
     },
@@ -728,6 +927,33 @@
       "reise": {
         "bigGroups": "Sleeps 6 or more",
         "cabins": "Cabins"
+      },
+      "vehicles": {
+        "foreignUsed": "Foreign used",
+        "rightHand": "Right-hand drive",
+        "automatic": "Automatic"
+      },
+      "property": {
+        "forRent": "For rent",
+        "threeBedrooms": "3+ bedrooms",
+        "plots": "Land and plots"
+      },
+      "phones": {
+        "iphones": "iPhones",
+        "new": "Brand new",
+        "under100": "Under $100"
+      },
+      "electronics": {
+        "solarKits": "Solar kits",
+        "laptops": "Laptops"
+      },
+      "livestock": {
+        "camels": "Camels",
+        "goats": "Goats and sheep"
+      },
+      "jobs": {
+        "fullTime": "Full time",
+        "ngo": "NGO jobs"
       }
     },
     "newListing": "Post a listing in {category}"

@@ -1,10 +1,40 @@
+import { ALL_ATTRIBUTES } from '@raadi/catalog';
+
 /**
  * The listings index. Bump INDEX_VERSION when the mapping changes: on start
  * the service creates the new index, copies the documents from the old one
- * and moves the alias (SearchIndex.ensureIndex). Fields that are not in the
- * stored documents need a re-read of the topic (docs/runbooks/event-pipeline.md).
+ * (through MIGRATE_SCRIPT) and moves the alias (SearchIndex.ensureIndex). Fields
+ * that are not in the stored documents need a re-read of the topic
+ * (docs/runbooks/event-pipeline.md).
  */
-export const INDEX_VERSION = 4;
+export const INDEX_VERSION = 5;
+
+/**
+ * Painless script applied while copying documents from an older index: version 5 (ADR-0040) adds the
+ * country, money in minor units and the region. Everything indexed before it is Norwegian, in kroner.
+ * Idempotent: documents that already have the new fields pass unchanged.
+ */
+export const MIGRATE_SCRIPT = `
+if (ctx._source.country == null) { ctx._source.country = 'NO'; }
+if (ctx._source.containsKey('priceNok')) {
+  def kroner = ctx._source.remove('priceNok');
+  if (kroner == null) { ctx._source.priceMinor = null; ctx._source.currency = null; }
+  else { ctx._source.priceMinor = ((Number) kroner).longValue() * 100L; ctx._source.currency = 'NOK'; }
+}
+if (ctx._source.containsKey('county')) { ctx._source.region = ctx._source.remove('county'); }
+`;
+
+/** The attributes' mapping, generated from every country's taxonomy (one kind per key). */
+const attributeMapping = Object.fromEntries(
+  [...ALL_ATTRIBUTES.values()].map((a) => [
+    a.key,
+    a.kind === 'number'
+      ? { type: 'integer' }
+      : a.kind === 'text'
+        ? { type: 'keyword', normalizer: 'lower' }
+        : { type: 'keyword' },
+  ]),
+);
 
 export const indexBody = {
   settings: {
@@ -53,6 +83,8 @@ export const indexBody = {
       id: { type: 'keyword' },
       ownerId: { type: 'keyword' },
       status: { type: 'keyword' },
+      /** The marketplace country (ADR-0040); every query filters on it. */
+      country: { type: 'keyword' },
       category: { type: 'keyword' },
       subcategory: { type: 'keyword' },
       title: {
@@ -71,32 +103,18 @@ export const indexBody = {
         analyzer: 'nb_text',
         fields: { suffix: { type: 'text', analyzer: 'nb_suffix', search_analyzer: 'nb_plain' } },
       },
-      priceNok: { type: 'long' },
+      /** Minor units of `currency` (the country's), absent when there is no price. */
+      priceMinor: { type: 'long' },
+      currency: { type: 'keyword' },
       attributes: {
         type: 'object',
-        dynamic: true,
-        properties: {
-          condition: { type: 'keyword' },
-          fuel: { type: 'keyword' },
-          gearbox: { type: 'keyword' },
-          propertyType: { type: 'keyword' },
-          employmentType: { type: 'keyword' },
-          bodyType: { type: 'keyword' },
-          drivetrain: { type: 'keyword' },
-          ownership: { type: 'keyword' },
-          make: { type: 'keyword', normalizer: 'lower' },
-          model: { type: 'keyword', normalizer: 'lower' },
-          employer: { type: 'keyword', normalizer: 'lower' },
-          year: { type: 'integer' },
-          mileageKm: { type: 'integer' },
-          areaM2: { type: 'integer' },
-          bedrooms: { type: 'integer' },
-          guests: { type: 'integer' },
-        },
+        // Keys outside the taxonomy are kept in _source but not indexed.
+        dynamic: false,
+        properties: attributeMapping,
       },
       placeId: { type: 'keyword' },
       placeName: { type: 'keyword' },
-      county: { type: 'keyword' },
+      region: { type: 'keyword' },
       location: { type: 'geo_point' },
       imageIds: { type: 'keyword', index: false },
       publishedAt: { type: 'date' },
@@ -104,4 +122,4 @@ export const indexBody = {
       promotedUntil: { type: 'date' },
     },
   },
-} as const;
+};

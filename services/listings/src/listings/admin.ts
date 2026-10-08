@@ -13,7 +13,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { CATEGORY_KEYS } from '@raadi/catalog';
+import { CATEGORY_KEYS, type Money } from '@raadi/catalog';
 import {
   type AuthenticatedRequest,
   imageUrls,
@@ -25,7 +25,7 @@ import {
 import type pg from 'pg';
 import { z } from 'zod';
 import { PG_POOL } from '../tokens.js';
-import { REMOVAL_REASONS, type RemovalReason } from './listing.model.js';
+import { priceOf, REMOVAL_REASONS, type RemovalReason } from './listing.model.js';
 import { ListingsRepository } from './listings.repository.js';
 import { SIGNER } from './listings.service.js';
 import { type ReportReason, ReportsService } from './reports.js';
@@ -37,7 +37,7 @@ export const adminSearchSchema = z
     q: z.string().trim().max(100).optional(),
     owner: z.uuid().optional(),
     status: z.enum(STATUSES).optional(),
-    category: z.enum(CATEGORY_KEYS).optional(),
+    category: z.enum(CATEGORY_KEYS as [string, ...string[]]).optional(),
     reported: z.enum(['true', 'false']).optional(),
     limit: z.coerce.number().int().min(1).max(100).default(25),
     offset: z.coerce.number().int().min(0).max(10_000).default(0),
@@ -74,7 +74,8 @@ export interface AdminListing {
   status: (typeof STATUSES)[number];
   category: string;
   subcategory: string;
-  priceNok: number | null;
+  country: string;
+  price: Money | null;
   ownerId: string;
   sellerName: string;
   placeId: string;
@@ -165,7 +166,9 @@ interface Row {
   status: AdminListing['status'];
   category: string;
   subcategory: string;
-  price_nok: string | null;
+  country: string;
+  price_minor: string | null;
+  currency: string | null;
   owner_id: string;
   seller_name: string;
   place_id: string;
@@ -178,7 +181,7 @@ interface Row {
   open_reports: string;
 }
 
-const SELECT = `SELECT l.id, l.title, l.status, l.category, l.subcategory, l.price_nok, l.owner_id,
+const SELECT = `SELECT l.id, l.title, l.status, l.category, l.subcategory, l.country, l.price_minor, l.currency, l.owner_id,
   l.seller_name, l.place_id, l.created_at, l.updated_at, l.promoted_until, l.removed_by,
   l.removal_reason, l.image_ids,
   (SELECT count(*) FROM reports r WHERE r.listing_id = l.id AND r.status = 'open') AS open_reports
@@ -464,7 +467,8 @@ export class ListingsAdminService {
       status: r.status,
       category: r.category,
       subcategory: r.subcategory,
-      priceNok: r.price_nok === null ? null : Number(r.price_nok),
+      country: r.country,
+      price: priceOf(r),
       ownerId: r.owner_id,
       sellerName: r.seller_name,
       placeId: r.place_id,

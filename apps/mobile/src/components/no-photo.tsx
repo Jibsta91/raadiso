@@ -29,7 +29,9 @@ export function NoPhoto({
       }}
     >
       <Icon
-        name={isCategory(category) ? CATEGORY_ICONS[category] : 'image-outline'}
+        name={
+          isCategory(category) ? (CATEGORY_ICONS[category] ?? 'image-outline') : 'image-outline'
+        }
         size={size}
         color={theme.muted}
         aria-hidden

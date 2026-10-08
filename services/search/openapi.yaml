@@ -3,8 +3,9 @@ info:
   title: Raadi search
   version: 1.0.0
   description: |
-    Public, anonymous search over active listings: full text (Norwegian stemming,
-    typo tolerance), facets, price ranges and geo radius. Results are eventually
+    Public, anonymous search over active listings in one country (ADR-0040): full text
+    (stemming, typo tolerance), facets generated from the country's taxonomy, price ranges
+    in its currency and geo radius. Results are eventually
     consistent with the listings API (typically within a second, via Kafka).
   license:
     name: Apache-2.0
@@ -23,29 +24,46 @@ paths:
       operationId: searchListings
       summary: Search listings
       parameters:
+        - name: country
+          in: query
+          description: The marketplace searched (XS is Somaliland); the service's default when absent (ADR-0040)
+          schema: { type: string, enum: [XS, NO] }
         - { name: q, in: query, schema: { type: string, maxLength: 200 } }
         - { name: category, in: query, description: Comma-separated, schema: { type: string } }
         - { name: subcategory, in: query, description: Comma-separated, schema: { type: string } }
         - {
-            name: county,
+            name: region,
             in: query,
-            description: Comma-separated county ids,
+            description: Comma-separated region ids of the country,
             schema: { type: string },
           }
-        - { name: condition, in: query, schema: { type: string } }
-        - { name: fuel, in: query, schema: { type: string } }
-        - { name: propertyType, in: query, schema: { type: string } }
-        - { name: employmentType, in: query, schema: { type: string } }
-        - { name: gearbox, in: query, schema: { type: string } }
-        - { name: bodyType, in: query, schema: { type: string } }
-        - { name: drivetrain, in: query, schema: { type: string } }
-        - { name: ownership, in: query, schema: { type: string } }
+        - { name: condition, in: query, description: Comma-separated, schema: { type: string } }
         - {
             name: make,
             in: query,
-            description: Comma-separated car makes (case-insensitive),
+            description: Comma-separated makes (case-insensitive),
             schema: { type: string },
           }
+        - { name: fuel, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: gearbox, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: bodyType, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: drivetrain, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: propertyType, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: ownership, in: query, description: Comma-separated, schema: { type: string } }
+        - {
+            name: employmentType,
+            in: query,
+            description: Comma-separated,
+            schema: { type: string },
+          }
+        - { name: usage, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: steering, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: furnishing, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: landUse, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: dealType, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: brand, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: itemType, in: query, description: Comma-separated, schema: { type: string } }
+        - { name: sex, in: query, description: Comma-separated, schema: { type: string } }
         - { name: yearMin, in: query, schema: { type: integer, minimum: 0 } }
         - { name: yearMax, in: query, schema: { type: integer, minimum: 0 } }
         - { name: mileageMin, in: query, schema: { type: integer, minimum: 0 } }
@@ -56,6 +74,10 @@ paths:
         - { name: bedroomsMax, in: query, schema: { type: integer, minimum: 0 } }
         - { name: guestsMin, in: query, schema: { type: integer, minimum: 0 } }
         - { name: guestsMax, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: storageMin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: storageMax, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: headMin, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: headMax, in: query, schema: { type: integer, minimum: 0 } }
         - {
             name: publishedAfter,
             in: query,
@@ -68,8 +90,13 @@ paths:
             description: Only listings published at or before this time,
             schema: { type: string, format: date-time },
           }
-        - { name: priceMin, in: query, schema: { type: integer, minimum: 0 } }
-        - { name: priceMax, in: query, schema: { type: integer, minimum: 0 } }
+        - {
+            name: priceMin,
+            in: query,
+            description: Major units of the country's currency (12.5 is $12.50),
+            schema: { type: number, minimum: 0 },
+          }
+        - { name: priceMax, in: query, schema: { type: number, minimum: 0 } }
         - {
             name: near,
             in: query,
@@ -117,6 +144,7 @@ paths:
             required: true,
             schema: { type: string, minLength: 2, maxLength: 60 },
           }
+        - { name: country, in: query, schema: { type: string, enum: [XS, NO] } }
       responses:
         '200':
           description: Suggestions
@@ -179,7 +207,8 @@ components:
         [
           id,
           title,
-          priceNok,
+          country,
+          price,
           category,
           subcategory,
           location,
@@ -192,17 +221,21 @@ components:
       properties:
         id: { type: string, format: uuid }
         title: { type: string }
-        priceNok: { type: [integer, 'null'] }
+        country: { type: string }
+        price:
+          oneOf:
+            - { $ref: '#/components/schemas/Money' }
+            - { type: 'null' }
         category: { type: string }
         subcategory: { type: string }
         location:
           type: object
-          required: [placeId, name, county, countyName, lat, lon]
+          required: [placeId, name, region, regionName, lat, lon]
           properties:
             placeId: { type: string }
             name: { type: string }
-            county: { type: string }
-            countyName: { type: string }
+            region: { type: string }
+            regionName: { type: string }
             lat: { type: number }
             lon: { type: number }
         distanceKm: { type: number }
@@ -218,55 +251,47 @@ components:
           type: object
           additionalProperties: { type: [string, number, boolean] }
         publishedAt: { type: string, format: date-time }
+    Money:
+      type: object
+      additionalProperties: false
+      required: [amountMinor, currency]
+      description: An amount in minor units (cents, øre) of an ISO 4217 currency (ADR-0040)
+      properties:
+        amountMinor: { type: integer, minimum: 0 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
     SearchResult:
       type: object
-      required: [total, page, pageSize, items, facets]
+      additionalProperties: false
+      required: [country, currency, total, page, pageSize, items, facets, priceRanges]
       properties:
+        country: { type: string, description: The country searched }
+        currency: { type: string, description: Its currency (the price ranges are in it) }
         total: { type: integer }
         page: { type: integer }
         pageSize: { type: integer }
         items: { type: array, items: { $ref: '#/components/schemas/SearchHit' } }
         facets:
           type: object
-          required:
-            [
-              category,
-              subcategory,
-              county,
-              condition,
-              fuel,
-              propertyType,
-              employmentType,
-              gearbox,
-              bodyType,
-              drivetrain,
-              ownership,
-              make,
-              price,
-            ]
+          description: >-
+            Counts per value: always category, subcategory and region, plus the attribute facets of the
+            selected category (or of every category of the country when none or several are selected)
+          required: [category, subcategory, region]
           properties:
             category: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
             subcategory: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            county: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            condition: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            fuel: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            propertyType: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            employmentType: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            gearbox: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            bodyType: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            drivetrain: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            ownership: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            make: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
-            price:
-              type: array
-              items:
-                type: object
-                required: [key, count]
-                properties:
-                  key: { type: string }
-                  from: { type: number }
-                  to: { type: number }
-                  count: { type: integer }
+            region: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+          additionalProperties: { type: array, items: { $ref: '#/components/schemas/FacetValue' } }
+        priceRanges:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, count]
+            properties:
+              key: { type: string }
+              from: { type: number, description: Major units, inclusive }
+              to: { type: number, description: Major units, exclusive }
+              count: { type: integer }
     Problem:
       type: object
       required: [type, title, status]

@@ -3,14 +3,16 @@ import { describe, it } from 'node:test';
 import { formatAge, formatPrice, pickLocale } from '../src/lib/format.ts';
 
 describe('formatPrice', () => {
-  it('formats whole kroner with a Norwegian thousands separator', () => {
-    assert.match(formatPrice(12500, 'nb', 'Pris på forespørsel'), /^12\s500 kr$/);
+  it('formats kroner with a Norwegian thousands separator, dollars the English way', () => {
+    const kroner = { amountMinor: 1_250_000, currency: 'NOK' };
+    assert.match(formatPrice(kroner, 'nb', 'Pris på forespørsel'), /^12\s500\skr$/);
+    assert.equal(formatPrice({ amountMinor: 125_050, currency: 'USD' }, 'en', ''), '$1,250.50');
   });
   it('uses the caller label when there is no price', () => {
     assert.equal(formatPrice(null, 'en', 'Price on request'), 'Price on request');
   });
   it('keeps zero as a price', () => {
-    assert.equal(formatPrice(0, 'en', 'n/a'), '0 kr');
+    assert.match(formatPrice({ amountMinor: 0, currency: 'NOK' }, 'nb', 'n/a'), /^0\skr$/);
   });
 });
 

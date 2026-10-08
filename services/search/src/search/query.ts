@@ -1,42 +1,51 @@
 import {
-  RANGE_ATTRIBUTES,
-  RANGE_PARAMS,
-  type RangeParam,
-  type SearchParams,
+  categoriesOf,
+  COUNTRIES,
+  COUNTRY_CODES,
+  type CountryCode,
+  facetsOf,
+  FACET_KEYS,
   findPlace,
+  isCountry,
+  RANGE_FIELDS,
+  RANGE_PARAMS,
+  type SearchParams,
+  toMinor,
 } from '@raadi/catalog';
 
 export { searchParamsSchema, type SearchParams } from '@raadi/catalog';
 
-/** Index field of each range parameter (the same name in every category that has it). */
-const RANGE_FIELDS = Object.fromEntries(
-  Object.values(RANGE_ATTRIBUTES).flatMap((r) => r.map((a) => [a.param, `attributes.${a.field}`])),
-) as Record<RangeParam, string>;
+/** Facets every search returns, and the document field each counts. */
+const BASE_FACETS = { category: 'category', subcategory: 'subcategory', region: 'region' } as const;
 
-/** Facets returned with every search, and the document field each counts. */
-export const FACETS = {
-  category: 'category',
-  subcategory: 'subcategory',
-  county: 'county',
-  condition: 'attributes.condition',
-  fuel: 'attributes.fuel',
-  propertyType: 'attributes.propertyType',
-  employmentType: 'attributes.employmentType',
-  gearbox: 'attributes.gearbox',
-  bodyType: 'attributes.bodyType',
-  drivetrain: 'attributes.drivetrain',
-  ownership: 'attributes.ownership',
-  make: 'attributes.make',
-} as const;
-type Facet = keyof typeof FACETS;
+/** Every facet the API knows: the base ones and each taxonomy attribute marked as a facet. */
+export const FACETS: Readonly<Record<string, string>> = {
+  ...BASE_FACETS,
+  ...Object.fromEntries(FACET_KEYS.map((k) => [k, `attributes.${k}`])),
+};
 
-export const PRICE_RANGES = [
-  { key: '0-999', to: 1000 },
-  { key: '1000-9999', from: 1000, to: 10_000 },
-  { key: '10000-99999', from: 10_000, to: 100_000 },
-  { key: '100000-999999', from: 100_000, to: 1_000_000 },
-  { key: '1000000+', from: 1_000_000 },
-] as const;
+const COUNTRY_CATEGORIES = Object.fromEntries(
+  COUNTRY_CODES.map((c) => [c, categoriesOf(c).map((n) => n.id)]),
+) as Record<CountryCode, string[]>;
+
+/**
+ * The facets worth counting for a search: with one category selected, that category's own (ADR-0024);
+ * otherwise those of every category of the country. Others are left out of the response.
+ */
+export function facetsFor(p: SearchParams, country: CountryCode): string[] {
+  const categories = p.category?.length === 1 ? p.category : undefined;
+  const keys = new Set<string>(Object.keys(BASE_FACETS));
+  const roots = categories ?? COUNTRY_CATEGORIES[country];
+  for (const c of roots) for (const a of facetsOf(c)) keys.add(a.key);
+  // A selected facet keeps its counts even if the category changes underneath it.
+  for (const k of FACET_KEYS) if ((p[k] as string[] | undefined)?.length) keys.add(k);
+  return [...keys];
+}
+
+/** The country searched: the request's, else the service's default. */
+export function countryOf(p: SearchParams, fallback: CountryCode): CountryCode {
+  return isCountry(p.country) ? p.country : fallback;
+}
 
 export function centre(p: SearchParams): { lat: number; lon: number } | undefined {
   if (p.lat !== undefined && p.lon !== undefined) return { lat: p.lat, lon: p.lon };
@@ -50,9 +59,10 @@ export function centre(p: SearchParams): { lat: number; lon: number } | undefine
  * facet's aggregation applies every selection except its own, so choosing
  * "bil" still shows the counts for the other categories (standard faceting).
  */
-export function buildSearch(p: SearchParams) {
+export function buildSearch(p: SearchParams, country: CountryCode) {
+  const { currency, priceBuckets } = COUNTRIES[country];
   const must: object[] = [];
-  const filter: object[] = [{ term: { status: 'active' } }];
+  const filter: object[] = [{ term: { status: 'active' } }, { term: { country } }];
 
   if (p.q) {
     must.push({
@@ -85,14 +95,17 @@ export function buildSearch(p: SearchParams) {
       },
     });
   }
+  // Prices are typed in major units of the country's currency; the index holds minor units.
   if (p.priceMin !== undefined || p.priceMax !== undefined) {
-    filter.push({ range: { priceNok: { gte: p.priceMin, lte: p.priceMax } } });
+    const gte = p.priceMin === undefined ? undefined : toMinor(p.priceMin, currency);
+    const lte = p.priceMax === undefined ? undefined : toMinor(p.priceMax, currency);
+    filter.push({ range: { priceMinor: { gte, lte } } });
   }
   for (const name of RANGE_PARAMS) {
-    const gte = p[`${name}Min`];
-    const lte = p[`${name}Max`];
+    const gte = p[`${name}Min`] as number | undefined;
+    const lte = p[`${name}Max`] as number | undefined;
     if (gte !== undefined || lte !== undefined) {
-      filter.push({ range: { [RANGE_FIELDS[name]]: { gte, lte } } });
+      filter.push({ range: { [`attributes.${RANGE_FIELDS[name]}`]: { gte, lte } } });
     }
   }
   if (p.publishedAfter || p.publishedBefore) {
@@ -101,18 +114,18 @@ export function buildSearch(p: SearchParams) {
   const c = centre(p);
   if (c) filter.push({ geo_distance: { distance: `${p.radiusKm ?? 50}km`, location: c } });
 
-  const selections: Partial<Record<Facet, object>> = {};
-  for (const facet of Object.keys(FACETS) as Facet[]) {
-    const values = p[facet];
-    if (values?.length) selections[facet] = { terms: { [FACETS[facet]]: values } };
+  const selections: Record<string, object> = {};
+  for (const [facet, field] of Object.entries(FACETS)) {
+    const values = p[facet] as string[] | undefined;
+    if (values?.length) selections[facet] = { terms: { [field]: values } };
   }
-  const others = (except?: Facet) =>
+  const others = (except?: string) =>
     Object.entries(selections)
       .filter(([f]) => f !== except)
       .map(([, clause]) => clause);
 
   const aggs: Record<string, object> = {};
-  for (const facet of Object.keys(FACETS) as Facet[]) {
+  for (const facet of facetsFor(p, country)) {
     aggs[facet] = {
       filter: { bool: { filter: others(facet) } },
       aggs: { values: { terms: { field: FACETS[facet], size: 50 } } },
@@ -120,7 +133,18 @@ export function buildSearch(p: SearchParams) {
   }
   aggs.price = {
     filter: { bool: { filter: others() } },
-    aggs: { values: { range: { field: 'priceNok', ranges: PRICE_RANGES } } },
+    aggs: {
+      values: {
+        range: {
+          field: 'priceMinor',
+          ranges: priceBuckets.map((b) => ({
+            key: b.key,
+            ...(b.from !== undefined ? { from: toMinor(b.from, currency) } : {}),
+            ...(b.to !== undefined ? { to: toMinor(b.to, currency) } : {}),
+          })),
+        },
+      },
+    },
   };
 
   const sort: Array<string | object> = [];
@@ -129,10 +153,10 @@ export function buildSearch(p: SearchParams) {
       sort.push({ publishedAt: 'desc' });
       break;
     case 'price_asc':
-      sort.push({ priceNok: { order: 'asc', missing: '_last' } });
+      sort.push({ priceMinor: { order: 'asc', missing: '_last' } });
       break;
     case 'price_desc':
-      sort.push({ priceNok: { order: 'desc', missing: '_last' } });
+      sort.push({ priceMinor: { order: 'desc', missing: '_last' } });
       break;
     case 'distance':
       sort.push({ _geo_distance: { location: c, order: 'asc', unit: 'km' } });

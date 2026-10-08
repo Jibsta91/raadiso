@@ -6,8 +6,17 @@
  * talking to each other. Same input, same output, on every machine.
  */
 import { createHash } from 'node:crypto';
-import { CATEGORIES, type Attributes, type Category, type Subcategory } from './taxonomy.js';
-import { PLACES, type Place } from './places.js';
+import {
+  attributesOf,
+  categoriesOf,
+  priceRuleOf,
+  type AttributeDef,
+  type Category,
+  type Subcategory,
+} from './categories.js';
+import type { CountryCode } from './countries.js';
+import type { Money } from './money.js';
+import { placesOf, type Place } from './places.js';
 
 /** Fixed Keycloak subjects of the demo users (deploy/keycloak/realm-raadi.json). */
 export const DEMO_USERS = [
@@ -367,7 +376,9 @@ const TEMPLATES: Record<Subcategory, Template> = {
   ),
 };
 
-const SUBCATEGORIES: Record<Category, readonly Subcategory[]> = CATEGORIES;
+const SUBCATEGORIES: Record<Category, readonly Subcategory[]> = Object.fromEntries(
+  categoriesOf('NO').map((c) => [c.id, (c.children ?? []).map((s) => s.id)]),
+);
 
 const CATEGORY_WEIGHTS: Array<[Category, number]> = [
   ['torget', 0.45],
@@ -398,12 +409,13 @@ export interface DemoListing {
   id: string;
   ownerId: string;
   sellerName: string;
+  country: CountryCode;
   category: Category;
   subcategory: Subcategory;
   title: string;
   description: string;
-  priceNok: number | null;
-  attributes: Attributes[Category];
+  price: Money | null;
+  attributes: Record<string, string | number>;
   place: Place;
   images: DemoImage[];
   /** Days before "now" the listing was published (0–60). */
@@ -415,7 +427,7 @@ function attributesFor(
   category: Category,
   sub: Subcategory,
   title: string,
-): Attributes[Category] {
+): Record<string, string | number> {
   switch (category) {
     case 'torget':
       return { condition: pick(rng, ['new', 'like_new', 'good', 'fair'] as const) };
@@ -469,6 +481,8 @@ function attributesFor(
       };
     case 'reise':
       return { guests: between(rng, 2, 8) };
+    default:
+      return {};
   }
 }
 
@@ -478,21 +492,27 @@ function imageCount(rng: Rng, category: Category): number {
   return between(rng, 1, 3);
 }
 
-/** The full demo dataset, generated identically on every call. */
-export function demoListings(count = DEMO_LISTING_COUNT): DemoListing[] {
+/** The full demo dataset, Norway's and Somaliland's, generated identically on every call. */
+export function demoListings(): DemoListing[] {
+  return [...demoListingsNorway(), ...demoListingsSomaliland()];
+}
+
+/** Norway's demo listings (test country): unchanged since Phase 2, so ids and tests stay stable. */
+export function demoListingsNorway(count = DEMO_LISTING_COUNT): DemoListing[] {
   const rng = prng(20261001);
+  const places = placesOf('NO');
   const listings: DemoListing[] = [];
   for (let i = 0; i < count; i++) {
     let roll = rng();
     const category = CATEGORY_WEIGHTS.find(([, w]) => (roll -= w) < 0)?.[0] ?? 'torget';
-    const subcategory = pick(rng, SUBCATEGORIES[category]);
-    const template = TEMPLATES[subcategory];
+    const subcategory = pick(rng, SUBCATEGORIES[category]!);
+    const template = TEMPLATES[subcategory]!;
     const title = pick(rng, template.titles);
     const owner =
       i < DEMO_USERS.length * DEMO_LISTINGS_PER_USER
         ? DEMO_USERS[i % DEMO_USERS.length]!
         : DEMO_SELLERS[i % DEMO_SELLERS.length]!;
-    const place = pick(rng, PLACES);
+    const place = pick(rng, places);
     const [min, max, step] = template.price;
     const id = demoUuid(`listing-${i}`);
     const hue = Math.floor(rng() * 360);
@@ -503,12 +523,422 @@ export function demoListings(count = DEMO_LISTING_COUNT): DemoListing[] {
       category,
       subcategory,
       title,
+      country: 'NO',
       description: `${title}. ${template.blurb} Henting i ${place.name}.`,
-      priceNok: category === 'jobb' ? null : between(rng, min, max, step),
+      price:
+        category === 'jobb'
+          ? null
+          : { amountMinor: between(rng, min, max, step) * 100, currency: 'NOK' },
       attributes: attributesFor(rng, category, subcategory, title),
       place,
       images: Array.from({ length: imageCount(rng, category) }, (_, j) => ({
         id: demoUuid(`listing-${i}-image-${j}`),
+        hue: (hue + j * 40) % 360,
+        category,
+        label: title,
+      })),
+      ageDays: Math.floor(rng() * 60),
+    });
+  }
+  return listings;
+}
+
+/* ── Somaliland (first market, ADR-0033) ─────────────────────────────────────────────────────── */
+
+export const DEMO_XS_LISTING_COUNT = 300;
+
+const XS_SELLER_NAMES = [
+  'Abdirahman',
+  'Hodan',
+  'Mukhtar',
+  'Sahra',
+  'Abdi',
+  'Nimco',
+  'Khadar',
+  'Ayaan',
+  'Guleed',
+  'Hibo',
+  'Liban',
+  'Ifrah',
+  'Mahad',
+  'Fardowsa',
+  'Yasin',
+  'Deeqa',
+  'Jama',
+  'Ubah',
+  'Warsame',
+  'Shukri',
+];
+
+/** Seed-only sellers in Somaliland (no Keycloak account): 15 listings each, well under the quota. */
+export const DEMO_XS_SELLERS = XS_SELLER_NAMES.map((name, n) => ({
+  id: demoUuid(`xs-seller-${n}`),
+  sellerName: `${name} ${String.fromCharCode(65 + ((n * 5) % 26))}.`,
+}));
+
+/** Titles (English, some Somali) and a price range in US dollars: [min, max, step]. */
+const XS_TEMPLATES: Record<
+  Subcategory,
+  { titles: readonly string[]; price: [number, number, number] }
+> = {
+  cars: {
+    titles: [
+      'Toyota Land Cruiser V8',
+      'Toyota Vitz',
+      'Toyota Mark X',
+      'Nissan Patrol',
+      'Toyota Hilux Surf',
+      'Suzuki Swift',
+      'Toyota Noah',
+      'Mitsubishi Pajero',
+    ],
+    price: [3000, 45000, 100],
+  },
+  motorcycles: {
+    titles: ['Bajaj Boxer 150', 'TVS King tuk-tuk', 'Honda CG 125', 'Bajaj RE three-wheeler'],
+    price: [600, 4500, 50],
+  },
+  'trucks-buses': {
+    titles: ['Isuzu NPR truck', 'Toyota Coaster bus', 'Mitsubishi Canter', 'Isuzu water tanker'],
+    price: [8000, 60000, 500],
+  },
+  'auto-parts': {
+    titles: [
+      'Tyres 265/65 R17, set of 4',
+      'Car battery 100Ah',
+      'Land Cruiser front bumper',
+      'Engine oil 5 L',
+      'Shock absorbers, pair',
+    ],
+    price: [10, 900, 5],
+  },
+  'houses-rent': {
+    titles: [
+      '3-bedroom house with compound',
+      'Modern apartment near the centre',
+      'Guri kiro ah, 2 qol',
+      'Furnished villa with garden',
+      'Room for rent, shared kitchen',
+    ],
+    price: [100, 1200, 10],
+  },
+  'houses-sale': {
+    titles: [
+      'Villa with garden',
+      'Guri iib ah, 4 qol',
+      'Family house with water tank',
+      'New apartment, 3 bedrooms',
+    ],
+    price: [15000, 250000, 1000],
+  },
+  land: {
+    titles: [
+      'Residential plot 20×20 m',
+      'Dhul iib ah',
+      'Farm land with a well',
+      'Commercial plot on the main road',
+    ],
+    price: [2000, 80000, 500],
+  },
+  'commercial-property': {
+    titles: ['Shop on the main road', 'Warehouse near the port', 'Office space, 2nd floor'],
+    price: [200, 50000, 50],
+  },
+  'short-stays': {
+    titles: ['Guest house room', 'Furnished apartment for short stays', 'Holiday house by the sea'],
+    price: [20, 150, 5],
+  },
+  'mobile-phones': {
+    titles: [
+      'iPhone 13 128 GB',
+      'Samsung Galaxy A54',
+      'Tecno Spark 20',
+      'Infinix Hot 40',
+      'iPhone 15 Pro Max',
+      'Xiaomi Redmi Note 13',
+      'Taleefan Samsung A15',
+    ],
+    price: [60, 1300, 5],
+  },
+  tablets: {
+    titles: ['iPad 9th generation', 'Samsung Galaxy Tab A8', 'Huawei MatePad'],
+    price: [80, 500, 5],
+  },
+  'phone-accessories': {
+    titles: [
+      'Power bank 20000 mAh',
+      'Wireless earbuds',
+      'Phone cases, wholesale',
+      'Fast charger 25 W',
+    ],
+    price: [3, 150, 1],
+  },
+  computers: {
+    titles: [
+      'HP EliteBook 840',
+      'Dell Latitude 5420',
+      'MacBook Air M1',
+      'HP LaserJet printer',
+      '24" monitor',
+    ],
+    price: [80, 1100, 10],
+  },
+  'solar-power': {
+    titles: [
+      'Solar panel 300 W',
+      'Lithium battery 200 Ah',
+      'Inverter 3 kW',
+      'Complete solar kit for a house',
+      'Solar street light',
+    ],
+    price: [25, 2500, 5],
+  },
+  appliances: {
+    titles: [
+      'Fridge 300 L',
+      'Split air conditioner 1.5 ton',
+      'Washing machine',
+      'Water dispenser',
+      'Gas cooker with oven',
+    ],
+    price: [40, 900, 5],
+  },
+  'tv-audio': {
+    titles: ['Smart TV 55"', 'Sound bar with subwoofer', 'Satellite receiver', 'Bluetooth speaker'],
+    price: [15, 700, 5],
+  },
+  furniture: {
+    titles: [
+      'Sofa set, 7 seats',
+      'Fadhi casri ah',
+      'Bed with mattress',
+      'Dining table with 6 chairs',
+      'Wardrobe, 3 doors',
+    ],
+    price: [40, 1500, 10],
+  },
+  kitchenware: {
+    titles: ['Cooking pots, set', 'Thermos flasks', 'Dinner set, 24 pieces', 'Blender'],
+    price: [5, 150, 1],
+  },
+  'home-decor': {
+    titles: ['Persian carpet 3×4 m', 'Curtains with rails', 'Wall clock', 'Dabqaad incense burner'],
+    price: [5, 400, 5],
+  },
+  'mens-clothing': {
+    titles: ['Macawis, set of 3', 'Suit, size 50', 'Khamiis', 'Leather jacket'],
+    price: [5, 200, 1],
+  },
+  'womens-clothing': {
+    titles: ['Dirac, new', 'Garbasaar', 'Abaya', 'Wedding dress'],
+    price: [8, 400, 2],
+  },
+  shoes: { titles: ['Sandals, size 42', 'Sneakers, size 40', 'Leather shoes'], price: [5, 120, 1] },
+  'jewellery-watches': {
+    titles: ['Gold necklace 21k', 'Casio watch', 'Silver bracelet'],
+    price: [15, 3000, 5],
+  },
+  bags: { titles: ['Leather handbag', 'School backpack', 'Travel suitcase'], price: [5, 150, 1] },
+  camels: {
+    titles: ['Young camels', 'Geel iib ah', 'Milking camel', 'Camels for Eid'],
+    price: [400, 12000, 50],
+  },
+  'goats-sheep': {
+    titles: ['Black-head Somali sheep', 'Ari iyo ido', 'Goats for Eid', 'Somali goats'],
+    price: [40, 3000, 10],
+  },
+  cattle: { titles: ['Dairy cow', "Lo' iib ah", 'Bull'], price: [300, 4000, 50] },
+  poultry: { titles: ['Laying hens', 'Digaag', 'Chicks'], price: [5, 600, 5] },
+  'farm-produce': {
+    titles: ['Fresh tomatoes, per crate', 'Watermelons', 'Dates, 10 kg', 'Malab (pure honey)'],
+    price: [3, 200, 1],
+  },
+  'animal-feed': {
+    titles: ['Hay bales', 'Sorghum, 50 kg sack', 'Animal feed pellets'],
+    price: [5, 300, 1],
+  },
+  'farm-equipment': {
+    titles: ['Water pump', 'Tractor plough', 'Irrigation pipes'],
+    price: [50, 6000, 10],
+  },
+  'ngo-jobs': {
+    titles: ['Project officer', 'Nutrition coordinator', 'Field monitor'],
+    price: [0, 0, 1],
+  },
+  'it-jobs': { titles: ['Web developer', 'Network technician'], price: [0, 0, 1] },
+  'sales-jobs': { titles: ['Shop assistant', 'Sales agent, mobile money'], price: [0, 0, 1] },
+  'driver-jobs': { titles: ['Driver with licence', 'Truck driver'], price: [0, 0, 1] },
+  'teaching-jobs': { titles: ['English teacher', 'Mathematics teacher'], price: [0, 0, 1] },
+  'health-jobs': { titles: ['Nurse', 'Pharmacist'], price: [0, 0, 1] },
+  'construction-jobs': { titles: ['Mason', 'Electrician'], price: [0, 0, 1] },
+  'hospitality-jobs': { titles: ['Hotel receptionist', 'Cook'], price: [0, 0, 1] },
+  'office-jobs': { titles: ['Accountant', 'Office assistant'], price: [0, 0, 1] },
+  'building-trades': {
+    titles: ['Plumber', 'House electrician', 'Tile fixing'],
+    price: [5, 300, 5],
+  },
+  'transport-logistics': {
+    titles: ['Moving services', 'Cargo transport to the port'],
+    price: [20, 600, 10],
+  },
+  tutoring: { titles: ['Quran teacher', 'English lessons', 'Maths tutor'], price: [5, 100, 5] },
+  'it-services': { titles: ['Website design', 'Computer networking'], price: [50, 800, 10] },
+  'events-catering': { titles: ['Wedding catering', 'Event tent hire'], price: [50, 1500, 10] },
+  'beauty-services': { titles: ['Henna artist', 'Barber, home visits'], price: [5, 80, 5] },
+  'repair-services': { titles: ['Phone repair', 'Fridge and AC repair'], price: [5, 120, 5] },
+  'business-equipment': {
+    titles: ['Generator 20 kVA', 'Commercial freezer', 'Sewing machines'],
+    price: [100, 9000, 10],
+  },
+  wholesale: {
+    titles: ['Rice, 25 kg sacks', 'Sugar, wholesale', 'Cooking oil, 20 L'],
+    price: [10, 2000, 5],
+  },
+  'baby-gear': { titles: ['Baby stroller', 'Child car seat', 'Baby cot'], price: [10, 250, 5] },
+  toys: { titles: ['Remote-control car', 'Building blocks', 'Football'], price: [3, 120, 1] },
+  'kids-clothing': { titles: ['School uniform', 'Eid clothes for kids'], price: [3, 60, 1] },
+  'sports-equipment': { titles: ['Football boots', 'Treadmill', 'Bicycle'], price: [10, 900, 5] },
+  books: {
+    titles: ['Quran, large print', 'University textbooks', 'Somali novels'],
+    price: [2, 80, 1],
+  },
+  'musical-instruments': { titles: ['Oud', 'Keyboard', 'Guitar'], price: [30, 700, 5] },
+};
+
+const XS_WEIGHTS: Array<[Category, number]> = [
+  ['vehicles', 0.14],
+  ['property', 0.14],
+  ['phones', 0.14],
+  ['electronics', 0.12],
+  ['home', 0.07],
+  ['fashion', 0.07],
+  ['livestock', 0.1],
+  ['agriculture', 0.04],
+  ['jobs', 0.07],
+  ['services', 0.05],
+  ['business', 0.02],
+  ['kids', 0.02],
+  ['sports-hobbies', 0.02],
+];
+
+const XS_BLURBS: Record<Category, string> = {
+  vehicles: 'Clean papers, ready to drive. Call or message to view.',
+  property: 'Water and electricity connected. Viewing any day.',
+  phones: 'Works perfectly, comes with charger.',
+  electronics: 'Tested and working. Delivery possible in town.',
+  home: 'Good quality, collection only.',
+  fashion: 'Good quality, several sizes.',
+  livestock: 'Healthy animals, vaccinated. Xoolo caafimaad qaba.',
+  agriculture: 'Fresh from the farm.',
+  jobs: 'Send your CV through Raadiso messages.',
+  services: 'Reliable and experienced. Fair prices.',
+  business: 'Serious buyers only.',
+  kids: 'Clean and in good condition.',
+  'sports-hobbies': 'Barely used.',
+};
+
+const XS_EMPLOYERS = [
+  'Horumar Trading',
+  'Hargeisa Builders',
+  'Sahan Relief',
+  'Port Logistics',
+  'City Clinic',
+  'Bright School',
+];
+
+const PHONE_BRAND_OF: Array<[RegExp, string]> = [
+  [/iphone|ipad/i, 'apple'],
+  [/samsung/i, 'samsung'],
+  [/tecno/i, 'tecno'],
+  [/infinix/i, 'infinix'],
+  [/xiaomi|redmi/i, 'xiaomi'],
+  [/huawei/i, 'huawei'],
+];
+
+/** Plausible numbers per attribute: [min, max, step]. */
+const XS_NUMBERS: Record<string, [number, number, number]> = {
+  year: [2004, 2022, 1],
+  mileageKm: [20_000, 250_000, 1000],
+  bedrooms: [1, 6, 1],
+  areaM2: [80, 600, 10],
+  guests: [1, 8, 1],
+  storageGb: [32, 512, 32],
+};
+const HEAD: Record<Subcategory, [number, number]> = {
+  camels: [1, 12],
+  'goats-sheep': [5, 60],
+  cattle: [1, 10],
+  poultry: [10, 200],
+};
+
+/** Attributes generated from the taxonomy's definitions, consistent with the title. */
+function xsAttributes(rng: Rng, category: Category, sub: Subcategory, title: string) {
+  const out: Record<string, string | number> = {};
+  const [first = 'Toyota', ...rest] = title.split(' ');
+  for (const def of attributesOf(category, sub) as AttributeDef[]) {
+    if (!def.required && rng() < 0.35) continue;
+    if (def.key === 'make') out.make = first;
+    else if (def.key === 'model') out.model = rest.join(' ') || first;
+    else if (def.key === 'employer') out.employer = pick(rng, XS_EMPLOYERS);
+    else if (def.key === 'brand')
+      out.brand =
+        PHONE_BRAND_OF.find(([re]) => re.test(title))?.[1] ??
+        pick(rng, def.kind === 'select' ? def.options : ['other']);
+    else if (def.key === 'head') out.head = between(rng, ...(HEAD[sub] ?? [1, 10]));
+    else if (def.key === 'areaM2' && sub === 'land') out.areaM2 = between(rng, 200, 5000, 50);
+    else if (def.kind === 'select') out[def.key] = pick(rng, def.options);
+    else if (def.kind === 'number') {
+      const [min, max, step] = XS_NUMBERS[def.key] ?? [
+        def.min,
+        Math.min(def.max, def.min + 100),
+        1,
+      ];
+      out[def.key] = between(rng, min, max, step);
+    } else out[def.key] = title.slice(0, def.maxLength);
+  }
+  return out;
+}
+
+/** Somaliland's demo listings: US dollars, Somaliland's towns, English and some Somali. */
+export function demoListingsSomaliland(count = DEMO_XS_LISTING_COUNT): DemoListing[] {
+  const rng = prng(20261008);
+  const places = placesOf('XS');
+  // Most people live in and around Hargeisa and Burao: weight the first towns.
+  const town = () => places[Math.floor(rng() ** 1.8 * places.length)]!;
+  const subs = Object.fromEntries(
+    categoriesOf('XS').map((c) => [c.id, (c.children ?? []).map((s) => s.id)]),
+  );
+  // Every subcategory once first, so each category page has listings in every tile; then by weight.
+  const tour = Object.entries(subs).flatMap(([c, ss]) => ss.map((sub) => [c, sub] as const));
+  const listings: DemoListing[] = [];
+  for (let i = 0; i < count; i++) {
+    let roll = rng();
+    const weighted = XS_WEIGHTS.find(([, w]) => (roll -= w) < 0)?.[0] ?? 'phones';
+    const [category, subcategory] = tour[i] ?? [weighted, pick(rng, subs[weighted]!)];
+    const template = XS_TEMPLATES[subcategory]!;
+    const title = pick(rng, template.titles);
+    const owner = DEMO_XS_SELLERS[i % DEMO_XS_SELLERS.length]!;
+    const place = town();
+    const [min, max, step] = template.price;
+    const rule = priceRuleOf(category, subcategory);
+    const priced = rule === 'required' || (rule === 'optional' && rng() < 0.6);
+    const id = demoUuid(`xs-listing-${i}`);
+    const hue = Math.floor(rng() * 360);
+    const images = category === 'jobs' ? 1 : between(rng, 1, 3);
+    listings.push({
+      id,
+      ownerId: owner.id,
+      sellerName: owner.sellerName,
+      country: 'XS',
+      category,
+      subcategory,
+      title,
+      description: `${title}. ${XS_BLURBS[category]} Located in ${place.name}.`,
+      price: priced ? { amountMinor: between(rng, min, max, step) * 100, currency: 'USD' } : null,
+      attributes: xsAttributes(rng, category, subcategory, title),
+      place,
+      images: Array.from({ length: images }, (_, j) => ({
+        id: demoUuid(`xs-listing-${i}-image-${j}`),
         hue: (hue + j * 40) % 360,
         category,
         label: title,

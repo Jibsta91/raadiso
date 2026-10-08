@@ -33,7 +33,7 @@ export default async function EditListingPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-3xl font-bold">{t('editTitle')}</h1>
-      <ListingForm listing={listing} />
+      <ListingForm country={listing.country} listing={listing} />
     </div>
   );
 }

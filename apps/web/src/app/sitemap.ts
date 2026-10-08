@@ -1,10 +1,12 @@
-import { CATEGORY_KEYS } from '@raadi/catalog';
+import { categoriesOf } from '@raadi/catalog/categories';
 import type { MetadataRoute } from 'next';
 import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
 import { env } from '@/lib/env';
+import { currentCountry } from '@/lib/host';
 
-export const revalidate = 3600;
+// Per host: each country's domain lists its own categories and listings (ADR-0040).
+export const dynamic = 'force-dynamic';
 
 /** How many of the newest listings the sitemap lists (search pages hold at most 48 each). */
 const LISTING_PAGES = 10;
@@ -34,7 +36,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     page('', { changeFrequency: 'hourly', priority: 1 }),
-    ...CATEGORY_KEYS.map((c) => page(`/${c}`, { changeFrequency: 'hourly', priority: 0.8 })),
+    ...categoriesOf(await currentCountry()).map(({ id }) =>
+      page(`/${id}`, { changeFrequency: 'hourly', priority: 0.8 }),
+    ),
     page('/terms', { changeFrequency: 'yearly', priority: 0.1 }),
     page('/privacy', { changeFrequency: 'yearly', priority: 0.1 }),
     ...listings,

@@ -32,16 +32,19 @@ describe('OpenAPI contract', () => {
         category: 'bil',
         subcategory: 'personbil',
         title: 'Volvo V60',
-        price_nok: '189000',
+        country: 'NO',
+        price_minor: '18900000',
+        currency: 'NOK',
         image_id: '0d7c1f3e-9a51-4c47-8f0e-1c2b3a4d5e6f',
         place_name: 'Oslo',
-        county: 'oslo',
+        region: 'oslo',
         published_at: new Date('2026-10-01T10:00:00Z'),
         favourited_at: new Date('2026-10-02T10:00:00Z'),
       },
       imgproxySigner('aa'.repeat(32), 'bb'.repeat(32)),
     );
-    assert.equal(fav.listing.priceNok, 189000);
+    assert.deepEqual(fav.listing.price, { amountMinor: 18900000, currency: 'NOK' });
+    assert.equal(fav.listing.location.regionName, 'Oslo');
     valid('Favourite', fav);
     valid(
       'SavedSearch',

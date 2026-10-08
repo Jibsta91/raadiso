@@ -201,22 +201,33 @@ components:
         listing:
           type: object
           additionalProperties: false
-          required: [id, title, priceNok, status, category, subcategory, location, publishedAt]
+          required:
+            [id, title, country, price, status, category, subcategory, location, publishedAt]
           properties:
             id: { type: string, format: uuid }
             title: { type: string }
-            priceNok: { type: [integer, 'null'] }
+            country: { type: string }
+            price:
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  required: [amountMinor, currency]
+                  description: Minor units of an ISO 4217 currency (ADR-0040)
+                  properties:
+                    amountMinor: { type: integer, minimum: 0 }
+                    currency: { type: string, pattern: '^[A-Z]{3}$' }
+                - { type: 'null' }
             status: { type: string, enum: [active, sold, deleted] }
             category: { type: string }
             subcategory: { type: string }
             location:
               type: object
               additionalProperties: false
-              required: [name, county, countyName]
+              required: [name, region, regionName]
               properties:
                 name: { type: string }
-                county: { type: string }
-                countyName: { type: string }
+                region: { type: string }
+                regionName: { type: string }
             image:
               type: object
               additionalProperties: false

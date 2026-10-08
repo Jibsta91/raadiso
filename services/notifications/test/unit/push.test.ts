@@ -15,13 +15,27 @@ describe('push', () => {
         'favourite_sold',
         'saved_search_match',
       ] as const) {
-        const copy = renderPush(kind, locale, { days: '7', count: '3', priceNok: '800' });
+        const copy = renderPush(kind, locale, {
+          days: '7',
+          count: '3',
+          amountMinor: '80000',
+          currency: 'NOK',
+        });
         assert.ok(copy.title.length > 0 && copy.title.length <= 40, `${kind}/${locale} title`);
         assert.ok(copy.body.length > 0 && copy.body.length <= 120, `${kind}/${locale} body`);
         assert.ok(!copy.body.includes('{'), `${kind}/${locale}: placeholder left`);
       }
     }
     assert.match(renderPush('listing_promoted', 'nb', { days: '7' }).body, /7 dager/);
+  });
+
+  it('formats prices in the reader’s language and the listing’s currency (ADR-0040)', () => {
+    const dollars = { amountMinor: '24000', currency: 'USD' };
+    assert.match(renderPush('favourite_price_drop', 'en', dollars).body, /costs \$240\.$/);
+    const kroner = { amountMinor: '80000', currency: 'NOK' };
+    assert.match(renderPush('favourite_price_drop', 'nb', kroner).body, /koster nå 800\skr\.$/);
+    // A notice stored before money had a currency.
+    assert.match(renderPush('favourite_price_drop', 'en', { priceNok: '800' }).body, /NOK|kr/);
   });
 
   it('opens app paths only', () => {

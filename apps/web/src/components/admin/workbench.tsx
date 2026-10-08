@@ -3,7 +3,8 @@
 import type { WorkbenchItem } from '@raadi/api-client';
 import { cn } from '@raadi/ui';
 import { ExternalLink, Flag, ImageOff, ShieldCheck } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
+import { formatMoney } from '@raadi/catalog/money';
+import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import { dismissAction, removeListingAction } from '@/app/[locale]/admin/actions';
 import { Link } from '@/i18n/navigation';
@@ -32,6 +33,7 @@ export function Workbench({
   const tr = useTranslations('report');
   const tl = useTranslations('admin.listings');
   const format = useFormatter();
+  const locale = useLocale();
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const current = items[Math.min(index, items.length - 1)];
@@ -190,13 +192,7 @@ export function Workbench({
             </p>
             <h2 className="text-xl font-bold">{l.title}</h2>
             <p className="font-semibold tabular-nums">
-              {l.priceNok === null
-                ? '–'
-                : format.number(l.priceNok, {
-                    style: 'currency',
-                    currency: 'NOK',
-                    maximumFractionDigits: 0,
-                  })}
+              {l.price === null ? '–' : formatMoney(l.price, locale)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

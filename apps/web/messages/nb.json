@@ -51,6 +51,58 @@
       "reise": {
         "name": "Reise",
         "description": "Feriehus, reiser og reisetilbud."
+      },
+      "vehicles": {
+        "name": "Kjøretøy",
+        "description": "Biler, motorsykler, tuk-tuk, lastebiler og deler."
+      },
+      "property": {
+        "name": "Eiendom og tomter",
+        "description": "Boliger til leie og salg, tomter og næringslokaler."
+      },
+      "phones": {
+        "name": "Telefoner og nettbrett",
+        "description": "Nye og brukte telefoner, nettbrett og tilbehør."
+      },
+      "electronics": {
+        "name": "Elektronikk og solenergi",
+        "description": "Solenergi, datamaskiner, hvitevarer, TV og lyd."
+      },
+      "home": {
+        "name": "Hjem og møbler",
+        "description": "Møbler, kjøkkenutstyr og interiør."
+      },
+      "fashion": {
+        "name": "Klær og mote",
+        "description": "Klær, sko, vesker, smykker og klokker."
+      },
+      "livestock": {
+        "name": "Husdyr",
+        "description": "Kameler, geiter og sau, storfe og fjørfe."
+      },
+      "agriculture": {
+        "name": "Landbruk og mat",
+        "description": "Gårdsprodukter, dyrefôr og utstyr."
+      },
+      "jobs": {
+        "name": "Jobber",
+        "description": "Stillinger fra arbeidsgivere i landet ditt."
+      },
+      "services": {
+        "name": "Tjenester",
+        "description": "Håndverkere, transport, kurs, arrangementer og reparasjoner."
+      },
+      "business": {
+        "name": "Næring og industri",
+        "description": "Utstyr, maskiner og engros."
+      },
+      "kids": {
+        "name": "Barn og baby",
+        "description": "Babyutstyr, leker og barneklær."
+      },
+      "sports-hobbies": {
+        "name": "Sport og hobby",
+        "description": "Sportsutstyr, bøker og instrumenter."
       }
     },
     "trustTitle": "Hvorfor Raadiso",
@@ -202,7 +254,20 @@
       "bil": "Bil",
       "eiendom": "Eiendom",
       "jobb": "Jobb",
-      "reise": "Reise"
+      "reise": "Reise",
+      "vehicles": "Kjøretøy",
+      "property": "Eiendom og tomter",
+      "phones": "Telefoner og nettbrett",
+      "electronics": "Elektronikk og solenergi",
+      "home": "Hjem og møbler",
+      "fashion": "Klær og mote",
+      "livestock": "Husdyr",
+      "agriculture": "Landbruk og mat",
+      "jobs": "Jobber",
+      "services": "Tjenester",
+      "business": "Næring og industri",
+      "kids": "Barn og baby",
+      "sports-hobbies": "Sport og hobby"
     },
     "subcategories": {
       "elektronikk": "Elektronikk og hvitevarer",
@@ -236,7 +301,62 @@
       "naering": "Næringseiendom",
       "kontor": "Kontor og administrasjon",
       "industri": "Industri og produksjon",
-      "reiseliv": "Hotell og restaurant"
+      "reiseliv": "Hotell og restaurant",
+      "cars": "Biler",
+      "motorcycles": "Motorsykler og tuk-tuk",
+      "trucks-buses": "Lastebiler og busser",
+      "auto-parts": "Deler og tilbehør",
+      "houses-rent": "Bolig til leie",
+      "houses-sale": "Bolig til salgs",
+      "land": "Tomter",
+      "commercial-property": "Næringslokaler",
+      "short-stays": "Korttidsleie",
+      "mobile-phones": "Mobiltelefoner",
+      "tablets": "Nettbrett",
+      "phone-accessories": "Tilbehør",
+      "computers": "Datamaskiner",
+      "solar-power": "Solenergi",
+      "appliances": "Hvitevarer",
+      "tv-audio": "TV og lyd",
+      "furniture": "Møbler",
+      "kitchenware": "Kjøkkenutstyr",
+      "home-decor": "Interiør",
+      "mens-clothing": "Herreklær",
+      "womens-clothing": "Dameklær",
+      "shoes": "Sko",
+      "jewellery-watches": "Smykker og klokker",
+      "bags": "Vesker",
+      "camels": "Kameler",
+      "goats-sheep": "Geiter og sau",
+      "cattle": "Storfe",
+      "poultry": "Fjørfe",
+      "farm-produce": "Gårdsprodukter",
+      "animal-feed": "Dyrefôr",
+      "farm-equipment": "Landbruksutstyr",
+      "ngo-jobs": "NGO og bistand",
+      "it-jobs": "IT og telekom",
+      "sales-jobs": "Salg og butikk",
+      "driver-jobs": "Sjåfør og transport",
+      "teaching-jobs": "Undervisning",
+      "health-jobs": "Helse",
+      "construction-jobs": "Bygg og anlegg",
+      "hospitality-jobs": "Hotell og restaurant",
+      "office-jobs": "Kontor og økonomi",
+      "building-trades": "Håndverkere",
+      "transport-logistics": "Transport og flytting",
+      "tutoring": "Undervisning og kurs",
+      "it-services": "IT og nett",
+      "events-catering": "Arrangementer og catering",
+      "beauty-services": "Skjønnhet",
+      "repair-services": "Reparasjoner",
+      "business-equipment": "Utstyr og maskiner",
+      "wholesale": "Engros",
+      "baby-gear": "Babyutstyr",
+      "toys": "Leker",
+      "kids-clothing": "Barneklær",
+      "sports-equipment": "Sportsutstyr",
+      "books": "Bøker",
+      "musical-instruments": "Musikkinstrumenter"
     },
     "attributes": {
       "condition": "Tilstand",
@@ -254,7 +374,17 @@
       "guests": "Gjester",
       "bodyType": "Karosseri",
       "drivetrain": "Hjuldrift",
-      "ownership": "Eierform"
+      "ownership": "Eierform",
+      "usage": "Bruk",
+      "steering": "Ratt",
+      "furnishing": "Møblering",
+      "landUse": "Formål",
+      "dealType": "Leie eller salg",
+      "brand": "Merke",
+      "storageGb": "Lagring",
+      "itemType": "Type",
+      "head": "Antall dyr",
+      "sex": "Kjønn"
     },
     "values": {
       "condition": {
@@ -279,7 +409,13 @@
         "townhouse": "Rekkehus",
         "cabin": "Hytte",
         "plot": "Tomt",
-        "commercial": "Næringslokale"
+        "commercial": "Næringslokale",
+        "villa": "Villa",
+        "room": "Rom",
+        "shop": "Butikk",
+        "office": "Kontor",
+        "warehouse": "Lager",
+        "hotel": "Hotell"
       },
       "employmentType": {
         "full_time": "Fast heltid",
@@ -306,6 +442,63 @@
         "freehold": "Selveier",
         "cooperative": "Andel",
         "shares": "Aksje"
+      },
+      "usage": {
+        "brand_new": "Helt ny",
+        "foreign_used": "Brukt fra utlandet",
+        "locally_used": "Brukt lokalt"
+      },
+      "steering": {
+        "left": "Venstrestyrt",
+        "right": "Høyrestyrt"
+      },
+      "dealType": {
+        "rent": "Til leie",
+        "sale": "Til salgs"
+      },
+      "furnishing": {
+        "furnished": "Møblert",
+        "unfurnished": "Umøblert"
+      },
+      "landUse": {
+        "residential": "Bolig",
+        "commercial": "Næring",
+        "agricultural": "Landbruk"
+      },
+      "sex": {
+        "male": "Hann",
+        "female": "Hunn",
+        "mixed": "Blandet"
+      },
+      "brand": {
+        "apple": "Apple",
+        "samsung": "Samsung",
+        "tecno": "Tecno",
+        "infinix": "Infinix",
+        "xiaomi": "Xiaomi",
+        "huawei": "Huawei",
+        "oppo": "OPPO",
+        "nokia": "Nokia",
+        "itel": "itel",
+        "other": "Annet"
+      },
+      "itemType": {
+        "laptop": "Bærbare",
+        "desktop": "Stasjonære",
+        "monitor": "Skjermer",
+        "printer": "Skrivere",
+        "accessory": "Tilbehør",
+        "panel": "Solcellepaneler",
+        "battery": "Batterier",
+        "inverter": "Vekselrettere",
+        "kit": "Komplette sett",
+        "light": "Lys",
+        "fridge": "Kjøleskap",
+        "air_conditioner": "Klimaanlegg",
+        "washing_machine": "Vaskemaskiner",
+        "cooker": "Komfyrer",
+        "water_dispenser": "Vanndispensere",
+        "fan": "Vifter"
       }
     }
   },
@@ -372,7 +565,9 @@
       "mileage": "Kilometerstand",
       "area": "Areal",
       "bedrooms": "Soverom",
-      "guests": "Gjester"
+      "guests": "Gjester",
+      "storage": "Lagring",
+      "head": "Antall dyr"
     },
     "rangeFrom": "{filter} fra {value}",
     "rangeTo": "{filter} til {value}",
@@ -413,7 +608,11 @@
     "promoted": "Fremhevet",
     "promotedUntil": "Fremhevet til {date}",
     "promote": "Fremhev",
-    "extendPromotion": "Forleng fremheving"
+    "extendPromotion": "Forleng fremheving",
+    "per": {
+      "month": "per måned",
+      "night": "per natt"
+    }
   },
   "form": {
     "newTitle": "Ny annonse",
@@ -461,10 +660,10 @@
         "subcategory": "Velg en underkategori.",
         "title": "Skriv en tittel på 3 til 120 tegn.",
         "description": "Skriv en beskrivelse (høyst 5 000 tegn).",
-        "priceNok": "Skriv prisen i hele kroner, eller la feltet stå tomt.",
         "placeId": "Velg hvor tingen er.",
         "attributes": "Sjekk denne opplysningen.",
-        "generic": "Sjekk dette feltet."
+        "generic": "Sjekk dette feltet.",
+        "price": "Skriv inn prisen, eller la feltet stå tomt."
       }
     },
     "pickCategory": "Hva vil du legge ut?",
@@ -546,7 +745,7 @@
       "listing_removed": "Annonsen «{title}» ble fjernet av en moderator fordi den bryter reglene for markedsplassen.",
       "review_received": "Du har fått en ny omtale: {rating} av 5 stjerner.",
       "listing_promoted": "Annonsen din er nå fremhevet i {days} dager. Kvitteringen ligger i e-posten din.",
-      "favourite_price_drop": "En favoritt har fått lavere pris: nå {priceNok} kr (før {previousPriceNok} kr).",
+      "favourite_price_drop": "En favoritt har fått lavere pris: nå {price} (før {previousPrice}).",
       "favourite_sold": "En av favorittene dine er solgt.",
       "saved_search_match": "{count} nye annonser passer et lagret søk."
     },
@@ -728,6 +927,33 @@
       "reise": {
         "bigGroups": "Plass til 6 eller flere",
         "cabins": "Hytter"
+      },
+      "vehicles": {
+        "foreignUsed": "Brukt fra utlandet",
+        "rightHand": "Høyrestyrt",
+        "automatic": "Automatgir"
+      },
+      "property": {
+        "forRent": "Til leie",
+        "threeBedrooms": "Minst 3 soverom",
+        "plots": "Tomter"
+      },
+      "phones": {
+        "iphones": "iPhone",
+        "new": "Helt nytt",
+        "under100": "Under 100 $"
+      },
+      "electronics": {
+        "solarKits": "Solcellesett",
+        "laptops": "Bærbare"
+      },
+      "livestock": {
+        "camels": "Kameler",
+        "goats": "Geiter og sau"
+      },
+      "jobs": {
+        "fullTime": "Fast heltid",
+        "ngo": "NGO-jobber"
       }
     },
     "newListing": "Legg ut annonse i {category}"

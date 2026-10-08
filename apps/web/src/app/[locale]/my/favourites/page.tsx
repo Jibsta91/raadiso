@@ -68,7 +68,7 @@ export default async function FavouritesPage({ params }: { params: Promise<{ loc
                 hit={{
                   id: f.listing.id,
                   title: f.listing.title,
-                  priceNok: f.listing.priceNok,
+                  price: f.listing.price,
                   category: f.listing.category,
                   image: f.listing.image,
                   location: f.listing.location,

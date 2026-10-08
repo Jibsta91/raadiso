@@ -5,6 +5,7 @@ import {
   openBaoEnvSchema,
   readSecrets,
 } from '@raadi/service-kit';
+import { COUNTRY_CODES } from '@raadi/catalog';
 import { z } from 'zod';
 
 export const envSchema = baseEnvSchema
@@ -18,6 +19,8 @@ export const envSchema = baseEnvSchema
     INDEX_ALIAS: z.string().default('raadi-listings'),
     KAFKA_BROKERS: z.string().default('kafka:9092'),
     KAFKA_USERNAME: z.string().default('search'),
+    /** The country of a search that names none (ADR-0040). */
+    DEFAULT_COUNTRY: z.enum(COUNTRY_CODES).default('XS'),
   });
 
 export type Env = z.infer<typeof envSchema>;

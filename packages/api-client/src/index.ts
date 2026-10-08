@@ -56,6 +56,8 @@ export type UpdateListing = ListingsComponents['schemas']['UpdateListing'];
 export type SearchResult = SearchComponents['schemas']['SearchResult'];
 export type SearchHit = SearchComponents['schemas']['SearchHit'];
 export type FacetValue = SearchComponents['schemas']['FacetValue'];
+export type Money = ListingsComponents['schemas']['Money'];
+export type Country = ListingsComponents['schemas']['Country'];
 export type SearchQuery = NonNullable<
   SearchPaths['/api/v1/search/listings']['get']['parameters']['query']
 >;

@@ -8,6 +8,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { metrics, trace } from '@opentelemetry/api';
+import { findPlace } from '@raadi/catalog';
 import {
   displayName,
   FgaClient,
@@ -21,6 +22,7 @@ import {
   type Listing,
   type ListingRow,
   mergedListingSchema,
+  priceOf,
   toListing,
   type UpdateListing,
 } from './listing.model.js';
@@ -126,12 +128,7 @@ export class ListingsService {
       subcategory: patch.subcategory ?? current.subcategory,
       title: patch.title ?? current.title,
       description: patch.description ?? current.description,
-      priceNok:
-        patch.priceNok !== undefined
-          ? patch.priceNok
-          : current.price_nok === null
-            ? null
-            : Number(current.price_nok),
+      price: patch.price !== undefined ? patch.price : priceOf(current),
       attributes: patch.attributes ?? current.attributes,
       placeId: patch.placeId ?? current.place_id,
       imageIds: patch.imageIds ?? current.image_ids,
@@ -226,7 +223,8 @@ export class ListingsService {
         subcategory: listing.subcategory,
         title: listing.title,
         description: listing.description,
-        priceNok: listing.priceNok,
+        country: findPlace(listing.placeId)?.country,
+        price: listing.price,
         imageCount: listing.imageIds.length,
       },
       context: { activeListings },

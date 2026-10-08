@@ -1,7 +1,9 @@
 import { Icon, type IconName } from '../../components/icon';
 import type { Listing, Media } from '@raadi/api-client';
-import { ATTRIBUTE_FIELDS, attributePayload, priceRequired } from '@raadi/catalog/attributes';
-import { findPlace, PLACES, type Place } from '@raadi/catalog/places';
+import { attributePayload, attributesOf, priceRuleOf } from '@raadi/catalog/attributes';
+import { COUNTRIES } from '@raadi/catalog/countries';
+import { currencySymbol, parseMajor, toMajor } from '@raadi/catalog/money';
+import { findPlace, placesOf, type Place } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -33,6 +35,7 @@ import {
   type SubcategoryId,
 } from '../../lib/categories';
 import { config } from '../../lib/config';
+import { APP_COUNTRY } from '../../lib/country';
 import { searchPlaces } from '../../lib/place-search';
 import { absoluteUrl } from '../../lib/urls';
 import { fonts, radius, space, useTheme } from '../../theme';
@@ -150,8 +153,8 @@ export function PickCategory({
           <Tile
             key={c}
             testID={`pick-category-${c}`}
-            icon={CATEGORY_ICONS[c]}
-            label={m.categories[c]}
+            icon={CATEGORY_ICONS[c] ?? 'image-outline'}
+            label={m.categories[c] ?? c}
             onPress={() => onPick(c)}
           />
         ))}
@@ -172,15 +175,21 @@ function PickSubcategory({
   const { m } = useI18n();
   return (
     <ScrollView contentContainerStyle={styles.page} testID="pick-subcategory">
-      <Picked label={m.categories[category]} icon={CATEGORY_ICONS[category]} onChange={onBack} />
-      <Title>{fill(m.sell.pickSubcategory, { category: m.categories[category] })}</Title>
+      <Picked
+        label={m.categories[category] ?? category}
+        icon={CATEGORY_ICONS[category] ?? 'image-outline'}
+        onChange={onBack}
+      />
+      <Title>
+        {fill(m.sell.pickSubcategory, { category: m.categories[category] ?? category })}
+      </Title>
       <View style={styles.grid}>
         {subcategoriesOf(category).map((s) => (
           <Tile
             key={s}
             testID={`pick-subcategory-${s}`}
-            icon={SUBCATEGORY_ICONS[s]}
-            label={m.taxonomy.subcategories[s]}
+            icon={SUBCATEGORY_ICONS[s] ?? 'image-outline'}
+            label={m.taxonomy.subcategories[s] ?? s}
             onPress={() => onPick(s)}
           />
         ))}
@@ -261,7 +270,7 @@ export function ListingForm({
   onChange?: () => void;
   existing?: Listing;
 }) {
-  const { m } = useI18n();
+  const { m, locale } = useI18n();
   const api = useApi();
   const auth = useAuth();
   const theme = useTheme();
@@ -276,9 +285,7 @@ export function ListingForm({
     Object.fromEntries(Object.entries(existing?.attributes ?? {}).map(([k, v]) => [k, String(v)])),
   );
   const [price, setPrice] = useState(
-    existing?.priceNok !== null && existing?.priceNok !== undefined
-      ? String(existing.priceNok)
-      : '',
+    existing?.price ? String(toMajor(existing.price.amountMinor, existing.price.currency)) : '',
   );
   const [placeQuery, setPlaceQuery] = useState('');
   const [place, setPlace] = useState<Place | undefined>(() =>
@@ -286,7 +293,11 @@ export function ListingForm({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string>();
-  const needsPrice = priceRequired(category);
+  const priceRule = priceRuleOf(category, subcategory);
+  const needsPrice = priceRule === 'required';
+  const fields = attributesOf(category, subcategory);
+  const { currency } = COUNTRIES[APP_COUNTRY];
+  const amountMinor = price.trim() === '' ? undefined : parseMajor(price, currency);
 
   const upload = async (asset: ImagePicker.ImagePickerAsset) => {
     const body = new FormData();
@@ -368,7 +379,8 @@ export function ListingForm({
     !description.trim() ||
     !place ||
     (needsPrice && price.trim() === '') ||
-    ATTRIBUTE_FIELDS[category].some((f) => f.required && !attributes[f.key]?.trim());
+    (price.trim() !== '' && amountMinor === undefined) ||
+    fields.some((f) => f.required && !attributes[f.key]?.trim());
 
   const publish = async () => {
     setSaving(true);
@@ -378,8 +390,8 @@ export function ListingForm({
       subcategory,
       title: title.trim(),
       description: description.trim(),
-      priceNok: needsPrice ? Number(price) : null,
-      attributes: attributePayload(category, attributes),
+      price: priceRule === 'none' || amountMinor === undefined ? null : { amountMinor, currency },
+      attributes: attributePayload(category, subcategory, attributes),
       placeId: place!.id,
       imageIds: photos.map((p) => p.id),
     };
@@ -435,7 +447,7 @@ export function ListingForm({
     </View>
   );
   const labels = m.taxonomy.attributes as Record<string, string>;
-  const places = place ? [] : searchPlaces(PLACES, placeQuery, 6);
+  const places = place ? [] : searchPlaces(placesOf(APP_COUNTRY), placeQuery, 6);
 
   return (
     <KeyboardAvoidingView
@@ -451,7 +463,7 @@ export function ListingForm({
       >
         <Picked
           label={`${m.categories[category]} › ${m.taxonomy.subcategories[subcategory]}`}
-          icon={CATEGORY_ICONS[category]}
+          icon={CATEGORY_ICONS[category] ?? 'image-outline'}
           onChange={onChange}
         />
 
@@ -528,7 +540,7 @@ export function ListingForm({
             value={title}
             onChangeText={setTitle}
             maxLength={120}
-            placeholder={m.sell.titlePlaceholder[category]}
+            placeholder={(m.sell.titlePlaceholder as Record<string, string>)[category]}
             accessibilityLabel={m.sell.titleLabel}
           />
           <Label text={m.sell.description} />
@@ -543,9 +555,9 @@ export function ListingForm({
           />
         </Section>
 
-        {ATTRIBUTE_FIELDS[category].length ? (
+        {fields.length ? (
           <Section n={3} title={m.sell.details}>
-            {ATTRIBUTE_FIELDS[category].map((f) => (
+            {fields.map((f) => (
               <View key={f.key} style={styles.fieldGroup}>
                 <Label text={labels[f.key] ?? f.key} optional={!f.required} />
                 {f.kind === 'select' ? (
@@ -567,20 +579,20 @@ export function ListingForm({
         ) : null}
 
         <Section
-          n={ATTRIBUTE_FIELDS[category].length ? 4 : 3}
-          title={needsPrice ? m.sell.priceAndPlace : m.sell.place}
+          n={fields.length ? 4 : 3}
+          title={priceRule !== 'none' ? m.sell.priceAndPlace : m.sell.place}
         >
-          {needsPrice ? (
+          {priceRule !== 'none' ? (
             <>
               <Label text={m.sell.price} />
               <Field
                 testID="field-price"
-                inputMode="numeric"
+                inputMode="decimal"
                 value={price}
-                onChangeText={(v) => setPrice(v.replace(/\D/g, ''))}
-                keyboardType="number-pad"
-                maxLength={10}
-                placeholder="kr"
+                onChangeText={(v) => setPrice(v.replace(/[^\d.,]/g, ''))}
+                keyboardType="decimal-pad"
+                maxLength={14}
+                placeholder={currencySymbol(currency, locale)}
                 accessibilityLabel={m.sell.price}
               />
             </>

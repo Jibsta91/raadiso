@@ -69,4 +69,12 @@ export const env = {
   get sessionCookie() {
     return process.env.SESSION_COOKIE_NAME ?? 'raadi_sid';
   },
+  /** Which country each host serves (ADR-0040), e.g. "raadiso.com=XS,no.raadi.localhost=NO". */
+  get countryHosts() {
+    return process.env.COUNTRY_HOSTS ?? '';
+  },
+  /** The country of a host that COUNTRY_HOSTS doesn't name. */
+  get defaultCountry() {
+    return process.env.DEFAULT_COUNTRY ?? 'XS';
+  },
 };

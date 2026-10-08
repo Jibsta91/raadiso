@@ -1,21 +1,23 @@
 import { Client, errors } from '@opensearch-project/opensearch';
 import type { ListingSnapshot } from '@raadi/events';
 import { circuitBreaker, retry } from '@raadi/service-kit';
-import { INDEX_VERSION, indexBody } from './index-definition.js';
+import { INDEX_VERSION, indexBody, MIGRATE_SCRIPT } from './index-definition.js';
 
 export interface ListingDocument {
   id: string;
   ownerId: string;
   status: string;
+  country: string;
   category: string;
   subcategory: string;
   title: string;
   description: string;
-  priceNok: number | null;
+  priceMinor: number | null;
+  currency: string | null;
   attributes: Record<string, string | number | boolean>;
   placeId: string;
   placeName: string;
-  county: string;
+  region: string;
   location: { lat: number; lon: number };
   imageIds: string[];
   publishedAt: string;
@@ -29,15 +31,24 @@ export function toDocument(l: ListingSnapshot): ListingDocument {
     id: l.id,
     ownerId: l.ownerId,
     status: l.status,
+    // Events from before ADR-0040 carry neither country nor price; they are Norwegian, in kroner.
+    country: l.country ?? 'NO',
     category: l.category,
     subcategory: l.subcategory,
     title: l.title,
     description: l.description,
-    priceNok: l.priceNok,
+    priceMinor:
+      l.price !== undefined
+        ? (l.price?.amountMinor ?? null)
+        : l.priceNok === null
+          ? null
+          : l.priceNok * 100,
+    currency:
+      l.price !== undefined ? (l.price?.currency ?? null) : l.priceNok === null ? null : 'NOK',
     attributes: l.attributes,
     placeId: l.location.placeId,
     placeName: l.location.name,
-    county: l.location.county,
+    region: l.location.region ?? l.location.county,
     location: { lat: l.location.lat, lon: l.location.lon },
     imageIds: l.imageIds,
     publishedAt: l.publishedAt,
@@ -112,6 +123,7 @@ export class SearchIndex {
               conflicts: 'proceed',
               source: { index: source },
               dest: { index: this.indexName, version_type: 'external' },
+              script: { lang: 'painless', source: MIGRATE_SCRIPT },
             },
             refresh: true,
             wait_for_completion: true,

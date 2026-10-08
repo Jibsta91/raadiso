@@ -160,15 +160,19 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 title: string;
-                priceNok: number | null;
+                country: string;
+                price: {
+                    amountMinor: number;
+                    currency: string;
+                } | null;
                 /** @enum {string} */
                 status: "active" | "sold" | "deleted";
                 category: string;
                 subcategory: string;
                 location: {
                     name: string;
-                    county: string;
-                    countyName: string;
+                    region: string;
+                    regionName: string;
                 };
                 image?: {
                     thumb: string;

@@ -1,4 +1,4 @@
-import { CATEGORY_KEYS } from '@raadi/catalog';
+import { categoriesOf } from '@raadi/catalog/categories';
 import { Button } from '@raadi/ui';
 import {
   Bell,
@@ -15,6 +15,7 @@ import {
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { unreadCount, unreadNotifications } from '@/lib/api';
+import { currentCountry } from '@/lib/host';
 import { env } from '@/lib/env';
 import { getSession } from '@/lib/session';
 import { isStaff } from '@/lib/staff';
@@ -31,12 +32,20 @@ const menuItem =
 // per-user pages. Prefetching them would cost about ten full server renders per
 // page view (each with a session lookup and the unread counts) for results that
 // go stale immediately, so these links have prefetch={false}.
+/** How many categories fit the header on wide screens. */
+const HEADER_CATEGORIES = 5;
+
 export async function Header({ locale }: { locale: string }) {
-  const [t, tHome, session] = await Promise.all([
+  const [t, tHome, session, country] = await Promise.all([
     getTranslations('nav'),
     getTranslations('home'),
     getSession(),
+    currentCountry(),
   ]);
+  // The country's first categories; the rest are a click away on the front page.
+  const headerCategories = categoriesOf(country)
+    .slice(0, HEADER_CATEGORIES)
+    .map((c) => c.id);
   const [unread, alerts] = session.authenticated
     ? await Promise.all([unreadCount(), unreadNotifications()])
     : [0, 0];
@@ -55,7 +64,7 @@ export async function Header({ locale }: { locale: string }) {
           raadiso<span className="text-primary">.</span>
         </Link>
         <nav aria-label={t('categories')} className="hidden gap-1 lg:flex">
-          {CATEGORY_KEYS.map((key) => (
+          {headerCategories.map((key) => (
             <Link
               key={key}
               href={`/${key}`}

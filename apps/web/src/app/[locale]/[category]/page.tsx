@@ -1,5 +1,5 @@
-import { CATEGORIES, CATEGORY_KEYS, type Category } from '@raadi/catalog';
-import { ChevronRight, Plus, Search } from 'lucide-react';
+import { countryOfCategory, facetsOf, subcategoriesOf } from '@raadi/catalog/categories';
+import { ChevronRight, Plus, Search, ShoppingBag } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
 import { makeLabel } from '@/lib/format';
+import { currentCountry } from '@/lib/host';
 import { logger } from '@/lib/logger';
 import { href } from '@/lib/search-params';
 import { localeAlternates } from '@/lib/seo';
@@ -15,8 +16,8 @@ import { CATEGORY_ICONS, SHORTCUTS, SUBCATEGORY_ICONS } from '@/lib/taxonomy-ico
 
 export const dynamic = 'force-dynamic';
 
-const isCategory = (value: string): value is Category =>
-  (CATEGORY_KEYS as readonly string[]).includes(value);
+/** A category of the country this host serves (ADR-0040); others are not found here. */
+const isCategory = async (value: string) => countryOfCategory(value) === (await currentCountry());
 
 export async function generateMetadata({
   params,
@@ -24,7 +25,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string; category: string }>;
 }): Promise<Metadata> {
   const { locale, category } = await params;
-  if (!isCategory(category)) return {};
+  if (!(await isCategory(category))) return {};
   const t = await getTranslations('home');
   return {
     title: t(`categories.${category}.name`),
@@ -40,7 +41,7 @@ export default async function CategoryPage({
   params: Promise<{ locale: string; category: string }>;
 }) {
   const { locale, category } = await params;
-  if (!isCategory(category)) notFound();
+  if (!(await isCategory(category))) notFound();
   setRequestLocale(locale);
   const [t, tHome, format] = await Promise.all([
     getTranslations(),
@@ -54,9 +55,11 @@ export default async function CategoryPage({
       return null;
     },
   );
-  const counts = new Map(result?.facets.subcategory.map((f) => [f.value, f.count]));
-  const makes = category === 'bil' ? (result?.facets.make ?? []).slice(0, 12) : [];
-  const Icon = CATEGORY_ICONS[category];
+  const counts = new Map(result?.facets.subcategory?.map((f) => [f.value, f.count]));
+  const shortcuts = SHORTCUTS[category] ?? [];
+  const hasMakes = facetsOf(category).some((f) => f.key === 'make');
+  const makes = hasMakes ? (result?.facets.make ?? []).slice(0, 12) : [];
+  const Icon = CATEGORY_ICONS[category] ?? ShoppingBag;
   const name = tHome(`categories.${category}.name`);
 
   return (
@@ -148,8 +151,8 @@ export default async function CategoryPage({
           role="list"
           data-testid="subcategory-tiles"
         >
-          {CATEGORIES[category].map((sub) => {
-            const SubIcon = SUBCATEGORY_ICONS[sub];
+          {subcategoriesOf(category).map((sub) => {
+            const SubIcon = SUBCATEGORY_ICONS[sub] ?? ShoppingBag;
             const count = counts.get(sub);
             return (
               <li key={sub} className="flex">
@@ -178,43 +181,45 @@ export default async function CategoryPage({
         </ul>
       </section>
 
-      <section aria-labelledby="shortcuts" className="space-y-4">
-        <h2 id="shortcuts" className="text-2xl font-bold">
-          {t('categoryPage.shortcutsTitle')}
-        </h2>
-        <ul className="flex flex-wrap gap-2" role="list" data-testid="category-shortcuts">
-          {SHORTCUTS[category].map((s) => (
-            <li key={s.key}>
-              <Link
-                href={href({ category, ...s.params })}
-                className="inline-flex h-10 items-center rounded-full border bg-card px-4 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {t(`categoryPage.shortcuts.${category}.${s.key}` as never)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        {makes.length ? (
-          <div className="space-y-3 pt-2">
-            <h3 className="text-sm font-semibold text-subtle-foreground">
-              {t('categoryPage.makesTitle')}
-            </h3>
-            <ul className="flex flex-wrap gap-2" role="list" data-testid="category-makes">
-              {makes.map((m) => (
-                <li key={m.value}>
-                  <Link
-                    href={href({ category, make: m.value })}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-full bg-soft px-3.5 text-sm font-medium text-soft-foreground transition-colors hover:bg-accent"
-                  >
-                    {makeLabel(m.value)}
-                    <span className="text-xs opacity-70">{m.count}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </section>
+      {shortcuts.length || makes.length ? (
+        <section aria-labelledby="shortcuts" className="space-y-4">
+          <h2 id="shortcuts" className="text-2xl font-bold">
+            {t('categoryPage.shortcutsTitle')}
+          </h2>
+          <ul className="flex flex-wrap gap-2" role="list" data-testid="category-shortcuts">
+            {shortcuts.map((s) => (
+              <li key={s.key}>
+                <Link
+                  href={href({ category, ...s.params })}
+                  className="inline-flex h-10 items-center rounded-full border bg-card px-4 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {t(`categoryPage.shortcuts.${category}.${s.key}` as never)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {makes.length ? (
+            <div className="space-y-3 pt-2">
+              <h3 className="text-sm font-semibold text-subtle-foreground">
+                {t('categoryPage.makesTitle')}
+              </h3>
+              <ul className="flex flex-wrap gap-2" role="list" data-testid="category-makes">
+                {makes.map((m) => (
+                  <li key={m.value}>
+                    <Link
+                      href={href({ category, make: m.value })}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-soft px-3.5 text-sm font-medium text-soft-foreground transition-colors hover:bg-accent"
+                    >
+                      {makeLabel(m.value)}
+                      <span className="text-xs opacity-70">{m.count}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {result?.items.length ? (
         <section aria-labelledby="newest" className="space-y-5">

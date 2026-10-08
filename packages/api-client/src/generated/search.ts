@@ -82,14 +82,15 @@ export interface components {
             /** Format: uuid */
             id: string;
             title: string;
-            priceNok: number | null;
+            country: string;
+            price: components["schemas"]["Money"] | null;
             category: string;
             subcategory: string;
             location: {
                 placeId: string;
                 name: string;
-                county: string;
-                countyName: string;
+                region: string;
+                regionName: string;
                 lat: number;
                 lon: number;
             };
@@ -107,31 +108,36 @@ export interface components {
             /** Format: date-time */
             publishedAt: string;
         };
+        /** @description An amount in minor units (cents, øre) of an ISO 4217 currency (ADR-0040) */
+        Money: {
+            amountMinor: number;
+            currency: string;
+        };
         SearchResult: {
+            /** @description The country searched */
+            country: string;
+            /** @description Its currency (the price ranges are in it) */
+            currency: string;
             total: number;
             page: number;
             pageSize: number;
             items: components["schemas"]["SearchHit"][];
+            /** @description Counts per value: always category, subcategory and region, plus the attribute facets of the selected category (or of every category of the country when none or several are selected) */
             facets: {
                 category: components["schemas"]["FacetValue"][];
                 subcategory: components["schemas"]["FacetValue"][];
-                county: components["schemas"]["FacetValue"][];
-                condition: components["schemas"]["FacetValue"][];
-                fuel: components["schemas"]["FacetValue"][];
-                propertyType: components["schemas"]["FacetValue"][];
-                employmentType: components["schemas"]["FacetValue"][];
-                gearbox: components["schemas"]["FacetValue"][];
-                bodyType: components["schemas"]["FacetValue"][];
-                drivetrain: components["schemas"]["FacetValue"][];
-                ownership: components["schemas"]["FacetValue"][];
-                make: components["schemas"]["FacetValue"][];
-                price: {
-                    key: string;
-                    from?: number;
-                    to?: number;
-                    count: number;
-                }[];
+                region: components["schemas"]["FacetValue"][];
+            } & {
+                [key: string]: components["schemas"]["FacetValue"][];
             };
+            priceRanges: {
+                key: string;
+                /** @description Major units */
+                from?: number;
+                /** @description Major units */
+                to?: number;
+                count: number;
+            }[];
         };
         Problem: {
             type: string;
@@ -164,23 +170,49 @@ export interface operations {
     searchListings: {
         parameters: {
             query?: {
+                /** @description The marketplace searched (XS is Somaliland); the service's default when absent (ADR-0040) */
+                country?: "XS" | "NO";
                 q?: string;
                 /** @description Comma-separated */
                 category?: string;
                 /** @description Comma-separated */
                 subcategory?: string;
-                /** @description Comma-separated county ids */
-                county?: string;
+                /** @description Comma-separated region ids of the country */
+                region?: string;
+                /** @description Comma-separated */
                 condition?: string;
-                fuel?: string;
-                propertyType?: string;
-                employmentType?: string;
-                gearbox?: string;
-                bodyType?: string;
-                drivetrain?: string;
-                ownership?: string;
-                /** @description Comma-separated car makes (case-insensitive) */
+                /** @description Comma-separated makes (case-insensitive) */
                 make?: string;
+                /** @description Comma-separated */
+                fuel?: string;
+                /** @description Comma-separated */
+                gearbox?: string;
+                /** @description Comma-separated */
+                bodyType?: string;
+                /** @description Comma-separated */
+                drivetrain?: string;
+                /** @description Comma-separated */
+                propertyType?: string;
+                /** @description Comma-separated */
+                ownership?: string;
+                /** @description Comma-separated */
+                employmentType?: string;
+                /** @description Comma-separated */
+                usage?: string;
+                /** @description Comma-separated */
+                steering?: string;
+                /** @description Comma-separated */
+                furnishing?: string;
+                /** @description Comma-separated */
+                landUse?: string;
+                /** @description Comma-separated */
+                dealType?: string;
+                /** @description Comma-separated */
+                brand?: string;
+                /** @description Comma-separated */
+                itemType?: string;
+                /** @description Comma-separated */
+                sex?: string;
                 yearMin?: number;
                 yearMax?: number;
                 mileageMin?: number;
@@ -191,10 +223,15 @@ export interface operations {
                 bedroomsMax?: number;
                 guestsMin?: number;
                 guestsMax?: number;
+                storageMin?: number;
+                storageMax?: number;
+                headMin?: number;
+                headMax?: number;
                 /** @description Only listings published after this time (exclusive); saved searches use it */
                 publishedAfter?: string;
                 /** @description Only listings published at or before this time */
                 publishedBefore?: string;
+                /** @description Major units of the country's currency (12.5 is $12.50) */
                 priceMin?: number;
                 priceMax?: number;
                 /** @description Place id (centre of a radius search) */
@@ -229,6 +266,7 @@ export interface operations {
         parameters: {
             query: {
                 q: string;
+                country?: "XS" | "NO";
             };
             header?: never;
             path?: never;
