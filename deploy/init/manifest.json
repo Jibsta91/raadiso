@@ -60,7 +60,8 @@
     "crowdsec_bouncer_key",
     "glitchtip_db_password",
     "glitchtip_secret_key",
-    "glitchtip_admin_password"
+    "glitchtip_admin_password",
+    "litellm_master_key"
   ],
   "fileConsumers": {
     "postgres": {
@@ -154,6 +155,14 @@
     "glitchtip": {
       "uid": 5000,
       "secrets": ["glitchtip_db_password", "glitchtip_secret_key", "glitchtip_admin_password"]
+    },
+    "litellm": {
+      "uid": 65534,
+      "secrets": ["litellm_master_key"]
+    },
+    "smoke": {
+      "uid": 65532,
+      "secrets": ["litellm_master_key"]
     }
   },
   "templates": [

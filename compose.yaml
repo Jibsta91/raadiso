@@ -19,3 +19,4 @@ include:
   - { path: deploy/compose/observability.yaml, project_directory: . }
   - { path: deploy/compose/apps.yaml, project_directory: . }
   - { path: deploy/compose/tools.yaml, project_directory: . }
+  - { path: deploy/compose/ai.yaml, project_directory: . }

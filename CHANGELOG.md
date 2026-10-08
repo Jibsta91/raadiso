@@ -8,6 +8,10 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- AI platform, Phase 4's foundation (ADR-0039): LiteLLM, the one gateway to language models, with the
+  aliases `raadi-chat` and `raadi-embed`, and a deterministic LLM mock behind them by default (chat,
+  streaming, 1024-dimension embeddings, failure scenarios, a request log for privacy tests). Traces reach
+  the collector without prompts or answers. Smoke checks the gateway.
 - Console: a Tools section (operators and platform admins) linking every web UI of the platform: Grafana,
   GlitchTip, Prometheus, the status page, Keycloak, OpenBao, Traefik, Mailpit, the push mock and, in tunnel
   mode, Pangolin. Each card says how to sign in (with the `./raadi secret` command to copy) and whether the

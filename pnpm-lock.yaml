@@ -685,6 +685,28 @@ importers:
         specifier: 2.9.1
         version: 2.9.1
 
+  services/llm-mock:
+    dependencies:
+      '@raadi/service-kit':
+        specifier: workspace:*
+        version: link:../../packages/service-kit
+      pino:
+        specifier: 10.3.1
+        version: 10.3.1
+    devDependencies:
+      '@raadi/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@types/node':
+        specifier: 24.19.1
+        version: 24.19.1
+      eslint:
+        specifier: 10.11.0
+        version: 10.11.0(jiti@2.7.0)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+
   services/media:
     dependencies:
       '@aws-sdk/client-s3':

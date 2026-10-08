@@ -1,0 +1,71 @@
+# AI platform (ADR-0039): LiteLLM, the one gateway to language models, in the default stack with the LLM
+# mock behind it. Ollama (local models) comes with --profile ai, Langfuse and MLflow with --profile full.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+services:
+  litellm:
+    # The official non-root image, pinned by digest: never the PyPI package (1.82.7 and 1.82.8 were
+    # compromised in March 2026). MIT outside the enterprise/ directory, which needs a key we don't use.
+    image: ghcr.io/berriai/litellm-non_root:v1.104.2@sha256:e8dee87e7ddbf9abc174e8a7b180a690d5265cc4827458d22c5ff5e108170027
+    entrypoint: ['sh', '-c']
+    # The master key comes from the secrets volume; LiteLLM wants it to start with "sk-".
+    command:
+      - >-
+        export LITELLM_MASTER_KEY="sk-$$(cat /run/secrets/raadi/litellm_master_key)" &&
+        exec /app/docker/prod_entrypoint.sh --config /etc/litellm/config.yaml --port 4000 --num_workers 1
+    restart: unless-stopped
+    logging: *logging
+    user: '65534:65534'
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    environment:
+      # The backend behind each alias (./raadi ai switches them to Ollama).
+      RAADI_CHAT_MODEL: ${RAADI_CHAT_MODEL:-openai/raadi-mock-chat}
+      RAADI_CHAT_API_BASE: ${RAADI_CHAT_API_BASE:-http://llm-mock:4000/v1}
+      RAADI_EMBED_MODEL: ${RAADI_EMBED_MODEL:-openai/raadi-mock-embed}
+      RAADI_EMBED_API_BASE: ${RAADI_EMBED_API_BASE:-http://llm-mock:4000/v1}
+      # Local models and the mock take any key.
+      RAADI_MODEL_API_KEY: local
+      # Offline: the model price list ships in the image; no telemetry.
+      LITELLM_LOCAL_MODEL_COST_MAP: 'True'
+      LITELLM_TELEMETRY: 'False'
+      LITELLM_LOG: INFO
+      JSON_LOGS: 'True'
+      # OpenTelemetry traces (without prompts or answers) to the collector.
+      OTEL_EXPORTER: otlp_http
+      OTEL_ENDPOINT: http://otel-collector:4318/v1/traces
+      OTEL_SERVICE_NAME: litellm
+      HOME: /tmp
+      TZ: ${TZ}
+    tmpfs: ['/tmp:mode=1777']
+    volumes:
+      - ./deploy/litellm/config.yaml:/etc/litellm/config.yaml:ro
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: litellm }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+      llm-mock: { condition: service_healthy }
+      otel-collector: { condition: service_started }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'python',
+          '-c',
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness', timeout=4).status == 200 else 1)",
+        ]
+      interval: 10s
+      timeout: 6s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { memory: 768M, cpus: '1.0' }
+
+volumes:
+  secrets: {}

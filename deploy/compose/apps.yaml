@@ -553,6 +553,28 @@ services:
       resources:
         limits: { memory: 128M, cpus: '0.25' }
 
+  # Development stand-in for a language model (ADR-0039): OpenAI-compatible, deterministic, no download.
+  # LiteLLM routes the raadi-chat and raadi-embed aliases here unless --profile ai brings Ollama.
+  llm-mock:
+    <<: *node-service
+    image: ${RAADI_IMAGE_PREFIX}/llm-mock:${RAADI_VERSION}
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: deploy/docker/node-service/Dockerfile
+      target: runtime
+      args: { SERVICE: llm-mock }
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: llm-mock
+      PORT: '4000'
+    depends_on:
+      otel-collector: { condition: service_started }
+    healthcheck: *node-health
+    deploy:
+      resources:
+        limits: { memory: 128M, cpus: '0.25' }
+
   web:
     <<: *node-service
     image: ${RAADI_IMAGE_PREFIX}/web:${RAADI_VERSION}

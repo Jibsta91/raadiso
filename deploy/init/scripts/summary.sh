@@ -53,6 +53,8 @@ cat <<BANNER
     Prometheus ......... ${S}://prometheus.${D}${P}
     SLOs ............... ${S}://grafana.${D}${P}/d/raadi-slos   (error budgets; public view: /en/status)
     Mailpit (emails) ... ${S}://mail.${D}${P}
+    AI gateway ......... http://litellm:4000 inside the stack: models raadi-chat and raadi-embed (the LLM mock by
+                         default). Key: ./raadi secret litellm_master_key, with the prefix "sk-"
     Error reports ...... ${S}://errors.${D}${P}   (GlitchTip; admin@raadi.localhost, password:
                          ./raadi secret glitchtip_admin_password)
     Push mock (app) .... ${S}://push.${D}${P}/messages   (pushes to the app, in development)
