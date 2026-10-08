@@ -56,6 +56,7 @@ export type UpdateListing = ListingsComponents['schemas']['UpdateListing'];
 export type SearchResult = SearchComponents['schemas']['SearchResult'];
 export type SearchHit = SearchComponents['schemas']['SearchHit'];
 export type Autocomplete = SearchComponents['schemas']['Autocomplete'];
+export type RankingLab = SearchComponents['schemas']['RankingLab'];
 export type Understood = SearchResult['query']['understood'][number];
 export type FacetValue = SearchComponents['schemas']['FacetValue'];
 export type Money = ListingsComponents['schemas']['Money'];

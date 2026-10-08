@@ -7,6 +7,7 @@ import {
   ScrollText,
   ShieldAlert,
   ShieldCheck,
+  SlidersHorizontal,
   Star,
   UserCog,
   Users,
@@ -50,6 +51,7 @@ const ICONS: Record<Section, typeof LayoutDashboard> = {
   reviews: Star,
   operations: Gauge,
   tools: Wrench,
+  ranking: SlidersHorizontal,
   staff: UserCog,
   audit: ScrollText,
 };

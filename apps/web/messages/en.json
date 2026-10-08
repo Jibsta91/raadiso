@@ -530,7 +530,13 @@
       "newest": "Newest",
       "price_asc": "Lowest price",
       "price_desc": "Highest price",
-      "distance": "Nearest"
+      "distance": "Nearest",
+      "year_desc": "Newest model year",
+      "mileage_asc": "Lowest mileage",
+      "area_desc": "Largest area",
+      "storage_desc": "Most storage",
+      "head_desc": "Most animals",
+      "price_per_area_asc": "Lowest price per m²"
     },
     "pageOf": "Page {page} of {pages}",
     "previous": "Previous",
@@ -1045,7 +1051,8 @@
       "operations": "Operations",
       "staff": "Staff",
       "audit": "Audit log",
-      "tools": "Tools"
+      "tools": "Tools",
+      "ranking": "Ranking lab"
     },
     "groups": {
       "workspace": "Workspace",
@@ -1868,6 +1875,34 @@
           "what": "Tunnel: public resources, VPN users and devices"
         }
       }
+    },
+    "ranking": {
+      "title": "Ranking lab",
+      "intro": "Best match for a search, each listing’s score taken apart: text relevance × (1 + quality weight × quality) × (1 + freshness weight × freshness). Try weights here; nothing is saved — the defaults change by pull request, checked by the judged queries.",
+      "query": "Search",
+      "country": "Country",
+      "weights": {
+        "quality": "Quality weight",
+        "freshness": "Freshness weight"
+      },
+      "run": "Rank",
+      "unavailable": "Search is not answering.",
+      "results": "{total, plural, one {# listing} other {# listings}}",
+      "defaults": "Defaults: quality {quality}, freshness {freshness}",
+      "understood": "Searched as “{text}” with:",
+      "caption": "Listings in best-match order with their score parts",
+      "cols": {
+        "listing": "Listing",
+        "photos": "Photos",
+        "age": "Age",
+        "relevance": "Relevance",
+        "quality": "Quality",
+        "freshness": "Freshness",
+        "multiplier": "Multiplier",
+        "score": "Score"
+      },
+      "promoted": "Promoted",
+      "days": "{days, plural, one {# day} other {# days}}"
     }
   },
   "security": {

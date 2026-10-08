@@ -121,7 +121,20 @@ paths:
           schema:
             {
               type: string,
-              enum: [relevance, newest, price_asc, price_desc, distance],
+              enum:
+                [
+                  relevance,
+                  newest,
+                  price_asc,
+                  price_desc,
+                  distance,
+                  year_desc,
+                  mileage_asc,
+                  area_desc,
+                  storage_desc,
+                  head_desc,
+                  price_per_area_asc,
+                ],
               default: relevance,
             }
         - { name: page, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 1 } }
@@ -185,6 +198,27 @@ paths:
                 properties:
                   suggestions: { type: array, items: { type: string } }
         '400': { $ref: '#/components/responses/Problem' }
+  /admin/v1/search/ranking:
+    get:
+      tags: [admin]
+      operationId: adminSearchRanking
+      summary: The ranking lab - best match with previewed weights, each score taken apart (ADR-0042)
+      description: Admin console only (console tokens; not routed by the gateway, ADR-0030). Saves nothing.
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: country, in: query, schema: { type: string, enum: [XS, NO] } }
+        - { name: category, in: query, schema: { type: string, maxLength: 40 } }
+        - { name: quality, in: query, schema: { type: number, minimum: 0, maximum: 3 } }
+        - { name: freshness, in: query, schema: { type: number, minimum: 0, maximum: 3 } }
+      responses:
+        '200':
+          description: Ranked listings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RankingLab' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
   /admin/v1/search/index:
     get:
       tags: [admin]
@@ -280,6 +314,73 @@ components:
           type: object
           additionalProperties: { type: [string, number, boolean] }
         publishedAt: { type: string, format: date-time }
+    Understood:
+      type: object
+      additionalProperties: false
+      required: [kind, words, set]
+      description: One part of the query read as a filter or a sort (ADR-0041)
+      properties:
+        kind: { type: string, enum: [category, attribute, place, region, sort, price] }
+        words: { type: string, description: The words of the query, as typed }
+        set:
+          type: object
+          description: The search parameters it set
+          additionalProperties: { type: string }
+    RankingWeights:
+      type: object
+      additionalProperties: false
+      required: [quality, freshness]
+      properties:
+        quality: { type: number }
+        freshness: { type: number }
+    RankingLab:
+      type: object
+      additionalProperties: false
+      required: [weights, defaults, query, total, items]
+      properties:
+        weights: { $ref: '#/components/schemas/RankingWeights' }
+        defaults: { $ref: '#/components/schemas/RankingWeights' }
+        query:
+          type: object
+          required: [text, understood]
+          properties:
+            text: { type: string }
+            understood: { type: array, items: { $ref: '#/components/schemas/Understood' } }
+        total: { type: integer }
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              [
+                id,
+                title,
+                category,
+                subcategory,
+                imageCount,
+                publishedAt,
+                promoted,
+                relevance,
+                quality,
+                freshness,
+                multiplier,
+                score,
+              ]
+            properties:
+              id: { type: string, format: uuid }
+              title: { type: string }
+              category: { type: string }
+              subcategory: { type: string }
+              imageCount: { type: integer }
+              publishedAt: { type: string, format: date-time }
+              promoted: { type: boolean }
+              relevance:
+                { type: number, description: Text relevance and boosts, before multipliers }
+              quality: { type: number }
+              freshness: { type: number }
+              multiplier: { type: number }
+              score: { type: number }
     Autocomplete:
       type: object
       additionalProperties: false
@@ -326,21 +427,7 @@ components:
           description: How the query was read (ADR-0041)
           properties:
             text: { type: string, description: The words searched as text }
-            understood:
-              type: array
-              items:
-                type: object
-                additionalProperties: false
-                required: [kind, words, set]
-                properties:
-                  kind:
-                    type: string
-                    enum: [category, attribute, place, region, sort, price]
-                  words: { type: string, description: The words of the query, as typed }
-                  set:
-                    type: object
-                    description: The search parameters it set
-                    additionalProperties: { type: string }
+            understood: { type: array, items: { $ref: '#/components/schemas/Understood' } }
         relaxed: { type: boolean, description: No listing matched every word; these match some }
         suggestion: { type: string, description: A spelling that would match more ("did you mean") }
         country: { type: string, description: The country searched }

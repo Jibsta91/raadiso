@@ -7,11 +7,12 @@ import { ALL_ATTRIBUTES, SYNONYMS } from '@raadi/catalog';
  * that are not in the stored documents need a re-read of the topic
  * (docs/runbooks/event-pipeline.md).
  */
-export const INDEX_VERSION = 6;
+export const INDEX_VERSION = 7;
 
 /**
  * Painless script applied while copying documents from an older index: version 5 (ADR-0040) added the
- * country, money in minor units and the region (version 6, ADR-0041, adds analysis only). Everything indexed before it is Norwegian, in kroner.
+ * country, money in minor units and the region; version 7 (ADR-0042) adds quality, computed here from
+ * the photos and the description (details count as half filled). Everything indexed before it is Norwegian, in kroner.
  * Idempotent: documents that already have the new fields pass unchanged.
  */
 export const MIGRATE_SCRIPT = `
@@ -22,6 +23,12 @@ if (ctx._source.containsKey('priceNok')) {
   else { ctx._source.priceMinor = ((Number) kroner).longValue() * 100L; ctx._source.currency = 'NOK'; }
 }
 if (ctx._source.containsKey('county')) { ctx._source.region = ctx._source.remove('county'); }
+if (ctx._source.quality == null) {
+  int photos = ctx._source.imageIds == null ? 0 : ctx._source.imageIds.size();
+  int text = ctx._source.description == null ? 0 : ctx._source.description.trim().length();
+  ctx._source.imageCount = photos;
+  ctx._source.quality = Math.round((0.5 * Math.min(photos, 4) / 4.0 + 0.25 * Math.min(text, 400) / 400.0 + 0.125) * 100) / 100.0;
+}
 `;
 
 /** The attributes' mapping, generated from every country's taxonomy (one kind per key). */
@@ -183,6 +190,9 @@ export const indexBody = {
       region: { type: 'keyword' },
       location: { type: 'geo_point' },
       imageIds: { type: 'keyword', index: false },
+      imageCount: { type: 'integer' },
+      /** 0–1, what the seller gave buyers (ADR-0042). */
+      quality: { type: 'float' },
       publishedAt: { type: 'date' },
       updatedAt: { type: 'date' },
       promotedUntil: { type: 'date' },

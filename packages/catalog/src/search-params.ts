@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ALL_ATTRIBUTES, CATEGORY_KEYS, FACET_KEYS, RANGE_PARAMS } from './categories.js';
+import { ALL_ATTRIBUTES, CATEGORY_KEYS, FACET_KEYS, RANGE_PARAMS, SORTS } from './categories.js';
 import { COUNTRY_CODES } from './countries.js';
 import { findPlace, REGION_KEYS } from './places.js';
 
@@ -84,9 +84,8 @@ const schema = z
      */
     publishedAfter: z.iso.datetime({ offset: true }).optional(),
     publishedBefore: z.iso.datetime({ offset: true }).optional(),
-    sort: z
-      .enum(['relevance', 'newest', 'price_asc', 'price_desc', 'distance'])
-      .default('relevance'),
+    /** Base sorts, and per-category ones generated from the taxonomy (ADR-0042). */
+    sort: z.enum(SORTS as [string, ...string[]]).default('relevance'),
     page: z.coerce.number().int().min(1).max(200).default(1),
     pageSize: z.coerce.number().int().min(1).max(48).default(24),
   })
@@ -123,7 +122,7 @@ const schema = z
  * (numbers) are looked up by name.
  */
 export type SearchParams = z.infer<typeof schema> & {
-  readonly [param: string]: string[] | number | string | undefined;
+  readonly [param: string]: string[] | number | string | boolean | undefined;
 };
 
 /** Every parameter name the search API accepts (for the OpenAPI contract test). */

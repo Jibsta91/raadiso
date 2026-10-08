@@ -174,3 +174,63 @@ describe('no dead ends', () => {
     assert.equal(exact.query.text, 'toyota car');
   });
 });
+
+describe('best match (ADR-0042)', () => {
+  it('puts complete, fresh listings first when there are no words', async () => {
+    const r = await service.rankingLab(
+      searchParamsSchema.parse({ category: 'phones', country: 'XS', pageSize: '48' }),
+      { quality: 0.5, freshness: 0.5 },
+    );
+    const top = r.items.slice(0, 5);
+    const rest = r.items.slice(5);
+    const mean = (xs: typeof r.items) =>
+      xs.reduce((n, x) => n + x.multiplier, 0) / Math.max(xs.length, 1);
+    assert.ok(rest.length > 0 && mean(top) >= mean(rest), 'better multipliers rank higher');
+    for (const x of r.items)
+      assert.ok(Math.abs(x.relevance * x.multiplier - x.score) < 0.01 * Math.max(x.score, 1), x.id);
+  });
+
+  it('previews other weights: with quality weighed heavily, the best-described lead', async () => {
+    const params = searchParamsSchema.parse({
+      category: 'vehicles',
+      country: 'XS',
+      pageSize: '48',
+    });
+    const heavy = await service.rankingLab(params, { quality: 3, freshness: 0 });
+    const qualities = heavy.items.map((x) => x.quality);
+    assert.deepEqual(
+      qualities,
+      [...qualities].sort((a, b) => b - a),
+    );
+  });
+
+  it('sorts cars by model year, newest first, and homes by price per square metre', async () => {
+    const cars = await service.search(
+      searchParamsSchema.parse({
+        country: 'XS',
+        category: 'vehicles',
+        subcategory: 'cars',
+        sort: 'year_desc',
+      }),
+    );
+    const years = cars.items.map((h) => Number(h.attributes.year));
+    assert.ok(years.length > 2);
+    assert.deepEqual(
+      years,
+      [...years].sort((a, b) => b - a),
+    );
+    const homes = await service.search(
+      searchParamsSchema.parse({
+        country: 'NO',
+        category: 'eiendom',
+        subcategory: 'salg',
+        sort: 'price_per_area_asc',
+      }),
+    );
+    const perArea = homes.items.map((h) => h.price!.amountMinor / Number(h.attributes.areaM2));
+    assert.deepEqual(
+      perArea,
+      [...perArea].sort((a, b) => a - b),
+    );
+  });
+});

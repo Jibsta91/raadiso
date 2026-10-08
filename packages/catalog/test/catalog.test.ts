@@ -16,6 +16,9 @@ import {
   attributePayload,
   attributeSchema,
   attributesOf,
+  BASE_SORTS,
+  SORTS,
+  sortsOf,
   CATEGORY_KEYS,
   categoriesOf,
   COUNTRIES,
@@ -251,5 +254,16 @@ describe('form fields', () => {
       gearbox: 'automatic',
     });
     assert.ok(attributeSchema('bil', 'personbil').safeParse(payload).success);
+  });
+});
+
+describe('sorts (ADR-0042)', () => {
+  it('come from attributes that declare an order, per category', () => {
+    assert.deepEqual(sortsOf('vehicles', 'cars').slice(5), ['year_desc', 'mileage_asc']);
+    assert.ok(sortsOf('eiendom').includes('price_per_area_asc'));
+    assert.ok(sortsOf('property', 'land').includes('area_desc'));
+    assert.ok(!sortsOf('jobb').includes('price_per_area_asc'));
+    assert.deepEqual(sortsOf('torget'), [...BASE_SORTS]);
+    assert.ok(SORTS.includes('head_desc') && SORTS.includes('storage_desc'));
   });
 });

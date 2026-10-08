@@ -23,6 +23,7 @@ const ALL = [
   'reviews',
   'operations',
   'tools',
+  'ranking',
   'staff',
   'audit',
 ] as const;
@@ -38,7 +39,7 @@ test('each role sees its own sections, and nothing else opens', async ({ browser
     admin: [...ALL],
     moderator: ['overview', 'moderation', 'listings', 'reviews'],
     support: ['overview', 'users', 'listings', 'orders', 'reviews'],
-    operator: ['overview', 'operations', 'tools'],
+    operator: ['overview', 'operations', 'tools', 'ranking'],
   };
   for (const [who, want] of Object.entries(expected)) {
     const page = await browser.newPage();
@@ -177,4 +178,20 @@ test('operators find every tool with its sign-in and live status', async ({ page
   for (const id of ['errors', 'prometheus', 'openbao', 'traefik', 'mailpit', 'push']) {
     await expect(page.getByTestId(`tool-${id}`), id).toHaveAttribute('data-status', 'up');
   }
+});
+
+test('operators take best match apart in the ranking lab, and preview weights', async ({
+  page,
+}) => {
+  await adminLogin(page, `operator@${domain}`);
+  await page.getByTestId('admin-nav-ranking').click();
+  await expect(page).toHaveURL(/\/admin\/ranking$/);
+  const rows = page.getByTestId('ranking-row');
+  await expect(rows.first()).toBeVisible();
+  // Weigh quality heavily, freshness not at all: the first rows have the most complete listings.
+  await page.getByTestId('weight-quality').fill('3');
+  await page.getByTestId('weight-freshness').fill('0');
+  await page.getByTestId('ranking-form').getByRole('button').click();
+  await expect(page).toHaveURL(/quality=3&freshness=0/);
+  await expect(rows.first()).toBeVisible();
 });

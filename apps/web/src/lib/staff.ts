@@ -18,6 +18,7 @@ export const SECTIONS = {
   reviews: ['moderator', 'support', 'platform-admin'],
   operations: ['operator', 'platform-admin'],
   tools: ['operator', 'platform-admin'],
+  ranking: ['operator', 'platform-admin'],
   staff: ['platform-admin'],
   audit: ['platform-admin'],
 } as const satisfies Record<string, readonly StaffRole[]>;
@@ -64,6 +65,7 @@ export const NAV_GROUPS: Array<{
     items: [
       { section: 'operations', href: '/admin/operations', key: 's' },
       { section: 'tools', href: '/admin/tools', key: 'k' },
+      { section: 'ranking', href: '/admin/ranking', key: 'b' },
       { section: 'staff', href: '/admin/staff', key: 't' },
       { section: 'audit', href: '/admin/audit', key: 'a' },
     ],

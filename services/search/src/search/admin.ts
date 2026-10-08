@@ -1,7 +1,22 @@
-import { Controller, Get } from '@nestjs/common';
-import { Staff } from '@raadi/service-kit';
+import { Controller, Get, Query } from '@nestjs/common';
+import { COUNTRY_CODES } from '@raadi/catalog';
+import { Staff, ZodValidationPipe } from '@raadi/service-kit';
+import { z } from 'zod';
 import { INDEX_VERSION } from './index-definition.js';
+import { DEFAULT_WEIGHTS, searchParamsSchema } from './query.js';
 import { SearchIndex } from './search.index.js';
+import { type RankingLab, SearchService } from './search.service.js';
+
+const weight = z.coerce.number().min(0).max(3);
+const labSchema = z
+  .object({
+    q: z.string().trim().max(200).optional(),
+    country: z.enum(COUNTRY_CODES).optional(),
+    category: z.string().max(40).optional(),
+    quality: weight.optional(),
+    freshness: weight.optional(),
+  })
+  .strict();
 
 export interface IndexStatus {
   alias: string;
@@ -17,7 +32,25 @@ export interface IndexStatus {
 /** The search index for operators (ADR-0030): size and freshness, to compare with listings. */
 @Controller('admin/v1/search')
 export class SearchAdminController {
-  constructor(private readonly index: SearchIndex) {}
+  constructor(
+    private readonly index: SearchIndex,
+    private readonly search: SearchService,
+  ) {}
+
+  /** The ranking lab (ADR-0042): best match with previewed weights, each score taken apart. */
+  @Get('ranking')
+  @Staff(['operator', 'platform-admin'])
+  async ranking(
+    @Query(new ZodValidationPipe(labSchema)) query: z.infer<typeof labSchema>,
+  ): Promise<RankingLab> {
+    const { quality, freshness, ...search } = query;
+    const params = searchParamsSchema.parse({ ...search, pageSize: '24' });
+    const weights = {
+      quality: quality ?? DEFAULT_WEIGHTS.quality,
+      freshness: freshness ?? DEFAULT_WEIGHTS.freshness,
+    };
+    return this.search.rankingLab(params, weights);
+  }
 
   @Get('index')
   @Staff(['operator', 'platform-admin'])

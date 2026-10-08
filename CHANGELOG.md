@@ -8,6 +8,13 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Best match (ADR-0042): relevance is multiplied by a listing's quality (photos, description, details
+  filled in) and freshness (a half after 14 days), so complete, recent listings come first, also on
+  category pages without words. Sorts per category from the taxonomy: newest model year, lowest
+  mileage, largest area, most storage, most animals, and the lowest price per square metre for
+  property. A ranking lab in the admin console (operators) takes each listing's score apart and
+  previews other weights. Search index version 7.
+
 - Search 2.0 (ADR-0041). Search reads the query: "cheap toyota hargeisa under 5000" becomes cars near
   Hargeisa, at most $5,000, cheapest first, with "toyota" matched as text. The words come from a lexicon
   in the catalog (categories, makes and models, values such as electric or right-hand drive, in English,

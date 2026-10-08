@@ -530,7 +530,13 @@
       "newest": "Kuwa ugu cusub",
       "price_asc": "Qiimaha ugu hooseeya",
       "price_desc": "Qiimaha ugu sarreeya",
-      "distance": "Kuwa ugu dhow"
+      "distance": "Kuwa ugu dhow",
+      "year_desc": "Sanadka ugu cusub",
+      "mileage_asc": "Masaafada ugu yar",
+      "area_desc": "Bed-ka ugu weyn",
+      "storage_desc": "Kaydka ugu badan",
+      "head_desc": "Xoolaha ugu badan",
+      "price_per_area_asc": "Qiimaha ugu jaban m² kasta"
     },
     "pageOf": "Bogga {page} ee {pages}",
     "previous": "Hore",
@@ -1045,7 +1051,8 @@
       "operations": "Hawlgalka",
       "staff": "Shaqaalaha",
       "audit": "Diiwaanka hubinta",
-      "tools": "Qalabka"
+      "tools": "Qalabka",
+      "ranking": "Shaybaarka kala horreynta"
     },
     "groups": {
       "workspace": "Goobta shaqada",
@@ -1868,6 +1875,34 @@
           "what": "Tunnel: kheyraadka dadweynaha, isticmaalayaasha VPN-ka iyo qalabka"
         }
       }
+    },
+    "ranking": {
+      "title": "Shaybaarka kala horreynta",
+      "intro": "Natiijada ugu fiican ee raadin, dhibcaha xayeysiis kasta oo la kala qaaday: ku habboonaanta qoraalka × (1 + miisaanka tayada × tayada) × (1 + miisaanka cusaybka × cusaybka). Halkan tijaabi miisaannada; waxba lama kaydiyo.",
+      "query": "Raadin",
+      "country": "Dalka",
+      "weights": {
+        "quality": "Miisaanka tayada",
+        "freshness": "Miisaanka cusaybka"
+      },
+      "run": "Kala horreysii",
+      "unavailable": "Raadintu ma jawaabayso.",
+      "results": "{total, plural, one {# xayeysiis} other {# xayeysiis}}",
+      "defaults": "Caadiga: tayada {quality}, cusaybka {freshness}",
+      "understood": "Waxaa loo raadiyay “{text}” iyadoo leh:",
+      "caption": "Xayeysiisyada siday u kala horreeyaan iyo qaybaha dhibcahooda",
+      "cols": {
+        "listing": "Xayeysiis",
+        "photos": "Sawirro",
+        "age": "Da’",
+        "relevance": "Ku habboonaan",
+        "quality": "Tayada",
+        "freshness": "Cusaybka",
+        "multiplier": "Isku dhufashada",
+        "score": "Dhibcaha"
+      },
+      "promoted": "La horumariyay",
+      "days": "{days, plural, one {# maalin} other {# maalmood}}"
     }
   },
   "security": {

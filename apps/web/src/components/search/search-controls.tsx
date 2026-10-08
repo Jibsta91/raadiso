@@ -8,7 +8,6 @@ import { useRouter } from '@/i18n/navigation';
 import { href, type Params, withParams } from '@/lib/search-params';
 
 const RADII = ['10', '25', '50', '100', '250'];
-const SORTS = ['relevance', 'newest', 'price_asc', 'price_desc', 'distance'] as const;
 
 /** The parameters this form sets; every other one is carried along in hidden fields. */
 const OWN = new Set(['near', 'lat', 'lon', 'radiusKm', 'sort', 'page']);
@@ -18,7 +17,16 @@ const OWN = new Set(['near', 'lat', 'lon', 'radiusKm', 'sort', 'page']);
  * page's JavaScript has loaded (or when it never does); once it has, a choice applies at once, and the
  * fields say so beforehand (WCAG 3.2.2).
  */
-export function SearchControls({ params, country }: { params: Params; country: CountryCode }) {
+export function SearchControls({
+  params,
+  country,
+  sorts,
+}: {
+  params: Params;
+  country: CountryCode;
+  /** The sorts on offer: the base ones, and a single category's own (ADR-0042). */
+  sorts: readonly string[];
+}) {
   const t = useTranslations('search');
   const locale = useLocale();
   const router = useRouter();
@@ -128,11 +136,13 @@ export function SearchControls({ params, country }: { params: Params; country: C
             go({ sort: e.target.value === 'relevance' ? undefined : e.target.value })
           }
         >
-          {SORTS.filter((s) => s !== 'distance' || hasCentre).map((s) => (
-            <option key={s} value={s}>
-              {t(`sort.${s}`)}
-            </option>
-          ))}
+          {sorts
+            .filter((s) => s !== 'distance' || hasCentre)
+            .map((s) => (
+              <option key={s} value={s}>
+                {t(`sort.${s}` as never)}
+              </option>
+            ))}
         </select>
       </label>
       {hydrated ? null : (

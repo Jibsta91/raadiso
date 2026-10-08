@@ -26,6 +26,7 @@ import {
   type NotificationsUser,
   type PaymentStats,
   type QueueStats,
+  type RankingLab,
   type RemovalReason,
   type SellerSnapshot,
   type StaffIdentity,
@@ -283,6 +284,15 @@ export const notificationQueues = (): Promise<QueueStats> =>
   call((i) => notifications().GET('/admin/v1/notifications/queues', i));
 export const indexStatus = (): Promise<IndexStatus> =>
   call((i) => search().GET('/admin/v1/search/index', i));
+/** The ranking lab (ADR-0042): best match with previewed weights, each score taken apart. */
+export const rankingLab = (query: {
+  q?: string;
+  country?: 'XS' | 'NO';
+  category?: string;
+  quality?: number;
+  freshness?: number;
+}): Promise<RankingLab> =>
+  call((i) => search().GET('/admin/v1/search/ranking', { ...i, params: { query } }));
 
 // -- audit --------------------------------------------------------------------------------------
 export interface AuditQuery {
