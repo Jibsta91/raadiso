@@ -24,6 +24,8 @@ Raadi toolbox — usage: docker compose run --rm toolbox <command> [args]
   test-integration   Testcontainers integration tests (uses the Docker socket)
   build              build all packages
   generate           regenerate the typed API client (OpenAPI) and event JSON Schemas (zod)
+  api-check          generated client and schemas up to date; no breaking OpenAPI change against
+                     main (oasdiff); API_BREAKING_OK=1 allows one on purpose
   e2e                Playwright end-to-end tests against the running stack
   security           Trivy (fs + config), Gitleaks, OSV-Scanner
   iac-scan           Checkov + Trivy misconfiguration scan (compose, Dockerfiles, infra/)
@@ -61,6 +63,34 @@ HELP
     install_deps
     pnpm --filter @raadi/api-client generate
     pnpm --filter @raadi/events generate && pnpm exec prettier --write --log-level warn packages/events/schemas
+    ;;
+  api-check)
+    # 1. The committed client and event schemas match the specs and contracts (./raadi generate was run).
+    install_deps
+    pnpm --filter @raadi/api-client generate
+    pnpm --filter @raadi/events generate && pnpm exec prettier --write --log-level warn packages/events/schemas
+    if ! git diff --quiet -- packages/api-client packages/events/schemas; then
+      git --no-pager diff --stat -- packages/api-client packages/events/schemas
+      echo "✘ the generated client or event schemas are out of date: run ./raadi generate and commit them" >&2
+      exit 1
+    fi
+    echo "✔ generated client and event schemas are up to date"
+    # 2. No breaking change in a service's OpenAPI document against the base (default origin/main).
+    base="${API_BASE_REF:-origin/main}" broken=0
+    git rev-parse --verify --quiet "$base" >/dev/null || { echo "✘ unknown base $base (git fetch?)" >&2; exit 1; }
+    for spec in services/*/openapi.yaml; do
+      git cat-file -e "$base:$spec" 2>/dev/null || continue # a new service has nothing to break
+      git show "$base:$spec" > /tmp/base-openapi.yaml
+      if ! oasdiff breaking /tmp/base-openapi.yaml "$spec" --fail-on ERR --format text; then
+        echo "✘ breaking change in $spec (against $base)" >&2; broken=1
+      fi
+    done
+    if (( broken )); then
+      [[ "${API_BREAKING_OK:-}" == 1 ]] || { echo "Clients would break. If that is on purpose (and every client is updated), run with API_BREAKING_OK=1." >&2; exit 1; }
+      echo "! breaking changes allowed by API_BREAKING_OK=1"
+    else
+      echo "✔ no breaking OpenAPI change against $base"
+    fi
     ;;
   e2e) install_deps; pnpm --filter e2e e2e "$@" ;;
   security)
