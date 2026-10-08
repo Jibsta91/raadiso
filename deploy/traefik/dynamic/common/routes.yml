@@ -128,6 +128,15 @@ http:
       middlewares: [security-headers, ratelimit-auth, forward-auth]
       priority: 110
 
+    # Error reports from the website and the app (Sentry SDKs) to GlitchTip (ADR-0038): only the event
+    # intake, on the site's own address, so the CSP stays connect-src 'self' and it works in tunnel mode.
+    errors-intake:
+      rule: (Host(`{{ $d }}`) || Host(`admin.{{ $d }}`)) && PathRegexp(`^/errors/api/[0-9]+/(envelope|store)/$`)
+      entryPoints: [web, websecure]
+      service: glitchtip
+      middlewares: [security-headers, ratelimit-default, api-body-limit, strip-errors]
+      priority: 110
+
     # Listing images: signed imgproxy URLs only (anything else is refused upstream).
     images:
       rule: Host(`{{ $d }}`) && PathPrefix(`/img/`)
@@ -159,6 +168,9 @@ http:
       middlewares: [security-headers, ratelimit-default]
 
   services:
+    glitchtip:
+      loadBalancer:
+        servers: [{ url: "http://glitchtip:8000" }]
     web:
       loadBalancer:
         servers: [{ url: "http://web:3000" }]

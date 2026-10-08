@@ -94,6 +94,9 @@ http:
         burst: 400
         period: 1s
 
+    strip-errors:
+      stripPrefix:
+        prefixes: ['/errors']
     strip-img:
       stripPrefix:
         prefixes: ['/img']

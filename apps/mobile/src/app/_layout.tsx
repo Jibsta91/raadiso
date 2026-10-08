@@ -17,7 +17,10 @@ import { PushRegistration } from '../lib/push';
 import { WidgetSync } from '../lib/widget-sync';
 import { RealtimeProvider } from '../lib/realtime';
 import { glassBar, liquidGlass } from '../components/ui';
+import { reportError, startErrorReporting } from '../lib/error-reporting';
 import { fonts, ThemeProvider, useTheme } from '../theme';
+
+startErrorReporting();
 
 /**
  * Last-resort error screen for anything that throws while rendering. Self-contained (no theme or i18n
@@ -28,6 +31,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   useEffect(() => {
     // eslint-disable-next-line no-console -- the only way an error on a phone reaches Metro's log
     console.error(`Render error: ${error.message}\n${error.stack ?? '(no stack)'}`);
+    reportError(error);
   }, [error]);
   return (
     <View

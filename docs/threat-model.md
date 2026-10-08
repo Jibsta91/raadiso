@@ -76,6 +76,10 @@ grows with each phase; Phase 6 adds a full ASVS checklist.
   and the stack still has the public demo passwords. Use it for testing, and `./raadi up` closes it.
   Behind Docker Desktop every visitor arrives from one address, so the edge can't ban attackers; CrowdSec
   blocks known exploit requests instead (ADR-0035).
+- **Error reports (GlitchTip, ADR-0038)** are a new store of client data: stack traces, URLs and the error
+  message. The SDKs send no user, IP, cookies, headers, bodies or query strings, and GlitchTip scrubs IP
+  and e-mail addresses at ingest; an error message that quotes user input could still carry personal
+  data. They are kept 30 days (`GLITCHTIP_RETENTION_DAYS`).
 - **Deleted listings keep their OpenFGA owner tuple.** This is harmless because checks also require the
   listing to exist ([ADR-0013](adr/0013-authorization.md)).
 

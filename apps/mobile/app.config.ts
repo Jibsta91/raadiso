@@ -70,6 +70,9 @@ const config: ExpoConfig = {
     authBaseUrl,
     realm: process.env.KEYCLOAK_REALM ?? 'raadi',
     clientId: 'raadi-mobile',
+    // Error reports (ADR-0038). A DSN's key is public by design; the web build (/m) gets it at build time.
+    errorsPublicKey: process.env.GLITCHTIP_PUBLIC_KEY ?? '',
+    errorsProjectId: process.env.GLITCHTIP_PROJECT_ID ?? '',
     ...(easProjectId ? { eas: { projectId: easProjectId } } : {}),
   },
 };

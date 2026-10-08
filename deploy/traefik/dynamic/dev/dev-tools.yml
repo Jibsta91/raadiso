@@ -18,6 +18,12 @@ http:
       entryPoints: [web, websecure]
       service: openbao
       middlewares: [security-headers]
+    # GlitchTip's UI (ADR-0038); its event intake is routed on the site's own address (routes.yml).
+    glitchtip:
+      rule: Host(`errors.{{ $d }}`)
+      entryPoints: [web, websecure]
+      service: glitchtip
+      middlewares: [security-headers]
     prometheus:
       rule: Host(`prometheus.{{ $d }}`)
       entryPoints: [web, websecure]

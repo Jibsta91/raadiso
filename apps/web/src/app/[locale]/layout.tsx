@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
+import { ErrorReporting } from '@/components/error-reporting';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { routing } from '@/i18n/routing';
@@ -65,6 +66,12 @@ export default async function LocaleLayout({
         >
           {t('skip')}
         </a>
+        <ErrorReporting
+          publicKey={env.errorsPublicKey}
+          projectId={env.errorsProjectId}
+          release={env.release}
+          environment={env.environment}
+        />
         <NextIntlClientProvider messages={clientMessages}>
           {admin ? (
             // The admin console brings its own frame (app/[locale]/admin/layout.tsx).

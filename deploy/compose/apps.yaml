@@ -566,6 +566,8 @@ services:
       <<: *otel-env
       OTEL_SERVICE_NAME: web
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      GLITCHTIP_PUBLIC_KEY: ${GLITCHTIP_PUBLIC_KEY}
+      GLITCHTIP_PROJECT_ID: ${GLITCHTIP_PROJECT_ID}
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       IDENTITY_BFF_URL: http://identity-bff:4000
@@ -608,6 +610,9 @@ services:
       context: .
       dockerfile: deploy/docker/mobile-web/Dockerfile
       target: runtime
+      args:
+        GLITCHTIP_PUBLIC_KEY: ${GLITCHTIP_PUBLIC_KEY}
+        GLITCHTIP_PROJECT_ID: ${GLITCHTIP_PROJECT_ID}
     environment:
       <<: *otel-env
       OTEL_SERVICE_NAME: mobile-web

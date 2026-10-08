@@ -248,6 +248,86 @@ services:
       resources:
         limits: { memory: 512M, cpus: '1.0' }
 
+  # GlitchTip (MIT, ADR-0038): crash and error reports from the website and the app (Sentry SDKs). One
+  # container (web and worker together) on its own PostgreSQL database, no Valkey. Reports arrive on the
+  # site's own address (/errors/…, deploy/traefik/dynamic/common/routes.yml); the UI is errors.<domain>.
+  glitchtip:
+    <<: *hardening
+    image: glitchtip/glitchtip:6.2.6@sha256:a3d8eb1b36c1e1603d55ab32711ea3dd8115874742a781a57391a62a16e0dff6
+    entrypoint: ['bash', '-c']
+    command:
+      - >-
+        export DATABASE_URL="postgres://glitchtip:$$(cat /run/secrets/raadi/glitchtip_db_password)@postgres:5432/glitchtip"
+        SECRET_KEY="$$(cat /run/secrets/raadi/glitchtip_secret_key)" &&
+        exec ./bin/start.sh
+    environment:
+      SERVER_ROLE: all_in_one
+      GRANIAN_WORKERS: '1'
+      GRANIAN_WORKERS_MAX_RSS: '320'
+      # Empty: PostgreSQL holds the task queue, cache and sessions.
+      VALKEY_URL: ''
+      GLITCHTIP_DOMAIN: ${PUBLIC_SCHEME}://errors.${RAADI_DOMAIN}${PUBLIC_PORT_SUFFIX}
+      ALLOWED_HOSTS: errors.${RAADI_DOMAIN},${RAADI_DOMAIN},glitchtip,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: ${PUBLIC_SCHEME}://errors.${RAADI_DOMAIN}${PUBLIC_PORT_SUFFIX}
+      DEFAULT_FROM_EMAIL: glitchtip@${RAADI_DOMAIN}
+      EMAIL_URL: smtp://${SMTP_HOST}:${SMTP_PORT}
+      ENABLE_USER_REGISTRATION: 'false'
+      ENABLE_ORGANIZATION_CREATION: 'false'
+      # Error reports are client data: kept 30 days (GlitchTip's default is 90).
+      GLITCHTIP_RETENTION_DAYS: '30'
+      TZ: ${TZ}
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: glitchtip }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+      db-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: ['CMD', 'python', 'healthcheck.py']
+      interval: 10s
+      timeout: 6s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { memory: 512M, cpus: '1.0' }
+
+  # The admin, the organisation and the project with the key from .env (deploy/glitchtip/bootstrap.py).
+  glitchtip-init:
+    image: glitchtip/glitchtip:6.2.6@sha256:a3d8eb1b36c1e1603d55ab32711ea3dd8115874742a781a57391a62a16e0dff6
+    entrypoint: ['bash', '-c']
+    command:
+      - >-
+        export DATABASE_URL="postgres://glitchtip:$$(cat /run/secrets/raadi/glitchtip_db_password)@postgres:5432/glitchtip"
+        SECRET_KEY="$$(cat /run/secrets/raadi/glitchtip_secret_key)" &&
+        python manage.py shell < /opt/raadi/bootstrap.py
+    restart: 'no'
+    logging: *logging
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    environment:
+      VALKEY_URL: ''
+      ALLOWED_HOSTS: localhost
+      GLITCHTIP_DOMAIN: ${PUBLIC_SCHEME}://errors.${RAADI_DOMAIN}${PUBLIC_PORT_SUFFIX}
+      GLITCHTIP_ADMIN_EMAIL: ${GLITCHTIP_ADMIN_EMAIL}
+      GLITCHTIP_PUBLIC_KEY: ${GLITCHTIP_PUBLIC_KEY}
+      GLITCHTIP_PROJECT_ID: ${GLITCHTIP_PROJECT_ID}
+    volumes:
+      - ./deploy/glitchtip/bootstrap.py:/opt/raadi/bootstrap.py:ro
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: glitchtip }
+    depends_on:
+      glitchtip: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { memory: 256M, cpus: '0.5' }
+
 volumes:
   prometheus-data: {}
   alertmanager-data: {}

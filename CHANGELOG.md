@@ -14,6 +14,9 @@ Each release also has generated notes on GitHub.
   `*.dev.raadiso.com` host works too, Metro included (`https://metro.dev.raadiso.com`, for development builds
   and Expo Go). The admin, organisation, site and resources are
   set up by an init job from `deploy/pangolin/blueprint.json.tmpl`. `./raadi up` closes the tunnel.
+- Error reports (ADR-0038): browser and app errors go to GlitchTip (`errors.raadi.localhost`) with stack
+  traces, through `/errors/` on the site's own address. No personal data: the SDKs collect none, and
+  GlitchTip scrubs IP and e-mail addresses at ingest.
 - Renovate, self-hosted (ADR-0037): `./raadi renovate`, and weekly on the self-hosted runner, opens update
   pull requests for images, npm packages, actions, toolbox CLIs and Traefik plugins; majors wait for
   approval on the dependency dashboard.
