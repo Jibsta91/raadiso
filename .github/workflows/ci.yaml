@@ -41,7 +41,10 @@ jobs:
       - run: ./raadi lint
       - run: ./raadi typecheck
       - run: ./raadi test
-      - run: ./raadi test-integration
+      # Testcontainers start a database or broker per suite: at most two suites at once, and only with room.
+      - name: Wait for free memory
+        run: deploy/ci-runner/wait-for-memory.sh 4
+      - run: ./raadi test-integration --concurrency=2
       - run: ./raadi licenses
       - run: ./raadi security
       - run: ./raadi iac-scan
@@ -65,6 +68,9 @@ jobs:
       HTTPS_PORT: '18443'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # A second stack needs about 7 GB: wait (up to 30 min) rather than be killed next to the dev stack.
+      - name: Wait for free memory
+        run: deploy/ci-runner/wait-for-memory.sh 8
       - name: docker compose up --wait
         run: docker compose up -d --wait --wait-timeout 1200
       - name: Smoke test

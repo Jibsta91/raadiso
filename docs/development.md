@@ -90,8 +90,10 @@ running stack.
 | Lint, types, tests, scans | every pull request and push to `main`                                  | lint, typecheck, test, test-integration, licenses, security, iac-scan |
 | Full stack                | the `full-stack` label on a pull request, a push to `main`, or by hand | `compose up`, smoke, e2e on ports 18080/18443, then `down -v`         |
 
-The full stack job needs about 7 GB more in Docker next to your own stack; stop yours (`./raadi down`) on a
-small machine. Pull requests from forks never run: the repository is public, and the runner has the
+The full stack job needs about 7 GB more in Docker next to your own stack. It waits (up to 30 minutes) until
+Docker has 8 GB free, and the integration tests wait for 4 GB and run at most two suites at once, so a busy
+laptop delays CI instead of breaking it (exit 137). Stop your stack (`./raadi down`) to let a waiting job
+start. Pull requests from forks never run: the repository is public, and the runner has the
 Docker socket.
 
 Setting it up once:
