@@ -13,7 +13,17 @@ import {
 import { parseEvent } from '@raadi/events';
 import { imageUrls, type ImgproxySigner } from '@raadi/service-kit';
 import { PermanentEventError, type ReceivedEvent } from '@raadi/service-kit/kafka';
-import { buildSearch, centre, countryOf, type Matching, type SearchParams } from './query.js';
+import {
+  buildSearch,
+  centre,
+  countryOf,
+  DEFAULT_WEIGHTS,
+  freshnessOf,
+  hourStart,
+  type Matching,
+  type RankingWeights,
+  type SearchParams,
+} from './query.js';
 import { fold, lexicon, type Understood, understand } from './understand.js';
 import type { SearchResponse } from './search.index.js';
 import { SearchIndex, toDocument } from './search.index.js';
@@ -67,6 +77,32 @@ export interface Autocomplete {
   categories: Array<{ category: string; subcategory?: string; count: number }>;
   queries: string[];
   places: Array<{ placeId: string; name: string }>;
+}
+
+/** One listing in the ranking lab: its score taken apart (ADR-0042). */
+export interface RankedListing {
+  id: string;
+  title: string;
+  category: string;
+  subcategory: string;
+  imageCount: number;
+  publishedAt: string;
+  promoted: boolean;
+  /** Text relevance and the query's boosts, before the multipliers. */
+  relevance: number;
+  quality: number;
+  freshness: number;
+  /** (1 + wq × quality) × (1 + wf × freshness). */
+  multiplier: number;
+  score: number;
+}
+
+export interface RankingLab {
+  weights: RankingWeights;
+  defaults: RankingWeights;
+  query: { text: string; understood: Understood[] };
+  total: number;
+  items: RankedListing[];
 }
 
 export interface PriceBucketCount {
@@ -219,6 +255,52 @@ export class SearchService {
       query: { text: effective.q ?? '', understood: reading?.understood ?? [] },
       relaxed,
       ...(suggestionOf(effective.q, res) ? { suggestion: suggestionOf(effective.q, res) } : {}),
+    };
+  }
+
+  /**
+   * The ranking lab (ADR-0042): best match for a query with the given weights, each listing's score
+   * taken apart. A preview: nothing is saved.
+   */
+  async rankingLab(params: SearchParams, weights: RankingWeights): Promise<RankingLab> {
+    const country = countryOf(params, this.defaultCountry);
+    const reading = params.understand === false ? undefined : understand(params, country);
+    const effective = { ...(reading?.params ?? params), sort: 'relevance' as const };
+    const res = await this.index.search(
+      buildSearch(effective, country, {
+        boostCategories: reading?.boostCategories,
+        boostValues: reading?.boostValues,
+        weights,
+      }),
+    );
+    const origin = Date.parse(hourStart());
+    return {
+      weights,
+      defaults: DEFAULT_WEIGHTS,
+      query: { text: effective.q ?? '', understood: reading?.understood ?? [] },
+      total: res.hits.total.value,
+      items: res.hits.hits.map((h) => {
+        const s = h._source;
+        const quality = s.quality ?? 0.5;
+        const freshness = freshnessOf(s.publishedAt, origin);
+        const multiplier = (1 + weights.quality * quality) * (1 + weights.freshness * freshness);
+        const promoted = !!s.promotedUntil && Date.parse(s.promotedUntil) > Date.now();
+        const score = h._score ?? 0;
+        return {
+          id: s.id,
+          title: s.title,
+          category: s.category,
+          subcategory: s.subcategory,
+          imageCount: s.imageCount ?? s.imageIds.length,
+          publishedAt: s.publishedAt,
+          promoted,
+          relevance: Math.round((score / multiplier - (promoted ? 1000 : 0)) * 1000) / 1000,
+          quality,
+          freshness: Math.round(freshness * 1000) / 1000,
+          multiplier: Math.round(multiplier * 1000) / 1000,
+          score: Math.round(score * 1000) / 1000,
+        };
+      }),
     };
   }
 

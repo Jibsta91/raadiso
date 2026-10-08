@@ -530,7 +530,13 @@
       "newest": "Nyeste",
       "price_asc": "Lavest pris",
       "price_desc": "Høyest pris",
-      "distance": "Nærmest"
+      "distance": "Nærmest",
+      "year_desc": "Nyeste årsmodell",
+      "mileage_asc": "Lavest kilometerstand",
+      "area_desc": "Størst areal",
+      "storage_desc": "Mest lagring",
+      "head_desc": "Flest dyr",
+      "price_per_area_asc": "Lavest pris per m²"
     },
     "pageOf": "Side {page} av {pages}",
     "previous": "Forrige",
@@ -1045,7 +1051,8 @@
       "operations": "Drift",
       "staff": "Ansatte",
       "audit": "Revisjonslogg",
-      "tools": "Verktøy"
+      "tools": "Verktøy",
+      "ranking": "Rangeringslab"
     },
     "groups": {
       "workspace": "Arbeidsflate",
@@ -1868,6 +1875,34 @@
           "what": "Tunnel: offentlige ressurser, VPN-brukere og enheter"
         }
       }
+    },
+    "ranking": {
+      "title": "Rangeringslab",
+      "intro": "Beste treff for et søk, med hver annonses poengsum delt opp: tekstrelevans × (1 + kvalitetsvekt × kvalitet) × (1 + ferskhetsvekt × ferskhet). Prøv vekter her; ingenting lagres — standardverdiene endres med pull request, kontrollert av de vurderte søkene.",
+      "query": "Søk",
+      "country": "Land",
+      "weights": {
+        "quality": "Kvalitetsvekt",
+        "freshness": "Ferskhetsvekt"
+      },
+      "run": "Ranger",
+      "unavailable": "Søket svarer ikke.",
+      "results": "{total, plural, one {# annonse} other {# annonser}}",
+      "defaults": "Standard: kvalitet {quality}, ferskhet {freshness}",
+      "understood": "Søkt som «{text}» med:",
+      "caption": "Annonser i rekkefølgen for beste treff med poengdelene",
+      "cols": {
+        "listing": "Annonse",
+        "photos": "Bilder",
+        "age": "Alder",
+        "relevance": "Relevans",
+        "quality": "Kvalitet",
+        "freshness": "Ferskhet",
+        "multiplier": "Faktor",
+        "score": "Poeng"
+      },
+      "promoted": "Fremhevet",
+      "days": "{days, plural, one {# dag} other {# dager}}"
     }
   },
   "security": {

@@ -106,3 +106,13 @@ test('suggestions while typing: a category, chosen with the keyboard', async ({ 
   await expect(page).toHaveURL(/\/en\/search\?category=torget&subcategory=mobler/);
   await expect(page.getByTestId('listing-card').first()).toBeVisible();
 });
+
+test('a category brings its own sorts: cars by model year', async ({ page }) => {
+  // ADR-0042: year and mileage sorts appear only with one category chosen.
+  await page.goto('/en/search?category=torget');
+  await expect(page.getByTestId('sort').locator('option[value="year_desc"]')).toHaveCount(0);
+  await page.goto('/en/search?category=bil');
+  await page.getByTestId('sort').selectOption('year_desc');
+  await expect(page).toHaveURL(/sort=year_desc/);
+  await expect(page.getByTestId('listing-card').first()).toBeVisible();
+});

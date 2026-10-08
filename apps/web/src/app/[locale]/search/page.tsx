@@ -1,4 +1,11 @@
-import { categoriesOf, countryOfCategory, facetsOf, rangesOf } from '@raadi/catalog/categories';
+import {
+  categoriesOf,
+  countryOfCategory,
+  facetsOf,
+  rangesOf,
+  BASE_SORTS,
+  sortsOf,
+} from '@raadi/catalog/categories';
 import { currencySymbol } from '@raadi/catalog/money';
 import { findPlace, regionName } from '@raadi/catalog/places';
 import type { SearchQuery } from '@raadi/api-client';
@@ -299,7 +306,11 @@ export default async function SearchPage({
               </ol>
             </nav>
           ) : null}
-          <SearchControls params={current} country={country} />
+          <SearchControls
+            params={current}
+            country={country}
+            sorts={only ? sortsOf(only, sub) : BASE_SORTS}
+          />
           {understood.length && requested.q ? (
             <p className="text-sm text-muted-foreground" data-testid="search-understood">
               {t('search.understoodAs', { q: requested.q })} {understood.map(describe).join(' · ')}.{' '}

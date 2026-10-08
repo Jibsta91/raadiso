@@ -1,4 +1,5 @@
 import {
+  ATTRIBUTE_SORTS,
   categoriesOf,
   COUNTRIES,
   COUNTRY_CODES,
@@ -7,6 +8,7 @@ import {
   FACET_KEYS,
   findPlace,
   isCountry,
+  PRICE_PER_AREA_SORT,
   RANGE_FIELDS,
   RANGE_PARAMS,
   type SearchParams,
@@ -61,7 +63,35 @@ export interface Matching {
   boostValues?: Record<string, string[]>;
   /** The retry after no hits: any one word may match, with more typo tolerance. */
   relaxed?: boolean;
+  /** Best-match weights (ADR-0042); the defaults unless the ranking lab previews others. */
+  weights?: RankingWeights;
 }
+
+/** How much quality and freshness multiply relevance under "best match" (ADR-0042). */
+export interface RankingWeights {
+  quality: number;
+  freshness: number;
+}
+export const DEFAULT_WEIGHTS: RankingWeights = { quality: 0.5, freshness: 0.5 };
+/** Freshness: 1 for two days, a half after another 14, then on towards 0 (Gaussian). */
+export const FRESHNESS = { offsetDays: 2, scaleDays: 14, decay: 0.5 } as const;
+
+/** (1 + wq × quality) × (1 + wf × freshness); documents without a quality count as average. */
+const RANK_SCRIPT = `
+double q = doc['quality'].size() == 0 ? 0.5 : doc['quality'].value;
+double f = decayDateGauss(params.origin, params.scale, params.offset, params.decay, doc['publishedAt'].value);
+return (1 + params.wq * q) * (1 + params.wf * f);`;
+
+/** Freshness of a listing published at `iso`, as the score script computes it (for the lab). */
+export function freshnessOf(iso: string, now = Date.now()): number {
+  const days = Math.max(0, (now - Date.parse(iso)) / 86_400_000 - FRESHNESS.offsetDays);
+  const sigma2 = -(FRESHNESS.scaleDays ** 2) / (2 * Math.log(FRESHNESS.decay));
+  return Math.exp(-(days ** 2) / (2 * sigma2));
+}
+
+/** Now, to the hour: the freshness origin (so equal searches within an hour score alike). */
+export const hourStart = () =>
+  new Date(Math.floor(Date.now() / 3_600_000) * 3_600_000).toISOString();
 
 /** The text fields each country's languages are searched in (Somaliland: English and Somali). */
 const TEXT_FIELDS: Record<
@@ -212,8 +242,29 @@ export function buildSearch(p: SearchParams, country: CountryCode, matching: Mat
     case 'distance':
       sort.push({ _geo_distance: { location: c, order: 'asc', unit: 'km' } });
       break;
-    default:
-      sort.push('_score', { publishedAt: 'desc' });
+    case PRICE_PER_AREA_SORT:
+      // Lowest price per square metre; listings without a price or an area last.
+      sort.push({
+        _script: {
+          type: 'number',
+          order: 'asc',
+          script: {
+            lang: 'painless',
+            source:
+              "doc['priceMinor'].size() == 0 || doc['attributes.areaM2'].size() == 0 || doc['attributes.areaM2'].value == 0 ? Double.MAX_VALUE : doc['priceMinor'].value / (double) doc['attributes.areaM2'].value",
+          },
+        },
+      });
+      break;
+    default: {
+      const own = ATTRIBUTE_SORTS[p.sort];
+      if (own) {
+        sort.push(
+          { [`attributes.${own.field}`]: { order: own.order, missing: '_last' } },
+          { publishedAt: 'desc' },
+        );
+      } else sort.push('_score', { publishedAt: 'desc' });
+    }
   }
   // Distance is shown on every hit when a centre is known, whatever the sort.
   const scriptFields = c
@@ -231,28 +282,75 @@ export function buildSearch(p: SearchParams, country: CountryCode, matching: Mat
     from: (p.page - 1) * p.pageSize,
     size: p.pageSize,
     track_total_hits: true,
-    query: {
-      bool: {
-        must: must.length ? must : [{ match_all: {} }],
-        filter,
-        // Under "relevance", running paid promotions rank first (ADR-0020), then phrase and category
-        // boosts (ADR-0041). Optional clauses: they change the order, never which listings match.
-        // Explicit sorts (newest, price, distance) don't score, so they get none.
-        ...(p.sort === 'relevance'
-          ? {
-              should: [
+    query:
+      p.sort === 'relevance'
+        ? {
+            // Best match (ADR-0042): relevance × quality × freshness.
+            function_score: {
+              query: {
+                bool: {
+                  must: must.length ? must : [{ match_all: {} }],
+                  filter,
+                  // Under "relevance", running paid promotions rank first (ADR-0020), then phrase and category
+                  // boosts (ADR-0041). Optional clauses: they change the order, never which listings match.
+                  // Explicit sorts (newest, price, distance) don't score, so they get none.
+                  ...(p.sort === 'relevance'
+                    ? {
+                        should: [
+                          {
+                            constant_score: {
+                              filter: { range: { promotedUntil: { gt: 'now' } } },
+                              boost: 1000,
+                            },
+                          },
+                          ...should,
+                        ],
+                      }
+                    : {}),
+                },
+              },
+              functions: [
                 {
-                  constant_score: {
-                    filter: { range: { promotedUntil: { gt: 'now' } } },
-                    boost: 1000,
+                  script_score: {
+                    script: {
+                      source: RANK_SCRIPT,
+                      params: {
+                        origin: hourStart(),
+                        scale: `${FRESHNESS.scaleDays}d`,
+                        offset: `${FRESHNESS.offsetDays}d`,
+                        decay: FRESHNESS.decay,
+                        wq: (matching.weights ?? DEFAULT_WEIGHTS).quality,
+                        wf: (matching.weights ?? DEFAULT_WEIGHTS).freshness,
+                      },
+                    },
                   },
                 },
-                ...should,
               ],
-            }
-          : {}),
-      },
-    },
+              boost_mode: 'multiply',
+            },
+          }
+        : {
+            bool: {
+              must: must.length ? must : [{ match_all: {} }],
+              filter,
+              // Under "relevance", running paid promotions rank first (ADR-0020), then phrase and category
+              // boosts (ADR-0041). Optional clauses: they change the order, never which listings match.
+              // Explicit sorts (newest, price, distance) don't score, so they get none.
+              ...(p.sort === 'relevance'
+                ? {
+                    should: [
+                      {
+                        constant_score: {
+                          filter: { range: { promotedUntil: { gt: 'now' } } },
+                          boost: 1000,
+                        },
+                      },
+                      ...should,
+                    ],
+                  }
+                : {}),
+            },
+          },
     post_filter: { bool: { filter: others() } },
     aggs,
     sort,

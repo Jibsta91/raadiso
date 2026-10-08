@@ -58,6 +58,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/v1/search/ranking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The ranking lab - best match with previewed weights, each score taken apart (ADR-0042)
+         * @description Admin console only (console tokens; not routed by the gateway, ADR-0030). Saves nothing.
+         */
+        get: operations["adminSearchRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/v1/search/index": {
         parameters: {
             query?: never;
@@ -128,6 +148,47 @@ export interface components {
             /** Format: date-time */
             publishedAt: string;
         };
+        /** @description One part of the query read as a filter or a sort (ADR-0041) */
+        Understood: {
+            /** @enum {string} */
+            kind: "category" | "attribute" | "place" | "region" | "sort" | "price";
+            /** @description The words of the query */
+            words: string;
+            /** @description The search parameters it set */
+            set: {
+                [key: string]: string;
+            };
+        };
+        RankingWeights: {
+            quality: number;
+            freshness: number;
+        };
+        RankingLab: {
+            weights: components["schemas"]["RankingWeights"];
+            defaults: components["schemas"]["RankingWeights"];
+            query: {
+                text: string;
+                understood: components["schemas"]["Understood"][];
+            };
+            total: number;
+            items: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                category: string;
+                subcategory: string;
+                imageCount: number;
+                /** Format: date-time */
+                publishedAt: string;
+                promoted: boolean;
+                /** @description Text relevance and boosts */
+                relevance: number;
+                quality: number;
+                freshness: number;
+                multiplier: number;
+                score: number;
+            }[];
+        };
         Autocomplete: {
             categories: {
                 category: string;
@@ -150,16 +211,7 @@ export interface components {
             query: {
                 /** @description The words searched as text */
                 text: string;
-                understood: {
-                    /** @enum {string} */
-                    kind: "category" | "attribute" | "place" | "region" | "sort" | "price";
-                    /** @description The words of the query */
-                    words: string;
-                    /** @description The search parameters it set */
-                    set: {
-                        [key: string]: string;
-                    };
-                }[];
+                understood: components["schemas"]["Understood"][];
             };
             /** @description No listing matched every word; these match some */
             relaxed: boolean;
@@ -292,7 +344,7 @@ export interface operations {
                 lat?: number;
                 lon?: number;
                 radiusKm?: number;
-                sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "distance";
+                sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "distance" | "year_desc" | "mileage_asc" | "area_desc" | "storage_desc" | "head_desc" | "price_per_area_asc";
                 page?: number;
                 pageSize?: number;
             };
@@ -363,6 +415,35 @@ export interface operations {
                 };
             };
             400: components["responses"]["Problem"];
+        };
+    };
+    adminSearchRanking: {
+        parameters: {
+            query?: {
+                q?: string;
+                country?: "XS" | "NO";
+                category?: string;
+                quality?: number;
+                freshness?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ranked listings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingLab"];
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
         };
     };
     adminSearchIndex: {

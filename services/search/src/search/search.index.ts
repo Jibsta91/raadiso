@@ -1,4 +1,5 @@
 import { Client, errors } from '@opensearch-project/opensearch';
+import { attributesOf } from '@raadi/catalog';
 import type { ListingSnapshot } from '@raadi/events';
 import { circuitBreaker, retry } from '@raadi/service-kit';
 import { INDEX_VERSION, indexBody, MIGRATE_SCRIPT } from './index-definition.js';
@@ -20,10 +21,31 @@ export interface ListingDocument {
   region: string;
   location: { lat: number; lon: number };
   imageIds: string[];
+  /** Photos, for ranking and the console (ADR-0042). */
+  imageCount: number;
+  /** What the seller gave buyers, 0–1: photos, description, details (ADR-0042). */
+  quality: number;
   publishedAt: string;
   updatedAt: string;
   /** End of a paid promotion (ADR-0020), if any. */
   promotedUntil: string | null;
+}
+
+/**
+ * How complete a listing is (ADR-0042): photos up to four (half), the description up to 400 characters
+ * (a quarter) and the share of the category's details filled in (a quarter). Rounded to two decimals.
+ */
+export function qualityOf(
+  l: Pick<ListingSnapshot, 'imageIds' | 'description' | 'category' | 'subcategory' | 'attributes'>,
+): number {
+  const photos = Math.min(l.imageIds.length, 4) / 4;
+  const text = Math.min(l.description.trim().length, 400) / 400;
+  const defs = attributesOf(l.category, l.subcategory);
+  const details = defs.length
+    ? defs.filter((d) => l.attributes[d.key] !== undefined && l.attributes[d.key] !== '').length /
+      defs.length
+    : 1;
+  return Math.round((0.5 * photos + 0.25 * text + 0.25 * details) * 100) / 100;
 }
 
 export function toDocument(l: ListingSnapshot): ListingDocument {
@@ -51,6 +73,8 @@ export function toDocument(l: ListingSnapshot): ListingDocument {
     region: l.location.region ?? l.location.county,
     location: { lat: l.location.lat, lon: l.location.lon },
     imageIds: l.imageIds,
+    imageCount: l.imageIds.length,
+    quality: qualityOf(l),
     publishedAt: l.publishedAt,
     updatedAt: l.updatedAt,
     promotedUntil: l.promotedUntil ?? null,

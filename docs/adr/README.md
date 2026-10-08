@@ -45,3 +45,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0038](0038-error-reports-glitchtip.md)                       | Error reports from the website and the app: GlitchTip                                    | Accepted |
 | [0040](0040-countries-money-and-taxonomy-as-data.md)          | Countries in the data: money in minor units, regions, a taxonomy per country             | Accepted |
 | [0041](0041-search-2-understanding-relevance-autocomplete.md) | Search 2.0: query understanding, multilingual matching, measured relevance, autocomplete | Accepted |
+| [0042](0042-best-match-ranking-and-sorts.md)                  | Best match: quality and freshness in the ranking, sorts per category, a ranking lab      | Accepted |

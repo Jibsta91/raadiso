@@ -42,6 +42,8 @@ export type AttributeDef =
       unit?: string;
       /** Searchable as `<range>Min` / `<range>Max` ("from – to"). */
       range?: string;
+      /** The order buyers sort by, if any: a sort `<range>_<order>` (ADR-0042). */
+      sort?: 'asc' | 'desc';
     });
 
 interface AttributeBase {
@@ -73,6 +75,7 @@ const year = (required: boolean): AttributeDef => ({
   min: 1900,
   max: new Date().getUTCFullYear() + 1,
   range: 'year',
+  sort: 'desc',
 });
 const mileage = (required: boolean): AttributeDef => ({
   key: 'mileageKm',
@@ -82,6 +85,7 @@ const mileage = (required: boolean): AttributeDef => ({
   max: 2_000_000,
   unit: 'km',
   range: 'mileage',
+  sort: 'asc',
 });
 const area = (required: boolean): AttributeDef => ({
   key: 'areaM2',
@@ -91,6 +95,7 @@ const area = (required: boolean): AttributeDef => ({
   max: 1_000_000,
   unit: 'm²',
   range: 'area',
+  sort: 'desc',
 });
 const bedrooms: AttributeDef = {
   key: 'bedrooms',
@@ -279,6 +284,7 @@ const SOMALILAND: readonly CategoryNode[] = [
             max: 4096,
             unit: 'GB',
             range: 'storage',
+            sort: 'desc',
           },
         ],
       },
@@ -309,7 +315,15 @@ const SOMALILAND: readonly CategoryNode[] = [
   {
     id: 'livestock',
     attributes: [
-      { key: 'head', kind: 'number', required: true, min: 1, max: 10_000, range: 'head' },
+      {
+        key: 'head',
+        kind: 'number',
+        required: true,
+        min: 1,
+        max: 10_000,
+        range: 'head',
+        sort: 'desc',
+      },
       select('sex', LIVESTOCK_SEX, false),
     ],
     children: leaves('camels', 'goats-sheep', 'cattle', 'poultry'),
@@ -518,3 +532,37 @@ export const RANGE_FIELDS: Readonly<Record<string, string>> = Object.fromEntries
   ),
 );
 export const RANGE_PARAMS: readonly string[] = Object.keys(RANGE_FIELDS);
+
+/** Sorts every search has. */
+export const BASE_SORTS = ['relevance', 'newest', 'price_asc', 'price_desc', 'distance'] as const;
+
+/** The lowest price per square metre: for categories with an area (ADR-0042). */
+export const PRICE_PER_AREA_SORT = 'price_per_area_asc';
+
+/** Sorts generated from attributes that declare an order: `year_desc` → attributes.year, descending. */
+export const ATTRIBUTE_SORTS: Readonly<Record<string, { field: string; order: 'asc' | 'desc' }>> =
+  Object.fromEntries(
+    [...ALL_ATTRIBUTES.values()].flatMap((a) =>
+      a.kind === 'number' && a.range && a.sort
+        ? [[`${a.range}_${a.sort}`, { field: a.key, order: a.sort }] as const]
+        : [],
+    ),
+  );
+
+/** Every sort the search API accepts. */
+export const SORTS: readonly string[] = [
+  ...BASE_SORTS,
+  ...Object.keys(ATTRIBUTE_SORTS),
+  PRICE_PER_AREA_SORT,
+];
+
+/** The sorts that make sense in a category (or subcategory), base sorts first. */
+export function sortsOf(category: Category, subcategory?: Subcategory): string[] {
+  const attrs = attributesOf(category, subcategory);
+  const own = Object.entries(ATTRIBUTE_SORTS)
+    .filter(([, s]) => attrs.some((a) => a.key === s.field))
+    .map(([key]) => key);
+  const perArea =
+    attrs.some((a) => a.key === 'areaM2') && priceRuleOf(category, subcategory) !== 'none';
+  return [...BASE_SORTS, ...own, ...(perArea ? [PRICE_PER_AREA_SORT] : [])];
+}
