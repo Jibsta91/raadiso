@@ -19,6 +19,12 @@ storage:
       path: /var/tempo/wal
     local:
       path: /var/tempo/blocks
+# Cut traces into blocks sooner, so fewer stay in memory: Tempo crept up to its 512M limit after a day of
+# test traffic, and the status page went red until a restart.
+ingester:
+  trace_idle_period: 5s
+  max_block_duration: 5m
+  max_block_bytes: 52428800
 compactor:
   compaction:
     block_retention: 168h
@@ -26,6 +32,16 @@ metrics_generator:
   registry:
     external_labels:
       source: tempo
+  processor:
+    span_metrics:
+      # Only spans the dashboards use: requests a service serves (SERVER) and events it handles (CONSUMER).
+      # Client and internal spans (database calls, HTTP calls out) made 85% of the 6k-series histogram.
+      filter_policies:
+        - include:
+            match_type: regex
+            attributes:
+              - key: kind
+                value: SPAN_KIND_(SERVER|CONSUMER)
   storage:
     path: /var/tempo/generator/wal
     remote_write:

@@ -19,8 +19,9 @@ export function totp(secret = process.env.DEMO_OTP_SECRET ?? 'raadi-demo-otp-sec
 }
 
 /**
- * Answers Keycloak's one-time code step, if it is showing. Keycloak accepts each code once, and
- * parallel workers sign staff in at the same time, so a rejected code is retried in the next window.
+ * Answers Keycloak's one-time code step, if it is showing. Development lets a code be used again within
+ * its window (KEYCLOAK_OTP_CODE_REUSABLE); where codes are single-use, a rejected code is retried in the
+ * next window.
  */
 export async function enterOtp(page: Page): Promise<void> {
   const otp = page.locator('#otp');
