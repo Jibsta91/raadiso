@@ -42,7 +42,11 @@ class FakeProvider implements PaymentProvider {
     this.captures.push(key);
     this.state.set(ref, 'captured');
   }
-  async refund(ref: string) {
+  refunds: string[] = [];
+  async refund(ref: string, _amount: number, key: string) {
+    // Slow enough that two refunds of one order overlap.
+    await new Promise((r) => setTimeout(r, 50));
+    this.refunds.push(key);
     this.state.set(ref, 'refunded');
   }
   async cancel(ref: string) {
@@ -300,8 +304,17 @@ describe('webhooks and reconciliation', () => {
 
     assert.equal(await status(service.refund(seller, second.id)), 403);
     assert.equal(await status(service.refund(moderator, second.id)), 403);
-    const refunded = await service.refund(admin, second.id);
-    assert.equal(refunded.status, 'refunded');
+    // Two admins refund at the same moment: one refund goes through, the other finds it done (409).
+    const [a, b] = await Promise.allSettled([
+      service.refund(admin, second.id),
+      service.refund(admin, second.id),
+    ]);
+    const refunded = [a, b].find((r) => r.status === 'fulfilled')!;
+    assert.equal(refunded.status, 'fulfilled');
+    assert.equal(refunded.value.status, 'refunded');
+    const other = [a, b].find((r) => r.status === 'rejected');
+    assert.equal(await status(other ? Promise.reject(other.reason) : Promise.resolve()), 409);
+    assert.deepEqual(provider.refunds, [`refund-${second.id}`], 'the provider is asked once');
     const audited = await pool.query<{ payload: { data: { action: string; targetId: string } } }>(
       `SELECT payload FROM outbox WHERE aggregate_type = 'audit' AND aggregate_id = $1`,
       [admin.sub],
