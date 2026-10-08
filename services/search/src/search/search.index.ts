@@ -217,4 +217,9 @@ export interface SearchResponse {
     string,
     { values: { buckets: Array<{ key: string; doc_count: number; from?: number; to?: number }> } }
   >;
+  /** Term suggestions, when the request asked for them ("did you mean"). */
+  suggest?: Record<
+    string,
+    Array<{ text: string; offset: number; length: number; options: Array<{ text: string }> }>
+  >;
 }

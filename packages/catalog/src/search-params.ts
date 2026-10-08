@@ -55,6 +55,11 @@ const schema = z
     /** The marketplace searched; the service's default country when absent. */
     country: z.enum(COUNTRY_CODES as [string, ...string[]]).optional(),
     q: z.string().trim().max(200).optional(),
+    /** "false" searches the words as typed, without reading categories, places and prices into them. */
+    understand: z
+      .enum(['true', 'false'])
+      .transform((v) => v === 'true')
+      .optional(),
     category: csv(CATEGORY_KEYS).optional(),
     subcategory: z
       .string()

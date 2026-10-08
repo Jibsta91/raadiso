@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search/autocomplete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What to offer while someone types (ADR-0041)
+         * @description Categories whose words start with the input (with listing counts), title completions and places, in one country.
+         */
+        get: operations["autocomplete"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search/suggest": {
         parameters: {
             query?: never;
@@ -108,12 +128,43 @@ export interface components {
             /** Format: date-time */
             publishedAt: string;
         };
+        Autocomplete: {
+            categories: {
+                category: string;
+                subcategory?: string;
+                count: number;
+            }[];
+            queries: string[];
+            places: {
+                placeId: string;
+                name: string;
+            }[];
+        };
         /** @description An amount in minor units (cents, øre) of an ISO 4217 currency (ADR-0040) */
         Money: {
             amountMinor: number;
             currency: string;
         };
         SearchResult: {
+            /** @description How the query was read (ADR-0041) */
+            query: {
+                /** @description The words searched as text */
+                text: string;
+                understood: {
+                    /** @enum {string} */
+                    kind: "category" | "attribute" | "place" | "region" | "sort" | "price";
+                    /** @description The words of the query */
+                    words: string;
+                    /** @description The search parameters it set */
+                    set: {
+                        [key: string]: string;
+                    };
+                }[];
+            };
+            /** @description No listing matched every word; these match some */
+            relaxed: boolean;
+            /** @description A spelling that would match more ("did you mean") */
+            suggestion?: string;
             /** @description The country searched */
             country: string;
             /** @description Its currency (the price ranges are in it) */
@@ -173,6 +224,8 @@ export interface operations {
                 /** @description The marketplace searched (XS is Somaliland); the service's default when absent (ADR-0040) */
                 country?: "XS" | "NO";
                 q?: string;
+                /** @description false searches the words as typed; otherwise categories, places, prices and "cheap" in the query become filters and a sort (ADR-0041), listed in the response's `query.understood` */
+                understand?: "true" | "false";
                 /** @description Comma-separated */
                 category?: string;
                 /** @description Comma-separated */
@@ -260,6 +313,30 @@ export interface operations {
             };
             400: components["responses"]["Problem"];
             503: components["responses"]["Problem"];
+        };
+    };
+    autocomplete: {
+        parameters: {
+            query: {
+                q: string;
+                country?: "XS" | "NO";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Autocomplete"];
+                };
+            };
+            400: components["responses"]["Problem"];
         };
     };
     suggest: {

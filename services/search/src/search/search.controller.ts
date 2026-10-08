@@ -4,10 +4,14 @@ import { Public, ZodValidationPipe } from '@raadi/service-kit';
 import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { type SearchParams, searchParamsSchema } from './query.js';
-import { type SearchResult, SearchService } from './search.service.js';
+import { type Autocomplete, type SearchResult, SearchService } from './search.service.js';
 
 const suggestSchema = z
   .object({ q: z.string().trim().min(2).max(60), country: z.enum(COUNTRY_CODES).optional() })
+  .strict();
+
+const autocompleteSchema = z
+  .object({ q: z.string().trim().min(1).max(60), country: z.enum(COUNTRY_CODES).optional() })
   .strict();
 
 /** Public search API: anonymous browsing is the core of a marketplace. */
@@ -23,6 +27,16 @@ export class SearchController {
   ): Promise<SearchResult> {
     void reply.header('cache-control', 'public, max-age=15');
     return this.search.search(params);
+  }
+
+  @Get('autocomplete')
+  async autocomplete(
+    @Query(new ZodValidationPipe(autocompleteSchema))
+    { q, country }: z.infer<typeof autocompleteSchema>,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<Autocomplete> {
+    void reply.header('cache-control', 'public, max-age=60');
+    return this.search.autocomplete(q, country);
   }
 
   @Get('suggest')

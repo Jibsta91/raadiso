@@ -1,6 +1,6 @@
 import { categoriesOf, countryOfCategory, facetsOf, rangesOf } from '@raadi/catalog/categories';
 import { currencySymbol } from '@raadi/catalog/money';
-import { regionName } from '@raadi/catalog/places';
+import { findPlace, regionName } from '@raadi/catalog/places';
 import type { SearchQuery } from '@raadi/api-client';
 import { Button } from '@raadi/ui';
 import { ChevronRight, SearchX } from 'lucide-react';
@@ -11,6 +11,7 @@ import { ActiveFilters, facetChips, paramChip } from '@/components/search/active
 import { FacetGroup } from '@/components/search/facet-group';
 import { FilterPanel } from '@/components/search/filter-panel';
 import { SaveSearchButton } from '@/components/saved/saved-search-controls';
+import { SearchBox } from '@/components/search/search-box';
 import { SearchControls } from '@/components/search/search-controls';
 import { Link } from '@/i18n/navigation';
 import { CATEGORY_ICONS } from '@/lib/taxonomy-icons';
@@ -18,12 +19,20 @@ import { savedSearches, searchListings, ServiceUnavailableError } from '@/lib/ap
 import { currentCountry } from '@/lib/host';
 import { sameSearch, savedParams, searchLabels } from '@/lib/search-labels';
 import { flatParams, makeLabel } from '@/lib/format';
-import { CATEGORY_FILTERS, href, type Params, selected, withParams } from '@/lib/search-params';
+import {
+  CATEGORY_FILTERS,
+  href,
+  type Params,
+  selected,
+  withoutKey,
+  withParams,
+} from '@/lib/search-params';
 
 export const dynamic = 'force-dynamic';
 
 const PASSTHROUGH = [
   'q',
+  'understand',
   'category',
   'subcategory',
   'region',
@@ -64,21 +73,12 @@ export default async function SearchPage({
     currentCountry(),
   ]);
   const all = flatParams(await searchParams);
-  const current: Params = Object.fromEntries(
+  const requested: Params = Object.fromEntries(
     Object.entries(all).filter(([k]) => PASSTHROUGH.includes(k)),
   );
-  // With exactly one category chosen, the sidebar shows that category's own filters (FINN-style).
-  const categories = selected(current, 'category');
-  const only =
-    categories.length === 1 && countryOfCategory(categories[0]!) === country
-      ? categories[0]!
-      : undefined;
-  const subcategories = selected(current, 'subcategory');
-  const sub = only && subcategories.length === 1 ? subcategories[0] : undefined;
-
   let result;
   try {
-    result = await searchListings({ ...current, pageSize: 24 } as unknown as SearchQuery);
+    result = await searchListings({ ...requested, pageSize: 24 } as unknown as SearchQuery);
   } catch (error) {
     if (!(error instanceof ServiceUnavailableError)) throw error;
     return (
@@ -87,6 +87,26 @@ export default async function SearchPage({
       </div>
     );
   }
+
+  // What the query said (ADR-0041) becomes ordinary filters: the sidebar, the chips (each removable)
+  // and every link carry them explicitly, with understand=false so they aren't read twice.
+  const understood = result.query.understood;
+  const current: Params = understood.length
+    ? {
+        ...withoutKey(requested, 'q'),
+        ...Object.assign({}, ...understood.map((u) => u.set)),
+        ...(result.query.text ? { q: result.query.text } : {}),
+        understand: 'false',
+      }
+    : requested;
+  // With exactly one category chosen, the sidebar shows that category's own filters (FINN-style).
+  const categories = selected(current, 'category');
+  const only =
+    categories.length === 1 && countryOfCategory(categories[0]!) === country
+      ? categories[0]!
+      : undefined;
+  const subcategories = selected(current, 'subcategory');
+  const sub = only && subcategories.length === 1 ? subcategories[0] : undefined;
 
   const pages = Math.max(1, Math.ceil(Math.min(result.total, 200 * 24) / result.pageSize));
   const label = (facet: string) => (value: string) => {
@@ -103,7 +123,9 @@ export default async function SearchPage({
         return t(`taxonomy.values.${facet}.${value}` as never);
     }
   };
-  const filtered = Object.keys(current).some((k) => k !== 'q' && k !== 'sort' && k !== 'page');
+  const filtered = Object.keys(current).some(
+    (k) => k !== 'q' && k !== 'sort' && k !== 'page' && k !== 'understand',
+  );
   // Saving a search keeps its filters; "Lagre søk" shows once there is something to keep.
   // A saved search remembers its country, so its alerts search the same marketplace (ADR-0040).
   const toSave = savedParams({ ...current, country });
@@ -136,6 +158,22 @@ export default async function SearchPage({
       value: unit ? `${n} ${unit}` : n,
     });
   };
+  /** One understood part of the query, in words ("Cars", "near Hargeisa", "Lowest price"). */
+  const describe = (u: (typeof understood)[number]): string => {
+    const set = u.set;
+    if (set.subcategory) return label('subcategory')(set.subcategory);
+    if (set.category) return label('category')(set.category);
+    if (set.near) return t('search.nearPlace', { place: findPlace(set.near)?.name ?? set.near });
+    if (set.region) return label('region')(set.region);
+    if (set.sort) return t(`search.sort.${set.sort}` as never);
+    const parts = [
+      ...(set.priceMin ? [bound('price', 'Min', ranges[0]!.unit)] : []),
+      ...(set.priceMax ? [bound('price', 'Max', ranges[0]!.unit)] : []),
+    ];
+    if (parts.length) return parts.join(', ');
+    const [key, value] = Object.entries(set)[0] ?? ['', ''];
+    return label(key)(value);
+  };
   const chips = [
     ...['category', 'subcategory', 'region', ...CATEGORY_FILTERS].flatMap((key) =>
       RANGE_KEYS.includes(key) ? [] : facetChips(current, key, label(key)),
@@ -154,18 +192,14 @@ export default async function SearchPage({
           .map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}
-        <label className="sr-only" htmlFor="q">
-          {t('search.placeholder')}
-        </label>
-        <input
-          id="q"
-          name="q"
-          type="search"
-          defaultValue={current.q ?? ''}
+        <SearchBox
+          country={country}
+          defaultValue={requested.q ?? ''}
           placeholder={t('search.placeholder')}
-          data-testid="search-input"
-          className="h-12 flex-1 rounded-full border border-input bg-card px-5 text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
-          maxLength={200}
+          label={t('search.placeholder')}
+          testId="search-input"
+          className="flex-1"
+          inputClassName="h-12 w-full rounded-full border border-input bg-card px-5 text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
         />
         <Button type="submit" size="lg" data-testid="search-submit">
           {t('search.submit')}
@@ -266,6 +300,41 @@ export default async function SearchPage({
             </nav>
           ) : null}
           <SearchControls params={current} country={country} />
+          {understood.length && requested.q ? (
+            <p className="text-sm text-muted-foreground" data-testid="search-understood">
+              {t('search.understoodAs', { q: requested.q })} {understood.map(describe).join(' · ')}.{' '}
+              <Link
+                href={href({ q: requested.q, understand: 'false' })}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+                data-testid="search-exact-words"
+              >
+                {t('search.exactWords')}
+              </Link>
+            </p>
+          ) : null}
+          {result.relaxed ? (
+            <p
+              role="status"
+              className="rounded-xl bg-soft p-3 text-sm"
+              data-testid="search-relaxed"
+            >
+              {t('search.relaxed')}
+            </p>
+          ) : null}
+          {result.suggestion ? (
+            <p className="text-sm" data-testid="search-did-you-mean">
+              {t.rich('search.didYouMean', {
+                suggestion: () => (
+                  <Link
+                    href={href({ ...withoutKey(requested, 'page'), q: result.suggestion! })}
+                    className="font-semibold text-primary underline-offset-4 hover:underline"
+                  >
+                    {result.suggestion}
+                  </Link>
+                ),
+              })}
+            </p>
+          ) : null}
           <ActiveFilters
             chips={chips}
             clear={current.q ? { q: current.q } : {}}

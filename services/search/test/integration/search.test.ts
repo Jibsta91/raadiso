@@ -138,8 +138,12 @@ describe('SearchIndex + SearchService', () => {
   });
 
   it('finds the last part of compound words ("sykkel" finds "Terrengsykkel")', async () => {
+    // A mountain bike, in Sport like any (search reads "sykkel" as that category, ADR-0041).
     const doc = snapshot(59, {
       version: 2,
+      category: 'torget',
+      subcategory: 'sport',
+      attributes: { condition: 'good' },
       title: 'Terrengsykkel fra Trek, 29 tommer',
       description: 'Lite brukt, nye dekk.',
     });

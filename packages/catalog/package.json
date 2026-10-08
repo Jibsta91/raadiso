@@ -29,6 +29,10 @@
       "types": "./dist/demo.d.ts",
       "default": "./dist/demo.js"
     },
+    "./lexicon": {
+      "types": "./dist/lexicon.d.ts",
+      "default": "./dist/lexicon.js"
+    },
     "./money": {
       "types": "./dist/money.d.ts",
       "default": "./dist/money.js"

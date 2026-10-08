@@ -70,3 +70,39 @@ test('geo search: near a place, within a radius, sorted by distance', async ({ p
   expect(distances.every((d) => d <= 100)).toBe(true);
   expect(distances).toEqual([...distances].sort((a, b) => a - b));
 });
+
+test('search reads categories and "cheap" out of the words, and each part can be removed', async ({
+  page,
+}) => {
+  // ADR-0041: "billig sykkel" is Sport, cheapest first, with nothing left to match as text.
+  await page.goto('/en/search?q=billig%20sykkel');
+  await expect(page.getByTestId('search-understood')).toBeVisible();
+  await expect(page.getByTestId('chip-subcategory-sport')).toBeVisible();
+  await expect(page.getByTestId('sort')).toHaveValue('price_asc');
+  await expect(page.getByTestId('listing-card').first()).toBeVisible();
+
+  // Removing the chip keeps the rest, and the words are no longer read again.
+  await page.getByTestId('chip-subcategory-sport').click();
+  await expect(page).toHaveURL(/understand=false/);
+  await expect(page).not.toHaveURL(/subcategory=sport/);
+
+  // The way out: search for the exact words.
+  await page.goto('/en/search?q=billig%20sykkel');
+  await page.getByTestId('search-exact-words').click();
+  await expect(page).toHaveURL(/q=billig\+sykkel&understand=false|understand=false&q=billig/);
+  await expect(page.getByTestId('search-understood')).toHaveCount(0);
+});
+
+test('suggestions while typing: a category, chosen with the keyboard', async ({ page }) => {
+  await page.goto('/en');
+  const box = page.getByTestId('home-search-input');
+  await box.fill('sof');
+  const category = page.getByTestId('suggestion-category').first();
+  await expect(category).toContainText('Furniture');
+  await expect(box).toHaveAttribute('aria-expanded', 'true');
+  await box.press('ArrowDown');
+  await expect(box).toHaveAttribute('aria-activedescendant', /.+/);
+  await box.press('Enter');
+  await expect(page).toHaveURL(/\/en\/search\?category=torget&subcategory=mobler/);
+  await expect(page.getByTestId('listing-card').first()).toBeVisible();
+});

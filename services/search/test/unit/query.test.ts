@@ -105,10 +105,36 @@ describe('query builder', () => {
     type MultiMatch = { multi_match: { fields: string[]; fuzziness?: string } };
     const text = body.query.bool.must[0] as { bool: { should: MultiMatch[] } };
     const [words, endings] = text.bool.should.map((c) => c.multi_match);
-    assert.equal(words!.fuzziness, 'AUTO:4,8');
+    // Typos from five letters; most words required, not all (ADR-0041).
+    assert.equal(words!.fuzziness, 'AUTO:5,9');
+    assert.equal((words as { minimum_should_match?: string }).minimum_should_match, '3<-25%');
     assert.equal(words!.fields[0], 'title^3');
     assert.deepEqual(endings!.fields, ['title.suffix^2', 'description.suffix']);
     assert.equal(endings!.fuzziness, undefined);
+  });
+
+  it('searches Somaliland in English and Somali fields, without Norwegian compounds', () => {
+    const body = build(parse({ q: 'solar panel' }), 'XS');
+    type MultiMatch = { multi_match: { fields: string[] } };
+    const text = body.query.bool.must[0] as { bool: { should: MultiMatch[] } };
+    assert.equal(text.bool.should.length, 1);
+    assert.deepEqual(text.bool.should[0]!.multi_match.fields.slice(0, 2), [
+      'title.en^3',
+      'title.so^3',
+    ]);
+    assert.ok(body.suggest, 'asks for spelling suggestions');
+  });
+
+  it('boosts what the query named but did not filter, and loosens matching on the retry', () => {
+    const body = build(parse({ q: 'phone laptop' }), 'XS', {
+      boostCategories: ['mobile-phones'],
+      boostValues: { 'attributes.itemType': ['laptop'] },
+      relaxed: true,
+    });
+    const should = JSON.stringify(body.query.bool.should);
+    assert.match(should, /"subcategory":\["mobile-phones"\]/);
+    assert.match(should, /"attributes.itemType":\["laptop"\]/);
+    assert.match(JSON.stringify(body.query.bool.must), /"minimum_should_match":"1"/);
   });
 
   it('applies a facet to the hits and to other facets, but not to its own counts', () => {

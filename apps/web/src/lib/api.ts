@@ -57,6 +57,8 @@ export async function searchListings(query: SearchQuery): Promise<SearchResult> 
       items: [],
       facets: { category: [], subcategory: [], region: [] },
       priceRanges: [],
+      query: { text: query.q ?? '', understood: [] },
+      relaxed: false,
     };
   }
   logger.warn({ status: response.status, error }, 'search failed');
