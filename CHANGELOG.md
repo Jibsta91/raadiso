@@ -8,6 +8,9 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- A strict Content-Security-Policy on the website and the console: a fresh nonce per page and
+  `'strict-dynamic'` instead of `'unsafe-inline'` scripts, sent by the app (Traefik's copy is gone).
+  e2e checks the header, the nonce on every server-sent script, and that nothing violates it.
 - Console: a Tools section (operators and platform admins) linking every web UI of the platform: Grafana,
   GlitchTip, Prometheus, the status page, Keycloak, OpenBao, Traefik, Mailpit, the push mock and, in tunnel
   mode, Pangolin. Each card says how to sign in (with the `./raadi secret` command to copy) and whether the
