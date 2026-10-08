@@ -178,8 +178,7 @@ const en = {
       review_received: 'Someone reviewed you: {rating} out of 5 stars.',
       listing_promoted:
         'Your listing is now promoted for {days} days. The receipt is in your e-mail.',
-      favourite_price_drop:
-        'A favourite got cheaper: now {priceNok} kr (was {previousPriceNok} kr).',
+      favourite_price_drop: 'A favourite got cheaper: now {price} (was {previousPrice}).',
       favourite_sold: 'One of your favourites has been sold.',
       saved_search_match: '{count} new listings match a saved search.',
     },
@@ -274,7 +273,12 @@ const en = {
   },
 };
 
-export type Messages = typeof en;
+type Strict = typeof en;
+/** Category and subcategory names are looked up by taxonomy id: the taxonomy is data (ADR-0040). */
+export type Messages = Omit<Strict, 'categories' | 'taxonomy'> & {
+  categories: Record<string, string>;
+  taxonomy: Omit<Strict['taxonomy'], 'subcategories'> & { subcategories: Record<string, string> };
+};
 
 const nb: Messages = {
   tabs: { home: 'Hjem', search: 'Søk', alerts: 'Varsler', messages: 'Meldinger', account: 'Konto' },
@@ -439,8 +443,7 @@ const nb: Messages = {
       review_received: 'Du har fått en ny omtale: {rating} av 5 stjerner.',
       listing_promoted:
         'Annonsen din er nå fremhevet i {days} dager. Kvitteringen ligger i e-posten din.',
-      favourite_price_drop:
-        'En favoritt har fått lavere pris: nå {priceNok} kr (før {previousPriceNok} kr).',
+      favourite_price_drop: 'En favoritt har fått lavere pris: nå {price} (før {previousPrice}).',
       favourite_sold: 'En av favorittene dine er solgt.',
       saved_search_match: '{count} nye annonser passer et lagret søk.',
     },
@@ -711,7 +714,7 @@ const so: Messages = {
       listing_promoted:
         'Xayeysiiskaaga hadda waa la horumariyay {days} maalmood. Rasiidka waxaa lagu diray iimaylkaaga.',
       favourite_price_drop:
-        'Mid aad jeceshahay qiimihiisa waa la dhimay: hadda {priceNok} kr (hore {previousPriceNok} kr).',
+        'Mid aad jeceshahay qiimihiisa waa la dhimay: hadda {price} (hore {previousPrice}).',
       favourite_sold: 'Mid ka mid ah kuwa aad jeceshahay waa la iibiyay.',
       saved_search_match: '{count} xayeysiis oo cusub ayaa ku habboon raadin la keydiyay.',
     },

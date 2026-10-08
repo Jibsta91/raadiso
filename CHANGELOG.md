@@ -8,6 +8,20 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Countries in the data (ADR-0040), the first slice of the listings programme. A listing belongs to its
+  place's country; money is minor units plus a currency (`price: { amountMinor, currency }`), and
+  `county` is now `region`. The taxonomy is data, one tree per country, with declarative attributes
+  that generate the validation, search parameters, facets, ranges and index mapping. Somaliland (`XS`)
+  has its own categories (vehicles with foreign-used and steering side, property and land, phones,
+  electronics and solar, livestock by the head, services with optional prices, …), six regions and
+  their towns, and 300 demo listings in US dollars next to Norway's 500. Search index version 5 filters
+  every query by country (`country=XS`, default `DEFAULT_COUNTRY`) and upgrades version 4 documents
+  while copying them. The website resolves the country from the host (`COUNTRY_HOSTS`); development
+  stays Norway until the second development host exists. Prices are formatted in the reader's
+  language and the listing's currency everywhere, also in push notices and notification lists. Rentals show
+  "per month", short stays "per night". Events stay compatible (new optional fields); the REST API
+  drops `priceNok` and `county` (a planned break).
+
 - A strict Content-Security-Policy on the website and the console: a fresh nonce per page and
   `'strict-dynamic'` instead of `'unsafe-inline'` scripts, sent by the app (Traefik's copy is gone).
   e2e checks the header, the nonce on every server-sent script, and that nothing violates it.

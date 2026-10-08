@@ -45,7 +45,7 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
       <div className="flex-1">
         <p className="font-medium">{l.title}</p>
         <p className="text-sm text-muted-foreground">
-          {l.priceNok === null ? t('listing.noPrice') : formatPrice(l.priceNok, current)} ·{' '}
+          {l.price === null ? t('listing.noPrice') : formatPrice(l.price, current)} ·{' '}
           {l.location.name}
         </p>
         {l.removal ? (

@@ -1,3 +1,4 @@
+import { noticePrices } from '@raadi/catalog/money';
 import { z } from 'zod';
 import type { Locale, PushKind } from './model.js';
 
@@ -30,11 +31,11 @@ const COPY: Record<PushKind, Record<Locale, PushCopy>> = {
     so: { title: 'Faallo cusub', body: 'Qof ayaa kaa faallooday ka dib iib.' },
   },
   favourite_price_drop: {
-    nb: { title: 'Lavere pris', body: 'En av favorittene dine koster nå {priceNok} kr.' },
-    en: { title: 'Price drop', body: 'One of your favourites now costs {priceNok} kr.' },
+    nb: { title: 'Lavere pris', body: 'En av favorittene dine koster nå {price}.' },
+    en: { title: 'Price drop', body: 'One of your favourites now costs {price}.' },
     so: {
       title: 'Qiimo dhimis',
-      body: 'Mid ka mid ah waxyaabaha aad jeceshahay hadda waa {priceNok} kr.',
+      body: 'Mid ka mid ah waxyaabaha aad jeceshahay hadda waa {price}.',
     },
   },
   favourite_sold: {
@@ -69,9 +70,10 @@ export function renderPush(
   params: Record<string, string>,
 ): PushCopy {
   const copy = COPY[kind][locale];
+  const values = { ...params, ...noticePrices(params, locale) };
   return {
     title: copy.title,
-    body: copy.body.replace(/\{(\w+)\}/g, (_, k: string) => params[k] ?? ''),
+    body: copy.body.replace(/\{(\w+)\}/g, (_, k: string) => values[k] ?? ''),
   };
 }
 

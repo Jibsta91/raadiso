@@ -172,7 +172,7 @@ test('app: the buyer reviews the seller from the conversation after a sale', asy
       subcategory: 'hobby',
       title,
       description: 'Laget av e2e-testen for omtaler i appen.',
-      priceNok: 150,
+      price: { amountMinor: 15000, currency: 'NOK' },
       attributes: { condition: 'good' },
       placeId: 'oslo',
       imageIds: [],

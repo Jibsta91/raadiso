@@ -1,10 +1,24 @@
 import 'server-only';
-import { COUNTIES, type County, SAVED_SEARCH_EXCLUDED, findPlace } from '@raadi/catalog';
-import { getFormatter, getTranslations } from 'next-intl/server';
+import {
+  ALL_ATTRIBUTES,
+  COUNTRIES,
+  findPlace,
+  isCountry,
+  regionName,
+  SAVED_SEARCH_EXCLUDED,
+} from '@raadi/catalog';
+import { currencySymbol } from '@raadi/catalog/money';
+import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { makeLabel } from './format';
+import { currentCountry } from './host';
 import { CATEGORY_FILTERS, type Params } from './search-params';
 
-const UNITS: Record<string, string> = { mileage: 'km', area: 'm²', price: 'kr' };
+/** Units of range filters, from the taxonomy (km, m², GB). */
+const UNITS: Record<string, string> = Object.fromEntries(
+  [...ALL_ATTRIBUTES.values()].flatMap((a) =>
+    a.kind === 'number' && a.range && a.unit ? [[a.range, a.unit] as const] : [],
+  ),
+);
 
 /**
  * A search in words, in the visitor's language: one label per filter value
@@ -12,13 +26,20 @@ const UNITS: Record<string, string> = { mileage: 'km', area: 'm²', price: 'kr' 
  * searches and to show what they contain.
  */
 export async function searchLabels(params: Params): Promise<string[]> {
-  const [t, format] = await Promise.all([getTranslations(), getFormatter()]);
+  const [t, format, locale, here] = await Promise.all([
+    getTranslations(),
+    getFormatter(),
+    getLocale(),
+    currentCountry(),
+  ]);
+  const country = isCountry(params.country) ? params.country : here;
+  const units = { ...UNITS, price: currencySymbol(COUNTRIES[country].currency, locale) };
   const values = (key: string) => (params[key] ?? '').split(',').filter(Boolean);
   const labels: string[] = [];
   if (params.q) labels.push(`«${params.q}»`);
   for (const v of values('category')) labels.push(t(`taxonomy.categories.${v}` as never));
   for (const v of values('subcategory')) labels.push(t(`taxonomy.subcategories.${v}` as never));
-  for (const v of values('county')) labels.push(COUNTIES[v as County] ?? v);
+  for (const v of values('region')) labels.push(regionName(v));
   for (const key of CATEGORY_FILTERS) {
     if (/(Min|Max)$/.test(key)) continue;
     for (const v of values(key))
@@ -30,7 +51,7 @@ export async function searchLabels(params: Params): Promise<string[]> {
     const [, name, which] = m as unknown as [string, string, 'Min' | 'Max'];
     const title = name === 'price' ? t('search.price') : t(`search.ranges.${name}` as never);
     const n = name === 'year' ? value : format.number(Number(value));
-    const unit = UNITS[name];
+    const unit = units[name as keyof typeof units];
     labels.push(
       t(which === 'Min' ? 'search.rangeFrom' : 'search.rangeTo', {
         filter: title,

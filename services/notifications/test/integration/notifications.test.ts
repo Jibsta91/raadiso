@@ -346,7 +346,12 @@ describe('notifications pipeline', () => {
     );
     await service.onEvent(
       received(
-        alert({ kind: 'price_drop', listingId: listing, priceNok: 800, previousPriceNok: 1000 }),
+        alert({
+          kind: 'price_drop',
+          listingId: listing,
+          price: { amountMinor: 24000, currency: 'USD' },
+          previousPrice: { amountMinor: 30000, currency: 'USD' },
+        }),
       ),
     );
     await drain();
@@ -354,7 +359,11 @@ describe('notifications pipeline', () => {
     const list = await repo.list(user, 10);
     const match = list.find((n) => n.kind === 'saved_search_match');
     assert.equal(match?.params.count, '5', 'one growing notice per saved search');
-    assert.equal(list.find((n) => n.kind === 'favourite_price_drop')?.params.priceNok, '800');
+    assert.deepEqual(list.find((n) => n.kind === 'favourite_price_drop')?.params, {
+      amountMinor: '24000',
+      currency: 'USD',
+      previousAmountMinor: '30000',
+    });
     const mine = pushed.filter((m) => m.to === device);
     assert.deepEqual(
       mine.map((m) => m.data.url).sort(),

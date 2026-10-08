@@ -1,4 +1,6 @@
-import type { TaxonomyMessages } from '../i18n/taxonomy';
+import type { Messages } from '../i18n/messages';
+
+type TaxonomyMessages = Messages['taxonomy'];
 
 /** Numeric attributes shown with thousands separators (and a unit). */
 const UNITS: Record<string, string> = { mileageKm: 'km', areaM2: 'm²' };

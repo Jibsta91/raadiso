@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "Apache-2.0",
-  "description": "Marketplace taxonomy (categories, attributes), Norwegian places for geo search, and the deterministic demo dataset.",
+  "description": "Marketplace configuration per country (ADR-0040): countries, money, places, the taxonomy as data with its attribute definitions, search parameters, and the deterministic demo dataset.",
   "type": "module",
   "files": [
     "dist"
@@ -21,13 +21,21 @@
       "types": "./dist/categories.d.ts",
       "default": "./dist/categories.js"
     },
-    "./places": {
-      "types": "./dist/places.d.ts",
-      "default": "./dist/places.js"
+    "./countries": {
+      "types": "./dist/countries.d.ts",
+      "default": "./dist/countries.js"
     },
     "./demo": {
       "types": "./dist/demo.d.ts",
       "default": "./dist/demo.js"
+    },
+    "./money": {
+      "types": "./dist/money.d.ts",
+      "default": "./dist/money.js"
+    },
+    "./places": {
+      "types": "./dist/places.d.ts",
+      "default": "./dist/places.js"
     }
   },
   "scripts": {

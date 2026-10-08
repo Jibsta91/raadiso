@@ -391,7 +391,8 @@ components:
           status,
           category,
           subcategory,
-          priceNok,
+          country,
+          price,
           ownerId,
           sellerName,
           placeId,
@@ -409,7 +410,8 @@ components:
         status: { type: string, enum: [active, sold, deleted] }
         category: { type: string }
         subcategory: { type: string }
-        priceNok: { type: [integer, 'null'] }
+        country: { $ref: '#/components/schemas/Country' }
+        price: { $ref: '#/components/schemas/NullableMoney' }
         ownerId: { type: string, format: uuid }
         sellerName: { type: string }
         placeId: { type: string }
@@ -474,7 +476,8 @@ components:
         - status
         - category
         - subcategory
-        - priceNok
+        - country
+        - price
         - ownerId
         - sellerName
         - placeId
@@ -508,10 +511,10 @@ components:
           type: string
         subcategory:
           type: string
-        priceNok:
-          type:
-            - integer
-            - 'null'
+        country:
+          $ref: '#/components/schemas/Country'
+        price:
+          $ref: '#/components/schemas/NullableMoney'
         ownerId:
           type: string
           format: uuid
@@ -696,18 +699,38 @@ components:
       properties:
         ids: { type: array, minItems: 1, maxItems: 50, items: { type: string, format: uuid } }
         note: { type: string, maxLength: 500 }
-    Category: { type: string, enum: [torget, bil, eiendom, jobb, reise] }
+    Category:
+      type: string
+      minLength: 1
+      maxLength: 40
+      description: A category id from the taxonomy of the listing's country (@raadi/catalog, ADR-0040)
+    Country:
+      type: string
+      enum: [XS, NO]
+      description: The marketplace country (XS is Somaliland, ADR-0033); a listing's is its place's
+    Money:
+      type: object
+      additionalProperties: false
+      required: [amountMinor, currency]
+      description: An amount in minor units (cents, øre) of an ISO 4217 currency (ADR-0040)
+      properties:
+        amountMinor: { type: integer, minimum: 0 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+    NullableMoney:
+      oneOf:
+        - { $ref: '#/components/schemas/Money' }
+        - { type: 'null' }
     Attributes:
       type: object
       description: Category-specific attributes (see @raadi/catalog), e.g. {"condition":"good"} for torget.
       additionalProperties: { type: [string, number, boolean] }
     Location:
       type: object
-      required: [placeId, name, county, lat, lon]
+      required: [placeId, name, region, lat, lon]
       properties:
         placeId: { type: string }
         name: { type: string }
-        county: { type: string }
+        region: { type: string, description: Region key of the place's country (@raadi/catalog) }
         lat: { type: number }
         lon: { type: number }
     ImageUrls:
@@ -734,7 +757,8 @@ components:
           subcategory,
           title,
           description,
-          priceNok,
+          country,
+          price,
           attributes,
           location,
           images,
@@ -751,7 +775,8 @@ components:
         subcategory: { type: string }
         title: { type: string }
         description: { type: string }
-        priceNok: { type: [integer, 'null'] }
+        country: { $ref: '#/components/schemas/Country' }
+        price: { $ref: '#/components/schemas/NullableMoney' }
         attributes: { $ref: '#/components/schemas/Attributes' }
         location: { $ref: '#/components/schemas/Location' }
         images: { type: array, items: { $ref: '#/components/schemas/ListingImage' } }
@@ -799,14 +824,20 @@ components:
         subcategory: { type: string, maxLength: 40 }
         title: { type: string, minLength: 3, maxLength: 120 }
         description: { type: string, minLength: 1, maxLength: 5000 }
-        priceNok:
-          {
-            type: [integer, 'null'],
-            minimum: 0,
-            description: Required except for jobb (must be null),
-          }
+        price:
+          oneOf:
+            - { $ref: '#/components/schemas/Money' }
+            - { type: 'null' }
+          description: >-
+            In the currency of the place's country. Required, optional or absent (null) by the category's
+            price rule (jobs have none)
         attributes: { $ref: '#/components/schemas/Attributes' }
-        placeId: { type: string, description: Place id from the gazetteer (e.g. oslo, bergen) }
+        placeId:
+          {
+            type: string,
+            description: Place id from the gazetteer (e.g. hargeisa,
+            oslo); it decides the listing's country,
+          }
         imageIds:
           type: array
           maxItems: 10
@@ -822,7 +853,7 @@ components:
         subcategory: { type: string, maxLength: 40 }
         title: { type: string, minLength: 3, maxLength: 120 }
         description: { type: string, minLength: 1, maxLength: 5000 }
-        priceNok: { type: [integer, 'null'], minimum: 0 }
+        price: { $ref: '#/components/schemas/NullableMoney' }
         attributes: { $ref: '#/components/schemas/Attributes' }
         placeId: { type: string }
         imageIds:

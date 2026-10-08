@@ -25,26 +25,39 @@ import {
   type TrustProfile,
   type TrustSummary,
 } from '@raadi/api-client';
+import { COUNTRIES } from '@raadi/catalog/countries';
 import { cache } from 'react';
 import { env } from './env';
 import { logger } from './logger';
+import { currentCountry } from './host';
 import { accessToken } from './session';
 
 /** Server-side data access: internal service URLs, the user's token when signed in. */
 
 export class ServiceUnavailableError extends Error {}
 
+/** Searches the country this request's host serves (ADR-0040), unless the query names one. */
 export async function searchListings(query: SearchQuery): Promise<SearchResult> {
+  const country = query.country ?? (await currentCountry());
   const client = createSearchClient({ baseUrl: env.searchUrl });
   const { data, error, response } = await client.GET('/api/v1/search/listings', {
-    params: { query },
+    params: { query: { ...query, country } },
     signal: AbortSignal.timeout(5000),
     cache: 'no-store',
   });
   if (data) return data;
   if (response.status === 400) {
     logger.info({ query, error }, 'search parameters rejected');
-    return { total: 0, page: 1, pageSize: 24, items: [], facets: emptyFacets() };
+    return {
+      country,
+      currency: COUNTRIES[country].currency,
+      total: 0,
+      page: 1,
+      pageSize: 24,
+      items: [],
+      facets: { category: [], subcategory: [], region: [] },
+      priceRanges: [],
+    };
   }
   logger.warn({ status: response.status, error }, 'search failed');
   throw new ServiceUnavailableError('search unavailable');
@@ -264,24 +277,6 @@ export async function paymentOrder(id: string): Promise<PaymentOrder | null> {
   if (data) return data;
   if (response.status === 404 || response.status === 400) return null;
   throw new ServiceUnavailableError(`payments returned ${response.status}`);
-}
-
-function emptyFacets(): SearchResult['facets'] {
-  return {
-    category: [],
-    subcategory: [],
-    county: [],
-    condition: [],
-    fuel: [],
-    propertyType: [],
-    employmentType: [],
-    gearbox: [],
-    bodyType: [],
-    drivetrain: [],
-    ownership: [],
-    make: [],
-    price: [],
-  };
 }
 
 /**

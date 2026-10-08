@@ -283,7 +283,8 @@ export interface components {
             status: "active" | "sold" | "deleted";
             category: string;
             subcategory: string;
-            priceNok: number | null;
+            country: components["schemas"]["Country"];
+            price: components["schemas"]["NullableMoney"];
             /** Format: uuid */
             ownerId: string;
             sellerName: string;
@@ -347,7 +348,8 @@ export interface components {
             status: "active" | "sold" | "deleted";
             category: string;
             subcategory: string;
-            priceNok: number | null;
+            country: components["schemas"]["Country"];
+            price: components["schemas"]["NullableMoney"];
             /** Format: uuid */
             ownerId: string;
             sellerName: string;
@@ -442,8 +444,19 @@ export interface components {
             ids: string[];
             note?: string;
         };
-        /** @enum {string} */
-        Category: "torget" | "bil" | "eiendom" | "jobb" | "reise";
+        /** @description A category id from the taxonomy of the listing's country (@raadi/catalog, ADR-0040) */
+        Category: string;
+        /**
+         * @description The marketplace country (XS is Somaliland, ADR-0033); a listing's is its place's
+         * @enum {string}
+         */
+        Country: "XS" | "NO";
+        /** @description An amount in minor units (cents, øre) of an ISO 4217 currency (ADR-0040) */
+        Money: {
+            amountMinor: number;
+            currency: string;
+        };
+        NullableMoney: components["schemas"]["Money"] | null;
         /** @description Category-specific attributes (see @raadi/catalog), e.g. {"condition":"good"} for torget. */
         Attributes: {
             [key: string]: string | number | boolean;
@@ -451,7 +464,8 @@ export interface components {
         Location: {
             placeId: string;
             name: string;
-            county: string;
+            /** @description Region key of the place's country (@raadi/catalog) */
+            region: string;
             lat: number;
             lon: number;
         };
@@ -475,7 +489,8 @@ export interface components {
             subcategory: string;
             title: string;
             description: string;
-            priceNok: number | null;
+            country: components["schemas"]["Country"];
+            price: components["schemas"]["NullableMoney"];
             attributes: components["schemas"]["Attributes"];
             location: components["schemas"]["Location"];
             images: components["schemas"]["ListingImage"][];
@@ -513,10 +528,10 @@ export interface components {
             subcategory: string;
             title: string;
             description: string;
-            /** @description Required except for jobb (must be null) */
-            priceNok?: number | null;
+            /** @description In the currency of the place's country. Required, optional or absent (null) by the category's price rule (jobs have none) */
+            price?: components["schemas"]["Money"] | null;
             attributes: components["schemas"]["Attributes"];
-            /** @description Place id from the gazetteer (e.g. oslo */
+            /** @description Place id from the gazetteer (e.g. hargeisa */
             placeId: string;
             /** @description Ids returned by the media API; only your own, scanned images */
             imageIds?: string[];
@@ -526,7 +541,7 @@ export interface components {
             subcategory?: string;
             title?: string;
             description?: string;
-            priceNok?: number | null;
+            price?: components["schemas"]["NullableMoney"];
             attributes?: components["schemas"]["Attributes"];
             placeId?: string;
             imageIds?: string[];

@@ -1,13 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { metrics, trace } from '@opentelemetry/api';
-import { COUNTIES, type County } from '@raadi/catalog';
+import { type CountryCode, COUNTRIES, type Money, regionName } from '@raadi/catalog';
 import { parseEvent } from '@raadi/events';
 import { imageUrls, type ImgproxySigner } from '@raadi/service-kit';
 import { PermanentEventError, type ReceivedEvent } from '@raadi/service-kit/kafka';
-import { buildSearch, centre, FACETS, PRICE_RANGES, type SearchParams } from './query.js';
+import { buildSearch, centre, countryOf, type SearchParams } from './query.js';
 import { SearchIndex, toDocument } from './search.index.js';
 
 export const SIGNER = Symbol('IMGPROXY_SIGNER');
+/** The country of a search that names none (DEFAULT_COUNTRY). */
+export const DEFAULT_COUNTRY = Symbol('DEFAULT_COUNTRY');
 
 const meter = metrics.getMeter('search');
 const indexed = meter.createCounter('raadi.search.indexed', {
@@ -25,14 +27,15 @@ const queries = meter.createHistogram('raadi.search.query.duration', {
 export interface SearchHit {
   id: string;
   title: string;
-  priceNok: number | null;
+  country: string;
+  price: Money | null;
   category: string;
   subcategory: string;
   location: {
     placeId: string;
     name: string;
-    county: string;
-    countyName: string;
+    region: string;
+    regionName: string;
     lat: number;
     lon: number;
   };
@@ -49,14 +52,26 @@ export interface FacetValue {
   count: number;
 }
 
+export interface PriceBucketCount {
+  key: string;
+  /** Major units of `currency`, inclusive. */
+  from?: number;
+  /** Major units of `currency`, exclusive. */
+  to?: number;
+  count: number;
+}
+
 export interface SearchResult {
+  /** The country searched, and its currency (prices in the price facet are in it). */
+  country: CountryCode;
+  currency: string;
   total: number;
   page: number;
   pageSize: number;
   items: SearchHit[];
-  facets: Record<keyof typeof FACETS, FacetValue[]> & {
-    price: Array<{ key: string; from?: number; to?: number; count: number }>;
-  };
+  /** The facets relevant to the search (category, subcategory, region and attribute facets). */
+  facets: Record<string, FacetValue[]>;
+  priceRanges: PriceBucketCount[];
 }
 
 @Injectable()
@@ -64,6 +79,7 @@ export class SearchService {
   constructor(
     private readonly index: SearchIndex,
     @Inject(SIGNER) private readonly signer: ImgproxySigner,
+    @Inject(DEFAULT_COUNTRY) private readonly defaultCountry: CountryCode,
   ) {}
 
   async search(params: SearchParams): Promise<SearchResult> {
@@ -72,27 +88,28 @@ export class SearchService {
       'raadi.search.has_query': Boolean(params.q),
       'raadi.search.sort': params.sort,
     });
-    const res = await this.index.search(buildSearch(params));
-    queries.record(res.took / 1000, { sort: params.sort, text: params.q ? 'yes' : 'no' });
+    const country = countryOf(params, this.defaultCountry);
+    span?.setAttribute('raadi.search.country', country);
+    const res = await this.index.search(buildSearch(params, country));
+    queries.record(res.took / 1000, { sort: params.sort, text: params.q ? 'yes' : 'no', country });
     const geo = centre(params);
 
-    const facets = Object.fromEntries(
-      Object.keys(FACETS).map((facet) => [
-        facet,
-        (res.aggregations[facet]?.values.buckets ?? []).map((b) => ({
-          value: b.key,
-          count: b.doc_count,
-        })),
-      ]),
-    ) as unknown as SearchResult['facets'];
-    facets.price = (res.aggregations.price?.values.buckets ?? []).map((b, i) => ({
-      key: PRICE_RANGES[i]?.key ?? b.key,
-      ...(b.from !== undefined ? { from: b.from } : {}),
-      ...(b.to !== undefined ? { to: b.to } : {}),
-      count: b.doc_count,
+    const facets: Record<string, FacetValue[]> = {};
+    for (const [facet, agg] of Object.entries(res.aggregations)) {
+      if (facet === 'price') continue;
+      facets[facet] = (agg.values.buckets ?? []).map((b) => ({ value: b.key, count: b.doc_count }));
+    }
+    const { currency, priceBuckets } = COUNTRIES[country];
+    const priceRanges = priceBuckets.map((bucket, i) => ({
+      key: bucket.key,
+      ...(bucket.from !== undefined ? { from: bucket.from } : {}),
+      ...(bucket.to !== undefined ? { to: bucket.to } : {}),
+      count: res.aggregations.price?.values.buckets[i]?.doc_count ?? 0,
     }));
 
     return {
+      country,
+      currency,
       total: res.hits.total.value,
       page: params.page,
       pageSize: params.pageSize,
@@ -103,14 +120,18 @@ export class SearchService {
         return {
           id: s.id,
           title: s.title,
-          priceNok: s.priceNok,
+          country: s.country,
+          price:
+            s.priceMinor === null || s.currency === null
+              ? null
+              : { amountMinor: s.priceMinor, currency: s.currency },
           category: s.category,
           subcategory: s.subcategory,
           location: {
             placeId: s.placeId,
             name: s.placeName,
-            county: s.county,
-            countyName: COUNTIES[s.county as County] ?? s.county,
+            region: s.region,
+            regionName: regionName(s.region),
             lat: s.location.lat,
             lon: s.location.lon,
           },
@@ -125,17 +146,19 @@ export class SearchService {
         };
       }),
       facets,
+      priceRanges,
     };
   }
 
-  /** Title suggestions for search-as-you-type. */
-  async suggest(q: string): Promise<string[]> {
+  /** Title suggestions for search-as-you-type, in one country. */
+  async suggest(q: string, country?: string): Promise<string[]> {
+    const where = country && Object.hasOwn(COUNTRIES, country) ? country : this.defaultCountry;
     const res = await this.index.search({
       size: 0,
       query: {
         bool: {
           must: [{ match: { 'title.prefix': { query: q, operator: 'and' } } }],
-          filter: [{ term: { status: 'active' } }],
+          filter: [{ term: { status: 'active' } }, { term: { country: where } }],
         },
       },
       aggs: { titles: { terms: { field: 'title.raw', size: 8 } } },

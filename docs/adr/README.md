@@ -43,3 +43,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0036](0036-self-hosted-ci-runner.md)                  | CI on a self-hosted runner on the development laptop                                   | Accepted |
 | [0037](0037-renovate-dependency-updates.md)            | Renovate for dependency updates, self-hosted                                           | Accepted |
 | [0038](0038-error-reports-glitchtip.md)                | Error reports from the website and the app: GlitchTip                                  | Accepted |
+| [0040](0040-countries-money-and-taxonomy-as-data.md)   | Countries in the data: money in minor units, regions, a taxonomy per country           | Accepted |

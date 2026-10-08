@@ -46,7 +46,9 @@ function Category({ id }: { id: CategoryId }) {
         const result = unwrap(res);
         if (cancelled || !result) return;
         setTotal(result.total);
-        setCounts(new Map(result.facets.subcategory.map((f: FacetValue) => [f.value, f.count])));
+        setCounts(
+          new Map((result.facets.subcategory ?? []).map((f: FacetValue) => [f.value, f.count])),
+        );
       })
       .catch(() => !cancelled && setError(true));
     return () => {
@@ -62,7 +64,12 @@ function Category({ id }: { id: CategoryId }) {
     >
       <View style={styles.hero}>
         <View style={[styles.heroIcon, { backgroundColor: theme.ink }]}>
-          <Icon name={CATEGORY_ICONS[id]} size={30} color={theme.inkText} aria-hidden />
+          <Icon
+            name={CATEGORY_ICONS[id] ?? 'image-outline'}
+            size={30}
+            color={theme.inkText}
+            aria-hidden
+          />
         </View>
         <LargeTitle>{m.categories[id]}</LargeTitle>
         {total !== undefined ? (
@@ -94,7 +101,12 @@ function Category({ id }: { id: CategoryId }) {
               ]}
             >
               <View style={[styles.tileIcon, { backgroundColor: theme.surfaceAlt }]}>
-                <Icon name={SUBCATEGORY_ICONS[sub]} size={22} color={theme.text} aria-hidden />
+                <Icon
+                  name={SUBCATEGORY_ICONS[sub] ?? 'image-outline'}
+                  size={22}
+                  color={theme.text}
+                  aria-hidden
+                />
               </View>
               <Text numberOfLines={2} style={[styles.tileName, { color: theme.text }]}>
                 {m.taxonomy.subcategories[sub]}

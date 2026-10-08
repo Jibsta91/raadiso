@@ -1,14 +1,11 @@
-import { FACET_ATTRIBUTES, RANGE_PARAMS } from '@raadi/catalog';
+import { FACET_KEYS, RANGE_PARAMS } from '@raadi/catalog/categories';
 
 /** Helpers for building search URLs from the current (flat) query. */
 export type Params = Record<string, string>;
 
 /** Filters that only make sense inside one category (attribute facets and ranges). */
 export const CATEGORY_FILTERS = [
-  ...new Set([
-    ...Object.values(FACET_ATTRIBUTES).flat(),
-    ...RANGE_PARAMS.flatMap((p) => [`${p}Min`, `${p}Max`]),
-  ]),
+  ...new Set([...FACET_KEYS, ...RANGE_PARAMS.flatMap((p) => [`${p}Min`, `${p}Max`])]),
 ];
 
 export function toggleValue(params: Params, key: string, value: string): Params {

@@ -53,7 +53,7 @@ const input = (id: string = randomUUID()) => ({
   subcategory: 'sport',
   title: 'Langrennsski',
   description: 'Lite brukt',
-  priceNok: 1500,
+  price: { amountMinor: 150000, currency: 'NOK' },
   attributes: { condition: 'good' },
   placeId: 'tromso',
   imageIds: [],

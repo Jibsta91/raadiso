@@ -9,6 +9,20 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState, type DependencyList } from 'react';
 import { useAuth } from './auth/context';
 import { config } from './config';
+import { APP_COUNTRY } from './country';
+
+/** Every search and suggestion is in the app's country (ADR-0040), unless it names one. */
+function inCountry<C extends ReturnType<typeof createSearchClient>>(client: C): C {
+  client.use({
+    onRequest({ request }) {
+      const url = new URL(request.url);
+      if (url.searchParams.has('country')) return undefined;
+      url.searchParams.set('country', APP_COUNTRY);
+      return new Request(url, request);
+    },
+  });
+  return client;
+}
 
 /** Typed clients for the services the app uses, authenticated by the platform's auth provider. */
 export function useApi() {
@@ -17,7 +31,7 @@ export function useApi() {
     const options = { baseUrl: config.apiBaseUrl, fetch: auth.fetch };
     return {
       listings: createListingsClient(options),
-      search: createSearchClient(options),
+      search: inCountry(createSearchClient(options)),
       messaging: createMessagingClient(options),
       notifications: createNotificationsClient(options),
       saved: createSavedClient(options),

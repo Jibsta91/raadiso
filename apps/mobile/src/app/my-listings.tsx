@@ -75,7 +75,7 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
           role="link"
           aria-label={[
             listing.title,
-            formatPrice(listing.priceNok, locale, m.common.noPrice),
+            formatPrice(listing.price, locale, m.common.noPrice),
             listing.status === 'sold' ? m.listing.sold : undefined,
           ]
             .filter(Boolean)
@@ -96,7 +96,7 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
               {listing.title}
             </Text>
             <Text style={[styles.price, { color: theme.muted }]}>
-              {formatPrice(listing.priceNok, locale, m.common.noPrice)}
+              {formatPrice(listing.price, locale, m.common.noPrice)}
             </Text>
             {listing.status === 'sold' ? <Badge label={m.listing.sold} tone="neutral" /> : null}
           </View>

@@ -1,16 +1,16 @@
 // Pure helpers shared by the screens; unit-tested in test/format.test.ts.
+import { formatMoney, type Money } from '@raadi/catalog/money';
 
 export type Locale = 'nb' | 'en' | 'so';
 
 export const intlLocale: Record<Locale, string> = { nb: 'nb-NO', en: 'en-GB', so: 'so-SO' };
 
-/** "12 500 kr", or `free`/`onRequest` labels supplied by the caller. */
-export function formatPrice(priceNok: number | null, locale: Locale, onRequest: string): string {
-  if (priceNok === null) return onRequest;
-  const amount = new Intl.NumberFormat(intlLocale[locale], { maximumFractionDigits: 0 }).format(
-    priceNok,
-  );
-  return `${amount} kr`;
+/**
+ * "12 500 kr", "$1,250": the listing's currency in the reader's format (ADR-0040), or the
+ * `onRequest` label supplied by the caller when there is no price.
+ */
+export function formatPrice(price: Money | null, locale: Locale, onRequest: string): string {
+  return price === null ? onRequest : formatMoney(price, locale);
 }
 
 type Unit = 'second' | 'minute' | 'hour' | 'day';

@@ -41,7 +41,7 @@ export default function Favourites() {
           hit={{
             id: item.listing.id,
             title: item.listing.title,
-            priceNok: item.listing.priceNok,
+            price: item.listing.price,
             category: item.listing.category,
             image: item.listing.image,
             location: item.listing.location,

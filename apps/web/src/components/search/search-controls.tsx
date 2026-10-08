@@ -1,14 +1,14 @@
 'use client';
 
-import { PLACES } from '@raadi/catalog';
-import { useTranslations } from 'next-intl';
+import type { CountryCode } from '@raadi/catalog/countries';
+import { placeName, placesOf } from '@raadi/catalog/places';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { href, type Params, withParams } from '@/lib/search-params';
 
 const RADII = ['10', '25', '50', '100', '250'];
 const SORTS = ['relevance', 'newest', 'price_asc', 'price_desc', 'distance'] as const;
-const PLACES_BY_NAME = [...PLACES].sort((a, b) => a.name.localeCompare(b.name, 'nb'));
 
 /** The parameters this form sets; every other one is carried along in hidden fields. */
 const OWN = new Set(['near', 'lat', 'lon', 'radiusKm', 'sort', 'page']);
@@ -18,9 +18,13 @@ const OWN = new Set(['near', 'lat', 'lon', 'radiusKm', 'sort', 'page']);
  * page's JavaScript has loaded (or when it never does); once it has, a choice applies at once, and the
  * fields say so beforehand (WCAG 3.2.2).
  */
-export function SearchControls({ params }: { params: Params }) {
+export function SearchControls({ params, country }: { params: Params; country: CountryCode }) {
   const t = useTranslations('search');
+  const locale = useLocale();
   const router = useRouter();
+  const places = [...placesOf(country)].sort((a, b) =>
+    placeName(a, locale as never).localeCompare(placeName(b, locale as never), locale),
+  );
   const [pending, startTransition] = useTransition();
   const [hydrated, setHydrated] = useState(false);
   const [positionFailed, setPositionFailed] = useState(false);
@@ -86,9 +90,9 @@ export function SearchControls({ params }: { params: Params }) {
         >
           <option value="">{t('anywhere')}</option>
           {hydrated ? <option value="__me">📍 {t('nearMe')}</option> : null}
-          {PLACES_BY_NAME.map((p) => (
+          {places.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name}
+              {placeName(p, locale as never)}
             </option>
           ))}
         </select>

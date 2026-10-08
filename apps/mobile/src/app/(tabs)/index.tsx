@@ -150,7 +150,7 @@ export default function Home() {
               <Chip
                 key={id}
                 testID={`category-${id}`}
-                label={m.categories[id]}
+                label={m.categories[id] ?? id}
                 onPress={() => router.push({ pathname: '/categories/[id]', params: { id } })}
               />
             ))}

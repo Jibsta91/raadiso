@@ -12,7 +12,8 @@ base := {
 		"subcategory": "sport",
 		"title": "Langrennsski",
 		"description": "Lite brukt",
-		"priceNok": 1500,
+		"country": "NO",
+		"price": {"amountMinor": 150000, "currency": "NOK"},
 		"imageCount": 2,
 	},
 	"context": {"activeListings": 3},
@@ -34,10 +35,22 @@ test_platform_admin_is_exempt_from_quota if {
 }
 
 test_price_ceiling_per_category if {
-	pricey := object.union(base, {"listing": object.union(base.listing, {"priceNok": 2000000})})
+	pricey := object.union(base, {"listing": object.union(base.listing, {"price": {"amountMinor": 200000000, "currency": "NOK"}})})
 	listings.decision.reasons == ["price_above_ceiling"] with input as pricey
 	car := object.union(pricey, {"listing": object.union(pricey.listing, {"category": "bil"})})
 	listings.decision.allow with input as car
+}
+
+test_price_ceiling_in_somaliland_dollars if {
+	phone := object.union(base, {"listing": object.union(base.listing, {"category": "phones", "subcategory": "mobile-phones", "country": "XS", "price": {"amountMinor": 120000, "currency": "USD"}})})
+	listings.decision.allow with input as phone
+	typo := object.union(phone, {"listing": object.union(phone.listing, {"price": {"amountMinor": 12000000, "currency": "USD"}})})
+	listings.decision.reasons == ["price_above_ceiling"] with input as typo
+}
+
+test_services_without_a_price_are_allowed if {
+	tutor := object.union(base, {"listing": object.union(base.listing, {"category": "services", "subcategory": "tutoring", "country": "XS", "price": null})})
+	listings.decision.allow with input as tutor
 }
 
 test_prohibited_terms_match_whole_words if {
@@ -48,7 +61,7 @@ test_prohibited_terms_match_whole_words if {
 }
 
 test_jobs_have_no_price_ceiling if {
-	job := object.union(base, {"listing": {"category": "jobb", "subcategory": "it", "title": "Utvikler", "description": "Fast stilling", "priceNok": null, "imageCount": 1}})
+	job := object.union(base, {"listing": {"category": "jobb", "subcategory": "it", "title": "Utvikler", "description": "Fast stilling", "country": "NO", "price": null, "imageCount": 1}})
 	listings.decision.allow with input as job
 }
 

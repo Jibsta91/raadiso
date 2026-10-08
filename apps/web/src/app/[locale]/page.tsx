@@ -1,15 +1,6 @@
 import { cn } from '@raadi/ui';
-import {
-  Briefcase,
-  Car,
-  House,
-  Lock,
-  Plane,
-  Search,
-  ShieldCheck,
-  ShoppingBag,
-  Sparkles,
-} from 'lucide-react';
+import { categoriesOf } from '@raadi/catalog/categories';
+import { Lock, Search, ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthErrorBanner } from '@/components/auth-error-banner';
@@ -17,39 +8,25 @@ import { ListingCard } from '@/components/listings/listing-card';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
+import { currentCountry } from '@/lib/host';
 import { logger } from '@/lib/logger';
 import { localeAlternates } from '@/lib/seo';
+import { CATEGORY_ICONS } from '@/lib/taxonomy-icons';
 
-// A bento grid: Marketplace is the tall ink tile; Property and Travel span two columns on wide screens.
-const CATEGORIES = [
-  {
-    key: 'torget',
-    Icon: ShoppingBag,
-    tile: 'col-span-2 bg-ink text-ink-foreground lg:col-span-1 lg:row-span-2',
-    // Lime on ink in light mode; ink is near-white in dark mode, where lime would vanish.
-    icon: 'text-highlight dark:text-ink-foreground',
-    body: 'opacity-75',
-    large: true,
-  },
-  { key: 'bil', Icon: Car, tile: 'border bg-card', icon: '', body: '', large: false },
-  {
-    key: 'eiendom',
-    Icon: House,
-    tile: 'col-span-2 bg-soft text-soft-foreground',
-    icon: '',
-    body: 'opacity-80',
-    large: false,
-  },
-  { key: 'jobb', Icon: Briefcase, tile: 'border bg-card', icon: '', body: '', large: false },
-  {
-    key: 'reise',
-    Icon: Plane,
-    tile: 'col-span-2 bg-highlight text-highlight-foreground',
-    icon: '',
-    body: 'opacity-80',
-    large: false,
-  },
+// A bento grid: the first category is the tall ink tile; then plain, soft (two columns), plain and
+// highlight (two columns) tiles repeat. Norway's five categories keep the layout they always had.
+const TILES = [
+  { tile: 'border bg-card', icon: '', body: '' },
+  { tile: 'col-span-2 bg-soft text-soft-foreground', icon: '', body: 'opacity-80' },
+  { tile: 'border bg-card', icon: '', body: '' },
+  { tile: 'col-span-2 bg-highlight text-highlight-foreground', icon: '', body: 'opacity-80' },
 ] as const;
+const FIRST_TILE = {
+  tile: 'col-span-2 bg-ink text-ink-foreground lg:col-span-1 lg:row-span-2',
+  // Lime on ink in light mode; ink is near-white in dark mode, where lime would vanish.
+  icon: 'text-highlight dark:text-ink-foreground',
+  body: 'opacity-75',
+};
 
 const TRUST = [
   { key: 'verified', Icon: ShieldCheck },
@@ -77,6 +54,12 @@ export default async function HomePage({
   setRequestLocale(locale);
   const { authError } = await searchParams;
   const t = await getTranslations('home');
+  const categories = categoriesOf(await currentCountry()).map(({ id }, i) => ({
+    key: id,
+    Icon: CATEGORY_ICONS[id] ?? ShoppingBag,
+    large: i === 0,
+    ...(i === 0 ? FIRST_TILE : TILES[(i - 1) % TILES.length]!),
+  }));
   // The front page still renders if search is down; it just omits the latest listings.
   const latest = await searchListings({ sort: 'newest', pageSize: 8 }).catch((error: unknown) => {
     logger.warn({ err: error }, 'latest listings unavailable');
@@ -127,7 +110,7 @@ export default async function HomePage({
           {t('categoriesTitle')}
         </h2>
         <div className="grid grid-flow-dense auto-rows-[10rem] grid-cols-2 gap-4 lg:auto-rows-[10.5rem] lg:grid-cols-4">
-          {CATEGORIES.map(({ key, Icon, tile, icon, body, large }) => (
+          {categories.map(({ key, Icon, tile, icon, body, large }) => (
             <Link
               key={key}
               href={`/${key}`}

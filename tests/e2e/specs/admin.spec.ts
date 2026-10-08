@@ -66,7 +66,7 @@ test('the admin host serves only the console, and the audit log filters', async 
       subcategory: 'hobby',
       title: `Revisjon e2e ${Date.now().toString(36)}`,
       description: 'Laget av e2e-testen for revisjonsloggen.',
-      priceNok: 10,
+      price: { amountMinor: 1000, currency: 'NOK' },
       attributes: { condition: 'good' },
       placeId: 'oslo',
       imageIds: [],

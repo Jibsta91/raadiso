@@ -179,7 +179,7 @@ export default function Search() {
               <Chip
                 key={id}
                 testID={`filter-${id}`}
-                label={m.categories[id]}
+                label={m.categories[id] ?? id}
                 selected={category === id}
                 onPress={() =>
                   router.setParams({
@@ -211,7 +211,7 @@ export default function Search() {
                 <Chip
                   key={id}
                   testID={`filter-sub-${id}`}
-                  label={m.taxonomy.subcategories[id]}
+                  label={m.taxonomy.subcategories[id] ?? id}
                   selected={subcategory === id}
                   onPress={() => router.setParams({ subcategory: subcategory === id ? '' : id })}
                 />

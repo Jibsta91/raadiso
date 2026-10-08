@@ -312,6 +312,23 @@ expect_status 400 "invalid search parameters are rejected"
 req GET "$PUBLIC/api/v1/search/suggest?q=Lan"
 [[ "$(json '.suggestions | length')" -gt 0 ]] && ok "search-as-you-type suggestions" || fail "suggestions"
 
+section "Countries (ADR-0040)"
+eventually "Somaliland's demo listings are searchable" 180 \
+  bash -c "curl -sf --connect-to ::$GW '$PUBLIC/api/v1/search/listings?country=XS&pageSize=1' | jq -e '.total >= 300'"
+req GET "$PUBLIC/api/v1/search/listings?country=XS&pageSize=48"
+json '.currency == "USD" and (.items | all(.[]; .country == "XS" and (.price == null or .price.currency == "USD")))' \
+  | grep -q true && ok "Somaliland searches its own listings, in US dollars" || fail "country search" "$(head -c 300 "$BODY")"
+json '.facets.region | map(.value) | index("maroodi-jeex") != null' | grep -q true \
+  && ok "regions are Somaliland's" || fail "regions" "$(json '.facets.region')"
+req GET "$PUBLIC/api/v1/search/listings?country=XS&priceMin=1000&sort=price_asc&pageSize=48"
+json '.items | length > 0 and all(.[]; .price.amountMinor >= 100000)' | grep -q true \
+  && ok "prices typed in dollars filter cents" || fail "dollar price filter" "$(head -c 300 "$BODY")"
+req GET "$PUBLIC/api/v1/search/listings?country=XS&category=vehicles&pageSize=1"
+json '.facets | has("usage") and has("steering") and (has("ownership") | not)' | grep -q true \
+  && ok "a category's facets come from its country's taxonomy" || fail "taxonomy facets" "$(json '.facets | keys')"
+req GET "$PUBLIC/api/v1/search/listings?country=NO&category=vehicles"
+[[ "$(json '.total')" == "0" ]] && ok "categories don't cross borders" || fail "cross-country category"
+
 section "Listings, media and authorization"
 # Images are optional, so take the newest listing that has one.
 req GET "$PUBLIC/api/v1/search/listings?pageSize=24&sort=newest"
@@ -349,7 +366,7 @@ req POST "$PUBLIC/api/v1/media" -H "origin: $ORIGIN" -F "file=@/tmp/eicar.jpg;ty
 title="Smoke test $(date +%s%N | tail -c 7) Langrennsski"
 listing_body() {
   jq -nc --arg t "$1" --arg img "$image" '{category: "torget", subcategory: "sport", title: $t,
-    description: "Created by the smoke test.", priceNok: 1500, attributes: {condition: "good"},
+    description: "Created by the smoke test.", price: {amountMinor: 150000, currency: "NOK"}, attributes: {condition: "good"},
     placeId: "tromso", imageIds: [$img]}'
 }
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H 'origin: https://evil.example' --data "$(listing_body "$title")"
@@ -358,21 +375,34 @@ req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origi
 expect_status 201 "listing created with an uploaded image"
 listing="$(json '.id')"
 [[ "$(json '.viewer.isOwner')" == "true" ]] && ok "creator is the owner (OpenFGA)" || fail "owner tuple"
+phone_body() {
+  jq -nc --arg c "$1" '{category: "phones", subcategory: "mobile-phones", title: "Smoke test phone",
+    description: "Created by the smoke test.", price: {amountMinor: 24000, currency: $c},
+    attributes: {condition: "good", brand: "samsung"}, placeId: "hargeisa"}'
+}
+req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(phone_body NOK)"
+[[ "$status" == "422" ]] && ok "a Somaliland listing cannot be priced in kroner" || fail "currency check" "HTTP $status"
+req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(phone_body USD)"
+[[ "$status" == "201" && "$(json '.country')" == "XS" && "$(json '.location.region')" == "maroodi-jeex" ]] \
+  && ok "a listing in Hargeisa is in Somaliland, in dollars" || fail "Somaliland listing" "HTTP $status $(head -c 300 "$BODY")"
+xs_listing="$(json '.id')"
+req DELETE "$PUBLIC/api/v1/listings/$xs_listing" -H "origin: $ORIGIN"
+expect_status 204 "the owner deletes it again"
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" \
   --data "$(listing_body "Selger våpen billig")"
 [[ "$status" == "422" && "$(json '.errors[0].code')" == "prohibited_item" ]] && ok "OPA policy blocks prohibited items" || fail "OPA policy" "HTTP $status"
 eventually "new listing reaches search via outbox -> Debezium -> Kafka" 90 \
   bash -c "curl -sf --connect-to ::$GW -G '$PUBLIC/api/v1/search/listings' --data-urlencode 'q=$title' | jq -e '.items[] | select(.id == \"$listing\")'"
-req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" -H 'if-match: "99"' --data '{"priceNok": 1200}'
+req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" -H 'if-match: "99"' --data '{"price": {"amountMinor": 120000, "currency": "NOK"}}'
 expect_status 412 "stale If-Match is refused"
-req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" -H 'if-match: "1"' --data '{"priceNok": 1200}'
+req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" -H 'if-match: "1"' --data '{"price": {"amountMinor": 120000, "currency": "NOK"}}'
 [[ "$status" == "200" && "$(json '.version')" == "2" ]] && ok "owner can edit (version 2)" || fail "owner edit" "HTTP $status"
 req DELETE "$PUBLIC/api/v1/media/$image" -H "origin: $ORIGIN"
 eventually "media learns the image is attached (listing events)" 60 \
   bash -c "curl -s -o /dev/null -w '%{http_code}' --connect-to ::$GW -b '$JAR' -X DELETE -H 'origin: $ORIGIN' '$PUBLIC/api/v1/media/$image' | grep -q 409"
 
 login_as "ola.nordmann@${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}" || fail "login as ola"
-req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"priceNok": 1}'
+req PATCH "$PUBLIC/api/v1/listings/$listing" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"price": {"amountMinor": 100, "currency": "NOK"}}'
 expect_status 403 "another user cannot edit the listing (OpenFGA)"
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(listing_body "Stolen image")"
 [[ "$status" == "422" ]] && ok "another user cannot attach someone else's image" || fail "image ownership" "HTTP $status"
@@ -519,7 +549,7 @@ expect_status 400 "saved searches are validated like the search API"
 login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" \
   --data "$(jq -nc --arg t "$word racersykkel" '{category: "torget", subcategory: "sport", title: $t,
-    description: "Created by the smoke test.", priceNok: 2000, attributes: {condition: "good"},
+    description: "Created by the smoke test.", price: {amountMinor: 200000, currency: "NOK"}, attributes: {condition: "good"},
     placeId: "tromso", imageIds: []}')"
 expect_status 201 "the seller publishes a listing that matches the saved search"
 fav_listing="$(json '.id')"
@@ -537,13 +567,13 @@ notice() { curl -sf --max-time 10 --connect-to "::${GW}" -b "$JAR" "$PUBLIC/api/
 eventually "the buyer is told about new matches (alert event -> notifications)" 90 notice saved_search_match "$search_id"
 
 login_as "$USER_EMAIL" || fail "login as $USER_EMAIL"
-req PATCH "$PUBLIC/api/v1/listings/$fav_listing" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"priceNok": 1500}'
+req PATCH "$PUBLIC/api/v1/listings/$fav_listing" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{"price": {"amountMinor": 150000, "currency": "NOK"}}'
 expect_status 200 "the seller lowers the price"
 
 login_as "$OLA" || fail "login as ola"
 eventually "the buyer is told the favourite got cheaper" 90 notice favourite_price_drop "$fav_listing"
 req GET "$PUBLIC/api/v1/saved/favourites"
-[[ "$(jq -r --arg id "$fav_listing" '.items[] | select(.listingId == $id) | .listing.priceNok' "$BODY")" == "1500" ]] \
+[[ "$(jq -r --arg id "$fav_listing" '.items[] | select(.listingId == $id) | .listing.price.amountMinor' "$BODY")" == "150000" ]] \
   && ok "the favourites list shows the new price" || fail "favourite price" "$(head -c 300 "$BODY")"
 req DELETE "$PUBLIC/api/v1/saved/favourites/$fav_listing" -H "origin: $ORIGIN"
 expect_status 204 "a favourite can be removed"

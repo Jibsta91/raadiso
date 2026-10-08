@@ -1,3 +1,4 @@
+import { noticePrices } from '@raadi/catalog/money';
 import type { Notification } from '@raadi/api-client';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -99,7 +100,10 @@ export default function Notifications() {
         keyExtractor={(n) => n.id}
         renderItem={({ item }) => {
           const isUnread = !item.read && !read.has(item.id);
-          const text = fill(m.notifications.kinds[item.kind], item.params);
+          const text = fill(m.notifications.kinds[item.kind], {
+            ...item.params,
+            ...noticePrices(item.params, locale),
+          });
           return (
             <Pressable
               role="link"

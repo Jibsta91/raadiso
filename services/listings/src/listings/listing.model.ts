@@ -1,10 +1,14 @@
 import {
-  attributeSchemas,
+  attributeSchema,
   categorySchema,
+  COUNTRIES,
+  countryOfCategory,
   findPlace,
   isSubcategoryOf,
-  priceRequired,
+  priceRuleOf,
   type Category,
+  type CountryCode,
+  type Money,
 } from '@raadi/catalog';
 import type { ListingSnapshot } from '@raadi/events';
 import { imageUrls, type ImgproxySigner } from '@raadi/service-kit';
@@ -17,18 +21,35 @@ const fields = {
   subcategory: z.string().min(1).max(40),
   title: z.string().trim().min(3).max(120),
   description: z.string().trim().min(1).max(5000),
-  priceNok: z.number().int().min(0).max(10_000_000_000).nullable(),
+  /** Minor units of the country's currency (ADR-0040); null when there is no asking price. */
+  price: z
+    .object({
+      amountMinor: z.number().int().min(0).max(1_000_000_000_000_000),
+      currency: z.string().regex(/^[A-Z]{3}$/),
+    })
+    .strict()
+    .nullable(),
   attributes: z.record(z.string(), z.unknown()),
   placeId: z.string().min(1).max(40),
   imageIds: z.array(z.uuid()).max(10),
 };
 
 /**
- * Cross-field rules shared by create and update: the subcategory belongs to
- * the category, attributes match the category, jobs have no price and every
- * other category has one, the place exists, and images are unique.
+ * Cross-field rules shared by create and update (ADR-0040): the place exists and decides the country,
+ * the category belongs to that country's taxonomy and the subcategory to the category, the attributes
+ * match the subcategory, the price follows the category's rule and is in the country's currency, and
+ * images are unique.
  */
 function validateListing(v: z.infer<z.ZodObject<typeof fields>>, ctx: z.RefinementCtx): void {
+  const place = findPlace(v.placeId);
+  if (!place) ctx.addIssue({ code: 'custom', path: ['placeId'], message: 'unknown place' });
+  if (place && countryOfCategory(v.category) !== place.country) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['category'],
+      message: `not a category in ${place.country}`,
+    });
+  }
   if (!isSubcategoryOf(v.category, v.subcategory)) {
     ctx.addIssue({
       code: 'custom',
@@ -36,7 +57,7 @@ function validateListing(v: z.infer<z.ZodObject<typeof fields>>, ctx: z.Refineme
       message: `not a subcategory of ${v.category}`,
     });
   }
-  const attrs = attributeSchemas[v.category].safeParse(v.attributes);
+  const attrs = attributeSchema(v.category, v.subcategory).safeParse(v.attributes);
   if (!attrs.success) {
     for (const issue of attrs.error.issues) {
       ctx.addIssue({
@@ -46,14 +67,20 @@ function validateListing(v: z.infer<z.ZodObject<typeof fields>>, ctx: z.Refineme
       });
     }
   }
-  if (priceRequired(v.category) && v.priceNok === null) {
-    ctx.addIssue({ code: 'custom', path: ['priceNok'], message: 'a price is required' });
+  const rule = priceRuleOf(v.category, v.subcategory);
+  if (rule === 'required' && v.price === null) {
+    ctx.addIssue({ code: 'custom', path: ['price'], message: 'a price is required' });
   }
-  if (!priceRequired(v.category) && v.priceNok !== null) {
-    ctx.addIssue({ code: 'custom', path: ['priceNok'], message: 'job listings have no price' });
+  if (rule === 'none' && v.price !== null) {
+    ctx.addIssue({ code: 'custom', path: ['price'], message: 'this category has no price' });
   }
-  if (!findPlace(v.placeId))
-    ctx.addIssue({ code: 'custom', path: ['placeId'], message: 'unknown place' });
+  if (place && v.price && v.price.currency !== COUNTRIES[place.country].currency) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['price', 'currency'],
+      message: `prices in ${place.country} are in ${COUNTRIES[place.country].currency}`,
+    });
+  }
   if (new Set(v.imageIds).size !== v.imageIds.length) {
     ctx.addIssue({ code: 'custom', path: ['imageIds'], message: 'duplicate image' });
   }
@@ -62,7 +89,7 @@ function validateListing(v: z.infer<z.ZodObject<typeof fields>>, ctx: z.Refineme
 export const createListingSchema = z
   .object({
     ...fields,
-    priceNok: fields.priceNok.default(null),
+    price: fields.price.default(null),
     imageIds: fields.imageIds.default([]),
   })
   .strict()
@@ -106,7 +133,9 @@ export interface ListingRow {
   subcategory: string;
   title: string;
   description: string;
-  price_nok: string | null; // bigint arrives as a string
+  country: CountryCode;
+  price_minor: string | null; // bigint arrives as a string
+  currency: string | null;
   attributes: Record<string, string | number | boolean>;
   place_id: string;
   lat: number;
@@ -136,9 +165,10 @@ export interface Listing {
   subcategory: string;
   title: string;
   description: string;
-  priceNok: number | null;
+  country: CountryCode;
+  price: Money | null;
   attributes: Record<string, string | number | boolean>;
-  location: { placeId: string; name: string; county: string; lat: number; lon: number };
+  location: { placeId: string; name: string; region: string; lat: number; lon: number };
   images: ListingImage[];
   seller: { name: string };
   publishedAt: string;
@@ -156,10 +186,17 @@ function location(row: ListingRow) {
   return {
     placeId: row.place_id,
     name: place?.name ?? row.place_id,
-    county: place?.county ?? 'unknown',
+    region: place?.region ?? 'unknown',
     lat: row.lat,
     lon: row.lon,
   };
+}
+
+/** The stored price as money, or null. */
+export function priceOf(row: Pick<ListingRow, 'price_minor' | 'currency'>): Money | null {
+  return row.price_minor === null || row.currency === null
+    ? null
+    : { amountMinor: Number(row.price_minor), currency: row.currency };
 }
 
 export function toListing(row: ListingRow, signer: ImgproxySigner): Listing {
@@ -171,7 +208,8 @@ export function toListing(row: ListingRow, signer: ImgproxySigner): Listing {
     subcategory: row.subcategory,
     title: row.title,
     description: row.description,
-    priceNok: row.price_nok === null ? null : Number(row.price_nok),
+    country: row.country,
+    price: priceOf(row),
     attributes: row.attributes,
     location: location(row),
     images: row.image_ids.map((id) => ({ id, urls: imageUrls(signer, id) })),
@@ -190,8 +228,13 @@ export function activePromotion(row: ListingRow, now = new Date()): string | nul
   return row.promoted_until && row.promoted_until > now ? row.promoted_until.toISOString() : null;
 }
 
-/** Event payload: public listing state, no seller name (ids, not personal data). */
+/**
+ * Event payload: public listing state, no seller name (ids, not personal data). `priceNok` and
+ * `location.county` stay for consumers that predate ADR-0040.
+ */
 export function toSnapshot(row: ListingRow): ListingSnapshot {
+  const price = priceOf(row);
+  const where = location(row);
   return {
     id: row.id,
     version: row.version,
@@ -201,9 +244,18 @@ export function toSnapshot(row: ListingRow): ListingSnapshot {
     subcategory: row.subcategory,
     title: row.title,
     description: row.description,
-    priceNok: row.price_nok === null ? null : Number(row.price_nok),
+    priceNok: price?.currency === 'NOK' ? Math.floor(price.amountMinor / 100) : null,
+    price,
+    country: row.country,
     attributes: row.attributes,
-    location: location(row),
+    location: {
+      placeId: where.placeId,
+      name: where.name,
+      county: where.region,
+      region: where.region,
+      lat: where.lat,
+      lon: where.lon,
+    },
     imageIds: row.image_ids,
     publishedAt: row.published_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),

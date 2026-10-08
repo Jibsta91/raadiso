@@ -1,5 +1,5 @@
 import { Icon, type IconName } from '../../components/icon';
-import { COUNTIES, type County } from '@raadi/catalog/places';
+import { regionName } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -240,13 +240,12 @@ export default function ListingScreen() {
             {item.title}
           </Text>
           <Text testID="listing-price" style={[styles.price, { color: theme.text }]}>
-            {formatPrice(item.priceNok, locale, m.common.noPrice)}
+            {formatPrice(item.price, locale, m.common.noPrice)}
           </Text>
           <View style={styles.place}>
             <Icon name="location-outline" size={16} color={theme.muted} />
             <Body muted style={styles.small}>
-              {item.location.name},{' '}
-              {COUNTIES[item.location.county as County] ?? item.location.county} ·{' '}
+              {item.location.name}, {regionName(item.location.region)} ·{' '}
               {formatAge(item.publishedAt, locale)}
             </Body>
           </View>

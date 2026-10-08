@@ -20,7 +20,7 @@ import { Lifecycle } from './lifecycle.js';
 import { SearchController } from './search/search.controller.js';
 import { SearchAdminController } from './search/admin.js';
 import { SearchIndex } from './search/search.index.js';
-import { SearchService, SIGNER } from './search/search.service.js';
+import { DEFAULT_COUNTRY, SearchService, SIGNER } from './search/search.service.js';
 import { APP_CONFIG } from './tokens.js';
 import { Indexer } from './workers.js';
 
@@ -54,6 +54,7 @@ export class AppModule {
       controllers: [SearchController, SearchAdminController, HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: cfg },
+        { provide: DEFAULT_COUNTRY, useValue: env.DEFAULT_COUNTRY },
         { provide: JwtVerifier, useValue: keycloakVerifier(env) },
         { provide: HealthRegistry, useValue: new HealthRegistry() },
         {

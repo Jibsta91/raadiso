@@ -14,7 +14,7 @@ test('owner is notified in the app when a moderator removes their listing', asyn
       subcategory: 'hobby',
       title,
       description: 'Laget av e2e-testen for varsler.',
-      priceNok: 100,
+      price: { amountMinor: 10000, currency: 'NOK' },
       attributes: { condition: 'good' },
       placeId: 'oslo',
       imageIds: [],

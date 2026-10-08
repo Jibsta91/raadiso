@@ -78,7 +78,7 @@ export function PromoteForm({
             />
             <span className="block font-semibold">{t('days', { count: p.days })}</span>
             <span className="block text-2xl font-bold">
-              {formatPrice(p.amountOre / 100, locale)}
+              {formatPrice({ amountMinor: p.amountOre, currency: 'NOK' }, locale)}
             </span>
             <span className="block text-xs text-muted-foreground">{t('vatIncluded')}</span>
           </label>

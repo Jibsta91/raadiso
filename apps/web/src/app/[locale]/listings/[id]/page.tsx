@@ -1,4 +1,5 @@
-import { COUNTIES, type County } from '@raadi/catalog';
+import { ALL_ATTRIBUTES, priceUnitOf, regionName } from '@raadi/catalog';
+import { toMajor } from '@raadi/catalog/money';
 import { Badge } from '@raadi/ui';
 import { MapPin, User } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -24,16 +25,10 @@ import { getSession } from '@/lib/session';
 export const dynamic = 'force-dynamic';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ENUM_ATTRIBUTES = new Set([
-  'condition',
-  'fuel',
-  'gearbox',
-  'bodyType',
-  'drivetrain',
-  'propertyType',
-  'ownership',
-  'employmentType',
-]);
+/** Attributes whose values are option keys with translated labels (from the taxonomy). */
+const ENUM_ATTRIBUTES = new Set(
+  [...ALL_ATTRIBUTES.values()].filter((a) => a.kind === 'select').map((a) => a.key),
+);
 
 export async function generateMetadata({
   params,
@@ -80,9 +75,13 @@ export default async function ListingPage({
 
   const attributeValue = (key: string, value: string | number | boolean) => {
     if (ENUM_ATTRIBUTES.has(key)) return t(`taxonomy.values.${key}.${value}` as never);
-    if (key === 'mileageKm' || key === 'areaM2') return format.number(Number(value));
+    const def = ALL_ATTRIBUTES.get(key);
+    if (def?.kind === 'number' && key !== 'year')
+      return `${format.number(Number(value))}${def.unit ? ` ${def.unit}` : ''}`;
     return String(value);
   };
+
+  const unit = priceUnitOf(listing.category, listing.subcategory);
 
   // What search engines show as a product with a price (schema.org Product and Offer).
   const structured = {
@@ -91,13 +90,13 @@ export default async function ListingPage({
     name: listing.title,
     description: summary(listing.description, 500),
     image: listing.images.map((img) => new URL(img.urls.large, env.publicBaseUrl).href),
-    ...(listing.priceNok === null
+    ...(listing.price === null
       ? {}
       : {
           offers: {
             '@type': 'Offer',
-            price: listing.priceNok,
-            priceCurrency: 'NOK',
+            price: toMajor(listing.price.amountMinor, listing.price.currency),
+            priceCurrency: listing.price.currency,
             availability:
               listing.status === 'active'
                 ? 'https://schema.org/InStock'
@@ -157,9 +156,13 @@ export default async function ListingPage({
             )}
           </div>
           <p className="text-3xl font-bold" data-testid="listing-price">
-            {listing.priceNok === null
-              ? t('listing.noPrice')
-              : formatPrice(listing.priceNok, locale)}
+            {listing.price === null ? t('listing.noPrice') : formatPrice(listing.price, locale)}
+            {listing.price && unit ? (
+              <span className="text-base font-normal text-muted-foreground">
+                {' '}
+                {t(`listing.per.${unit}`)}
+              </span>
+            ) : null}
           </p>
           <ShareButton title={listing.title} />
         </header>
@@ -201,8 +204,7 @@ export default async function ListingPage({
                   <span className="sr-only">{t('listing.location')}</span>
                 </dt>
                 <dd>
-                  {listing.location.name},{' '}
-                  {COUNTIES[listing.location.county as County] ?? listing.location.county}
+                  {listing.location.name}, {regionName(listing.location.region)}
                 </dd>
               </div>
               <div className="flex items-start gap-2">

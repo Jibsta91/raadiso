@@ -9,6 +9,11 @@ import { z } from 'zod';
 
 const uuid = z.uuid();
 const timestamp = z.iso.datetime({ offset: true });
+/** An amount in minor units (cents, øre) and its ISO 4217 currency (ADR-0040). */
+const money = z.object({
+  amountMinor: z.number().int().min(0),
+  currency: z.string().regex(/^[A-Z]{3}$/),
+});
 
 export const listingSnapshot = z
   .object({
@@ -20,15 +25,26 @@ export const listingSnapshot = z
     subcategory: z.string().min(1),
     title: z.string().min(1).max(120),
     description: z.string().max(5000),
+    /**
+     * Deprecated (ADR-0040): whole kroner for listings priced in NOK, else null. Read `price` when
+     * present; kept for consumers that predate it.
+     */
     priceNok: z.number().int().min(0).nullable(),
     attributes: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
     location: z.object({
       placeId: z.string().min(1),
       name: z.string().min(1),
+      /** Deprecated (ADR-0040): the region, under its old name. */
       county: z.string().min(1),
+      /** Added later (optional, BACKWARD compatible): the region of the place's country. */
+      region: z.string().min(1).optional(),
       lat: z.number().min(-90).max(90),
       lon: z.number().min(-180).max(180),
     }),
+    /** Added later (optional, BACKWARD compatible): the listing's country (ADR-0040). */
+    country: z.string().length(2).optional(),
+    /** Added later (optional, BACKWARD compatible): the asking price in minor units, null if none. */
+    price: money.nullable().optional(),
     imageIds: z.array(uuid).max(10),
     publishedAt: timestamp,
     updatedAt: timestamp,
@@ -133,9 +149,12 @@ export const contracts = {
     savedSearchId: uuid.optional(),
     /** New matches since the last alert (search_match). */
     count: z.number().int().min(1).optional(),
-    /** Old and new asking price (price_drop). */
+    /** Old and new asking price (price_drop). Deprecated (ADR-0040): kroner only; read `price`. */
     previousPriceNok: z.number().int().min(0).optional(),
     priceNok: z.number().int().min(0).optional(),
+    /** Added later (optional, BACKWARD compatible): old and new asking price in minor units. */
+    previousPrice: money.optional(),
+    price: money.optional(),
   }),
   /**
    * A privileged action by staff (moderator, support, operator, platform admin): who did what to

@@ -14,7 +14,7 @@ test('buyer and seller review each other after a sale', async ({ browser }) => {
       subcategory: 'hobby',
       title,
       description: 'Laget av e2e-testen for omtaler.',
-      priceNok: 250,
+      price: { amountMinor: 25000, currency: 'NOK' },
       attributes: { condition: 'good' },
       placeId: 'oslo',
       imageIds: [],

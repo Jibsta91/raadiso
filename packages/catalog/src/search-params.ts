@@ -1,31 +1,15 @@
 import { z } from 'zod';
-import { COUNTIES, findPlace } from './places.js';
-import {
-  BODY_TYPES,
-  CONDITIONS,
-  DRIVETRAINS,
-  EMPLOYMENT_TYPES,
-  FUELS,
-  GEARBOXES,
-  OWNERSHIPS,
-  PROPERTY_TYPES,
-  RANGE_PARAMS,
-  type RangeParam,
-} from './attributes.js';
-import { CATEGORY_KEYS } from './categories.js';
+import { ALL_ATTRIBUTES, CATEGORY_KEYS, FACET_KEYS, RANGE_PARAMS } from './categories.js';
+import { COUNTRY_CODES } from './countries.js';
+import { findPlace, REGION_KEYS } from './places.js';
 
 /**
- * The search API's query parameters (GET /api/v1/search/listings), shared by the
- * search service and the services that store searches (saved searches, ADR-0026).
+ * The search API's query parameters (GET /api/v1/search/listings), shared by the search service and the
+ * services that store searches (saved searches, ADR-0026). Facet and range parameters are generated from
+ * the taxonomy (ADR-0040): every facet attribute is a parameter of the same name, every range attribute
+ * gives `<range>Min` and `<range>Max`.
  */
 const count = z.coerce.number().int().min(0).max(10_000_000);
-/** yearMin/yearMax, mileageMin/mileageMax, … for every range attribute in the taxonomy. */
-const rangeParams = Object.fromEntries(
-  RANGE_PARAMS.flatMap((p) => [
-    [`${p}Min`, count.optional()],
-    [`${p}Max`, count.optional()],
-  ]),
-) as Record<`${RangeParam}${'Min' | 'Max'}`, z.ZodOptional<typeof count>>;
 
 const csv = <T extends string>(values: readonly T[]) =>
   z
@@ -38,9 +22,38 @@ const csv = <T extends string>(values: readonly T[]) =>
     )
     .pipe(z.array(z.enum(values as [T, ...T[]])).max(values.length));
 
+/** Free-text facet values (car makes), matched case-insensitively: the index lower-cases them. */
+const lowerCsv = z
+  .string()
+  .trim()
+  .max(400)
+  .transform((s) =>
+    s
+      .split(',')
+      .map((v) => v.trim().toLowerCase())
+      .filter(Boolean),
+  )
+  .pipe(z.array(z.string().max(40)).max(20));
+
+const facetParams = Object.fromEntries(
+  FACET_KEYS.map((key) => {
+    const def = ALL_ATTRIBUTES.get(key)!;
+    return [key, (def.kind === 'select' ? csv(def.options) : lowerCsv).optional()];
+  }),
+) as Record<string, z.ZodOptional<z.ZodType<string[]>>>;
+
+const rangeParams = Object.fromEntries(
+  RANGE_PARAMS.flatMap((p) => [
+    [`${p}Min`, count.optional()],
+    [`${p}Max`, count.optional()],
+  ]),
+) as Record<string, z.ZodOptional<typeof count>>;
+
 /** Query string of GET /api/v1/search/listings. Multi-value facets are comma-separated. */
-export const searchParamsSchema = z
+const schema = z
   .object({
+    /** The marketplace searched; the service's default country when absent. */
+    country: z.enum(COUNTRY_CODES as [string, ...string[]]).optional(),
     q: z.string().trim().max(200).optional(),
     category: csv(CATEGORY_KEYS).optional(),
     subcategory: z
@@ -49,31 +62,12 @@ export const searchParamsSchema = z
       .max(400)
       .transform((s) => s.split(',').filter(Boolean))
       .optional(),
-    county: csv(Object.keys(COUNTIES)).optional(),
-    condition: csv(CONDITIONS).optional(),
-    fuel: csv(FUELS).optional(),
-    propertyType: csv(PROPERTY_TYPES).optional(),
-    employmentType: csv(EMPLOYMENT_TYPES).optional(),
-    gearbox: csv(GEARBOXES).optional(),
-    bodyType: csv(BODY_TYPES).optional(),
-    drivetrain: csv(DRIVETRAINS).optional(),
-    ownership: csv(OWNERSHIPS).optional(),
-    /** Car makes, matched case-insensitively (the index lower-cases them). */
-    make: z
-      .string()
-      .trim()
-      .max(400)
-      .transform((s) =>
-        s
-          .split(',')
-          .map((v) => v.trim().toLowerCase())
-          .filter(Boolean),
-      )
-      .pipe(z.array(z.string().max(40)).max(20))
-      .optional(),
+    region: csv(REGION_KEYS).optional(),
+    ...facetParams,
     ...rangeParams,
-    priceMin: z.coerce.number().int().min(0).optional(),
-    priceMax: z.coerce.number().int().min(0).optional(),
+    /** Major units of the country's currency, as people type them. */
+    priceMin: z.coerce.number().min(0).max(1e12).optional(),
+    priceMax: z.coerce.number().min(0).max(1e12).optional(),
     /** Centre of a radius search: a place id from the gazetteer, or lat+lon (e.g. the browser's position). */
     near: z.string().max(40).optional(),
     lat: z.coerce.number().min(-90).max(90).optional(),
@@ -98,9 +92,10 @@ export const searchParamsSchema = z
     if ((p.lat === undefined) !== (p.lon === undefined)) {
       ctx.addIssue({ code: 'custom', path: ['lat'], message: 'lat and lon go together' });
     }
-    for (const name of ['price', ...RANGE_PARAMS] as const) {
-      const min = p[`${name}Min`];
-      const max = p[`${name}Max`];
+    const range = p as unknown as Record<string, number | undefined>;
+    for (const name of ['price', ...RANGE_PARAMS]) {
+      const min = range[`${name}Min`];
+      const max = range[`${name}Max`];
       if (min !== undefined && max !== undefined && min > max) {
         ctx.addIssue({
           code: 'custom',
@@ -118,7 +113,21 @@ export const searchParamsSchema = z
     }
   });
 
-export type SearchParams = z.infer<typeof searchParamsSchema>;
+/**
+ * Parsed parameters. The fixed ones are typed; the generated facets (string arrays) and ranges
+ * (numbers) are looked up by name.
+ */
+export type SearchParams = z.infer<typeof schema> & {
+  readonly [param: string]: string[] | number | string | undefined;
+};
+
+/** Every parameter name the search API accepts (for the OpenAPI contract test). */
+export const SEARCH_PARAM_NAMES: readonly string[] = Object.keys(schema.shape);
+
+export const searchParamsSchema = schema as unknown as z.ZodType<
+  SearchParams,
+  Record<string, unknown>
+>;
 
 /** Parameters that describe what to find (not how to page or sort): what a saved search keeps. */
 export const SAVED_SEARCH_EXCLUDED = [

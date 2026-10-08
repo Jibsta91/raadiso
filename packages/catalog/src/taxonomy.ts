@@ -1,57 +1,56 @@
 import { z } from 'zod';
 import {
-  BODY_TYPES,
-  CONDITIONS,
-  DRIVETRAINS,
-  EMPLOYMENT_TYPES,
-  FUELS,
-  GEARBOXES,
-  OWNERSHIPS,
-  PROPERTY_TYPES,
-} from './attributes.js';
-import { CATEGORY_KEYS, type Category } from './categories.js';
+  attributesOf,
+  CATEGORY_KEYS,
+  isCategory,
+  type AttributeDef,
+  type Category,
+  type Subcategory,
+} from './categories.js';
 
+export * from './attribute-values.js';
 export * from './attributes.js';
 export * from './categories.js';
+export * from './countries.js';
+export * from './money.js';
 
-export const categorySchema = z.enum(CATEGORY_KEYS as [Category, ...Category[]]);
+export const categorySchema = z
+  .string()
+  .min(1)
+  .max(40)
+  .refine(isCategory, { message: 'unknown category' });
 
-const year = z
-  .number()
-  .int()
-  .min(1900)
-  .max(new Date().getUTCFullYear() + 1);
+function fieldSchema(def: AttributeDef): z.ZodType {
+  const s =
+    def.kind === 'select'
+      ? z.enum(def.options as [string, ...string[]])
+      : def.kind === 'text'
+        ? z.string().trim().min(1).max(def.maxLength)
+        : z.number().int().min(def.min).max(def.max);
+  return def.required ? s : s.optional();
+}
 
-/** Category-specific attributes. Unknown keys are rejected (strict). */
-export const attributeSchemas = {
-  torget: z.object({ condition: z.enum(CONDITIONS) }).strict(),
-  bil: z
-    .object({
-      make: z.string().trim().min(1).max(40),
-      model: z.string().trim().min(1).max(60),
-      year,
-      mileageKm: z.number().int().min(0).max(2_000_000),
-      fuel: z.enum(FUELS),
-      gearbox: z.enum(GEARBOXES),
-      bodyType: z.enum(BODY_TYPES).optional(),
-      drivetrain: z.enum(DRIVETRAINS).optional(),
-    })
-    .strict(),
-  eiendom: z
-    .object({
-      propertyType: z.enum(PROPERTY_TYPES),
-      areaM2: z.number().int().min(1).max(100_000),
-      bedrooms: z.number().int().min(0).max(50).optional(),
-      ownership: z.enum(OWNERSHIPS).optional(),
-    })
-    .strict(),
-  jobb: z
-    .object({
-      employer: z.string().trim().min(1).max(80),
-      employmentType: z.enum(EMPLOYMENT_TYPES),
-    })
-    .strict(),
-  reise: z.object({ guests: z.number().int().min(1).max(50) }).strict(),
-} satisfies Record<Category, z.ZodType>;
+const schemas = new Map<string, z.ZodType<Record<string, string | number>>>();
 
-export type Attributes = { [C in Category]: z.infer<(typeof attributeSchemas)[C]> };
+/**
+ * The attributes of a listing in a subcategory, generated from the taxonomy. Unknown keys are rejected
+ * (strict). Unknown categories get a schema that accepts only an empty object.
+ */
+export function attributeSchema(
+  category: Category,
+  subcategory: Subcategory,
+): z.ZodType<Record<string, string | number>> {
+  const key = `${category}/${subcategory}`;
+  let schema = schemas.get(key);
+  if (!schema) {
+    const defs = attributesOf(category, subcategory);
+    schema = z
+      .object(Object.fromEntries(defs.map((d) => [d.key, fieldSchema(d)])))
+      .strict() as unknown as z.ZodType<Record<string, string | number>>;
+    schemas.set(key, schema);
+  }
+  return schema;
+}
+
+/** Every category id, for OpenAPI enums and the console's filters. */
+export const ALL_CATEGORIES = CATEGORY_KEYS;

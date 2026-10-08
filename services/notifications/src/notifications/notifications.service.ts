@@ -171,8 +171,12 @@ export class NotificationsService {
       case 'no.raadi.saved.alert.v1': {
         // Favourites and saved searches (ADR-0026): in the app, as a push, and (saved
         // searches only) at most one e-mail a day per search.
-        const { userId, kind, listingId, savedSearchId, count, priceNok, previousPriceNok } =
-          parsed.data;
+        const { userId, kind, listingId, savedSearchId, count } = parsed.data;
+        // Minor units and currency (ADR-0040); alerts from before carry whole kroner.
+        const kroner = (n?: number) =>
+          n === undefined ? undefined : { amountMinor: n * 100, currency: 'NOK' };
+        const price = parsed.data.price ?? kroner(parsed.data.priceNok);
+        const previous = parsed.data.previousPrice ?? kroner(parsed.data.previousPriceNok);
         await this.repo.once(parsed.id, async (tx) => {
           if (kind === 'search_match' && savedSearchId && count) {
             await tx.notifyMatches(userId, savedSearchId, count);
@@ -196,10 +200,11 @@ export class NotificationsService {
           } else if ((kind === 'price_drop' || kind === 'sold') && listingId) {
             const notice = kind === 'price_drop' ? 'favourite_price_drop' : 'favourite_sold';
             const params: Record<string, string> =
-              kind === 'price_drop'
+              kind === 'price_drop' && price
                 ? {
-                    priceNok: String(priceNok ?? ''),
-                    previousPriceNok: String(previousPriceNok ?? ''),
+                    amountMinor: String(price.amountMinor),
+                    currency: price.currency,
+                    ...(previous ? { previousAmountMinor: String(previous.amountMinor) } : {}),
                   }
                 : {};
             await tx.notify(userId, notice, listingId, params);

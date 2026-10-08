@@ -42,10 +42,12 @@ describe('clamd replies', () => {
 });
 
 describe('demo art', () => {
-  it('renders a self-contained SVG for every demo image', () => {
-    const image = demoListings(3)[0]!.images[0]!;
-    const svg = demoSvg(image);
-    assert.match(svg, /^<svg [^>]*width="1280" height="960"/);
-    assert.ok(!/href=|<script|<image/i.test(svg), 'no external references');
+  it('renders a self-contained SVG with an icon for every demo image, in both countries', () => {
+    for (const listing of demoListings()) {
+      const svg = demoSvg(listing.images[0]!);
+      assert.match(svg, /^<svg [^>]*width="1280" height="960"/);
+      assert.ok(!/href=|<script|<image/i.test(svg), 'no external references');
+      assert.ok(!svg.includes('undefined'), `${listing.category} has a drawing`);
+    }
   });
 });

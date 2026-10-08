@@ -132,7 +132,7 @@ export async function createListing(
       subcategory: 'hobby',
       title,
       description: 'Laget av en e2e-test.',
-      priceNok: 100,
+      price: { amountMinor: 10000, currency: 'NOK' },
       attributes: { condition: 'good' },
       placeId: 'oslo',
       imageIds: [],

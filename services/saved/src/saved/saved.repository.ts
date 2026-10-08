@@ -4,7 +4,7 @@ import { buildEvent, type EventData, type ListingSnapshot } from '@raadi/events'
 import { appendToOutbox, withTransaction } from '@raadi/service-kit';
 import type pg from 'pg';
 import { PG_POOL } from '../tokens.js';
-import type { FavouriteRow, ListingRow, SavedSearchRow } from './model.js';
+import { type FavouriteRow, type ListingRow, priceOf, type SavedSearchRow } from './model.js';
 import type { PublicListing } from './clients.js';
 
 export type Alert = Omit<EventData<'no.raadi.saved.alert.v1'>, 'alertId'>;
@@ -40,12 +40,13 @@ export class SavedRepository {
       if (mine.rows[0]?.has) return 'added';
       if (Number(mine.rows[0]?.n ?? 0) >= max) return 'full';
       await db.query(
-        `INSERT INTO listings (id, version, status, category, subcategory, title, price_nok,
-                               image_id, place_name, county, published_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `INSERT INTO listings (id, version, status, category, subcategory, title, price_minor,
+                               image_id, place_name, region, published_at, currency, country)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          ON CONFLICT (id) DO UPDATE SET
            version = EXCLUDED.version, status = EXCLUDED.status, title = EXCLUDED.title,
-           price_nok = EXCLUDED.price_nok, image_id = EXCLUDED.image_id, updated_at = now()
+           price_minor = EXCLUDED.price_minor, currency = EXCLUDED.currency,
+           image_id = EXCLUDED.image_id, updated_at = now()
          WHERE listings.version < EXCLUDED.version`,
         [
           listing.id,
@@ -54,11 +55,13 @@ export class SavedRepository {
           listing.category,
           listing.subcategory,
           listing.title,
-          listing.priceNok,
+          listing.price?.amountMinor ?? null,
           listing.images[0]?.id ?? null,
           listing.location.name,
-          listing.location.county,
+          listing.location.region,
           listing.publishedAt,
+          listing.price?.currency ?? null,
+          listing.country,
         ],
       );
       await db.query('INSERT INTO favourites (user_id, listing_id) VALUES ($1, $2)', [
@@ -122,9 +125,17 @@ export class SavedRepository {
     ]);
     const before = rows[0];
     if (!before || before.version >= listing.version) return [];
+    // Events from before ADR-0040 carry kroner only.
+    const price =
+      listing.price !== undefined
+        ? listing.price
+        : listing.priceNok === null
+          ? null
+          : { amountMinor: listing.priceNok * 100, currency: 'NOK' };
     await db.query(
       `UPDATE listings SET version = $2, owner_id = $3, status = $4, category = $5, subcategory = $6,
-              title = $7, price_nok = $8, image_id = $9, place_name = $10, county = $11, updated_at = now()
+              title = $7, price_minor = $8, image_id = $9, place_name = $10, region = $11,
+              currency = $12, country = $13, updated_at = now()
         WHERE id = $1`,
       [
         listing.id,
@@ -134,27 +145,37 @@ export class SavedRepository {
         listing.category,
         listing.subcategory,
         listing.title,
-        listing.priceNok,
+        price?.amountMinor ?? null,
         listing.imageIds[0] ?? null,
         listing.location.name,
-        listing.location.county,
+        listing.location.region ?? listing.location.county,
+        price?.currency ?? null,
+        listing.country ?? before.country,
       ],
     );
-    const oldPrice = before.price_nok === null ? null : Number(before.price_nok);
+    const oldPrice = priceOf(before);
     const alerts: Array<Omit<Alert, 'userId'>> = [];
     if (before.status === 'active' && listing.status === 'sold') {
       alerts.push({ kind: 'sold', listingId: listing.id });
     } else if (
       listing.status === 'active' &&
       oldPrice !== null &&
-      listing.priceNok !== null &&
-      listing.priceNok < oldPrice
+      price !== null &&
+      price.currency === oldPrice.currency &&
+      price.amountMinor < oldPrice.amountMinor
     ) {
       alerts.push({
         kind: 'price_drop',
         listingId: listing.id,
-        previousPriceNok: oldPrice,
-        priceNok: listing.priceNok,
+        previousPrice: oldPrice,
+        price,
+        // For consumers that predate ADR-0040.
+        ...(price.currency === 'NOK'
+          ? {
+              previousPriceNok: Math.floor(oldPrice.amountMinor / 100),
+              priceNok: Math.floor(price.amountMinor / 100),
+            }
+          : {}),
       });
     }
     if (!alerts.length) return [];

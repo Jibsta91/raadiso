@@ -1,4 +1,4 @@
-import { COUNTIES, type County, SAVED_SEARCH_EXCLUDED, searchParamsSchema } from '@raadi/catalog';
+import { type Money, regionName, SAVED_SEARCH_EXCLUDED, searchParamsSchema } from '@raadi/catalog';
 import { imageUrls, type ImgproxySigner } from '@raadi/service-kit';
 import { z } from 'zod';
 
@@ -10,10 +10,12 @@ export interface ListingRow {
   category: string;
   subcategory: string;
   title: string;
-  price_nok: string | number | null;
+  country: string;
+  price_minor: string | number | null;
+  currency: string | null;
   image_id: string | null;
   place_name: string;
-  county: string;
+  region: string;
   published_at: Date;
 }
 
@@ -39,11 +41,12 @@ export interface Favourite {
   listing: {
     id: string;
     title: string;
-    priceNok: number | null;
+    country: string;
+    price: Money | null;
     status: 'active' | 'sold' | 'deleted';
     category: string;
     subcategory: string;
-    location: { name: string; county: string; countyName: string };
+    location: { name: string; region: string; regionName: string };
     image?: { thumb: string; card: string };
     publishedAt: string;
   };
@@ -60,7 +63,12 @@ export interface SavedSearch {
   createdAt: string;
 }
 
-const toNumber = (v: string | number | null) => (v === null ? null : Number(v));
+/** The stored price as money, or null. */
+export function priceOf(row: Pick<ListingRow, 'price_minor' | 'currency'>): Money | null {
+  return row.price_minor === null || row.currency === null
+    ? null
+    : { amountMinor: Number(row.price_minor), currency: row.currency };
+}
 
 export function toFavourite(row: FavouriteRow, signer: ImgproxySigner): Favourite {
   const image = row.image_id ? imageUrls(signer, row.image_id) : undefined;
@@ -70,14 +78,15 @@ export function toFavourite(row: FavouriteRow, signer: ImgproxySigner): Favourit
     listing: {
       id: row.id,
       title: row.title,
-      priceNok: toNumber(row.price_nok),
+      country: row.country,
+      price: priceOf(row),
       status: row.status,
       category: row.category,
       subcategory: row.subcategory,
       location: {
         name: row.place_name,
-        county: row.county,
-        countyName: COUNTIES[row.county as County] ?? row.county,
+        region: row.region,
+        regionName: regionName(row.region),
       },
       ...(image ? { image: { thumb: image.thumb, card: image.card } } : {}),
       publishedAt: row.published_at.toISOString(),

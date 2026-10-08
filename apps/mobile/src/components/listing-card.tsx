@@ -14,7 +14,7 @@ import { Badge, Glass } from './ui';
 // one style object there, never an array (an array arrives as {0: …} and React DOM throws).
 
 /** What a tile shows: a search hit, or a favourite (which may be sold). */
-export type TileListing = Pick<SearchHit, 'id' | 'title' | 'priceNok' | 'category' | 'image'> & {
+export type TileListing = Pick<SearchHit, 'id' | 'title' | 'price' | 'category' | 'image'> & {
   location: { name: string };
   promoted?: boolean;
   sold?: boolean;
@@ -46,7 +46,7 @@ export function ListingTile({ hit }: { hit: TileListing }) {
         role="link"
         aria-label={[
           hit.title,
-          formatPrice(hit.priceNok, locale, m.common.noPrice),
+          formatPrice(hit.price, locale, m.common.noPrice),
           hit.location.name,
           hit.sold ? m.listing.sold : hit.promoted ? m.listing.promoted : undefined,
         ]
@@ -67,7 +67,7 @@ export function ListingTile({ hit }: { hit: TileListing }) {
           ) : null}
           <Glass style={styles.priceChip}>
             <Text maxFontSizeMultiplier={1.5} style={[styles.price, { color: theme.text }]}>
-              {formatPrice(hit.priceNok, locale, m.common.noPrice)}
+              {formatPrice(hit.price, locale, m.common.noPrice)}
             </Text>
           </Glass>
         </View>
@@ -93,7 +93,7 @@ export function ListingFeature({ hit }: { hit: SearchHit }) {
         role="link"
         aria-label={[
           hit.title,
-          formatPrice(hit.priceNok, locale, m.common.noPrice),
+          formatPrice(hit.price, locale, m.common.noPrice),
           m.listing.promoted,
         ].join(', ')}
         style={styles.feature}
@@ -107,7 +107,7 @@ export function ListingFeature({ hit }: { hit: SearchHit }) {
             {hit.title}
           </Text>
           <Text maxFontSizeMultiplier={1.5} style={[styles.price, { color: theme.text }]}>
-            {formatPrice(hit.priceNok, locale, m.common.noPrice)}
+            {formatPrice(hit.price, locale, m.common.noPrice)}
           </Text>
         </Glass>
       </Pressable>
