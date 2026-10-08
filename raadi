@@ -6,7 +6,8 @@ cd "$(dirname "$0")"
 
 DC=(docker compose)
 DEV=(docker compose -f compose.yaml -f compose.dev.yaml)
-TOOL=(docker compose --progress quiet run --rm toolbox)
+# API_* reach ./raadi api-check when set (an -e without a value forwards only what is set).
+TOOL=(docker compose --progress quiet run --rm -e API_BREAKING_OK -e API_BASE_REF toolbox)
 
 usage() {
   cat <<'USAGE'
@@ -26,7 +27,7 @@ Platform
   clean              stop and DELETE all data volumes (asks first)
 
 Quality (run in the toolbox container)
-  lint | format | typecheck | test | test-integration | build | generate
+  lint | format | typecheck | test | test-integration | build | generate | api-check
   smoke              smoke test against the running stack
   e2e                Playwright end-to-end tests against the running stack
   security           Trivy, Gitleaks, OSV-Scanner
@@ -207,7 +208,7 @@ case "$cmd" in
     ;;
   smoke) "${DC[@]}" --progress quiet --profile test run --rm smoke ;;
   e2e) "${DC[@]}" --progress quiet --profile test run --rm e2e "$@" ;;
-  lint|format|typecheck|test|test-integration|build|generate|security|iac-scan|licenses|sbom)
+  lint|format|typecheck|test|test-integration|build|generate|api-check|security|iac-scan|licenses|sbom)
     "${TOOL[@]}" "$cmd" "$@" ;;
   toolbox)
     if (( $# )); then "${TOOL[@]}" "$@"; else "${TOOL[@]}" bash; fi ;;

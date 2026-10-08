@@ -42,6 +42,7 @@ services:
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      AUTH_LOGIN_RATE_PER_MINUTE: ${AUTH_LOGIN_RATE_PER_MINUTE:-20}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
     volumes:
       - type: volume
@@ -136,6 +137,7 @@ services:
       PUBLIC_BASE_URL: ${ADMIN_BASE_URL}
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      AUTH_LOGIN_RATE_PER_MINUTE: ${AUTH_LOGIN_RATE_PER_MINUTE:-20}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       OIDC_CLIENT_ID: raadi-admin
       OIDC_PROMPT: login
@@ -410,6 +412,7 @@ services:
       LISTINGS_URL: http://listings:4000
       SEARCH_URL: http://search:4000
       SAVED_SEARCH_INTERVAL_SECONDS: ${SAVED_SEARCH_INTERVAL_SECONDS}
+      SAVED_SEARCH_LAG_SECONDS: ${SAVED_SEARCH_LAG_SECONDS:-30}
     volumes:
       - type: volume
         source: secrets

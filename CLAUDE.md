@@ -28,8 +28,8 @@ legal, QA, reviewer) live in `.claude/agents/`; [docs/ai-team.md](docs/ai-team.m
 - **Security:** OIDC everywhere (Keycloak), zero trust between services, secrets only from OpenBao, TLS at the
   edge, OWASP ASVS L2, GDPR (no PII in logs or events).
 - **Git:** `main` takes changes only through PRs (signed commits, squash merge). GitHub Actions are switched
-  off since 2026-10-05 (too slow): run the gates locally (`./raadi lint typecheck test`, then `licenses`,
-  `security` and `iac-scan`, plus `smoke` and `e2e` for anything beyond docs), then push the branch, open a PR
+  off since 2026-10-05 (too slow): run the gates locally (`./raadi lint typecheck test`, then `api-check`,
+  `licenses`, `security` and `iac-scan`, plus `smoke` and `e2e` for anything beyond docs), then push the branch, open a PR
   and merge it through the GitHub API. `.github/workflows/ci.yaml` stays, so CI can be switched back on.
   Never push to `main` directly.
 - **Stack is settled:** Keycloak + OpenBao (Authentik/Bitwarden were considered and rejected). No Kubernetes.

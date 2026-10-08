@@ -14,6 +14,7 @@ import {
   isCsrfSafe,
   keycloakUiLocale,
   loginCookieName,
+  loginRatePerMinute,
   newBrowserBinding,
   normaliseLocale,
   safeReturnTo,
@@ -23,7 +24,10 @@ import { type SessionData, SessionStore } from './session.store.js';
 const REFRESH_SKEW_SEC = 30;
 /** As long as the login transaction lives in Valkey (session.store.ts). */
 const LOGIN_TX_TTL_SEC = 600;
-const AUTH_THROTTLE = { default: { limit: 20, ttl: 60_000 } };
+// Read at load: decorators can't use the injected config.
+const AUTH_THROTTLE = {
+  default: { limit: loginRatePerMinute(process.env.AUTH_LOGIN_RATE_PER_MINUTE), ttl: 60_000 },
+};
 
 type Req = FastifyRequest & { cookies: Record<string, string | undefined> };
 
