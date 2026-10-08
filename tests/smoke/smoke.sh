@@ -381,7 +381,8 @@ phone_body() {
     attributes: {condition: "good", brand: "samsung"}, placeId: "hargeisa"}'
 }
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(phone_body NOK)"
-[[ "$status" == "422" ]] && ok "a Somaliland listing cannot be priced in kroner" || fail "currency check" "HTTP $status"
+[[ "$status" == "400" && "$(json '[.errors[].path] | index("price.currency") != null')" == "true" ]] \
+  && ok "a Somaliland listing cannot be priced in kroner" || fail "currency check" "HTTP $status $(head -c 300 "$BODY")"
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data "$(phone_body USD)"
 [[ "$status" == "201" && "$(json '.country')" == "XS" && "$(json '.location.region')" == "maroodi-jeex" ]] \
   && ok "a listing in Hargeisa is in Somaliland, in dollars" || fail "Somaliland listing" "HTTP $status $(head -c 300 "$BODY")"

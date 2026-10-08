@@ -8,8 +8,10 @@ import {
   type Subcategory,
 } from './categories.js';
 
+// Each name reaches the package entry by one path only: OpenTelemetry's ESM loader hook
+// (import-in-the-middle) drops names that two `export *` lines both provide.
 export * from './attribute-values.js';
-export * from './attributes.js';
+export { attributePayload } from './attributes.js';
 export * from './categories.js';
 export * from './countries.js';
 export * from './money.js';
