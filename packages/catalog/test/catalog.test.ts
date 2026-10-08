@@ -17,6 +17,7 @@ import {
   attributeSchema,
   attributesOf,
   BASE_SORTS,
+  compareRuleOf,
   SORTS,
   sortsOf,
   CATEGORY_KEYS,
@@ -265,5 +266,22 @@ describe('sorts (ADR-0042)', () => {
     assert.ok(!sortsOf('jobb').includes('price_per_area_asc'));
     assert.deepEqual(sortsOf('torget'), [...BASE_SORTS]);
     assert.ok(SORTS.includes('head_desc') && SORTS.includes('storage_desc'));
+  });
+});
+
+describe('price comparison rules (ADR-0043)', () => {
+  it('name only attributes their subcategories have', () => {
+    for (const code of COUNTRY_CODES)
+      for (const root of categoriesOf(code))
+        for (const sub of root.children ?? []) {
+          const rule = compareRuleOf(root.id, sub.id);
+          const keys = attributesOf(root.id, sub.id).map((a) => a.key);
+          for (const k of [
+            ...(rule.same ?? []),
+            ...Object.keys(rule.near ?? {}),
+            ...(rule.per ? [rule.per] : []),
+          ])
+            assert.ok(keys.includes(k), `${sub.id}: ${k}`);
+        }
   });
 });

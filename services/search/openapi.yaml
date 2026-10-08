@@ -174,6 +174,53 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Autocomplete' }
         '400': { $ref: '#/components/responses/Problem' }
+  /api/v1/search/listings/{id}/price-insight:
+    get:
+      tags: [search]
+      operationId: priceInsight
+      summary: A listing's price against comparable listings (ADR-0043)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: The insight, or null without enough comparables
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [insight]
+                properties:
+                  insight:
+                    oneOf:
+                      - { $ref: '#/components/schemas/PriceInsight' }
+                      - { type: 'null' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /api/v1/search/price-guide:
+    get:
+      tags: [search]
+      operationId: priceGuide
+      summary: What comparable listings cost, for a seller filling in the form (ADR-0043)
+      description: >-
+        Other query parameters are the draft's details by attribute key (make, model, year, brand, …).
+      parameters:
+        - { name: country, in: query, required: true, schema: { type: string, enum: [XS, NO] } }
+        - { name: category, in: query, required: true, schema: { type: string } }
+        - { name: subcategory, in: query, required: true, schema: { type: string } }
+        - { name: placeId, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: The guide, or null without enough comparables
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [guide]
+                properties:
+                  guide:
+                    oneOf:
+                      - { $ref: '#/components/schemas/PriceGuide' }
+                      - { type: 'null' }
+        '400': { $ref: '#/components/responses/Problem' }
   /api/v1/search/suggest:
     get:
       tags: [search]
@@ -302,6 +349,10 @@ components:
             lat: { type: number }
             lon: { type: number }
         distanceKm: { type: number }
+        deal:
+          type: string
+          enum: [great, good]
+          description: A good price against comparable listings (ADR-0043)
         image:
           type: object
           required: [thumb, card]
@@ -314,6 +365,41 @@ components:
           type: object
           additionalProperties: { type: [string, number, boolean] }
         publishedAt: { type: string, format: date-time }
+    PriceStats:
+      type: object
+      additionalProperties: false
+      required: [comparables, p25, median, p75, unit, basis]
+      properties:
+        comparables: { type: integer }
+        p25: { type: number, description: Minor units per unit }
+        median: { type: number }
+        p75: { type: number }
+        unit: { type: string, enum: [listing, areaM2, head] }
+        basis:
+          type: object
+          additionalProperties: false
+          required: [same, near, region, loosened]
+          properties:
+            same: { type: array, items: { type: string } }
+            near: { type: array, items: { type: string } }
+            region: { type: boolean }
+            loosened: { type: boolean }
+    PriceGuide:
+      allOf:
+        - { $ref: '#/components/schemas/PriceStats' }
+        - type: object
+          required: [currency]
+          properties: { currency: { type: string } }
+    PriceInsight:
+      type: object
+      additionalProperties: false
+      required: [listingId, currency, unitPrice, rating, stats]
+      properties:
+        listingId: { type: string, format: uuid }
+        currency: { type: string }
+        unitPrice: { type: number, description: The listing's price per unit, in minor units }
+        rating: { type: string, enum: [unusually_low, great, good, fair, high] }
+        stats: { $ref: '#/components/schemas/PriceStats' }
     Understood:
       type: object
       additionalProperties: false

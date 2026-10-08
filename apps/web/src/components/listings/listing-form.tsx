@@ -1,6 +1,6 @@
 'use client';
 
-import type { Listing, Media } from '@raadi/api-client';
+import type { Listing, Media, PriceGuide } from '@raadi/api-client';
 import {
   attributePayload as toAttributes,
   attributesOf,
@@ -9,7 +9,7 @@ import {
 } from '@raadi/catalog/attributes';
 import { categoriesOf, subcategoriesOf, type Category } from '@raadi/catalog/categories';
 import { COUNTRIES, type CountryCode } from '@raadi/catalog/countries';
-import { currencySymbol, parseMajor, toMajor } from '@raadi/catalog/money';
+import { currencySymbol, formatMoney, parseMajor, toMajor } from '@raadi/catalog/money';
 import { placeName, placesOf } from '@raadi/catalog/places';
 import { Button } from '@raadi/ui';
 import { Check, ImagePlus, Loader2, X } from 'lucide-react';
@@ -87,6 +87,37 @@ export function ListingForm({
   const priceRule = category ? priceRuleOf(category, subcategory || undefined) : 'required';
   const priceUnit = category ? priceUnitOf(category, subcategory || undefined) : undefined;
   const fields = category && subcategory ? attributesOf(category, subcategory) : [];
+
+  // What comparable listings cost, while the seller fills in the details (ADR-0043).
+  const [placeId, setPlaceId] = useState(listing?.location.placeId ?? '');
+  const [guide, setGuide] = useState<PriceGuide | null>(null);
+  const draft = JSON.stringify(attributes);
+  useEffect(() => {
+    if (!category || !subcategory || priceRule === 'none') {
+      setGuide(null);
+      return;
+    }
+    const params = new URLSearchParams({ country, category, subcategory });
+    if (placeId) params.set('placeId', placeId);
+    for (const [k, v] of Object.entries(JSON.parse(draft) as Record<string, string>))
+      if (v.trim() && fields.some((f) => f.key === k)) params.set(k, v.trim());
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/v1/search/price-guide?${params}`, { signal: ctrl.signal })
+        .then((res) => (res.ok ? (res.json() as Promise<{ guide: PriceGuide | null }>) : null))
+        .then((body) => setGuide(body?.guide ?? null))
+        .catch(() => undefined);
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+    // `fields` follows category and subcategory.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [country, category, subcategory, placeId, draft, priceRule]);
+  const perUnit = (amountMinor: number) =>
+    formatMoney({ amountMinor: Math.round(amountMinor), currency }, locale) +
+    (guide && guide.unit !== 'listing' ? ` ${t(`price.per.${guide.unit}`)}` : '');
 
   async function upload(files: FileList | null) {
     if (!files?.length) return;
@@ -521,6 +552,15 @@ export function ListingForm({
                     <span className={unitClass}>{currencySymbol(currency, locale)}</span>
                   </span>
                   {hint('price')}
+                  {guide ? (
+                    <span className="block text-sm text-muted-foreground" data-testid="price-guide">
+                      {t('price.guide', {
+                        from: perUnit(guide.p25),
+                        to: perUnit(guide.p75),
+                        median: perUnit(guide.median),
+                      })}
+                    </span>
+                  ) : null}
                 </label>
               ) : null}
               <label className="space-y-1">
@@ -529,6 +569,7 @@ export function ListingForm({
                   name="placeId"
                   required
                   defaultValue={listing?.location.placeId ?? ''}
+                  onChange={(e) => setPlaceId(e.target.value)}
                   data-testid="field-place"
                   {...invalid('placeId')}
                   className={fieldClass('placeId')}

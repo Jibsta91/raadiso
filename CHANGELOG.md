@@ -8,6 +8,13 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Price insight (ADR-0043). Each listing's price is compared with similar active listings, as the
+  taxonomy defines them (cars by make, model and year, property per m² in the region, livestock per
+  animal, phones by brand and storage), loosened to the subcategory when there are too few. The listing
+  page shows a price check (great, good, fair, above similar) with the comparables' range and median,
+  and warns about prices far below similar listings, a common sign of fraud. Result cards mark great
+  and good prices, and the listing form tells sellers what similar listings cost as they fill it in.
+
 - Best match (ADR-0042): relevance is multiplied by a listing's quality (photos, description, details
   filled in) and freshness (a half after 14 days), so complete, recent listings come first, also on
   category pages without words. Sorts per category from the taxonomy: newest model year, lowest

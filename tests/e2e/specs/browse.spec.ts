@@ -63,3 +63,16 @@ test('listing page: title and price first; the photo opens full screen and Escap
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('gallery-dialog')).toBeHidden();
 });
+
+test('a price check against similar listings, and good deals marked in the results', async ({
+  page,
+}) => {
+  // ADR-0043: cars compare by make and model, then within their subcategory.
+  await page.goto('/en/search?category=bil&subcategory=personbil');
+  await expect(page.getByTestId('listing-card-deal').first()).toBeVisible();
+  await page.getByTestId('listing-card').first().click();
+  const insight = page.getByTestId('price-insight');
+  await expect(insight).toBeVisible();
+  await expect(insight).toHaveAttribute('data-rating', /^(unusually_low|great|good|fair|high)$/);
+  await expect(insight).toContainText(/similar listing/);
+});

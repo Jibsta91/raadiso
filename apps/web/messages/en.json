@@ -1964,5 +1964,29 @@
       "console": "Staff console",
       "grafana": "Grafana"
     }
+  },
+  "price": {
+    "title": "Price check",
+    "rating": {
+      "unusually_low": "Unusually low",
+      "great": "Great price",
+      "good": "Good price",
+      "fair": "Fair price",
+      "high": "Above similar"
+    },
+    "per": {
+      "areaM2": "per m²",
+      "head": "per animal"
+    },
+    "region": "region",
+    "range": "Compared with {count, plural, one {# similar listing} other {# similar listings}}: most cost {from}–{to}, the middle {median}.",
+    "compared": "Same {what}.",
+    "warning": "Far below similar listings. Be careful: meet in person, see the item before paying, and never pay in advance.",
+    "safety": "Safety tips",
+    "deal": {
+      "great": "Great price",
+      "good": "Good price"
+    },
+    "guide": "Similar listings: {from}–{to} (middle {median})."
   }
 }

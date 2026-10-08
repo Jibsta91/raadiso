@@ -1964,5 +1964,29 @@
       "console": "Konsoolka shaqaalaha",
       "grafana": "Grafana"
     }
+  },
+  "price": {
+    "title": "Hubinta qiimaha",
+    "rating": {
+      "unusually_low": "Si aan caadi ahayn u hooseeya",
+      "great": "Qiimo aad u fiican",
+      "good": "Qiimo wanaagsan",
+      "fair": "Qiimo caadi ah",
+      "high": "Ka sarreeya kuwa la midka ah"
+    },
+    "per": {
+      "areaM2": "m² kasta",
+      "head": "neef kasta"
+    },
+    "region": "gobolka",
+    "range": "Marka la barbar dhigo {count, plural, one {# xayeysiis oo la mid ah} other {# xayeysiis oo la mid ah}}: inta badan waa {from}–{to}, dhexda {median}.",
+    "compared": "Isku {what}.",
+    "warning": "Aad ayuu uga hooseeyaa kuwa la midka ah. Taxaddar: la kulan iibiyaha, arag alaabta ka hor intaadan bixin, hana bixin lacag hore.",
+    "safety": "Talooyinka badbaadada",
+    "deal": {
+      "great": "Qiimo aad u fiican",
+      "good": "Qiimo wanaagsan"
+    },
+    "guide": "Xayeysiisyada la midka ah: {from}–{to} (dhexda {median})."
   }
 }

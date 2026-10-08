@@ -234,3 +234,40 @@ describe('best match (ADR-0042)', () => {
     );
   });
 });
+
+describe('price insight (ADR-0043)', () => {
+  const ids = demoListings();
+  it('rates a car against cars of its make and model, and a plot per square metre', async () => {
+    const car = ids.find((l) => l.subcategory === 'cars' && l.title.startsWith('Toyota'))!;
+    const insight = await service.priceInsight(car.id);
+    assert.ok(insight, 'enough comparable cars');
+    assert.equal(insight.stats.unit, 'listing');
+    assert.ok(insight.stats.comparables >= 4);
+    assert.ok(['unusually_low', 'great', 'good', 'fair', 'high'].includes(insight.rating));
+    assert.ok(
+      insight.stats.p25 <= insight.stats.median && insight.stats.median <= insight.stats.p75,
+    );
+    const plot = ids.find((l) => l.subcategory === 'land')!;
+    const land = await service.priceInsight(plot.id);
+    assert.equal(land?.stats.unit, 'areaM2');
+  });
+
+  it('shows good news on result cards, and guides a seller', async () => {
+    const r = await service.search(
+      searchParamsSchema.parse({ country: 'XS', category: 'phones', pageSize: '48' }),
+    );
+    assert.ok(
+      r.items.some((h) => h.deal === 'great' || h.deal === 'good'),
+      'some deals',
+    );
+    assert.ok(r.items.every((h) => h.deal === undefined || ['great', 'good'].includes(h.deal)));
+    const guide = await service.priceGuide({
+      country: 'XS',
+      category: 'livestock',
+      subcategory: 'camels',
+      attributes: { head: 2 },
+    });
+    assert.equal(guide?.unit, 'head');
+    assert.equal(guide?.currency, 'USD');
+  });
+});
