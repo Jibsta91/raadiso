@@ -6,6 +6,8 @@ interface Extra {
   authBaseUrl: string;
   realm: string;
   clientId: string;
+  errorsPublicKey?: string;
+  errorsProjectId?: string;
   eas?: { projectId?: string };
 }
 
@@ -16,6 +18,9 @@ export const config = {
   apiBaseUrl: Platform.OS === 'web' ? '' : extra.publicBaseUrl,
   issuer: `${extra.authBaseUrl}/realms/${extra.realm}`,
   clientId: extra.clientId,
+  /** GlitchTip's public project key and project (ADR-0038); empty turns error reporting off. */
+  errorsPublicKey: extra.errorsPublicKey ?? '',
+  errorsProjectId: extra.errorsProjectId ?? '',
   /** The linked Expo project; push tokens are issued per project (none: no push). */
   easProjectId: extra.eas?.projectId,
 };

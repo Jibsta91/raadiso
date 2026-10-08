@@ -57,7 +57,10 @@
     "pangolin_server_secret",
     "pangolin_setup_token",
     "pangolin_site_secret",
-    "crowdsec_bouncer_key"
+    "crowdsec_bouncer_key",
+    "glitchtip_db_password",
+    "glitchtip_secret_key",
+    "glitchtip_admin_password"
   ],
   "fileConsumers": {
     "postgres": {
@@ -147,6 +150,10 @@
     "crowdsec": {
       "uid": 0,
       "secrets": ["crowdsec_bouncer_key"]
+    },
+    "glitchtip": {
+      "uid": 5000,
+      "secrets": ["glitchtip_db_password", "glitchtip_secret_key", "glitchtip_admin_password"]
     }
   },
   "templates": [
@@ -190,6 +197,11 @@
     "openfga": {
       "owner": "openfga",
       "password": "openfga_db_password",
+      "extensions": []
+    },
+    "glitchtip": {
+      "owner": "glitchtip",
+      "password": "glitchtip_db_password",
       "extensions": []
     }
   },

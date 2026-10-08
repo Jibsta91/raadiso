@@ -38,6 +38,19 @@ const DATA_EXCEPTIONS = new Map([
   ['spdx-exceptions', 'CC-BY-3.0'],
 ]);
 
+// Free non-OSI packages admitted under ADR-0009, with their class (recorded in the ADR that adds them).
+const FREE_EXCEPTIONS = new Map([
+  // ADR-0038: Sentry's CLI, a dependency of @sentry/react-native used only for uploads at build time (its
+  // download script doesn't run; pnpm blocks it). Fair Source: commercial use allowed except a competing
+  // product; becomes MIT two years after each release. May stay in Phase 5.
+  ['@sentry/cli', 'FSL-1.1-MIT'],
+]);
+// An admitted package's per-platform binaries count too (@sentry/cli-linux-x64 and the like).
+const freeException = (name, license) =>
+  [...FREE_EXCEPTIONS].some(
+    ([pkg, lic]) => lic === license && (name === pkg || name.startsWith(`${pkg}-`)),
+  );
+
 const ok = (expr) => {
   const e = expr.replace(/[()]/g, ' ').trim();
   if (/ OR /i.test(e)) return e.split(/ OR /i).some((p) => ok(p));
@@ -55,7 +68,12 @@ let count = 0;
 for (const [license, pkgs] of Object.entries(byLicense)) {
   for (const pkg of pkgs) {
     count++;
-    if (ok(license) || DATA_EXCEPTIONS.get(pkg.name) === license) continue;
+    if (
+      ok(license) ||
+      DATA_EXCEPTIONS.get(pkg.name) === license ||
+      freeException(pkg.name, license)
+    )
+      continue;
     violations.push(`${pkg.name}@${(pkg.versions ?? [pkg.version]).join(',')}: ${license}`);
   }
 }

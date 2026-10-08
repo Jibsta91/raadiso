@@ -53,6 +53,8 @@ cat <<BANNER
     Prometheus ......... ${S}://prometheus.${D}${P}
     SLOs ............... ${S}://grafana.${D}${P}/d/raadi-slos   (error budgets; public view: /en/status)
     Mailpit (emails) ... ${S}://mail.${D}${P}
+    Error reports ...... ${S}://errors.${D}${P}   (GlitchTip; admin@raadi.localhost, password:
+                         ./raadi secret glitchtip_admin_password)
     Push mock (app) .... ${S}://push.${D}${P}/messages   (pushes to the app, in development)
 
   Demo logins (password for all: ${DEMO_USER_PASSWORD:-<seed disabled>})

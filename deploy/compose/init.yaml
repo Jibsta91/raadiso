@@ -211,6 +211,7 @@ services:
       imgproxy: { condition: service_healthy }
       clamav: { condition: service_healthy }
       opa: { condition: service_healthy }
+      glitchtip-init: { condition: service_completed_successfully }
 
   # End-to-end smoke test against the running stack (CI and `./raadi smoke`).
   smoke:

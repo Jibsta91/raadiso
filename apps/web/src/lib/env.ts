@@ -53,6 +53,19 @@ export const env = {
   get realm() {
     return process.env.KEYCLOAK_REALM ?? 'raadi';
   },
+  /** GlitchTip's public project key and project (ADR-0038); empty turns error reporting off. */
+  get errorsPublicKey() {
+    return process.env.GLITCHTIP_PUBLIC_KEY ?? '';
+  },
+  get errorsProjectId() {
+    return process.env.GLITCHTIP_PROJECT_ID ?? '';
+  },
+  get release() {
+    return process.env.RAADI_VERSION ?? 'dev';
+  },
+  get environment() {
+    return process.env.RAADI_ENV ?? 'development';
+  },
   get sessionCookie() {
     return process.env.SESSION_COOKIE_NAME ?? 'raadi_sid';
   },
