@@ -7,17 +7,28 @@ FROM ghcr.io/astral-sh/uv:0.12.22@sha256:f513a91fc62fe7c17567eee97230dd198e43edb
 
 FROM mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
 ARG TARGETARCH
+# renovate: datasource=npm depName=pnpm
 ARG PNPM_VERSION=10.34.6
+# renovate: datasource=npm depName=turbo
 ARG TURBO_VERSION=2.11.6
 ARG PYTHON_VERSION=3.13
+# renovate: datasource=github-releases depName=opentofu/opentofu extractVersion=^v(?<version>.+)$
 ARG TOFU_VERSION=1.13.1
+# renovate: datasource=github-releases depName=terraform-linters/tflint extractVersion=^v(?<version>.+)$
 ARG TFLINT_VERSION=0.64.0
+# renovate: datasource=github-releases depName=aquasecurity/trivy extractVersion=^v(?<version>.+)$
 ARG TRIVY_VERSION=0.75.0
+# renovate: datasource=github-releases depName=gitleaks/gitleaks extractVersion=^v(?<version>.+)$
 ARG GITLEAKS_VERSION=8.30.1
+# renovate: datasource=github-releases depName=google/osv-scanner extractVersion=^v(?<version>.+)$
 ARG OSV_SCANNER_VERSION=2.6.0
+# renovate: datasource=github-releases depName=anchore/syft extractVersion=^v(?<version>.+)$
 ARG SYFT_VERSION=1.54.0
+# renovate: datasource=github-releases depName=open-policy-agent/opa extractVersion=^v(?<version>.+)$
 ARG OPA_VERSION=1.21.1
+# renovate: datasource=pypi depName=checkov
 ARG CHECKOV_VERSION=3.3.22
+# renovate: datasource=pypi depName=ansible-core
 ARG ANSIBLE_CORE_VERSION=2.21.4
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]

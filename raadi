@@ -53,6 +53,8 @@ Phone (docs/mobile.md)
   tunnel             like phone, but reachable from anywhere through Pangolin on this laptop:
                      public website and sign-in, the rest over the Pangolin VPN (ADR-0034)
 CI (docs/development.md)
+  renovate [args]    open dependency update pull requests now (ADR-0037); needs
+                     ./raadi secret-set renovate_token once; --dry-run=full only reports
   runner register|start|stop|status
                      the self-hosted GitHub Actions runner on this laptop (ADR-0036); register
                      once with a token from GitHub (input hidden), then start
@@ -307,6 +309,13 @@ PHONE
     Metro, over the VPN:  development build: https://metro.${phone_domain}  Expo Go: exps://metro.${phone_domain}
     Back to raadi.localhost (and the tunnel closed):  ./raadi up
 TUNNEL
+    ;;
+  renovate)
+    token="$("${DC[@]}" --progress quiet run --rm --no-deps -T --entrypoint cat secrets-init \
+      /secrets/_master/renovate_token 2>/dev/null)" || true
+    [[ -n "$token" ]] || { echo "missing secret renovate_token: ./raadi secret-set renovate_token (docs/development.md)" >&2; exit 2; }
+    # Passed by name, so the token is in no command line.
+    RENOVATE_TOKEN="$token" "${DC[@]}" --profile ops run --rm renovate "$@"
     ;;
   runner)
     case "${1:-status}" in

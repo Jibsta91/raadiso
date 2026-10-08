@@ -1,0 +1,36 @@
+# Renovate (ADR-0037): dependency update pull requests, every Monday morning, on the self-hosted runner
+# (ADR-0036). Needs the repository secret RENOVATE_TOKEN (docs/development.md); without it the job says so
+# and stops. ./raadi renovate does the same run by hand.
+name: renovate
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+jobs:
+  renovate:
+    name: Renovate
+    runs-on: [self-hosted, raadi]
+    timeout-minutes: 60
+    steps:
+      - name: Run Renovate
+        env:
+          RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [ -z "$RENOVATE_TOKEN" ]; then
+            echo "::warning::The repository secret RENOVATE_TOKEN is not set (docs/development.md)"
+            exit 0
+          fi
+          docker run --rm --security-opt no-new-privileges:true --tmpfs /tmp:mode=1777 \
+            -e RENOVATE_TOKEN -e RENOVATE_PLATFORM=github -e "RENOVATE_REPOSITORIES=$GITHUB_REPOSITORY" \
+            -e RENOVATE_REQUIRE_CONFIG=required -e RENOVATE_ONBOARDING=false -e LOG_LEVEL=info \
+            renovate/renovate:44.145.1@sha256:6f1f3e2d9d0c3f99aa1f61f7509d302185de7deb173ac8c5ff88a5ce283ec435

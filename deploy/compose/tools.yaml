@@ -97,6 +97,26 @@ services:
       resources:
         limits: { memory: 1G, cpus: '2.0' }
 
+  # Renovate (AGPL-3.0, ADR-0037): opens dependency update pull requests. ./raadi renovate runs it with the
+  # token from ./raadi secret-set renovate_token; weekly, .github/workflows/renovate.yaml runs it on the
+  # self-hosted runner.
+  renovate:
+    image: renovate/renovate:44.145.1@sha256:6f1f3e2d9d0c3f99aa1f61f7509d302185de7deb173ac8c5ff88a5ce283ec435
+    profiles: [ops]
+    restart: 'no'
+    security_opt: ['no-new-privileges:true']
+    environment:
+      RENOVATE_PLATFORM: github
+      RENOVATE_REPOSITORIES: ${GITHUB_REPOSITORY}
+      RENOVATE_TOKEN: ${RENOVATE_TOKEN:-}
+      RENOVATE_REQUIRE_CONFIG: required
+      RENOVATE_ONBOARDING: 'false'
+      LOG_LEVEL: info
+    tmpfs: ['/tmp:mode=1777']
+    deploy:
+      resources:
+        limits: { memory: 2G, cpus: '2.0' }
+
 volumes:
   nm-root: {}
   nm-web: {}

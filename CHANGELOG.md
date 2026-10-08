@@ -14,6 +14,9 @@ Each release also has generated notes on GitHub.
   `*.dev.raadiso.com` host works too, Metro included (`https://metro.dev.raadiso.com`, for development builds
   and Expo Go). The admin, organisation, site and resources are
   set up by an init job from `deploy/pangolin/blueprint.json.tmpl`. `./raadi up` closes the tunnel.
+- Renovate, self-hosted (ADR-0037): `./raadi renovate`, and weekly on the self-hosted runner, opens update
+  pull requests for images, npm packages, actions, toolbox CLIs and Traefik plugins; majors wait for
+  approval on the dependency dashboard.
 - CI on this laptop (ADR-0036): a self-hosted GitHub Actions runner (`./raadi runner register|start`) runs
   the workflow's quality job on every pull request and the full-stack job on request, under its own
   compose project. Pull requests from forks never run on it.
