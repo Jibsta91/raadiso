@@ -568,6 +568,10 @@ services:
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
       GLITCHTIP_PUBLIC_KEY: ${GLITCHTIP_PUBLIC_KEY}
       GLITCHTIP_PROJECT_ID: ${GLITCHTIP_PROJECT_ID}
+      # The console's Tools page (which UIs the gateway routes in this mode, and GlitchTip's login).
+      DEV_TOOLS_ROUTED: ${DEV_TOOLS_ROUTED}
+      KEYCLOAK_ADMIN_PUBLIC: ${KEYCLOAK_ADMIN_PUBLIC}
+      GLITCHTIP_ADMIN_EMAIL: ${GLITCHTIP_ADMIN_EMAIL}
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       IDENTITY_BFF_URL: http://identity-bff:4000

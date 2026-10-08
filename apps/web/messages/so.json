@@ -805,7 +805,8 @@
       "reviews": "Faallooyinka",
       "operations": "Hawlgalka",
       "staff": "Shaqaalaha",
-      "audit": "Diiwaanka hubinta"
+      "audit": "Diiwaanka hubinta",
+      "tools": "Qalabka"
     },
     "groups": {
       "workspace": "Goobta shaqada",
@@ -1560,6 +1561,73 @@
         "user_note": "Qoraal la qoray",
         "user_roles_change": "Doorarka shaqaalaha la beddelay",
         "user_otp_reset": "Barnaamijka xaqiijinta la saaray"
+      }
+    },
+    "tools": {
+      "title": "Qalabka",
+      "intro": "Dhammaan shaashadaha webka ee madasha, sida loo galo iyo haddii ay hadda jawaabayaan. Qalab kastaa wuxuu leeyahay xakamayntiisa gelitaanka.",
+      "groups": {
+        "observe": "La-socodka",
+        "identity": "Aqoonsiga iyo sirta",
+        "dev": "Albaabka iyo horumarinta"
+      },
+      "status": {
+        "up": "Shaqaynaya",
+        "down": "Ma shaqaynayo",
+        "unknown": "Lama hubin",
+        "off": "Lama bixiyo"
+      },
+      "signIn": {
+        "sso": "Ku gal akoonkaaga shaqaalaha (hal mar gelid).",
+        "none": "Gelid lama rabo: horumarinta oo keliya, waligeed laguma bixiyo wax-soo-saarka.",
+        "secret": "Ku gal sirta la sameeyay, oo laptop-ka lagu daabaco:",
+        "secretUser": "Sida {user} ugu gal sirta la sameeyay, oo laptop-ka lagu daabaco:",
+        "public": "Dadweyne: qof walba wuu furi karaa, gelid la'aan."
+      },
+      "open": "Fur",
+      "offHint": "Albaabku ma bixiyo shaashaddan habkan hadda (habka taleefanka ama wax-soo-saarka).",
+      "footnote": "Xiriiriyeyaashu waxay ka furmaan tab cusub. Qalabka aan halkan laga bixin waa la liis gareeyay si aad u ogaato inay jiraan.",
+      "items": {
+        "grafana": {
+          "name": "Grafana",
+          "what": "Dashboordhada, diiwaannada, raadadka, SLO-yada iyo digniinaha"
+        },
+        "errors": {
+          "name": "GlitchTip",
+          "what": "Warbixinnada khaladaadka ee websaydhka iyo app-ka"
+        },
+        "prometheus": {
+          "name": "Prometheus",
+          "what": "Cabbirrada ceeriin iyo xeerarka digniinta"
+        },
+        "status": {
+          "name": "Bogga xaaladda",
+          "what": "Waxa macaamiishu ka arkaan shaqaynta"
+        },
+        "keycloak": {
+          "name": "Keycloak",
+          "what": "Isticmaalayaasha, doorarka, macaamiisha iyo dejinta gelitaanka"
+        },
+        "openbao": {
+          "name": "OpenBao",
+          "what": "Sirta iyo aqoonsiyada adeegyada"
+        },
+        "traefik": {
+          "name": "Traefik",
+          "what": "Waddooyinka albaabka, middleware-ka iyo adeegyada"
+        },
+        "mailpit": {
+          "name": "Mailpit",
+          "what": "Iimaylada madashu dirtay (horumarinta)"
+        },
+        "push": {
+          "name": "Push mock",
+          "what": "Ogeysiisyada loo diray app-ka (horumarinta)"
+        },
+        "pangolin": {
+          "name": "Pangolin",
+          "what": "Tunnel: kheyraadka dadweynaha, isticmaalayaasha VPN-ka iyo qalabka"
+        }
       }
     }
   },
