@@ -30,6 +30,12 @@ realm="$(envsubst "$vars" < /opt/raadi/keycloak/realm-raadi.json)"
 if [[ "${SEED_DEMO_DATA:-false}" != "true" ]]; then
   realm="$(jq 'del(.users)' <<<"$realm")"
 fi
+# One-time codes are single-use, except in development where KEYCLOAK_OTP_CODE_REUSABLE=true lets a code be
+# used again within its 30 s window: tests sign the same demo staff user in several times in a row, and the
+# demo code secret is public anyway (DEMO_OTP_SECRET). Anything but "true" keeps codes single-use.
+reusable=false
+[[ "${KEYCLOAK_OTP_CODE_REUSABLE:-false}" == true ]] && reusable=true
+realm="$(jq --argjson r "$reusable" '.otpPolicyCodeReusable = $r' <<<"$realm")"
 
 token() {
   curl -fsS "$KC/realms/master/protocol/openid-connect/token" \

@@ -239,12 +239,14 @@ export class PaymentsService {
   async refund(principal: Principal, id: string, reason?: { reasonCode: string; note: string }) {
     if (!principal.roles.some((r) => ADMINS.includes(r)))
       throw new ForbiddenException('Admins only');
-    const row = await this.repo.get(id);
-    if (!row) throw new NotFoundException('Order not found');
-    if (row.status !== 'captured' || !row.provider_ref)
-      throw new ConflictException(`Order is ${row.status}`);
-    await this.provider.refund(row.provider_ref, row.amount_ore, `refund-${row.id}`);
-    await this.repo.locked(id, async (tx, r) => {
+    // The order's lock is taken before the provider is called: a second refund of the same order waits,
+    // then finds it refunded (409), so the money moves and the audit entry is written once. The provider
+    // call is idempotent per order (refund-<id>): if the commit fails after the provider refunded, refunding
+    // again repairs the order. The provider's timeout (≤ 10 s) bounds how long the lock is held.
+    const done = await this.repo.locked(id, async (tx, r) => {
+      if (r.status !== 'captured' || !r.provider_ref)
+        throw new ConflictException(`Order is ${r.status}`);
+      await this.provider.refund(r.provider_ref, r.amount_ore, `refund-${r.id}`);
       await this.apply(tx, r, 'refunded', 'admin');
       // In the same transaction as the refund (ADR-0028).
       await audit(tx.client, 'urn:raadi:payments', principal, {
@@ -259,7 +261,9 @@ export class PaymentsService {
           ...(reason ? { reasonCode: reason.reasonCode } : {}),
         },
       });
+      return true;
     });
+    if (!done) throw new NotFoundException('Order not found');
     this.logger.log({ orderId: id, admin: principal.sub }, 'order refunded');
     return this.view((await this.repo.get(id))!);
   }

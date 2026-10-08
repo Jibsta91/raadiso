@@ -9,6 +9,7 @@ import {
   newBrowserBinding,
   normaliseLocale,
   safeReturnTo,
+  loginRatePerMinute,
 } from '../../src/auth/security.js';
 
 describe('safeReturnTo', () => {
@@ -88,5 +89,15 @@ describe('login browser binding (login CSRF)', () => {
     const a = loginCookieName('raadi_sid', 'state-one-1234567890');
     assert.match(a, /^raadi_sid_login_[0-9a-f]{16}$/);
     assert.notEqual(a, loginCookieName('raadi_sid', 'state-two-1234567890'));
+  });
+});
+
+describe('loginRatePerMinute', () => {
+  it('takes a positive whole number from the environment', () => {
+    assert.equal(loginRatePerMinute('120'), 120);
+  });
+  it('falls back to 20 when unset or not a positive whole number', () => {
+    for (const raw of [undefined, '', '0', '-5', '2.5', 'many'])
+      assert.equal(loginRatePerMinute(raw), 20);
   });
 });

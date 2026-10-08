@@ -11,6 +11,12 @@ Each release also has generated notes on GitHub.
 - `./raadi api-check`: fails when the generated API client or event schemas are stale, or when an
   OpenAPI change would break clients (oasdiff against `main`; `API_BREAKING_OK=1` for a planned break).
   Tests for OPA's system policies (who may query decisions; masking typed text in decision logs).
+- Faster tests: smoke 245 s → 65 s, e2e 1.9 → 1.3 min. In development a one-time code may be used again
+  within its 30 s window (`KEYCLOAK_OTP_CODE_REUSABLE`), sign-ins are limited to 120 a minute instead of 20
+  (`AUTH_LOGIN_RATE_PER_MINUTE`), and saved searches run every 15 s with a 10 s indexing lag. Production
+  keeps single-use codes and 20 sign-ins a minute.
+- Tempo: span metrics only for server and consumer spans (histogram series 6,240 → 2,715, the dashboards
+  unchanged) and trace blocks cut after 5 minutes, against the memory creep that turned the status page red.
 - Console: a Tools section (operators and platform admins) linking every web UI of the platform: Grafana,
   GlitchTip, Prometheus, the status page, Keycloak, OpenBao, Traefik, Mailpit, the push mock and, in tunnel
   mode, Pangolin. Each card says how to sign in (with the `./raadi secret` command to copy) and whether the
