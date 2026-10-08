@@ -10,6 +10,7 @@ import {
   Star,
   UserCog,
   Users,
+  Wrench,
 } from 'lucide-react';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
@@ -48,6 +49,7 @@ const ICONS: Record<Section, typeof LayoutDashboard> = {
   orders: Receipt,
   reviews: Star,
   operations: Gauge,
+  tools: Wrench,
   staff: UserCog,
   audit: ScrollText,
 };

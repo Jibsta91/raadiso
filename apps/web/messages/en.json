@@ -805,7 +805,8 @@
       "reviews": "Reviews",
       "operations": "Operations",
       "staff": "Staff",
-      "audit": "Audit log"
+      "audit": "Audit log",
+      "tools": "Tools"
     },
     "groups": {
       "workspace": "Workspace",
@@ -1560,6 +1561,73 @@
         "user_note": "Note written",
         "user_roles_change": "Staff roles changed",
         "user_otp_reset": "Authenticator removed"
+      }
+    },
+    "tools": {
+      "title": "Tools",
+      "intro": "Every web UI of the platform, with how to sign in and whether it answers right now. Each tool keeps its own access control.",
+      "groups": {
+        "observe": "Monitoring",
+        "identity": "Identity and secrets",
+        "dev": "Gateway and development"
+      },
+      "status": {
+        "up": "Up",
+        "down": "Down",
+        "unknown": "Not checked",
+        "off": "Not served"
+      },
+      "signIn": {
+        "sso": "Sign in with your staff account (single sign-on).",
+        "none": "No sign-in: development only, never served in production.",
+        "secret": "Sign in with the generated secret, printed on the laptop by:",
+        "secretUser": "Sign in as {user} with the generated secret, printed on the laptop by:",
+        "public": "Public: anyone can open it, no sign-in."
+      },
+      "open": "Open",
+      "offHint": "The gateway does not serve this UI in the current mode (phone mode or production).",
+      "footnote": "Links open in a new tab. Tools that are not served here are listed so you know they exist.",
+      "items": {
+        "grafana": {
+          "name": "Grafana",
+          "what": "Dashboards, logs, traces, SLOs and alerts"
+        },
+        "errors": {
+          "name": "GlitchTip",
+          "what": "Error reports from the website and the app"
+        },
+        "prometheus": {
+          "name": "Prometheus",
+          "what": "Raw metrics and alert rules"
+        },
+        "status": {
+          "name": "Status page",
+          "what": "What customers see about uptime"
+        },
+        "keycloak": {
+          "name": "Keycloak",
+          "what": "Users, roles, clients and sign-in settings"
+        },
+        "openbao": {
+          "name": "OpenBao",
+          "what": "Secrets and service credentials"
+        },
+        "traefik": {
+          "name": "Traefik",
+          "what": "Gateway routes, middlewares and services"
+        },
+        "mailpit": {
+          "name": "Mailpit",
+          "what": "E-mails the platform sent (development)"
+        },
+        "push": {
+          "name": "Push mock",
+          "what": "Push notifications sent to the app (development)"
+        },
+        "pangolin": {
+          "name": "Pangolin",
+          "what": "Tunnel: public resources, VPN users and devices"
+        }
       }
     }
   },

@@ -805,7 +805,8 @@
       "reviews": "Vurderinger",
       "operations": "Drift",
       "staff": "Ansatte",
-      "audit": "Revisjonslogg"
+      "audit": "Revisjonslogg",
+      "tools": "Verktøy"
     },
     "groups": {
       "workspace": "Arbeidsflate",
@@ -1560,6 +1561,73 @@
         "user_note": "Notat skrevet",
         "user_roles_change": "Ansattroller endret",
         "user_otp_reset": "Autentiseringsapp fjernet"
+      }
+    },
+    "tools": {
+      "title": "Verktøy",
+      "intro": "Alle nettgrensesnittene i plattformen, med hvordan du logger inn og om de svarer nå. Hvert verktøy har sin egen tilgangskontroll.",
+      "groups": {
+        "observe": "Overvåking",
+        "identity": "Identitet og hemmeligheter",
+        "dev": "Gateway og utvikling"
+      },
+      "status": {
+        "up": "Oppe",
+        "down": "Nede",
+        "unknown": "Ikke sjekket",
+        "off": "Ikke tilgjengelig"
+      },
+      "signIn": {
+        "sso": "Logg inn med ansattkontoen din (enkel pålogging).",
+        "none": "Ingen innlogging: bare i utvikling, aldri i produksjon.",
+        "secret": "Logg inn med den genererte hemmeligheten, som vises på laptopen med:",
+        "secretUser": "Logg inn som {user} med den genererte hemmeligheten, som vises på laptopen med:",
+        "public": "Offentlig: alle kan åpne den, uten innlogging."
+      },
+      "open": "Åpne",
+      "offHint": "Gatewayen viser ikke dette grensesnittet i denne modusen (telefonmodus eller produksjon).",
+      "footnote": "Lenkene åpnes i en ny fane. Verktøy som ikke er tilgjengelige her, står likevel på listen så du vet at de finnes.",
+      "items": {
+        "grafana": {
+          "name": "Grafana",
+          "what": "Dashbord, logger, sporinger, SLO-er og varsler"
+        },
+        "errors": {
+          "name": "GlitchTip",
+          "what": "Feilrapporter fra nettstedet og appen"
+        },
+        "prometheus": {
+          "name": "Prometheus",
+          "what": "Rå metrikker og varslingsregler"
+        },
+        "status": {
+          "name": "Statusside",
+          "what": "Det kundene ser om oppetid"
+        },
+        "keycloak": {
+          "name": "Keycloak",
+          "what": "Brukere, roller, klienter og innloggingsoppsett"
+        },
+        "openbao": {
+          "name": "OpenBao",
+          "what": "Hemmeligheter og tjenestenøkler"
+        },
+        "traefik": {
+          "name": "Traefik",
+          "what": "Gatewayens ruter, mellomvare og tjenester"
+        },
+        "mailpit": {
+          "name": "Mailpit",
+          "what": "E-post plattformen har sendt (utvikling)"
+        },
+        "push": {
+          "name": "Push-mock",
+          "what": "Pushvarsler sendt til appen (utvikling)"
+        },
+        "pangolin": {
+          "name": "Pangolin",
+          "what": "Tunnel: offentlige ressurser, VPN-brukere og enheter"
+        }
       }
     }
   },

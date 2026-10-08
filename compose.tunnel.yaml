@@ -337,6 +337,11 @@ services:
       EXPO_PACKAGER_PROXY_URL: https://metro.${RAADI_DOMAIN}
     ports: !reset []
 
+  # The console's Tools page links to Pangolin's dashboard in tunnel mode.
+  web:
+    environment:
+      TUNNEL_DASHBOARD_URL: https://${PANGOLIN_DOMAIN}
+
   summary:
     environment:
       TUNNEL_DASHBOARD_URL: https://${PANGOLIN_DOMAIN}

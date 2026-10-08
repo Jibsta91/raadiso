@@ -8,6 +8,10 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Console: a Tools section (operators and platform admins) linking every web UI of the platform: Grafana,
+  GlitchTip, Prometheus, the status page, Keycloak, OpenBao, Traefik, Mailpit, the push mock and, in tunnel
+  mode, Pangolin. Each card says how to sign in (with the `./raadi secret` command to copy) and whether the
+  tool answers right now; tools the gateway doesn't serve in the current mode are marked so.
 - Tunnel mode (ADR-0034): `./raadi tunnel` makes the stack on the laptop reachable from anywhere through a
   self-hosted Pangolin on the same laptop (the home router forwards TCP 80/443 and UDP 51820/21820). The
   website, sign-in and test payments are public behind a Pangolin sign-in; with the Pangolin app (VPN), every

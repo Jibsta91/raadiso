@@ -22,6 +22,7 @@ const ALL = [
   'orders',
   'reviews',
   'operations',
+  'tools',
   'staff',
   'audit',
 ] as const;
@@ -37,7 +38,7 @@ test('each role sees its own sections, and nothing else opens', async ({ browser
     admin: [...ALL],
     moderator: ['overview', 'moderation', 'listings', 'reviews'],
     support: ['overview', 'users', 'listings', 'orders', 'reviews'],
-    operator: ['overview', 'operations'],
+    operator: ['overview', 'operations', 'tools'],
   };
   for (const [who, want] of Object.entries(expected)) {
     const page = await browser.newPage();
@@ -155,4 +156,25 @@ test('operators see the platform health, not people', async ({ page }) => {
   );
   await expect(page.getByTestId('ops-delivery')).toBeVisible();
   await expect(page.getByTestId('ops-search')).toBeVisible();
+});
+
+test('operators find every tool with its sign-in and live status', async ({ page }) => {
+  await adminLogin(page, `operator@${domain}`);
+  await page.getByTestId('admin-nav-tools').click();
+  await expect(page).toHaveURL(/\/admin\/tools$/);
+  // Grafana: single sign-on, answers, and the link points at grafana.<domain>.
+  const grafana = page.getByTestId('tool-grafana');
+  await expect(grafana).toHaveAttribute('data-status', 'up');
+  await expect(page.getByTestId('tool-grafana-open')).toHaveAttribute(
+    'href',
+    new RegExp(`//grafana\\.${domain.replaceAll('.', '\\.')}`),
+  );
+  // Keycloak's admin console: a generated secret, with the command that prints it.
+  await expect(page.getByTestId('tool-keycloak')).toContainText(
+    './raadi secret keycloak_admin_password',
+  );
+  // Every tool the gateway serves here answers (development mode routes them all).
+  for (const id of ['errors', 'prometheus', 'openbao', 'traefik', 'mailpit', 'push']) {
+    await expect(page.getByTestId(`tool-${id}`), id).toHaveAttribute('data-status', 'up');
+  }
 });
