@@ -26,6 +26,8 @@ ARG OSV_SCANNER_VERSION=2.6.0
 ARG SYFT_VERSION=1.54.0
 # renovate: datasource=github-releases depName=open-policy-agent/opa extractVersion=^v(?<version>.+)$
 ARG OPA_VERSION=1.21.1
+# renovate: datasource=github-releases depName=oasdiff/oasdiff extractVersion=^v(?<version>.+)$
+ARG OASDIFF_VERSION=1.33.0
 # renovate: datasource=pypi depName=checkov
 ARG CHECKOV_VERSION=3.3.22
 # renovate: datasource=pypi depName=ansible-core
@@ -81,6 +83,10 @@ RUN arch="${TARGETARCH:-amd64}"; \
     base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"; \
     fetch "$base/$f" "$f"; fetch "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt" sums; verify "$f" sums; \
     tar -xzf "$f" -C /usr/local/bin gitleaks; rm -f ./*; \
+    # oasdiff (OpenAPI breaking-change check, ./raadi api-check)
+    f="oasdiff_${OASDIFF_VERSION}_linux_${arch}.tar.gz"; base="https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}"; \
+    fetch "$base/$f" "$f"; fetch "$base/checksums.txt" sums; verify "$f" sums; \
+    tar -xzf "$f" -C /usr/local/bin oasdiff; rm -f ./*; \
     # OSV-Scanner
     f="osv-scanner_linux_${arch}"; base="https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}"; \
     fetch "$base/$f" "$f"; fetch "$base/osv-scanner_SHA256SUMS" sums; verify "$f" sums; \

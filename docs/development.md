@@ -78,6 +78,12 @@ Contract tests validate controller output against the service's `openapi.yaml`, 
 generates `@raadi/api-client`. `./raadi generate` rebuilds that client and the event JSON Schemas in
 `packages/events/schemas` (from the zod contracts); run it after changing either.
 
+`./raadi api-check` (a gate) fails when the committed client or schemas are out of date, and when a
+service's `openapi.yaml` breaks clients against `main` ([oasdiff](https://github.com/oasdiff/oasdiff):
+a removed field or endpoint, a new required parameter). For a break on purpose, with every client updated
+in the same pull request, run it with `API_BREAKING_OK=1`; `API_BASE_REF` compares against another ref.
+Rego policies have tests next to them (`*_test.rego`, run by `./raadi test`), the system policies included.
+
 ## CI on this laptop (self-hosted runner)
 
 Pull requests are checked by `.github/workflows/ci.yaml` on a GitHub Actions runner that runs on the

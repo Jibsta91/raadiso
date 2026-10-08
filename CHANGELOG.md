@@ -8,6 +8,9 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- `./raadi api-check`: fails when the generated API client or event schemas are stale, or when an
+  OpenAPI change would break clients (oasdiff against `main`; `API_BREAKING_OK=1` for a planned break).
+  Tests for OPA's system policies (who may query decisions; masking typed text in decision logs).
 - Console: a Tools section (operators and platform admins) linking every web UI of the platform: Grafana,
   GlitchTip, Prometheus, the status page, Keycloak, OpenBao, Traefik, Mailpit, the push mock and, in tunnel
   mode, Pangolin. Each card says how to sign in (with the `./raadi secret` command to copy) and whether the
