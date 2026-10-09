@@ -123,7 +123,9 @@
     "latestTitle": "Xayeysiisyadii ugu dambeeyay",
     "seeAll": "Dhammaan arag",
     "searchPlaceholder": "Maxaad raadinaysaa?",
-    "searchSubmit": "Raadi"
+    "searchSubmit": "Raadi",
+    "recentTitle": "Dhawaan la eegay",
+    "recentClear": "Tirtir"
   },
   "account": {
     "title": "Akoonkayga",
@@ -633,7 +635,8 @@
     "per": {
       "month": "bishii",
       "night": "habeenkii"
-    }
+    },
+    "similarTitle": "Xayeysiisyo la mid ah"
   },
   "form": {
     "newTitle": "Xayeysiis cusub",

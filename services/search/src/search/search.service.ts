@@ -260,40 +260,7 @@ export class SearchService {
       total: res.hits.total.value,
       page: params.page,
       pageSize: params.pageSize,
-      items: res.hits.hits.map((h) => {
-        const s = h._source;
-        const first = s.imageIds[0];
-        const distance = h.fields?.distance_km?.[0];
-        return {
-          id: s.id,
-          title: s.title,
-          country: s.country,
-          price:
-            s.priceMinor === null || s.currency === null
-              ? null
-              : { amountMinor: s.priceMinor, currency: s.currency },
-          category: s.category,
-          subcategory: s.subcategory,
-          location: {
-            placeId: s.placeId,
-            name: s.placeName,
-            region: s.region,
-            regionName: regionName(s.region),
-            lat: s.location.lat,
-            lon: s.location.lon,
-          },
-          ...(geo && distance !== undefined ? { distanceKm: Math.round(distance * 10) / 10 } : {}),
-          ...(deals.has(s.id) ? { deal: deals.get(s.id) } : {}),
-          ...(recentDrop(s) ? { priceDrop: recentDrop(s)! } : {}),
-          ...(first
-            ? { image: (({ thumb, card }) => ({ thumb, card }))(imageUrls(this.signer, first)) }
-            : {}),
-          imageCount: s.imageIds.length,
-          attributes: s.attributes,
-          publishedAt: s.publishedAt,
-          promoted: !!s.promotedUntil && Date.parse(s.promotedUntil) > Date.now(),
-        };
-      }),
+      items: this.toHits(res, deals, geo !== undefined),
       facets,
       priceRanges,
       query: { text: effective.q ?? '', understood: reading?.understood ?? [] },
@@ -346,6 +313,112 @@ export class SearchService {
         };
       }),
     };
+  }
+
+  /** Search hits as the API returns them. */
+  private toHits(
+    res: SearchResponse,
+    deals: Map<string, 'great' | 'good'> = new Map(),
+    withDistance = false,
+  ): SearchHit[] {
+    return res.hits.hits.map((h) => {
+      const s = h._source;
+      const first = s.imageIds[0];
+      const distance = h.fields?.distance_km?.[0];
+      return {
+        id: s.id,
+        title: s.title,
+        country: s.country,
+        price:
+          s.priceMinor === null || s.currency === null
+            ? null
+            : { amountMinor: s.priceMinor, currency: s.currency },
+        category: s.category,
+        subcategory: s.subcategory,
+        location: {
+          placeId: s.placeId,
+          name: s.placeName,
+          region: s.region,
+          regionName: regionName(s.region),
+          lat: s.location.lat,
+          lon: s.location.lon,
+        },
+        ...(withDistance && distance !== undefined
+          ? { distanceKm: Math.round(distance * 10) / 10 }
+          : {}),
+        ...(deals.has(s.id) ? { deal: deals.get(s.id) } : {}),
+        ...(recentDrop(s) ? { priceDrop: recentDrop(s)! } : {}),
+        ...(first
+          ? { image: (({ thumb, card }) => ({ thumb, card }))(imageUrls(this.signer, first)) }
+          : {}),
+        imageCount: s.imageIds.length,
+        attributes: s.attributes,
+        publishedAt: s.publishedAt,
+        promoted: !!s.promotedUntil && Date.parse(s.promotedUntil) > Date.now(),
+      };
+    });
+  }
+
+  /**
+   * Listings like this one (ADR-0047): more-like-this on its words, in its country, the same
+   * subcategory and a similar price ranking higher; topped up with its subcategory's newest when the
+   * words find too few. Empty for an unknown listing.
+   */
+  async similar(id: string, size = 8): Promise<SearchHit[]> {
+    const doc = (await this.index.search({ size: 1, query: { ids: { values: [id] } } })).hits
+      .hits[0]?._source;
+    if (!doc) return [];
+    const fields =
+      doc.country === 'NO'
+        ? ['title', 'title.std', 'description']
+        : ['title.en', 'title.so', 'description.en'];
+    const base = [{ term: { status: 'active' } }, { term: { country: doc.country } }];
+    const should: object[] = [
+      { term: { subcategory: { value: doc.subcategory, boost: 3 } } },
+      { term: { category: { value: doc.category, boost: 1 } } },
+    ];
+    if (doc.priceMinor !== null) {
+      should.push({
+        range: { priceMinor: { gte: doc.priceMinor * 0.5, lte: doc.priceMinor * 1.5, boost: 1.5 } },
+      });
+    }
+    const res = await this.index.search({
+      size,
+      _source: { excludes: ['description', 'ownerId'] },
+      query: {
+        bool: {
+          must: [
+            {
+              more_like_this: {
+                fields,
+                like: [{ _index: this.index.alias, _id: id }],
+                min_term_freq: 1,
+                min_doc_freq: 1,
+                max_query_terms: 12,
+                minimum_should_match: '30%',
+              },
+            },
+          ],
+          filter: base,
+          should,
+          must_not: [{ ids: { values: [id] } }],
+        },
+      },
+    });
+    const hits = this.toHits(res);
+    if (hits.length >= size) return hits;
+    const more = await this.index.search({
+      size: size - hits.length,
+      _source: { excludes: ['description', 'ownerId'] },
+      query: {
+        bool: {
+          filter: [...base, { term: { subcategory: doc.subcategory } }],
+          must_not: [{ ids: { values: [id, ...hits.map((h) => h.id)] } }],
+        },
+      },
+      sort: [{ publishedAt: 'desc' }],
+    });
+    return [...hits, ...this.toHits(more)];
   }
 
   /** Price statistics per comparable group, for a minute (ADR-0043). */

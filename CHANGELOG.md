@@ -8,6 +8,10 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Discovery (ADR-0047): listing pages show similar listings (more-like-this in search, the same
+  subcategory and a similar price first), and the front page shows what this browser viewed lately
+  (kept in the browser only, clearable).
+
 - Smart categories (ADR-0046): a subcategory's third level (computers and solar power by type, phones
   and tablets by brand) as chips with counts in search; "What are you selling?" at the start of a new
   listing suggests the category from the words and starts the title; category pages show their

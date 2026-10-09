@@ -123,7 +123,9 @@
     "latestTitle": "Nyeste annonser",
     "seeAll": "Se alle",
     "searchPlaceholder": "Hva leter du etter?",
-    "searchSubmit": "Søk"
+    "searchSubmit": "Søk",
+    "recentTitle": "Nylig sett",
+    "recentClear": "Tøm"
   },
   "account": {
     "title": "Min konto",
@@ -633,7 +635,8 @@
     "per": {
       "month": "per måned",
       "night": "per natt"
-    }
+    },
+    "similarTitle": "Lignende annonser"
   },
   "form": {
     "newTitle": "Ny annonse",

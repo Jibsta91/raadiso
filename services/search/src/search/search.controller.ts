@@ -7,6 +7,7 @@ import { type SearchParams, searchParamsSchema } from './query.js';
 import {
   type Autocomplete,
   type PriceInsight,
+  type SearchHit,
   type SearchResult,
   SearchService,
 } from './search.service.js';
@@ -63,6 +64,16 @@ export class SearchController {
   ): Promise<Autocomplete> {
     void reply.header('cache-control', 'public, max-age=60');
     return this.search.autocomplete(q, country);
+  }
+
+  /** Listings like this one (ADR-0047). */
+  @Get('listings/:id/similar')
+  async similar(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<{ items: SearchHit[] }> {
+    void reply.header('cache-control', 'public, max-age=120');
+    return { items: await this.search.similar(id) };
   }
 
   /** A listing's price against comparable listings (ADR-0043); `insight` is null without enough. */

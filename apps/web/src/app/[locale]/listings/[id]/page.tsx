@@ -8,6 +8,8 @@ import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ImageGallery } from '@/components/listings/image-gallery';
 import { ListingActions } from '@/components/listings/listing-actions';
+import { ListingCard } from '@/components/listings/listing-card';
+import { RecordSeen } from '@/components/listings/recently-viewed';
 import { ViewBeacon } from '@/components/listings/view-beacon';
 import { ShareButton } from '@/components/listings/share-button';
 import { ContactSeller } from '@/components/messaging/contact-seller';
@@ -17,7 +19,7 @@ import { nonceFrom } from '@/lib/csp';
 import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
-import { favouriteIds, getListing, priceInsight, priceHistory } from '@/lib/api';
+import { favouriteIds, getListing, priceInsight, priceHistory, similarListings } from '@/lib/api';
 import { env } from '@/lib/env';
 import { PriceInsight } from '@/components/listings/price-insight';
 import { formatPrice } from '@/lib/format';
@@ -67,13 +69,14 @@ export default async function ListingPage({
   if (!UUID.test(id)) notFound();
   const listing = await getListing(id);
   if (!listing) notFound();
-  const [t, format, session, favourites, insight, history] = await Promise.all([
+  const [t, format, session, favourites, insight, history, similar] = await Promise.all([
     getTranslations(),
     getFormatter(),
     getSession(),
     favouriteIds(),
     listing.price && listing.status === 'active' ? priceInsight(listing.id) : null,
     priceHistory(listing.id),
+    listing.status === 'active' ? similarListings(listing.id) : [],
   ]);
   const canContact = listing.status === 'active' && !listing.viewer?.isOwner;
 
@@ -287,6 +290,38 @@ export default async function ListingPage({
           ) : null}
         </aside>
       </div>
+      {listing.status === 'active' && !listing.viewer?.isOwner ? (
+        <RecordSeen
+          listing={{
+            id: listing.id,
+            title: listing.title,
+            price: listing.price,
+            ...(listing.images[0] ? { image: listing.images[0].urls.thumb } : {}),
+            place: listing.location.name,
+          }}
+        />
+      ) : null}
+      {similar.length ? (
+        <section
+          aria-labelledby="similar"
+          className="mt-14 space-y-5"
+          data-testid="similar-listings"
+        >
+          <h2 id="similar" className="text-2xl font-bold">
+            {t('listing.similarTitle')}
+          </h2>
+          <ul
+            className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 lg:grid-cols-4"
+            role="list"
+          >
+            {similar.slice(0, 8).map((hit) => (
+              <li key={hit.id} className="flex">
+                <ListingCard hit={hit} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </article>
   );
 }
