@@ -45,6 +45,11 @@ export const listingSnapshot = z
     country: z.string().length(2).optional(),
     /** Added later (optional, BACKWARD compatible): the asking price in minor units, null if none. */
     price: money.nullable().optional(),
+    /**
+     * Added later (optional, BACKWARD compatible): the last price drop, the price before it and when;
+     * null once the price goes up again (ADR-0044).
+     */
+    priceDrop: z.object({ previous: money, at: timestamp }).nullable().optional(),
     imageIds: z.array(uuid).max(10),
     publishedAt: timestamp,
     updatedAt: timestamp,

@@ -16,7 +16,7 @@ import { nonceFrom } from '@/lib/csp';
 import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
-import { favouriteIds, getListing, priceInsight } from '@/lib/api';
+import { favouriteIds, getListing, priceInsight, priceHistory } from '@/lib/api';
 import { env } from '@/lib/env';
 import { PriceInsight } from '@/components/listings/price-insight';
 import { formatPrice } from '@/lib/format';
@@ -66,12 +66,13 @@ export default async function ListingPage({
   if (!UUID.test(id)) notFound();
   const listing = await getListing(id);
   if (!listing) notFound();
-  const [t, format, session, favourites, insight] = await Promise.all([
+  const [t, format, session, favourites, insight, history] = await Promise.all([
     getTranslations(),
     getFormatter(),
     getSession(),
     favouriteIds(),
     listing.price && listing.status === 'active' ? priceInsight(listing.id) : null,
+    priceHistory(listing.id),
   ]);
   const canContact = listing.status === 'active' && !listing.viewer?.isOwner;
 
@@ -166,6 +167,15 @@ export default async function ListingPage({
               </span>
             ) : null}
           </p>
+          {listing.priceDrop ? (
+            <p className="text-sm font-medium text-primary" data-testid="listing-reduced">
+              {t.rich('price.reducedOn', {
+                price: formatPrice(listing.priceDrop.previous, locale),
+                date: format.dateTime(new Date(listing.priceDrop.at), { dateStyle: 'medium' }),
+                old: (chunks) => <s>{chunks}</s>,
+              })}
+            </p>
+          ) : null}
           <ShareButton title={listing.title} />
         </header>
         <div className="space-y-6 lg:col-start-1 lg:row-span-2 lg:row-start-1">
@@ -199,6 +209,31 @@ export default async function ListingPage({
 
         <aside className="space-y-4 lg:col-start-2 lg:row-start-2">
           {insight ? <PriceInsight insight={insight} /> : null}
+          {history.length > 1 ? (
+            <details className="rounded-2xl border p-4 text-sm" data-testid="price-history">
+              <summary className="cursor-pointer font-semibold">{t('price.history')}</summary>
+              <table className="mt-3 w-full">
+                <caption className="sr-only">{t('price.historyCaption')}</caption>
+                <tbody>
+                  {history.map((h) => (
+                    <tr key={h.at} className="border-t first:border-t-0">
+                      <td className="py-1.5 text-muted-foreground">
+                        {format.dateTime(new Date(h.at), { dateStyle: 'medium' })}
+                      </td>
+                      <td className="py-1.5 text-end font-medium tabular-nums">
+                        {h.amountMinor === null || !h.currency
+                          ? t('price.noPrice')
+                          : formatPrice(
+                              { amountMinor: h.amountMinor, currency: h.currency },
+                              locale,
+                            )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
+          ) : null}
           <div className="space-y-3 rounded-lg border p-4 text-sm">
             <dl className="space-y-3">
               <div className="flex items-start gap-2">

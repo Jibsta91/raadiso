@@ -46,6 +46,7 @@ const PASSTHROUGH = [
   ...CATEGORY_FILTERS,
   'priceMin',
   'priceMax',
+  'priceDropped',
   'near',
   'lat',
   'lon',
@@ -189,6 +190,7 @@ export default async function SearchPage({
       ...paramChip(current, `${r.param}Min`, bound(r.param, 'Min', r.unit)),
       ...paramChip(current, `${r.param}Max`, bound(r.param, 'Max', r.unit)),
     ]),
+    ...paramChip(current, 'priceDropped', t('search.priceDropped')),
   ];
 
   return (
@@ -241,6 +243,24 @@ export default async function SearchPage({
               showAll={(count) => t('search.showAll', { count })}
             />
           ))}
+          {/* Reduced in the last 30 days (ADR-0044): a link, so it works without JavaScript. */}
+          <Link
+            href={href(
+              withParams(current, { priceDropped: current.priceDropped ? undefined : 'true' }),
+            )}
+            scroll={false}
+            data-testid="filter-price-dropped"
+            aria-current={current.priceDropped ? 'true' : undefined}
+            className="flex items-center gap-2 rounded-lg py-1.5 text-sm hover:underline"
+          >
+            <span
+              aria-hidden
+              className={`flex size-4 items-center justify-center rounded border ${current.priceDropped ? 'border-primary bg-primary text-primary-foreground' : 'border-input'}`}
+            >
+              {current.priceDropped ? '✓' : ''}
+            </span>
+            {t('search.priceDropped')}
+          </Link>
           <form
             action={`/${locale}/search`}
             method="get"

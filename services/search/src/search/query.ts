@@ -67,6 +67,9 @@ export interface Matching {
   weights?: RankingWeights;
 }
 
+/** How long a price drop counts as recent: filters, badges (ADR-0044). */
+export const PRICE_DROP_DAYS = 30;
+
 /** How much quality and freshness multiply relevance under "best match" (ADR-0042). */
 export interface RankingWeights {
   quality: number;
@@ -189,6 +192,9 @@ export function buildSearch(p: SearchParams, country: CountryCode, matching: Mat
       filter.push({ range: { [`attributes.${RANGE_FIELDS[name]}`]: { gte, lte } } });
     }
   }
+  if (p.priceDropped === 'true') {
+    filter.push({ range: { priceDroppedAt: { gte: `now-${PRICE_DROP_DAYS}d` } } });
+  }
   if (p.publishedAfter || p.publishedBefore) {
     filter.push({ range: { publishedAt: { gt: p.publishedAfter, lte: p.publishedBefore } } });
   }
@@ -241,6 +247,10 @@ export function buildSearch(p: SearchParams, country: CountryCode, matching: Mat
       break;
     case 'distance':
       sort.push({ _geo_distance: { location: c, order: 'asc', unit: 'km' } });
+      break;
+    case 'price_drop':
+      // Recently reduced first; listings without a drop after them, newest first.
+      sort.push({ priceDroppedAt: { order: 'desc', missing: '_last' } }, { publishedAt: 'desc' });
       break;
     case PRICE_PER_AREA_SORT:
       // Lowest price per square metre; listings without a price or an area last.

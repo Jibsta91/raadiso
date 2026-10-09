@@ -569,7 +569,14 @@ export const RANGE_FIELDS: Readonly<Record<string, string>> = Object.fromEntries
 export const RANGE_PARAMS: readonly string[] = Object.keys(RANGE_FIELDS);
 
 /** Sorts every search has. */
-export const BASE_SORTS = ['relevance', 'newest', 'price_asc', 'price_desc', 'distance'] as const;
+export const BASE_SORTS = [
+  'relevance',
+  'newest',
+  'price_asc',
+  'price_desc',
+  'distance',
+  'price_drop',
+] as const;
 
 /** The lowest price per square metre: for categories with an area (ADR-0042). */
 export const PRICE_PER_AREA_SORT = 'price_per_area_asc';

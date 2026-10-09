@@ -536,7 +536,8 @@
       "area_desc": "Størst areal",
       "storage_desc": "Mest lagring",
       "head_desc": "Flest dyr",
-      "price_per_area_asc": "Lavest pris per m²"
+      "price_per_area_asc": "Lavest pris per m²",
+      "price_drop": "Nylig satt ned"
     },
     "pageOf": "Side {page} av {pages}",
     "previous": "Forrige",
@@ -593,7 +594,8 @@
     "exactWords": "Søk etter de nøyaktige ordene i stedet",
     "relaxed": "Ingen annonser passet alle ordene, så disse passer noen av dem.",
     "didYouMean": "Mente du {suggestion}?",
-    "nearPlace": "nær {place}"
+    "nearPlace": "nær {place}",
+    "priceDropped": "Satt ned i pris"
   },
   "listing": {
     "noPrice": "Lønn etter avtale",
@@ -1987,6 +1989,12 @@
       "great": "Veldig god pris",
       "good": "God pris"
     },
-    "guide": "Lignende annonser: {from}–{to} (midten {median})."
+    "guide": "Lignende annonser: {from}–{to} (midten {median}).",
+    "reducedFrom": "Satt ned fra <old>{price}</old>",
+    "was": "før",
+    "reducedOn": "Satt ned fra <old>{price}</old> {date}",
+    "history": "Prishistorikk",
+    "historyCaption": "Prisene på denne annonsen over tid",
+    "noPrice": "Ingen pris"
   }
 }

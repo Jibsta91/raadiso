@@ -536,7 +536,8 @@
       "area_desc": "Largest area",
       "storage_desc": "Most storage",
       "head_desc": "Most animals",
-      "price_per_area_asc": "Lowest price per m²"
+      "price_per_area_asc": "Lowest price per m²",
+      "price_drop": "Recently reduced"
     },
     "pageOf": "Page {page} of {pages}",
     "previous": "Previous",
@@ -593,7 +594,8 @@
     "exactWords": "Search for the exact words instead",
     "relaxed": "No listing matched every word, so these match some of them.",
     "didYouMean": "Did you mean {suggestion}?",
-    "nearPlace": "near {place}"
+    "nearPlace": "near {place}",
+    "priceDropped": "Price reduced"
   },
   "listing": {
     "noPrice": "Salary by agreement",
@@ -1987,6 +1989,12 @@
       "great": "Great price",
       "good": "Good price"
     },
-    "guide": "Similar listings: {from}–{to} (middle {median})."
+    "guide": "Similar listings: {from}–{to} (middle {median}).",
+    "reducedFrom": "Reduced from <old>{price}</old>",
+    "was": "was",
+    "reducedOn": "Reduced from <old>{price}</old> on {date}",
+    "history": "Price history",
+    "historyCaption": "Prices of this listing over time",
+    "noPrice": "No price"
   }
 }

@@ -7,7 +7,7 @@ import { ALL_ATTRIBUTES, SYNONYMS } from '@raadi/catalog';
  * that are not in the stored documents need a re-read of the topic
  * (docs/runbooks/event-pipeline.md).
  */
-export const INDEX_VERSION = 7;
+export const INDEX_VERSION = 8;
 
 /**
  * Painless script applied while copying documents from an older index: version 5 (ADR-0040) added the
@@ -196,6 +196,9 @@ export const indexBody = {
       publishedAt: { type: 'date' },
       updatedAt: { type: 'date' },
       promotedUntil: { type: 'date' },
+      /** The last price drop (ADR-0044). */
+      previousPriceMinor: { type: 'long' },
+      priceDroppedAt: { type: 'date' },
     },
   },
 };

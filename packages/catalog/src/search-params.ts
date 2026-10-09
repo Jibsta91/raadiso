@@ -73,6 +73,8 @@ const schema = z
     /** Major units of the country's currency, as people type them. */
     priceMin: z.coerce.number().min(0).max(1e12).optional(),
     priceMax: z.coerce.number().min(0).max(1e12).optional(),
+    /** Only listings whose price dropped in the last 30 days (ADR-0044). */
+    priceDropped: z.enum(['true']).optional(),
     /** Centre of a radius search: a place id from the gazetteer, or lat+lon (e.g. the browser's position). */
     near: z.string().max(40).optional(),
     lat: z.coerce.number().min(-90).max(90).optional(),

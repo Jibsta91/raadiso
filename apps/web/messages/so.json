@@ -536,7 +536,8 @@
       "area_desc": "Bed-ka ugu weyn",
       "storage_desc": "Kaydka ugu badan",
       "head_desc": "Xoolaha ugu badan",
-      "price_per_area_asc": "Qiimaha ugu jaban m² kasta"
+      "price_per_area_asc": "Qiimaha ugu jaban m² kasta",
+      "price_drop": "Dhawaan la dhimay"
     },
     "pageOf": "Bogga {page} ee {pages}",
     "previous": "Hore",
@@ -593,7 +594,8 @@
     "exactWords": "Raadi erayada saxda ah",
     "relaxed": "Xayeysiis kasta ma waafaqin erayada oo dhan, kuwani qaar bay la jaan qaadaan.",
     "didYouMean": "Ma waxaad ula jeeddaa {suggestion}?",
-    "nearPlace": "u dhow {place}"
+    "nearPlace": "u dhow {place}",
+    "priceDropped": "Qiimo la dhimay"
   },
   "listing": {
     "noPrice": "Mushahar heshiis ah",
@@ -1987,6 +1989,12 @@
       "great": "Qiimo aad u fiican",
       "good": "Qiimo wanaagsan"
     },
-    "guide": "Xayeysiisyada la midka ah: {from}–{to} (dhexda {median})."
+    "guide": "Xayeysiisyada la midka ah: {from}–{to} (dhexda {median}).",
+    "reducedFrom": "Laga dhimay <old>{price}</old>",
+    "was": "hore",
+    "reducedOn": "Laga dhimay <old>{price}</old> {date}",
+    "history": "Taariikhda qiimaha",
+    "historyCaption": "Qiimaha xayeysiiskan muddo ka dib",
+    "noPrice": "Qiimo ma leh"
   }
 }

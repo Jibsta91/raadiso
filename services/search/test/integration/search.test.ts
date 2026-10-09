@@ -293,3 +293,26 @@ describe('countries (ADR-0040)', () => {
     assert.ok(!('priceNok' in doc) && !('county' in doc));
   });
 });
+
+describe('price drops (ADR-0044)', () => {
+  it('shows a recent drop on the hit, filters and sorts by it', async () => {
+    const doc = snapshot(3, {
+      version: 5,
+      priceNok: 900,
+      price: { amountMinor: 90000, currency: 'NOK' },
+      priceDrop: {
+        previous: { amountMinor: 120000, currency: 'NOK' },
+        at: new Date().toISOString(),
+      },
+    });
+    await index.upsert(toDocument(doc), 5);
+    await index.client.indices.refresh({ index: 'raadi-listings' });
+    const r = await search({ priceDropped: 'true', sort: 'price_drop' });
+    assert.equal(r.items[0]?.id, doc.id);
+    assert.deepEqual(r.items[0]?.priceDrop?.previous, { amountMinor: 120000, currency: 'NOK' });
+    assert.ok(
+      r.items.every((h) => h.priceDrop),
+      'only reduced listings',
+    );
+  });
+});

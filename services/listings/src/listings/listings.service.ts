@@ -26,7 +26,11 @@ import {
   toListing,
   type UpdateListing,
 } from './listing.model.js';
-import { ListingsRepository, VersionConflictError } from './listings.repository.js';
+import {
+  ListingsRepository,
+  type PriceChange,
+  VersionConflictError,
+} from './listings.repository.js';
 
 export interface ListingContact {
   listingId: string;
@@ -62,6 +66,13 @@ export class ListingsService {
   ) {}
 
   /** Public view; owners and moderators also see sold-out and removed listings' details. */
+  /** The prices of a listing anyone may see (not deleted), newest first (ADR-0044). */
+  async priceHistory(id: string): Promise<PriceChange[]> {
+    const row = await this.repo.findById(id);
+    if (!row || row.status === 'deleted') throw new NotFoundException('Listing not found');
+    return this.repo.priceHistory(id);
+  }
+
   async get(id: string, principal?: Principal): Promise<Listing> {
     const row = await this.repo.findById(id);
     if (!row) throw new NotFoundException('Listing not found');

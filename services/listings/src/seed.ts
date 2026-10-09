@@ -11,6 +11,19 @@ import { pino } from 'pino';
 import { envSchema, loadAppConfig } from './config.js';
 import { ListingsRepository, type NewListing } from './listings/listings.repository.js';
 
+/**
+ * About one demo listing in eight had a higher price first (ADR-0044), chosen by its id so every machine
+ * seeds the same. The drop happened halfway between publication and now.
+ */
+function demoDrop(
+  l: ReturnType<typeof demoListings>[number],
+  publishedAt: number,
+): Pick<NewListing, 'priceDrop'> {
+  if (!l.price || parseInt(l.id.slice(0, 2), 16) % 8 !== 0) return {};
+  const previousMinor = Math.round((l.price.amountMinor * 1.15) / 100) * 100;
+  return { priceDrop: { previousMinor, at: new Date((publishedAt + Date.now()) / 2) } };
+}
+
 const log = pino(loggerOptions('listings-seed'));
 
 async function main(): Promise<void> {
@@ -42,6 +55,7 @@ async function main(): Promise<void> {
           placeId: l.place.id,
           imageIds: l.images.map((img) => img.id),
           publishedAt: new Date(now - l.ageDays * 86_400_000 - i * 60_000),
+          ...demoDrop(l, now - l.ageDays * 86_400_000 - i * 60_000),
         })),
       );
       inserted += rows.length;

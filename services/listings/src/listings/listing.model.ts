@@ -150,6 +150,9 @@ export interface ListingRow {
   promoted_until: Date | null;
   removed_by: 'owner' | 'moderation' | null;
   removal_reason: RemovalReason | null;
+  /** The last drop (ADR-0044): the price before it, and when; null once the price goes up again. */
+  previous_price_minor: string | null;
+  price_dropped_at: Date | null;
 }
 
 export interface ListingImage {
@@ -175,6 +178,8 @@ export interface Listing {
   updatedAt: string;
   /** Set while a paid promotion runs. */
   promotedUntil: string | null;
+  /** The listing's last price drop, until the price goes up again (ADR-0044). */
+  priceDrop?: { previous: Money; at: string };
   /** Present when the caller is authenticated. */
   viewer?: { isOwner: boolean; canEdit: boolean; canDelete: boolean };
   /** Only on the owner's list of their listings: a moderator removed it (and why). */
@@ -217,10 +222,21 @@ export function toListing(row: ListingRow, signer: ImgproxySigner): Listing {
     publishedAt: row.published_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
     promotedUntil: activePromotion(row),
+    ...(dropOf(row) ? { priceDrop: dropOf(row)! } : {}),
     ...(row.status === 'deleted' && row.removed_by === 'moderation'
       ? { removal: { reason: row.removal_reason } }
       : {}),
   };
+}
+
+/** The last price drop, if the listing has one (ADR-0044). */
+export function dropOf(row: ListingRow): { previous: Money; at: string } | null {
+  return row.previous_price_minor !== null && row.price_dropped_at && row.currency
+    ? {
+        previous: { amountMinor: Number(row.previous_price_minor), currency: row.currency },
+        at: row.price_dropped_at.toISOString(),
+      }
+    : null;
 }
 
 /** The promotion end while it is still running, else null. */
@@ -260,5 +276,6 @@ export function toSnapshot(row: ListingRow): ListingSnapshot {
     publishedAt: row.published_at.toISOString(),
     updatedAt: row.updated_at.toISOString(),
     promotedUntil: row.promoted_until?.toISOString() ?? null,
+    priceDrop: dropOf(row),
   };
 }

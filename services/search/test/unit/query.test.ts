@@ -275,3 +275,17 @@ describe('best match and sorts (ADR-0042)', () => {
     assert.ok(freshnessOf(ago(60), now) < 0.01);
   });
 });
+
+describe('price drops (ADR-0044)', () => {
+  it('filters on drops in the last 30 days and sorts the most recent first', () => {
+    const body = build(parse({ priceDropped: 'true', sort: 'price_drop' }), 'NO');
+    assert.ok(
+      boolOf(body).filter.some(
+        (f) =>
+          JSON.stringify(f) === JSON.stringify({ range: { priceDroppedAt: { gte: 'now-30d' } } }),
+      ),
+    );
+    assert.deepEqual(body.sort[0], { priceDroppedAt: { order: 'desc', missing: '_last' } });
+    assert.ok(!searchParamsSchema.safeParse({ priceDropped: 'yes' }).success);
+  });
+});
