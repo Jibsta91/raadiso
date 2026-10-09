@@ -42,6 +42,13 @@ Secrets & TLS
   secret-set <name>  store a secret you supply (input hidden), e.g. godaddy_pat
   otp                the demo staff users' current one-time code for the admin console
   ca-cert            export the dev CA to deploy/certs/raadi-dev-ca.crt
+Production (docs/deploy.md; settings in deploy/prod/local.env)
+  deploy setup       prepare the server once (deploy user, firewall, updates, logs)
+  deploy [up]        copy the current commit to the server, build there and start it
+  deploy cert        get or renew the Let's Encrypt wildcard on the server
+  deploy secret-set <name>
+                     store a secret you supply on the server, e.g. godaddy_pat
+  deploy <command>   run any other ./raadi command on the server (status, logs, ps, …)
 Domain (raadiso.com via GoDaddy, docs/domain.md)
   dns <server-ip> [domain] [--dry-run]
                      point domain and *.domain (default $DNS_ZONE) at a public server address
@@ -332,6 +339,49 @@ TUNNEL
       stop) "${DC[@]}" --profile ci rm -sf ci-runner ;;
       status) "${DC[@]}" --profile ci ps -a ci-runner; "${DC[@]}" --profile ci logs --tail 20 ci-runner ;;
       *) echo "usage: ./raadi runner register|start|stop|status" >&2; exit 2 ;;
+    esac
+    ;;
+  deploy)
+    # Production on one server, over SSH as the deploy user (ADR-0051, docs/deploy.md).
+    [[ -f deploy/prod/local.env ]] \
+      || { echo "copy deploy/prod/local.env.example to deploy/prod/local.env and fill it in" >&2; exit 2; }
+    host="$(sed -n 's/^DEPLOY_HOST=//p' deploy/prod/local.env)"
+    dir="$(sed -n 's/^DEPLOY_DIR=//p' deploy/prod/prod.env)"
+    [[ -n "$host" ]] || { echo "set DEPLOY_HOST in deploy/prod/local.env" >&2; exit 2; }
+    sub="${1:-up}"; shift || true
+    # shellcheck disable=SC2029 # The directory, commit and names are meant to expand here.
+    case "$sub" in
+      setup)
+        admin="$(sed -n 's/^DEPLOY_ADMIN_HOST=//p' deploy/prod/local.env)"
+        [[ -n "$admin" ]] || { echo "set DEPLOY_ADMIN_HOST in deploy/prod/local.env" >&2; exit 2; }
+        ssh "$admin" sudo DEPLOY_DIR="$dir" bash -s < deploy/prod/setup-server.sh
+        ;;
+      up)
+        # What is deployed is a commit, so the server can always be traced back to one.
+        [[ -z "$(git status --porcelain)" || -n "${DEPLOY_DIRTY:-}" ]] \
+          || { echo "uncommitted changes: commit them first (DEPLOY_DIRTY=1 deploys them anyway)" >&2; exit 2; }
+        # The code, without Git, ignored files and the server's own .env and secrets directory.
+        rsync -az --delete --exclude=/.git --exclude=/.env --exclude=/.deployed --exclude=/secrets --exclude=/deploy/prod/local.env \
+          --filter=':- .gitignore' ./ "${host}:${dir}/"
+        # The server's .env: .env.example, then prod.env, then local.env; the last value of a key wins.
+        cat .env.example deploy/prod/prod.env deploy/prod/local.env \
+          | awk -F= '/^[A-Za-z_][A-Za-z0-9_]*=/ { if (!($1 in v)) k[++n] = $1; v[$1] = $0 }
+                     END { for (i = 1; i <= n; i++) print v[k[i]] }' \
+          | ssh "$host" "umask 077 && cat > ${dir}/.env && echo $(git rev-parse HEAD) > ${dir}/.deployed"
+        # shellcheck disable=SC2016 # $p is sed's, on the server.
+        ssh "$host" "cd ${dir} && docker compose up -d --build --wait --remove-orphans $* \
+          && docker compose logs --no-log-prefix summary | sed -n '/┌/,\$p'"
+        ;;
+      cert) ssh "$host" "cd ${dir} && ./raadi cert --install && ./raadi restart traefik" ;;
+      secret-set)
+        name="${1:?usage: ./raadi deploy secret-set <name>}"
+        [[ "$name" =~ ^[a-z0-9_]+$ ]] || { echo "invalid secret name" >&2; exit 2; }
+        read -r -s -p "Value for ${name} on ${host} (input hidden): " value; echo
+        printf '%s' "$value" | ssh "$host" "cd ${dir} && ./raadi secret-set ${name}"
+        unset value
+        ;;
+      # Any other command runs on the server: ./raadi deploy status, ./raadi deploy logs search
+      *) ssh -t "$host" "cd ${dir} && ./raadi ${sub} $*" ;;
     esac
     ;;
   ca-cert)
