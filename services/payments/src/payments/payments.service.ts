@@ -56,6 +56,8 @@ export class PaymentsService {
   ) {}
 
   products() {
+    // Without a provider there is nothing to buy (ADR-0051).
+    if (this.provider.name === 'none') return { items: [], provider: this.provider.name };
     return {
       items: Object.entries(PRODUCTS).map(([id, p]) => ({
         id,
@@ -75,6 +77,8 @@ export class PaymentsService {
    * different request is a conflict.
    */
   async createOrder(principal: Principal, token: string, key: string, body: CreateOrder) {
+    if (this.provider.name === 'none')
+      throw new ServiceUnavailableException('Promotions are not available yet');
     const requestHash = createHash('sha256')
       .update(JSON.stringify([body.listingId, body.product]))
       .digest('hex');

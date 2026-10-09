@@ -24,11 +24,13 @@ import { PaymentsRepository } from './payments/payments.repository.js';
 import { PaymentsService } from './payments/payments.service.js';
 import { PAYMENT_PROVIDER, type PaymentProvider } from './payments/providers/provider.js';
 import { StripeProvider } from './payments/providers/stripe.js';
+import { NoProvider } from './payments/providers/none.js';
 import { VippsProvider } from './payments/providers/vipps.js';
 import { PaymentWorkers } from './payments/workers.js';
 import { APP_CONFIG, PG_POOL } from './tokens.js';
 
 function provider({ env, secrets }: AppConfig): PaymentProvider {
+  if (env.PAYMENTS_PROVIDER === 'none') return new NoProvider();
   if (env.PAYMENTS_PROVIDER === 'stripe') {
     return new StripeProvider({
       baseUrl: env.STRIPE_BASE_URL,

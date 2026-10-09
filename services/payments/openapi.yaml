@@ -441,7 +441,10 @@ components:
         items:
           type: array
           items: { $ref: '#/components/schemas/Product' }
-        provider: { type: string, enum: [vipps, stripe] }
+        provider:
+          type: string
+          enum: [vipps, stripe, none]
+          description: '`none`: no provider yet, so no products and no new orders (ADR-0051)'
     OrderInput:
       type: object
       additionalProperties: false

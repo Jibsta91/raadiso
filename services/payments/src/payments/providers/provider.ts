@@ -40,7 +40,7 @@ export class WebhookRejected extends Error {}
  * provider means one more implementation (ADR-0020).
  */
 export interface PaymentProvider {
-  readonly name: 'vipps' | 'stripe';
+  readonly name: 'vipps' | 'stripe' | 'none';
   /** Whether the provider captures by itself (then capture() is not called). */
   readonly autoCapture: boolean;
   create(input: CreatePaymentInput): Promise<{ providerRef: string; redirectUrl: string }>;

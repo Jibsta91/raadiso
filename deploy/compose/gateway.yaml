@@ -32,6 +32,7 @@ services:
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_ADMIN_PUBLIC: ${KEYCLOAK_ADMIN_PUBLIC}
       DEV_TOOLS_ROUTED: ${DEV_TOOLS_ROUTED}
+      GRAFANA_ROUTED: ${GRAFANA_ROUTED:-true}
       TZ: ${TZ}
     volumes:
       - ./deploy/traefik/traefik.yml:/etc/traefik/traefik.yml:ro

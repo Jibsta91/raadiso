@@ -36,6 +36,17 @@ fi
 reusable=false
 [[ "${KEYCLOAK_OTP_CODE_REUSABLE:-false}" == true ]] && reusable=true
 realm="$(jq --argjson r "$reusable" '.otpPolicyCodeReusable = $r' <<<"$realm")"
+# A real mail provider (production, ADR-0051) needs a login: SMTP_USER plus the supplied secret
+# smtp_password (./raadi secret-set smtp_password). Implicit TLS on SMTP_SECURE=true (465), else
+# STARTTLS. Mailpit in development takes neither.
+if [[ -n "${SMTP_USER:-}" ]]; then
+  [[ -s "${MASTER_DIR}/smtp_password" ]] || die "SMTP_USER is set but the secret smtp_password is missing"
+  secure=false
+  [[ "${SMTP_SECURE:-false}" == true ]] && secure=true
+  realm="$(jq --arg u "$SMTP_USER" --rawfile p "${MASTER_DIR}/smtp_password" --argjson s "$secure" \
+    '.smtpServer += {auth: "true", user: $u, password: $p,
+      ssl: ($s | tostring), starttls: ((($s | not)) | tostring)}' <<<"$realm")"
+fi
 
 token() {
   curl -fsS "$KC/realms/master/protocol/openid-connect/token" \

@@ -54,7 +54,17 @@ export default async function PromotePage({
           </p>
         ) : null}
       </div>
-      <PromoteForm listingId={id} products={products} />
+      {products.length ? (
+        <PromoteForm listingId={id} products={products} />
+      ) : (
+        // No payment provider yet (PAYMENTS_PROVIDER=none, ADR-0051).
+        <p
+          className="rounded-lg border p-4 text-muted-foreground"
+          data-testid="promote-unavailable"
+        >
+          {t('unavailable')}
+        </p>
+      )}
     </div>
   );
 }

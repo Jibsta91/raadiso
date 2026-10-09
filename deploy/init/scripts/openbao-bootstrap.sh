@@ -32,6 +32,10 @@ for svc in $(jq -r '.services | keys[]' "$MANIFEST"); do
   args=()
   while IFS=$'\t' read -r key src; do args+=("${key}=$(secret "$src")"); done \
     < <(jq -r --arg s "$svc" '.services[$s].openbao // {} | to_entries[] | [.key, .value] | @tsv' "$MANIFEST")
+  # Secrets the operator supplies (./raadi secret-set), synced only once they exist.
+  while IFS=$'\t' read -r key src; do
+    if [[ -s "${MASTER_DIR}/${src}" ]]; then args+=("${key}=$(secret "$src")"); fi
+  done < <(jq -r --arg s "$svc" '.services[$s].supplied // {} | to_entries[] | [.key, .value] | @tsv' "$MANIFEST")
   (( ${#args[@]} )) && bao kv put -mount=secret "raadi/${svc}" "${args[@]}" >/dev/null
 
   {

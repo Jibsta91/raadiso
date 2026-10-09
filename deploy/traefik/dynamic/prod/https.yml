@@ -1,0 +1,11 @@
+# Production only (mounted by compose.prod.yaml, ADR-0051): every plain-HTTP request is redirected
+# to HTTPS before any other router sees it. Certificates come from Let's Encrypt by DNS-01
+# (ADR-0023), so port 80 is never needed for validation.
+http:
+  routers:
+    to-https:
+      rule: HostRegexp(`.+`)
+      entryPoints: [web]
+      middlewares: [https-redirect]
+      service: noop@internal
+      priority: 100000

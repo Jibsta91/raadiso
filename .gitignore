@@ -24,3 +24,4 @@ deploy/certs/*.pem
 *.tfplan
 .build/
 *.tsbuildinfo
+deploy/prod/local.env

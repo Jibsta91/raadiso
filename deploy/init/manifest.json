@@ -289,6 +289,9 @@
         "db_password": "notifications_db_password",
         "kafka_password": "kafka_notifications_password",
         "keycloak_client_secret": "notifications_kc_client_secret"
+      },
+      "supplied": {
+        "smtp_password": "smtp_password"
       }
     },
     "trust": {

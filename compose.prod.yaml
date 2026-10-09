@@ -1,0 +1,88 @@
+# Production overlay (ADR-0051), on the server only:
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --wait
+# ./raadi deploy runs it with the server's .env, which is .env.example plus deploy/prod/prod.env.
+# No demo users, demo data, mocks or dev tools; Keycloak's admin console, the admin console host,
+# Grafana and the dev tools are not routed (reach them through an SSH tunnel); HTTP redirects to HTTPS.
+
+services:
+  # Development stand-ins never start here: real SMTP, a real push service, and payments either from
+  # a provider or switched off (PAYMENTS_PROVIDER=none).
+  mailpit:
+    profiles: [dev]
+  payments-mock:
+    profiles: [dev]
+  push-mock:
+    profiles: [dev]
+
+  # The readiness sentinel, without the stand-ins.
+  summary:
+    depends_on: !override
+      traefik: { condition: service_healthy }
+      web: { condition: service_healthy }
+      mobile-web: { condition: service_healthy }
+      identity-bff: { condition: service_healthy }
+      admin-bff: { condition: service_healthy }
+      keycloak-init: { condition: service_completed_successfully }
+      grafana: { condition: service_healthy }
+      prometheus: { condition: service_healthy }
+      alertmanager: { condition: service_healthy }
+      blackbox: { condition: service_healthy }
+      loki: { condition: service_healthy }
+      tempo: { condition: service_healthy }
+      otel-collector: { condition: service_healthy }
+      connect-init: { condition: service_completed_successfully }
+      authz-init: { condition: service_completed_successfully }
+      registry-init: { condition: service_completed_successfully }
+      listings: { condition: service_healthy }
+      listings-seed: { condition: service_completed_successfully }
+      media: { condition: service_healthy }
+      media-seed: { condition: service_completed_successfully }
+      search: { condition: service_healthy }
+      messaging: { condition: service_healthy }
+      messaging-seed: { condition: service_completed_successfully }
+      notifications: { condition: service_healthy }
+      trust: { condition: service_healthy }
+      saved: { condition: service_healthy }
+      audit: { condition: service_healthy }
+      payments: { condition: service_healthy }
+      apicurio: { condition: service_healthy }
+      opensearch: { condition: service_healthy }
+      imgproxy: { condition: service_healthy }
+      clamav: { condition: service_healthy }
+      opa: { condition: service_healthy }
+      glitchtip-init: { condition: service_completed_successfully }
+
+  # The gateway without the development routes, plus the production HTTPS redirect.
+  traefik:
+    volumes: !override
+      - ./deploy/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./deploy/traefik/dynamic/common:/etc/traefik/dynamic/common:ro
+      - ./deploy/traefik/dynamic/prod:/etc/traefik/dynamic/prod:ro
+      - certs:/certs:ro
+
+  # Grafana sends no mail of its own (alerts go through Alertmanager).
+  grafana:
+    environment:
+      GF_SMTP_ENABLED: 'false'
+
+  # The server has 24 GB: the data services get more room than on a 16 GB laptop (ADR-0011).
+  postgres:
+    deploy:
+      resources:
+        limits: { memory: 1536M }
+  opensearch:
+    environment:
+      OPENSEARCH_JAVA_OPTS: -Xms1g -Xmx1g -XX:+UseG1GC
+    deploy:
+      resources:
+        limits: { memory: 2G }
+  kafka:
+    environment:
+      KAFKA_HEAP_OPTS: -Xms512m -Xmx512m
+    deploy:
+      resources:
+        limits: { memory: 1G }
+  keycloak:
+    deploy:
+      resources:
+        limits: { memory: 1536M }
