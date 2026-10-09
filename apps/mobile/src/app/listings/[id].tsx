@@ -2,7 +2,7 @@ import { Icon, type IconName } from '../../components/icon';
 import { regionName } from '@raadi/catalog/places';
 import { Image } from 'expo-image';
 import { router, Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Platform,
@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NoPhoto } from '../../components/no-photo';
+import { PhotoViewer } from '../../components/photo-viewer';
 import { ContactCompose } from '../../components/contact-compose';
 import { ReportListing } from '../../components/report-listing';
 import { Badge, Body, Button, Glass, liquidGlass, Status } from '../../components/ui';
@@ -25,6 +26,7 @@ import { ListingTile } from '../../components/listing-card';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { attributeRows } from '../../lib/attributes';
 import { useFavourite } from '../../lib/saved';
+import { recordSeen } from '../../lib/recent';
 import { useAuth } from '../../lib/auth/context';
 import { isCategory, isSubcategoryOf } from '../../lib/categories';
 import { useKeyboardLift } from '../../lib/keyboard';
@@ -77,6 +79,9 @@ export default function ListingScreen() {
   const { width } = useWindowDimensions();
   const [photo, setPhoto] = useState(0);
   const [composing, setComposing] = useState(false);
+  const [viewer, setViewer] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const gallery = useRef<ScrollView>(null);
   const barBottom = Math.max(insets.bottom, space.md);
   // The contact form lives in the bottom bar: lift it above the keyboard while typing.
   const keyboardLift = useKeyboardLift(barBottom);
@@ -134,6 +139,20 @@ export default function ListingScreen() {
   );
 
   const favourite = useFavourite(id);
+
+  // Remembered on this device for the front page's "Recently viewed" (ADR-0048); not one's own.
+  const seen = listing.data;
+  useEffect(() => {
+    if (!seen || seen.viewer?.isOwner || seen.status !== 'active') return;
+    void recordSeen({
+      id: seen.id,
+      title: seen.title,
+      price: seen.price,
+      category: seen.category,
+      location: { name: seen.location.name },
+      ...(seen.images[0] ? { image: { card: seen.images[0].urls.card } } : {}),
+    });
+  }, [seen]);
 
   const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -203,6 +222,12 @@ export default function ListingScreen() {
   const details = attributeRows(item.attributes, m.taxonomy, intlLocale[locale]);
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
     setPhoto(Math.round(e.nativeEvent.contentOffset.x / pageWidth));
+  const long = item.description.length > CUT + 80;
+  const photos = item.images.map((image) => ({
+    id: image.id,
+    large: absoluteUrl(image.urls.large, config.apiBaseUrl),
+    thumb: absoluteUrl(image.urls.thumb, config.apiBaseUrl),
+  }));
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -211,6 +236,7 @@ export default function ListingScreen() {
         <View style={{ height: photoHeight, backgroundColor: theme.placeholder }}>
           {item.images.length > 0 ? (
             <ScrollView
+              ref={gallery}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
@@ -218,14 +244,21 @@ export default function ListingScreen() {
               onScroll={onScroll}
               scrollEventThrottle={64}
             >
-              {item.images.map((image) => (
-                <Image
+              {item.images.map((image, i) => (
+                <Pressable
                   key={image.id}
-                  source={{ uri: absoluteUrl(image.urls.large, config.apiBaseUrl) }}
-                  style={{ width: pageWidth, height: photoHeight }}
-                  contentFit="cover"
-                  transition={150}
-                />
+                  role="button"
+                  testID="listing-photo"
+                  aria-label={fill(m.listing.photo, { n: i + 1, total: item.images.length })}
+                  onPress={() => setViewer(i)}
+                >
+                  <Image
+                    source={{ uri: absoluteUrl(image.urls.large, config.apiBaseUrl) }}
+                    style={{ width: pageWidth, height: photoHeight }}
+                    contentFit="cover"
+                    transition={150}
+                  />
+                </Pressable>
               ))}
             </ScrollView>
           ) : (
@@ -377,7 +410,26 @@ export default function ListingScreen() {
             </View>
           ) : null}
 
-          <Body>{item.description}</Body>
+          <View style={styles.description}>
+            <Body testID="listing-description">
+              {long && !expanded
+                ? `${item.description.slice(0, CUT).trimEnd()}…`
+                : item.description}
+            </Body>
+            {long ? (
+              <Pressable
+                role="button"
+                testID="description-toggle"
+                aria-expanded={expanded}
+                hitSlop={8}
+                onPress={() => setExpanded((e) => !e)}
+              >
+                <Text style={[styles.more, { color: theme.accent }]}>
+                  {expanded ? m.listing.showLess : m.listing.showMore}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
           {item.viewer?.isOwner ? (
             <View style={styles.ownerRow}>
               <Badge label={m.listing.yours} tone="neutral" testID="own-listing" />
@@ -452,34 +504,76 @@ export default function ListingScreen() {
                 onSent={(conversation) => router.push(`/messages/${conversation}`)}
               />
             ) : (
-              <Button
-                testID={auth.status === 'signedIn' ? 'contact-open' : 'contact-login'}
-                label={auth.status === 'signedIn' ? m.contact.title : m.contact.login}
-                icon={
-                  <Icon name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
-                }
-                onPress={() => {
-                  if (auth.status !== 'signedIn') return void auth.signIn();
-                  // iOS: the message is written in a native sheet (grabber, half and full height);
-                  // elsewhere the bottom bar turns into the form.
-                  if (Platform.OS === 'ios') {
-                    router.push({
-                      pathname: '/contact/[listingId]',
-                      params: { listingId: item.id, title: item.title },
-                    });
-                  } else setComposing(true);
-                }}
-              />
+              <View style={styles.barRow}>
+                <View style={styles.barPrice}>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    maxFontSizeMultiplier={1.3}
+                    style={[styles.barPriceText, { color: theme.text }]}
+                  >
+                    {formatPrice(item.price, locale, m.common.noPrice)}
+                  </Text>
+                  {item.priceDrop ? (
+                    <Text numberOfLines={1} style={[styles.barBefore, { color: theme.muted }]}>
+                      {formatPrice(item.priceDrop.previous, locale, '')}
+                    </Text>
+                  ) : null}
+                </View>
+                <View style={styles.grow}>
+                  <Button
+                    testID={auth.status === 'signedIn' ? 'contact-open' : 'contact-login'}
+                    label={auth.status === 'signedIn' ? m.contact.title : m.contact.login}
+                    icon={
+                      <Icon name="chatbubble-ellipses-outline" size={20} color={theme.accentText} />
+                    }
+                    onPress={() => {
+                      if (auth.status !== 'signedIn') return void auth.signIn();
+                      // iOS: the message is written in a native sheet (grabber, half and full height);
+                      // elsewhere the bottom bar turns into the form.
+                      if (Platform.OS === 'ios') {
+                        router.push({
+                          pathname: '/contact/[listingId]',
+                          params: { listingId: item.id, title: item.title },
+                        });
+                      } else setComposing(true);
+                    }}
+                  />
+                </View>
+              </View>
             )}
           </Glass>
         </Animated.View>
       ) : null}
+      <PhotoViewer
+        photos={photos}
+        start={viewer}
+        onClose={(last) => {
+          setViewer(null);
+          setPhoto(last);
+          gallery.current?.scrollTo({ x: last * pageWidth, animated: false });
+        }}
+      />
     </View>
   );
 }
 
+/** Descriptions longer than this are cut, with "Show more". */
+const CUT = 320;
+
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  description: { gap: space.sm },
+  more: { fontFamily: fonts.semibold, fontSize: 15 },
+  barRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  barPrice: { maxWidth: '45%', paddingLeft: space.sm },
+  barPriceText: { fontFamily: fonts.bold, fontSize: 18, fontVariant: ['tabular-nums'] },
+  barBefore: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    textDecorationLine: 'line-through',
+    fontVariant: ['tabular-nums'],
+  },
   reduced: { fontFamily: fonts.semibold, fontSize: 15 },
   similar: { gap: space.md, marginTop: space.lg },
   similarTitle: { fontFamily: fonts.bold, fontSize: 20 },

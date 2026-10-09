@@ -72,6 +72,7 @@ const en = {
     back: 'Back',
     share: 'Share',
     noPrice: 'No price',
+    close: 'Close',
   },
   notFound: {
     title: 'Page not found',
@@ -86,6 +87,12 @@ const en = {
   },
   home: {
     latest: 'Latest listings',
+    savedNew: 'New in your saved searches',
+    recent: 'Recently viewed',
+    clear: 'Clear',
+    reduced: 'Price dropped',
+    seeAll: 'See all',
+    browse: 'Categories',
     searchPlaceholder: 'What are you looking for?',
     all: 'All',
   },
@@ -100,6 +107,8 @@ const en = {
     placeholder: 'Search for anything',
     submit: 'Search',
     results: '{count} results',
+    gridView: 'Grid view',
+    listView: 'List view',
     noResults: 'Nothing matched your search.',
   },
   category: {
@@ -251,6 +260,10 @@ const en = {
   taxonomy: taxonomyMessages.en,
   listing: {
     seller: 'Seller',
+    showMore: 'Show more',
+    showLess: 'Show less',
+    photo: 'Photo {n} of {total}',
+    photos: 'Photos',
     sold: 'Sold',
     promoted: 'Promoted',
     yours: 'Your listing',
@@ -378,6 +391,7 @@ const nb: Messages = {
     back: 'Tilbake',
     share: 'Del',
     noPrice: 'Pris ikke oppgitt',
+    close: 'Lukk',
   },
   notFound: {
     title: 'Fant ikke siden',
@@ -392,6 +406,12 @@ const nb: Messages = {
   },
   home: {
     latest: 'Nyeste annonser',
+    savedNew: 'Nytt i lagrede søk',
+    recent: 'Sist sett',
+    clear: 'Tøm',
+    reduced: 'Satt ned i pris',
+    seeAll: 'Se alle',
+    browse: 'Kategorier',
     searchPlaceholder: 'Hva leter du etter?',
     all: 'Alle',
   },
@@ -400,6 +420,8 @@ const nb: Messages = {
     placeholder: 'Søk etter hva som helst',
     submit: 'Søk',
     results: '{count} treff',
+    gridView: 'Rutenett',
+    listView: 'Liste',
     noResults: 'Ingen annonser passet til søket.',
   },
   category: {
@@ -551,6 +573,10 @@ const nb: Messages = {
   taxonomy: taxonomyMessages.nb,
   listing: {
     seller: 'Selger',
+    showMore: 'Vis mer',
+    showLess: 'Vis mindre',
+    photo: 'Bilde {n} av {total}',
+    photos: 'Bilder',
     sold: 'Solgt',
     promoted: 'Fremhevet',
     yours: 'Din annonse',
@@ -677,6 +703,7 @@ const so: Messages = {
     back: 'Dib u noqo',
     share: 'La wadaag',
     noPrice: 'Qiime lama sheegin',
+    close: 'Xir',
   },
   notFound: {
     title: 'Bogga lama helin',
@@ -691,6 +718,12 @@ const so: Messages = {
   },
   home: {
     latest: 'Xayeysiisyadii ugu dambeeyay',
+    savedNew: 'Waxa cusub ee raadintaada la keydiyay',
+    recent: 'Kuwii aad dhowaan eegtay',
+    clear: 'Tirtir',
+    reduced: 'Qiimo la dhimay',
+    seeAll: 'Dhammaan eeg',
+    browse: 'Qaybaha',
     searchPlaceholder: 'Maxaad raadinaysaa?',
     all: 'Dhammaan',
   },
@@ -705,6 +738,8 @@ const so: Messages = {
     placeholder: 'Raadi wax kasta',
     submit: 'Raadi',
     results: '{count} natiijo',
+    gridView: 'Muuqaal shabakad',
+    listView: 'Muuqaal liis',
     noResults: 'Wax xayeysiis ah oo raadintaada la jaanqaada lama helin.',
   },
   category: {
@@ -857,6 +892,10 @@ const so: Messages = {
   taxonomy: taxonomyMessages.so,
   listing: {
     seller: 'Iibiyaha',
+    showMore: 'Muuji wax badan',
+    showLess: 'Muuji wax yar',
+    photo: 'Sawirka {n} ee {total}',
+    photos: 'Sawirro',
     sold: 'La iibiyay',
     promoted: 'La horumariyay',
     yours: 'Xayeysiiskaaga',

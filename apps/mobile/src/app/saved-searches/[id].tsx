@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Status } from '../../components/ui';
 import { useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad } from '../../lib/api';
-import { openSavedSearch } from './index';
+import { openSavedSearch } from '../../lib/saved';
 
 /** Where a "new matches" push lands: opens that saved search's results. */
 export default function OpenSavedSearch() {

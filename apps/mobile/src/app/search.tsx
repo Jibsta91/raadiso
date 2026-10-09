@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ListingTile } from '../components/listing-card';
+import { ListingRow, ListingTile, TileSkeleton } from '../components/listing-card';
 import { filterKeys, SearchFilters } from '../components/search-filters';
 import { Body, Chip, Field, Status } from '../components/ui';
 import { SortMenu } from '../components/sort-menu';
@@ -13,9 +13,57 @@ import { unwrap, useApi } from '../lib/api';
 import { type Sort, sortsFor } from '../lib/sort';
 import { CATEGORIES, isCategory, isSubcategoryOf, subcategoriesOf } from '../lib/categories';
 import { useAuth } from '../lib/auth/context';
+import { getPreference, setPreference } from '../lib/storage';
 import { fonts, radius, space, useTheme } from '../theme';
 
 const PAGE_SIZE = 24;
+const LAYOUT_KEY = 'raadi.searchLayout';
+type Layout = 'grid' | 'list';
+
+/** Grid or list (ADR-0048), remembered on the device. */
+function useLayout(): [Layout, (next: Layout) => void] {
+  const [layout, setLayout] = useState<Layout>('grid');
+  useEffect(() => {
+    void getPreference(LAYOUT_KEY).then((v) => (v === 'list' || v === 'grid') && setLayout(v));
+  }, []);
+  return [
+    layout,
+    (next) => {
+      setLayout(next);
+      void setPreference(LAYOUT_KEY, next);
+    },
+  ];
+}
+
+function LayoutToggle({ value, onChange }: { value: Layout; onChange: (next: Layout) => void }) {
+  const { m } = useI18n();
+  const theme = useTheme();
+  return (
+    <View
+      style={[styles.layout, { borderColor: theme.border, backgroundColor: theme.surface }]}
+      role="radiogroup"
+    >
+      {(['grid', 'list'] as const).map((l) => (
+        <Pressable
+          key={l}
+          role="radio"
+          testID={`layout-${l}`}
+          aria-checked={value === l}
+          aria-label={l === 'grid' ? m.search.gridView : m.search.listView}
+          hitSlop={4}
+          onPress={() => onChange(l)}
+          style={[styles.layoutButton, value === l ? { backgroundColor: theme.ink } : null]}
+        >
+          <Icon
+            name={l === 'grid' ? 'grid-outline' : 'list-outline'}
+            size={16}
+            color={value === l ? theme.inkText : theme.text}
+          />
+        </Pressable>
+      ))}
+    </View>
+  );
+}
 
 /** "Save search" (ADR-0026): saved at once; signed-out users are asked to sign in first. */
 function SaveSearch({ params, name }: { params: Record<string, string>; name: string }) {
@@ -95,6 +143,8 @@ export default function Search() {
   const [suggestion, setSuggestion] = useState<string>();
   const [focused, setFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<Autocomplete | null>(null);
+  const [layout, setLayout] = useLayout();
+  const grid = layout === 'grid';
 
   // Suggestions while typing (ADR-0041), debounced; an older answer never replaces a newer one.
   useEffect(() => {
@@ -174,15 +224,16 @@ export default function Search() {
 
   return (
     <FlatList
+      key={layout}
       testID="search-results"
       keyboardDismissMode="on-drag"
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + space.xl }]}
       data={hits}
-      numColumns={2}
-      columnWrapperStyle={styles.row}
+      numColumns={grid ? 2 : 1}
+      columnWrapperStyle={grid ? styles.row : undefined}
       keyExtractor={(hit) => hit.id}
-      renderItem={({ item }) => <ListingTile hit={item} />}
+      renderItem={({ item }) => (grid ? <ListingTile hit={item} /> : <ListingRow hit={item} />)}
       onEndReached={more}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={
@@ -369,13 +420,14 @@ export default function Search() {
             </ScrollView>
           ) : null}
           <View style={styles.totalRow}>
-            {total !== undefined ? (
-              <Body muted testID="search-total">
-                {fill(m.search.results, { count: total })}
-              </Body>
-            ) : (
-              <View />
-            )}
+            <View style={styles.totalLeft}>
+              <LayoutToggle value={layout} onChange={setLayout} />
+              {total !== undefined ? (
+                <Body muted testID="search-total" style={styles.total}>
+                  {fill(m.search.results, { count: total })}
+                </Body>
+              ) : null}
+            </View>
             {query || category ? (
               <SaveSearch
                 params={{
@@ -398,12 +450,18 @@ export default function Search() {
         </View>
       }
       ListEmptyComponent={
-        <Status
-          loading={loading}
-          error={error}
-          empty={m.search.noResults}
-          onRetry={() => setNonce((n) => n + 1)}
-        />
+        loading && !error ? (
+          <View testID="loading">
+            {[0, 1].map((r) => (
+              <View key={r} style={styles.skeletonRow}>
+                <TileSkeleton />
+                <TileSkeleton />
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Status error={error} empty={m.search.noResults} onRetry={() => setNonce((n) => n + 1)} />
+        )
       }
       ListFooterComponent={hits.length > 0 && loading ? <Status loading /> : null}
     />
@@ -417,6 +475,17 @@ const styles = StyleSheet.create({
   bleed: { marginHorizontal: -(space.xl - 4) },
   chips: { gap: space.sm, paddingHorizontal: space.xl - 4 },
   totalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  totalLeft: { flexDirection: 'row', alignItems: 'center', gap: space.md, flexShrink: 1 },
+  total: { flexShrink: 1 },
+  skeletonRow: { flexDirection: 'row', gap: space.md + 2, marginBottom: space.lg },
+  layout: { flexDirection: 'row', borderWidth: 1, borderRadius: radius.pill, padding: 2 },
+  layoutButton: {
+    width: 34,
+    height: 30,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   save: {
     flexDirection: 'row',
     alignItems: 'center',

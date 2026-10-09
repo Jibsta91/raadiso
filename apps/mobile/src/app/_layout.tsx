@@ -16,6 +16,7 @@ import { AuthProvider } from '../lib/auth/provider';
 import { PushRegistration } from '../lib/push';
 import { WidgetSync } from '../lib/widget-sync';
 import { RealtimeProvider } from '../lib/realtime';
+import { FavouritesProvider } from '../lib/saved';
 import { glassBar, liquidGlass } from '../components/ui';
 import { reportError, startErrorReporting } from '../lib/error-reporting';
 import { fonts, ThemeProvider, useTheme } from '../theme';
@@ -145,9 +146,11 @@ export default function RootLayout() {
           <I18nProvider>
             <AuthProvider>
               <RealtimeProvider>
-                <Screens />
-                <PushRegistration />
-                <WidgetSync />
+                <FavouritesProvider>
+                  <Screens />
+                  <PushRegistration />
+                  <WidgetSync />
+                </FavouritesProvider>
               </RealtimeProvider>
             </AuthProvider>
           </I18nProvider>

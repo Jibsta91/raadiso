@@ -193,10 +193,13 @@ apps/mobile/src/app/          Expo Router screens: (tabs)/ home, search, sell, m
                               listings/[id], listings/new, categories/[id], contact/[listingId],
                               messages/[id], my-listings, favourites, saved-searches, notifications,
                               users/[id] (trust profile), auth, +not-found
-apps/mobile/src/components/   ui.tsx (Fjord Glass primitives), listing-card.tsx, no-photo.tsx
+apps/mobile/src/components/   ui.tsx (Fjord Glass primitives), listing-card.tsx (tile, row, heart,
+                              skeleton; ADR-0048), photo-viewer.tsx (full-screen photos), no-photo.tsx
 apps/mobile/src/lib/          api (typed clients, useLoad, usePaged), auth (provider.tsx for web,
                               provider.native.tsx for devices), realtime (one shared WebSocket), storage,
-                              push (push.native.tsx registers the device; push.tsx is the web no-op)
+                              push (push.native.tsx registers the device; push.tsx is the web no-op),
+                              saved (one shared copy of the favourite ids), recent (recently viewed,
+                              on the device only)
 apps/mobile/src/theme.tsx     palettes, fonts and the System / Light / Dark preference
 apps/mobile/src/i18n/         nb / en / so catalogue (wording follows apps/web/messages)
 apps/mobile/server/serve.mjs  static server for the web export
