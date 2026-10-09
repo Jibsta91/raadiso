@@ -43,6 +43,10 @@ for name in $(jq -r '.bcrypt // [] | .[]' "$MANIFEST"); do
   hash="$(htpasswd -nbBC 10 x "$(cat "${MASTER_DIR}/${name}")" | cut -d: -f2- | tr -d '\n')"
   export "bcrypt_${name}=${hash}"; render_vars+=("\${bcrypt_${name}}")
 done
+# Cookie keys must be 16, 24 or 32 bytes (oauth2-proxy): the first 32 characters of the secret.
+for name in $(jq -r '.cookie // [] | .[]' "$MANIFEST"); do
+  export "cookie_${name}=$(head -c 32 "${MASTER_DIR}/${name}")"; render_vars+=("\${cookie_${name}}")
+done
 while IFS=$'\t' read -r src consumer dest; do
   uid=$(jq -r --arg c "$consumer" '.fileConsumers[$c].uid' "$MANIFEST")
   dir="${SECRETS_DIR}/${consumer}"
@@ -51,7 +55,7 @@ while IFS=$'\t' read -r src consumer dest; do
   install -m 0400 -o "$uid" -g 0 "${dir}/${dest}.tmp" "${dir}/${dest}"; rm -f "${dir}/${dest}.tmp"
   chown "$uid:0" "$dir"; chmod 0500 "$dir"
 done < <(jq -r '.templates // [] | .[] | [.src, .consumer, .dest] | @tsv' "$MANIFEST")
-unset "${!bcrypt_@}"
+unset "${!bcrypt_@}" "${!cookie_@}"
 
 # Directories for OpenBao AppRole credentials, filled by openbao-bootstrap.
 for svc in $(jq -r '.services | keys[]' "$MANIFEST"); do

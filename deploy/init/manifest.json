@@ -60,7 +60,9 @@
     "crowdsec_bouncer_key",
     "glitchtip_db_password",
     "glitchtip_secret_key",
-    "glitchtip_admin_password"
+    "glitchtip_admin_password",
+    "dockhand_oidc_client_secret",
+    "dockhand_cookie_secret"
   ],
   "fileConsumers": {
     "postgres": {
@@ -154,6 +156,10 @@
     "glitchtip": {
       "uid": 5000,
       "secrets": ["glitchtip_db_password", "glitchtip_secret_key", "glitchtip_admin_password"]
+    },
+    "dockhand-proxy": {
+      "uid": 65532,
+      "secrets": ["dockhand_oidc_client_secret"]
     }
   },
   "templates": [
@@ -176,6 +182,11 @@
       "src": "opa/secrets.json.tmpl",
       "consumer": "opa",
       "dest": "data.json"
+    },
+    {
+      "src": "dockhand-proxy/oauth2-proxy.cfg.tmpl",
+      "consumer": "dockhand-proxy",
+      "dest": "oauth2-proxy.cfg"
     }
   ],
   "bcrypt": [
@@ -355,5 +366,6 @@
       "key": "imgproxy_key",
       "salt": "imgproxy_salt"
     }
-  }
+  },
+  "cookie": ["dockhand_cookie_secret"]
 }

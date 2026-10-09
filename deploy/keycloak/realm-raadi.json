@@ -270,6 +270,26 @@
       ]
     },
     {
+      "clientId": "dockhand",
+      "name": "Dockhand (production only, ADR-0052)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${DOCKHAND_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "rootUrl": "https://dockhand.${RAADI_DOMAIN}",
+      "redirectUris": ["https://dockhand.${RAADI_DOMAIN}/oauth2/callback"],
+      "webOrigins": ["https://dockhand.${RAADI_DOMAIN}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://dockhand.${RAADI_DOMAIN}/*"
+      },
+      "defaultClientScopes": ["web-origins", "acr", "basic", "profile", "roles", "email"]
+    },
+    {
       "clientId": "apicurio-registry",
       "name": "Apicurio Registry (resource server)",
       "enabled": true,
