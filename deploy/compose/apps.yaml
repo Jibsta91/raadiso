@@ -251,6 +251,7 @@ services:
       AUTH_BASE_URL: ${AUTH_BASE_URL}
       KEYCLOAK_REALM: ${KEYCLOAK_REALM}
       DEFAULT_COUNTRY: ${DEFAULT_COUNTRY}
+      PRICE_INSIGHT: ${PRICE_INSIGHT}
     volumes:
       - type: volume
         source: secrets

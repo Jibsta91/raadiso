@@ -43,6 +43,8 @@ import { SearchIndex, toDocument } from './search.index.js';
 export const SIGNER = Symbol('IMGPROXY_SIGNER');
 /** The country of a search that names none (DEFAULT_COUNTRY). */
 export const DEFAULT_COUNTRY = Symbol('DEFAULT_COUNTRY');
+/** Whether price insight is on (PRICE_INSIGHT, ADR-0050). */
+export const PRICE_INSIGHT = Symbol('PRICE_INSIGHT');
 
 const meter = metrics.getMeter('search');
 const indexed = meter.createCounter('raadi.search.indexed', {
@@ -192,6 +194,7 @@ export class SearchService {
     private readonly index: SearchIndex,
     @Inject(SIGNER) private readonly signer: ImgproxySigner,
     @Inject(DEFAULT_COUNTRY) private readonly defaultCountry: CountryCode,
+    @Inject(PRICE_INSIGHT) private readonly priceInsightOn: boolean = true,
   ) {}
 
   async search(params: SearchParams): Promise<SearchResult> {
@@ -472,6 +475,7 @@ export class SearchService {
 
   /** "Great price" and "good price" for a page of hits (only good news in lists). */
   private async deals(res: SearchResponse): Promise<Map<string, 'great' | 'good'>> {
+    if (!this.priceInsightOn) return new Map();
     const priced = res.hits.hits.map((h) => h._source).filter((s) => s.priceMinor !== null);
     const targets = priced.map((s) => ({
       country: s.country,
@@ -494,6 +498,7 @@ export class SearchService {
 
   /** A listing's price against its comparables (the listing excluded); null without enough. */
   async priceInsight(id: string): Promise<PriceInsight | null> {
+    if (!this.priceInsightOn) return null;
     const res = await this.index.search({ size: 1, query: { ids: { values: [id] } } });
     const doc = res.hits.hits[0]?._source;
     if (!doc || doc.priceMinor === null || doc.currency === null) return null;
@@ -524,6 +529,7 @@ export class SearchService {
 
   /** What comparable listings cost, for a seller filling in the form (ADR-0043). */
   async priceGuide(t: PriceTarget): Promise<(PriceStats & { currency: string }) | null> {
+    if (!this.priceInsightOn) return null;
     const [stats] = await this.statsFor([t]);
     return stats ? { ...stats, currency: COUNTRIES[t.country as CountryCode].currency } : null;
   }

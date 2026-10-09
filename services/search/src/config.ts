@@ -21,6 +21,14 @@ export const envSchema = baseEnvSchema
     KAFKA_USERNAME: z.string().default('search'),
     /** The country of a search that names none (ADR-0040). */
     DEFAULT_COUNTRY: z.enum(COUNTRY_CODES).default('XS'),
+    /**
+     * Price insight (ADR-0043): the price check on listings, "great/good price" on cards and the
+     * sellers' price guide. Off since 2026-10-09 (ADR-0050); the code stays, ready to be switched on.
+     */
+    PRICE_INSIGHT: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((v) => v === 'true'),
   });
 
 export type Env = z.infer<typeof envSchema>;

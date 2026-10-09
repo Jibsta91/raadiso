@@ -53,3 +53,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0047](0047-similar-and-recently-viewed.md)                   | Discovery: similar listings from search, recently viewed in the browser                  | Accepted |
 | [0048](0048-app-2-home-cards-photos.md)                       | App 2.0: a FINN-style front page, cards with a heart, full-screen photos, grid or list   | Accepted |
 | [0049](0049-testflight-over-the-tunnel.md)                    | TestFlight before production: the app built for the tunnel, used over the Pangolin VPN   | Accepted |
+| [0050](0050-price-insight-switched-off.md)                    | Price insight switched off (PRICE_INSIGHT=false)                                         | Accepted |
