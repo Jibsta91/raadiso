@@ -21,6 +21,7 @@ import { ContactCompose } from '../../components/contact-compose';
 import { ReportListing } from '../../components/report-listing';
 import { Badge, Body, Button, Glass, liquidGlass, Status } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
+import { ListingTile } from '../../components/listing-card';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { attributeRows } from '../../lib/attributes';
 import { useFavourite } from '../../lib/saved';
@@ -122,6 +123,15 @@ export default function ListingScreen() {
       : i.stats.unit === 'head'
         ? ` ${m.market.perHead}`
         : '');
+
+  // Listings like this one (ADR-0047), below the listing.
+  const similar = useLoad(
+    async () =>
+      unwrap(
+        await api.search.GET('/api/v1/search/listings/{id}/similar', { params: { path: { id } } }),
+      )?.items ?? [],
+    [api, id],
+  );
 
   const favourite = useFavourite(id);
 
@@ -383,6 +393,22 @@ export default function ListingScreen() {
           ) : (
             <ReportListing listingId={item.id} />
           )}
+          {similar.data?.length ? (
+            <View style={styles.similar} testID="similar-listings">
+              <Text style={[styles.similarTitle, { color: theme.text }]}>{m.market.similar}</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.similarRow}
+              >
+                {similar.data.map((hit) => (
+                  <View key={hit.id} style={styles.similarTile}>
+                    <ListingTile hit={hit} />
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          ) : null}
         </View>
       </ScrollView>
 
@@ -455,6 +481,10 @@ export default function ListingScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   reduced: { fontFamily: fonts.semibold, fontSize: 15 },
+  similar: { gap: space.md, marginTop: space.lg },
+  similarTitle: { fontFamily: fonts.bold, fontSize: 20 },
+  similarRow: { gap: space.md },
+  similarTile: { width: 156 },
   insight: { borderWidth: 1, borderRadius: radius.md, padding: space.md, gap: space.xs },
   insightTitle: { fontFamily: fonts.semibold, fontSize: 15 },
   missing: { flex: 1, paddingHorizontal: space.lg },
