@@ -5,9 +5,10 @@
 {{ $d := env "RAADI_DOMAIN" }}
 http:
   routers:
-    {{- if ne (env "DEV_TOOLS_ROUTED") "false" }}
+    {{- if ne (env "ADMIN_ROUTED") "false" }}
     # Not served in phone mode (./raadi phone), where the gateway is on the Wi-Fi and the demo staff
-    # logins and one-time-code secret are public.
+    # logins and one-time-code secret are public. Served in production (ADR-0051): no demo users, and
+    # every staff member signs in with a staff role and their own one-time code.
     admin-auth:
       rule: Host(`admin.{{ $d }}`) && PathPrefix(`/auth/`) && !Path(`/auth/forward`)
       entryPoints: [web, websecure]

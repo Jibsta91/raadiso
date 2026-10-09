@@ -75,7 +75,8 @@ Any other `./raadi` command runs on the server:
 ./raadi deploy secret grafana_admin_password
 ```
 
-Grafana, Keycloak's admin console, the admin console and the dev tools are not routed in production.
+The admin console is at `https://admin.<domain>`: staff sign in with a staff role and their own
+one-time code. Grafana, Keycloak's admin console and the dev tools are not routed in production.
 Reach them through an SSH tunnel to the container's address on the server, for example Grafana
 (then open http://localhost:3001):
 

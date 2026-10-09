@@ -1,8 +1,9 @@
 # Production overlay (ADR-0051), on the server only:
 #   docker compose -f compose.yaml -f compose.prod.yaml up -d --wait
 # ./raadi deploy runs it with the server's .env, which is .env.example plus deploy/prod/prod.env.
-# No demo users, demo data, mocks or dev tools; Keycloak's admin console, the admin console host,
-# Grafana and the dev tools are not routed (reach them through an SSH tunnel); HTTP redirects to HTTPS.
+# No demo users, demo data, mocks or dev tools; Keycloak's admin console, Grafana and the dev tools
+# are not routed (reach them through an SSH tunnel); the admin console is, on admin.$RAADI_DOMAIN
+# (staff role and one-time code); HTTP redirects to HTTPS.
 
 services:
   # Development stand-ins never start here: real SMTP, a real push service, and payments either from
