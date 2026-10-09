@@ -6,6 +6,11 @@ Each release also has generated notes on GitHub.
 
 ## [Unreleased]
 
+### Changed
+
+- Price insight is switched off (ADR-0050): no price check on listings, no "great/good price" on
+  cards and no price guide for sellers, on the website and in the app. `PRICE_INSIGHT=true` turns it on.
+
 ### Added
 
 - App 2.0 (ADR-0048), measured against FINN's app. The front page starts from category tiles, saved

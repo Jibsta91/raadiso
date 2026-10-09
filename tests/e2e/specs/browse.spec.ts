@@ -64,9 +64,13 @@ test('listing page: title and price first; the photo opens full screen and Escap
   await expect(page.getByTestId('gallery-dialog')).toBeHidden();
 });
 
+// ADR-0043, switched off by default (PRICE_INSIGHT, ADR-0050): the stack decides, the test follows.
+const priceInsight = process.env.PRICE_INSIGHT === 'true';
+
 test('a price check against similar listings, and good deals marked in the results', async ({
   page,
 }) => {
+  test.skip(!priceInsight, 'price insight is switched off (PRICE_INSIGHT=false)');
   // ADR-0043: cars compare by make and model, then within their subcategory.
   await page.goto('/en/search?category=bil&subcategory=personbil');
   await expect(page.getByTestId('listing-card-deal').first()).toBeVisible();
@@ -75,6 +79,16 @@ test('a price check against similar listings, and good deals marked in the resul
   await expect(insight).toBeVisible();
   await expect(insight).toHaveAttribute('data-rating', /^(unusually_low|great|good|fair|high)$/);
   await expect(insight).toContainText(/similar listing/);
+});
+
+test('with price insight off, no price check and no deal badges', async ({ page }) => {
+  test.skip(priceInsight, 'price insight is switched on');
+  await page.goto('/en/search?category=bil&subcategory=personbil');
+  await expect(page.getByTestId('listing-card').first()).toBeVisible();
+  await expect(page.getByTestId('listing-card-deal')).toHaveCount(0);
+  await page.getByTestId('listing-card').first().click();
+  await expect(page.getByTestId('listing-title')).toBeVisible();
+  await expect(page.getByTestId('price-insight')).toHaveCount(0);
 });
 
 test('a listing shows similar ones, and the front page remembers what was viewed', async ({
