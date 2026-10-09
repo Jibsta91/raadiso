@@ -118,10 +118,7 @@ function ToolCard({
       </p>
       {tool.signIn.kind === 'secret' && (
         <div className="-mt-1">
-          <CopyButton
-            value={`./raadi secret ${tool.signIn.secret}`}
-            label={`./raadi secret ${tool.signIn.secret}`}
-          />
+          <CopyButton value={tool.signIn.command} label={tool.signIn.command} />
         </div>
       )}
       <div className="mt-auto">

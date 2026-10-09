@@ -270,22 +270,28 @@
       ]
     },
     {
-      "clientId": "dockhand",
-      "name": "Dockhand (production only, ADR-0052)",
+      "clientId": "staff-gate",
+      "name": "Staff tools (production only, ADR-0054)",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "${DOCKHAND_CLIENT_SECRET}",
+      "secret": "${STAFF_GATE_CLIENT_SECRET}",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "rootUrl": "https://dockhand.${RAADI_DOMAIN}",
-      "redirectUris": ["https://dockhand.${RAADI_DOMAIN}/oauth2/callback"],
-      "webOrigins": ["https://dockhand.${RAADI_DOMAIN}"],
+      "rootUrl": "https://${RAADI_DOMAIN}",
+      "redirectUris": [
+        "https://dockhand.${RAADI_DOMAIN}/oauth2/callback",
+        "https://errors.${RAADI_DOMAIN}/oauth2/callback",
+        "https://prometheus.${RAADI_DOMAIN}/oauth2/callback",
+        "https://traefik.${RAADI_DOMAIN}/oauth2/callback",
+        "https://auth.${RAADI_DOMAIN}/oauth2/callback"
+      ],
+      "webOrigins": [],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "https://dockhand.${RAADI_DOMAIN}/*"
+        "post.logout.redirect.uris": "https://*.${RAADI_DOMAIN}/*"
       },
       "defaultClientScopes": ["web-origins", "acr", "basic", "profile", "roles", "email"]
     },

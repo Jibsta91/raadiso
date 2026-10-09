@@ -1,0 +1,68 @@
+# Staff tools behind the staff gate (ADR-0054), production only, when STAFF_TOOLS_ROUTED=true.
+# Traefik asks staff-gate about every request: without a Keycloak session holding the platform-admin
+# role and a one-time code, the browser is sent to the sign-in. The tools' own logins stay on top.
+# OpenBao is never served here: it is reached through an SSH tunnel (docs/deploy.md).
+{{ $d := env "RAADI_DOMAIN" }}
+{{- if eq (env "STAFF_TOOLS_ROUTED") "true" }}
+http:
+  middlewares:
+    staff-gate:
+      forwardAuth:
+        address: http://staff-gate:4180/
+        trustForwardHeader: true
+        authResponseHeaders: [X-Auth-Request-Email]
+
+  routers:
+    # The gate's own pages (sign-in start, callback, sign-out) on every tool's host.
+    staff-gate:
+      rule: >-
+        (Host(`errors.{{ $d }}`) || Host(`prometheus.{{ $d }}`) || Host(`traefik.{{ $d }}`)
+        || Host(`auth.{{ $d }}`) || Host(`dockhand.{{ $d }}`)) && PathPrefix(`/oauth2/`)
+      entryPoints: [websecure]
+      service: staff-gate
+      middlewares: [security-headers, ratelimit-auth]
+      priority: 1000
+    # GlitchTip's interface (its event intake stays on the site's own address, routes.yml).
+    staff-glitchtip:
+      rule: Host(`errors.{{ $d }}`)
+      entryPoints: [websecure]
+      service: glitchtip
+      middlewares: [security-headers, ratelimit-default, staff-gate]
+    staff-prometheus:
+      rule: Host(`prometheus.{{ $d }}`)
+      entryPoints: [websecure]
+      service: staff-prometheus
+      middlewares: [security-headers, ratelimit-default, staff-gate]
+    staff-traefik:
+      rule: Host(`traefik.{{ $d }}`)
+      entryPoints: [websecure]
+      service: api@internal
+      middlewares: [security-headers, staff-gate]
+    # Keycloak's admin console; its own master-realm sign-in follows the gate.
+    staff-keycloak-admin:
+      rule: Host(`auth.{{ $d }}`) && PathPrefix(`/admin/`)
+      entryPoints: [websecure]
+      service: keycloak
+      middlewares: [keycloak-headers, ratelimit-default, staff-gate]
+    {{- if env "DOCKHAND_URL" }}
+    # The owner's Docker UI, next to the stack on the same server.
+    staff-dockhand:
+      rule: Host(`dockhand.{{ $d }}`)
+      entryPoints: [websecure]
+      service: staff-dockhand
+      middlewares: [security-headers, ratelimit-default, staff-gate]
+    {{- end }}
+
+  services:
+    staff-gate:
+      loadBalancer:
+        servers: [{ url: "http://staff-gate:4180" }]
+    staff-prometheus:
+      loadBalancer:
+        servers: [{ url: "http://prometheus:9090" }]
+    {{- if env "DOCKHAND_URL" }}
+    staff-dockhand:
+      loadBalancer:
+        servers: [{ url: "{{ env "DOCKHAND_URL" }}" }]
+    {{- end }}
+{{- end }}

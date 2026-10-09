@@ -13,12 +13,12 @@ REALM="${KEYCLOAK_REALM:-raadi}"
 BFF_CLIENT_SECRET="$(secret bff_oidc_client_secret)"
 ADMIN_CLIENT_SECRET="$(secret admin_oidc_client_secret)"
 GRAFANA_CLIENT_SECRET="$(secret grafana_oidc_client_secret)"
-DOCKHAND_CLIENT_SECRET="$(secret dockhand_oidc_client_secret)"
+STAFF_GATE_CLIENT_SECRET="$(secret staff_gate_oidc_client_secret)"
 REGISTRY_INIT_CLIENT_SECRET="$(secret registry_init_client_secret)"
 NOTIFICATIONS_CLIENT_SECRET="$(secret notifications_kc_client_secret)"
 ADMIN_KC_CLIENT_SECRET="$(secret admin_kc_client_secret)"
 DEMO_EMAIL_DOMAIN="${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}"
-export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL ADMIN_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLIENT_SECRET ADMIN_CLIENT_SECRET GRAFANA_CLIENT_SECRET DOCKHAND_CLIENT_SECRET \
+export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL ADMIN_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLIENT_SECRET ADMIN_CLIENT_SECRET GRAFANA_CLIENT_SECRET STAFF_GATE_CLIENT_SECRET \
   REGISTRY_INIT_CLIENT_SECRET NOTIFICATIONS_CLIENT_SECRET ADMIN_KC_CLIENT_SECRET \
   SMTP_HOST="${SMTP_HOST:-mailpit}" SMTP_PORT="${SMTP_PORT:-1025}" \
   SMTP_FROM="${SMTP_FROM:-no-reply@${RAADI_DOMAIN}}" \
@@ -26,7 +26,7 @@ export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL ADMIN_BASE_URL AUTH_BASE_URL GRAFANA_BA
 
 # envsubst only replaces this explicit list (Keycloak's own ${...} keys stay intact).
 # shellcheck disable=SC2016
-vars='$DEMO_OTP_SECRET $PUBLIC_BASE_URL $ADMIN_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $ADMIN_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $DOCKHAND_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET $ADMIN_KC_CLIENT_SECRET'
+vars='$DEMO_OTP_SECRET $PUBLIC_BASE_URL $ADMIN_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $ADMIN_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $STAFF_GATE_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET $ADMIN_KC_CLIENT_SECRET'
 realm="$(envsubst "$vars" < /opt/raadi/keycloak/realm-raadi.json)"
 if [[ "${SEED_DEMO_DATA:-false}" != "true" ]]; then
   realm="$(jq 'del(.users)' <<<"$realm")"
@@ -127,6 +127,13 @@ while IFS=$'\t' read -r id roles; do
 done < <(jq -r '.users // [] | .[] | [.id, (.realmRoles // [] | join(" "))] | @tsv' <<<"$realm")
 info "demo users have their realm roles"
 
+# A replaced client: dockhand became the staff gate's client (ADR-0054).
+old_id="$(api -G "$KC/admin/realms/$REALM/clients" --data-urlencode clientId=dockhand | jq -r '.[0].id // empty')"
+if [[ -n "$old_id" ]]; then
+  api -X DELETE "$KC/admin/realms/$REALM/clients/$old_id" >/dev/null
+  info "client dockhand removed"
+fi
+
 # The admin console (client raadi-admin) requires a one-time code for everyone (ADR-0028): a copy
 # of the browser flow whose OTP step is required instead of conditional, bound to that client
 # only. Staff without an authenticator are asked to set one up at their first sign-in.
@@ -143,14 +150,14 @@ done < <(jq -c '.[]
     elif .displayName == "Condition - user configured" and .requirement != "DISABLED" then .requirement = "DISABLED"
     else empty end' <<<"$executions")
 flow_id="$(api "$KC/admin/realms/$REALM/authentication/flows" | jq -r --arg a "$FLOW" '.[] | select(.alias == $a) | .id')"
-# Dockhand's (ADR-0052) and Grafana's sign-ins are staff sign-ins too.
-for client_id in raadi-admin dockhand grafana; do
+# The staff gate's (ADR-0054) and Grafana's sign-ins are staff sign-ins too.
+for client_id in raadi-admin staff-gate grafana; do
   admin_client="$(api -G "$KC/admin/realms/$REALM/clients" --data-urlencode clientId="$client_id" | jq -r '.[0].id')"
   api "$KC/admin/realms/$REALM/clients/$admin_client" \
     | jq -c --arg f "$flow_id" '.authenticationFlowBindingOverrides = {browser: $f}' \
     | api -X PUT "$KC/admin/realms/$REALM/clients/$admin_client" --data-binary @- >/dev/null
 done
-info "admin console, Dockhand and Grafana require a one-time code (flow ${FLOW})"
+info "admin console, staff tools and Grafana require a one-time code (flow ${FLOW})"
 
 # Service accounts get their client roles here (the realm import cannot express them).
 grant_client_role() { # <service-account client> <resource client> <role>

@@ -1,6 +1,7 @@
 # 0052 — Dockhand on dockhand.raadiso.com, behind the staff sign-in
 
-- Status: Accepted
+- Status: Superseded by [ADR-0054](0054-staff-gate-for-staff-tools.md) (one staff gate for every staff
+  tool)
 - Date: 2026-10-09
 - Builds on [ADR-0051](0051-production-on-one-server.md) (production on one server) and
   [ADR-0028](0028-admin-console-staff-roles-and-audit.md) (staff roles and one-time codes).

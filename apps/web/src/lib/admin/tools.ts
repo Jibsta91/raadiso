@@ -4,6 +4,8 @@ import { env } from '@/lib/env';
  * The stack's web UIs for the console's Tools page: where each one lives, how staff sign in, and a
  * health probe on the internal network. Dev tools are routed only when DEV_TOOLS_ROUTED isn't "false"
  * (not in phone mode, never in production), Keycloak's admin console only with KEYCLOAK_ADMIN_PUBLIC.
+ * In production, STAFF_TOOLS_ROUTED serves GlitchTip, Prometheus, Traefik's dashboard and Keycloak's
+ * admin console behind the staff gate (ADR-0054); the development stand-ins aren't listed there.
  */
 export type ToolId =
   | 'grafana'
@@ -23,7 +25,7 @@ export type ToolId =
  */
 export type SignIn =
   | { kind: 'sso' }
-  | { kind: 'secret'; user?: string; secret: string }
+  | { kind: 'secret'; user?: string; secret: string; command: string }
   | { kind: 'none' }
   | { kind: 'public' };
 
@@ -46,7 +48,14 @@ export function tools(locale: string): Tool[] {
   const base = new URL(env.publicBaseUrl);
   const at = (sub: string, path = '') => `${base.protocol}//${sub}.${base.host}${path}`;
   const dev = process.env.DEV_TOOLS_ROUTED !== 'false';
+  const staff = process.env.STAFF_TOOLS_ROUTED === 'true';
+  const production = env.environment === 'production';
   const keycloakAdmin = process.env.KEYCLOAK_ADMIN_PUBLIC !== 'false';
+  // Generated secrets are read where the stack runs: on the server in production.
+  const secret = (name: string) => ({
+    secret: name,
+    command: `./raadi ${production ? 'deploy secret' : 'secret'} ${name}`,
+  });
   const pangolin = process.env.TUNNEL_DASHBOARD_URL ?? '';
   const list: Tool[] = [
     {
@@ -64,10 +73,10 @@ export function tools(locale: string): Tool[] {
       signIn: {
         kind: 'secret',
         user: process.env.GLITCHTIP_ADMIN_EMAIL ?? 'admin@raadi.localhost',
-        secret: 'glitchtip_admin_password',
+        ...secret('glitchtip_admin_password'),
       },
       health: 'http://glitchtip:8000/_health/',
-      routed: dev,
+      routed: dev || staff,
     },
     {
       id: 'prometheus',
@@ -75,7 +84,7 @@ export function tools(locale: string): Tool[] {
       url: at('prometheus'),
       signIn: { kind: 'none' },
       health: 'http://prometheus:9090/-/ready',
-      routed: dev,
+      routed: dev || staff,
     },
     {
       id: 'status',
@@ -89,15 +98,15 @@ export function tools(locale: string): Tool[] {
       id: 'keycloak',
       group: 'identity',
       url: at('auth', '/admin/'),
-      signIn: { kind: 'secret', user: 'admin', secret: 'keycloak_admin_password' },
+      signIn: { kind: 'secret', user: 'admin', ...secret('keycloak_admin_password') },
       health: 'http://keycloak:9000/health/ready',
-      routed: keycloakAdmin,
+      routed: keycloakAdmin || staff,
     },
     {
       id: 'openbao',
       group: 'identity',
       url: at('bao', '/ui/'),
-      signIn: { kind: 'secret', secret: 'openbao_root_token' },
+      signIn: { kind: 'secret', ...secret('openbao_root_token') },
       health: 'http://openbao:8200/v1/sys/health',
       routed: dev,
     },
@@ -107,7 +116,7 @@ export function tools(locale: string): Tool[] {
       url: at('traefik', '/dashboard/'),
       signIn: { kind: 'none' },
       health: 'http://traefik:8081/ping',
-      routed: dev,
+      routed: dev || staff,
     },
     {
       id: 'mailpit',
@@ -132,11 +141,12 @@ export function tools(locale: string): Tool[] {
       id: 'pangolin',
       group: 'dev',
       url: pangolin,
-      signIn: { kind: 'secret', secret: 'pangolin_admin_password' },
+      signIn: { kind: 'secret', ...secret('pangolin_admin_password') },
       routed: true,
     });
   }
-  return list;
+  // Mailpit and the push mock are development stand-ins: production doesn't run them.
+  return production ? list.filter((t) => t.id !== 'mailpit' && t.id !== 'push') : list;
 }
 
 /** Each tool with a live status (internal health probe, 3 s timeout). */

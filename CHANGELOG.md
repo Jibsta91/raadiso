@@ -23,8 +23,9 @@ Each release also has generated notes on GitHub.
   runs any other command on the server. `compose.prod.yaml` leaves out demo data, mocks and dev tools
   and redirects HTTP to HTTPS. Mail goes through Brevo. Payments are off until a provider is chosen
   (`PAYMENTS_PROVIDER=none`). See `docs/deploy.md`.
-- Dockhand at dockhand.raadiso.com behind the staff sign-in (ADR-0052): Keycloak, the platform-admin
-  role and a one-time code, through oauth2-proxy.
+- Staff tools in production behind one staff gate (ADR-0054): GlitchTip, Prometheus, Traefik's
+  dashboard, Keycloak's admin console and Dockhand, for platform admins with a one-time code. The
+  admin console (admin.raadiso.com) and Grafana are served too; OpenBao stays behind an SSH tunnel.
 - TestFlight builds use production (raadiso.com, Somaliland) and need no VPN.
 
 - App 2.0 (ADR-0048), measured against FINN's app. The front page starts from category tiles, saved
