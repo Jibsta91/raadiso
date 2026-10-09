@@ -50,8 +50,15 @@ const config: ExpoConfig = {
     'expo-secure-store',
     'expo-localization',
     'expo-web-browser',
-    // Push notifications (ADR-0025); development builds get the entitlements from this plugin.
-    ['expo-notifications', { color: '#3b5bff' }],
+    // Push notifications (ADR-0025); development builds get the entitlements from this plugin. Store
+    // builds (TestFlight, ADR-0049) need Apple's production push environment.
+    [
+      'expo-notifications',
+      {
+        color: '#3b5bff',
+        mode: process.env.APNS_MODE === 'production' ? 'production' : 'development',
+      },
+    ],
     // Photos for new listings: library and camera (development builds get the permission texts).
     [
       'expo-image-picker',
