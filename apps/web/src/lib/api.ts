@@ -66,6 +66,21 @@ export async function searchListings(query: SearchQuery): Promise<SearchResult> 
   throw new ServiceUnavailableError('search unavailable');
 }
 
+/** A listing's prices over time, newest first (ADR-0044); empty on failure. */
+export async function priceHistory(
+  id: string,
+): Promise<Array<{ amountMinor: number | null; currency: string | null; at: string }>> {
+  const client = createListingsClient({ baseUrl: env.listingsUrl });
+  const { data } = await client
+    .GET('/api/v1/listings/{id}/price-history', {
+      params: { path: { id } },
+      signal: AbortSignal.timeout(3000),
+      cache: 'no-store',
+    })
+    .catch(() => ({ data: undefined }));
+  return data?.items ?? [];
+}
+
 /** A listing's price against comparable listings (ADR-0043); null without enough, or on failure. */
 export async function priceInsight(id: string): Promise<PriceInsight | null> {
   const client = createSearchClient({ baseUrl: env.searchUrl });

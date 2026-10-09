@@ -21,6 +21,7 @@ import {
   freshnessOf,
   hourStart,
   type Matching,
+  PRICE_DROP_DAYS,
   type RankingWeights,
   type SearchParams,
 } from './query.js';
@@ -74,6 +75,8 @@ export interface SearchHit {
   distanceKm?: number;
   /** A good price against comparable listings (ADR-0043); only good news is shown in lists. */
   deal?: 'great' | 'good';
+  /** A recent price drop (ADR-0044): the price before, and when. */
+  priceDrop?: { previous: Money; at: string };
   image?: { thumb: string; card: string };
   imageCount: number;
   attributes: Record<string, string | number | boolean>;
@@ -154,6 +157,20 @@ export interface SearchResult {
   relaxed: boolean;
   /** A spelling that would match more listings ("did you mean"). */
   suggestion?: string;
+}
+
+/** A drop in the last PRICE_DROP_DAYS days, as the hit shows it. */
+function recentDrop(s: {
+  previousPriceMinor?: number | null;
+  priceDroppedAt?: string | null;
+  currency: string | null;
+}): { previous: Money; at: string } | undefined {
+  if (s.previousPriceMinor == null || !s.priceDroppedAt || !s.currency) return undefined;
+  if (Date.now() - Date.parse(s.priceDroppedAt) > PRICE_DROP_DAYS * 86_400_000) return undefined;
+  return {
+    previous: { amountMinor: s.previousPriceMinor, currency: s.currency },
+    at: s.priceDroppedAt,
+  };
 }
 
 /** The query with each misspelled word replaced by its suggestion, when there is one and few hits. */
@@ -267,6 +284,7 @@ export class SearchService {
           },
           ...(geo && distance !== undefined ? { distanceKm: Math.round(distance * 10) / 10 } : {}),
           ...(deals.has(s.id) ? { deal: deals.get(s.id) } : {}),
+          ...(recentDrop(s) ? { priceDrop: recentDrop(s)! } : {}),
           ...(first
             ? { image: (({ thumb, card }) => ({ thumb, card }))(imageUrls(this.signer, first)) }
             : {}),

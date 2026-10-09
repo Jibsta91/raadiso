@@ -57,6 +57,8 @@ const row: ListingRow = {
   promoted_until: null,
   removed_by: null,
   removal_reason: null,
+  previous_price_minor: null,
+  price_dropped_at: null,
 };
 
 describe('OpenAPI contract', () => {
@@ -72,6 +74,22 @@ describe('OpenAPI contract', () => {
     assert.equal(listing.location.region, 'vestland');
     const withViewer = { ...listing, viewer: { isOwner: true, canEdit: true, canDelete: true } };
     assert.ok(validate(withViewer), JSON.stringify(validate.errors));
+  });
+
+  it('a price drop shows on the listing and in its event, until the price goes up (ADR-0044)', () => {
+    const at = new Date('2026-10-09T10:00:00Z');
+    const dropped = { ...row, previous_price_minor: '20500000', price_dropped_at: at };
+    const listing = toListing(dropped, signer);
+    assert.deepEqual(listing.priceDrop, {
+      previous: { amountMinor: 20500000, currency: 'NOK' },
+      at: at.toISOString(),
+    });
+    assert.ok(validator('Listing')(listing));
+    const event = { listing: toSnapshot(dropped) };
+    assert.ok(contracts['no.raadi.listings.listing.updated.v1'].safeParse(event).success);
+    assert.equal(event.listing.priceDrop?.previous.amountMinor, 20500000);
+    assert.equal(toSnapshot(row).priceDrop, null);
+    assert.equal(toListing(row, signer).priceDrop, undefined);
   });
 
   it('a listing a moderator removed tells its owner why; one the owner deleted does not', () => {

@@ -29,6 +29,9 @@ export interface ListingDocument {
   updatedAt: string;
   /** End of a paid promotion (ADR-0020), if any. */
   promotedUntil: string | null;
+  /** The last price drop (ADR-0044): the price before, and when. */
+  previousPriceMinor: number | null;
+  priceDroppedAt: string | null;
 }
 
 /**
@@ -78,6 +81,8 @@ export function toDocument(l: ListingSnapshot): ListingDocument {
     publishedAt: l.publishedAt,
     updatedAt: l.updatedAt,
     promotedUntil: l.promotedUntil ?? null,
+    previousPriceMinor: l.priceDrop?.previous.amountMinor ?? null,
+    priceDroppedAt: l.priceDrop?.at ?? null,
   };
 }
 

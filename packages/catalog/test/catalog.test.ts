@@ -260,7 +260,10 @@ describe('form fields', () => {
 
 describe('sorts (ADR-0042)', () => {
   it('come from attributes that declare an order, per category', () => {
-    assert.deepEqual(sortsOf('vehicles', 'cars').slice(5), ['year_desc', 'mileage_asc']);
+    assert.deepEqual(sortsOf('vehicles', 'cars').slice(BASE_SORTS.length), [
+      'year_desc',
+      'mileage_asc',
+    ]);
     assert.ok(sortsOf('eiendom').includes('price_per_area_asc'));
     assert.ok(sortsOf('property', 'land').includes('area_desc'));
     assert.ok(!sortsOf('jobb').includes('price_per_area_asc'));

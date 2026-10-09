@@ -47,3 +47,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0041](0041-search-2-understanding-relevance-autocomplete.md) | Search 2.0: query understanding, multilingual matching, measured relevance, autocomplete | Accepted |
 | [0042](0042-best-match-ranking-and-sorts.md)                  | Best match: quality and freshness in the ranking, sorts per category, a ranking lab      | Accepted |
 | [0043](0043-price-insight-and-guide.md)                       | Price insight: deal ratings against comparable listings, a price guide for sellers       | Accepted |
+| [0044](0044-price-history-and-drops.md)                       | Price history and drops: recorded by listings, carried by events, found in search        | Accepted |

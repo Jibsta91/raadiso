@@ -8,6 +8,11 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Price drops (ADR-0044). Listings records every price a listing has had and its last drop; events carry
+  the drop, and search shows drops of the last 30 days on cards ("reduced from", the old price struck
+  through), filters on them and sorts the most recently reduced first. The listing page says when and
+  from what the price was reduced and shows the price history. Saved searches can keep the filter.
+
 - Price insight (ADR-0043). Each listing's price is compared with similar active listings, as the
   taxonomy defines them (cars by make, model and year, property per m² in the region, livestock per
   animal, phones by brand and storage), loosened to the subcategory when there are too few. The listing

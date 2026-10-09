@@ -15,6 +15,8 @@ export type CardListing = Pick<SearchHit, 'id' | 'title' | 'price' | 'category' 
   distanceKm?: number;
   /** A good price against comparable listings (ADR-0043). */
   deal?: 'great' | 'good';
+  /** A recent price drop (ADR-0044). */
+  priceDrop?: { previous: { amountMinor: number; currency: string }; at: string };
   sold?: boolean;
 };
 
@@ -91,6 +93,14 @@ export async function ListingCard({ hit }: { hit: CardListing }) {
               ? ` · ${t('search.distance', { km: Math.round(hit.distanceKm) })}`
               : ''}
           </p>
+          {hit.priceDrop ? (
+            <p className="text-sm font-medium text-primary" data-testid="listing-card-reduced">
+              {t.rich('price.reducedFrom', {
+                price: formatPrice(hit.priceDrop.previous, locale),
+                old: (chunks) => <s>{chunks}</s>,
+              })}
+            </p>
+          ) : null}
           {hit.deal ? (
             <p
               className="text-sm font-semibold text-primary"

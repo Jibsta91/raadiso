@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/listings/{id}/price-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A listing's prices over time, newest first (ADR-0044) */
+        get: operations["listingPriceHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/listings/{id}": {
         parameters: {
             query?: never;
@@ -506,6 +523,12 @@ export interface components {
              * @description End of a running paid promotion; null when not promoted (ADR-0020)
              */
             promotedUntil: string | null;
+            /** @description The last price drop, until the price goes up again (ADR-0044) */
+            priceDrop?: {
+                previous: components["schemas"]["Money"];
+                /** Format: date-time */
+                at: string;
+            };
             /** @description On the owner's own list only - a moderator removed the listing, and why */
             removal?: {
                 /** @enum {string|null} */
@@ -656,6 +679,36 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+        };
+    };
+    listingPriceHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The prices */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            amountMinor: number | null;
+                            currency: string | null;
+                            /** Format: date-time */
+                            at: string;
+                        }[];
+                    };
+                };
+            };
+            404: components["responses"]["Problem"];
         };
     };
     getListing: {

@@ -177,6 +177,12 @@ export interface components {
              * @enum {string}
              */
             deal?: "great" | "good";
+            /** @description A price drop in the last 30 days, the price before and when (ADR-0044) */
+            priceDrop?: {
+                previous: components["schemas"]["Money"];
+                /** Format: date-time */
+                at: string;
+            };
             image?: {
                 thumb: string;
                 card: string;
@@ -409,12 +415,14 @@ export interface operations {
                 /** @description Major units of the country's currency (12.5 is $12.50) */
                 priceMin?: number;
                 priceMax?: number;
+                /** @description Only listings whose price dropped in the last 30 days (ADR-0044) */
+                priceDropped?: "true";
                 /** @description Place id (centre of a radius search) */
                 near?: string;
                 lat?: number;
                 lon?: number;
                 radiusKm?: number;
-                sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "distance" | "year_desc" | "mileage_asc" | "area_desc" | "storage_desc" | "head_desc" | "price_per_area_asc";
+                sort?: "relevance" | "newest" | "price_asc" | "price_desc" | "distance" | "price_drop" | "year_desc" | "mileage_asc" | "area_desc" | "storage_desc" | "head_desc" | "price_per_area_asc";
                 page?: number;
                 pageSize?: number;
             };

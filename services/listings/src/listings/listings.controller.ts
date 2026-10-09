@@ -24,6 +24,7 @@ import {
   type UpdateListing,
   updateListingSchema,
 } from './listing.model.js';
+import type { PriceChange } from './listings.repository.js';
 import { ListingsService } from './listings.service.js';
 
 const pageSchema = z.object({
@@ -56,6 +57,17 @@ export class ListingsController {
     @Query(new ZodValidationPipe(mineSchema)) page: z.infer<typeof mineSchema>,
   ) {
     return this.listings.mine(req.principal!, page.limit, page.offset, page.removed === 'true');
+  }
+
+  /** A listing's prices over time, newest first (ADR-0044). Public, like the listing. */
+  @Public()
+  @Get(':id/price-history')
+  async priceHistory(
+    @Param('id', new ParseUUIDPipe({ version: undefined })) id: string,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ): Promise<{ items: PriceChange[] }> {
+    void reply.header('cache-control', 'public, max-age=60');
+    return { items: await this.listings.priceHistory(id) };
   }
 
   @Public()

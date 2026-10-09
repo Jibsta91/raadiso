@@ -15,7 +15,7 @@ import {
 const COLUMNS = `id, owner_id, seller_name, country, category, subcategory, title, description, price_minor, currency,
   attributes, place_id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lon,
   image_ids, status, version, created_at, updated_at, published_at, promoted_until, removed_by,
-  removal_reason`;
+  removal_reason, previous_price_minor, price_dropped_at`;
 
 export class VersionConflictError extends Error {}
 
@@ -24,6 +24,15 @@ export interface NewListing extends CreateListing {
   ownerId: string;
   sellerName: string;
   publishedAt?: Date;
+  /** Demo data only: a price drop that happened before the seed (ADR-0044). */
+  priceDrop?: { previousMinor: number; at: Date };
+}
+
+/** One entry of a listing's price history (ADR-0044). */
+export interface PriceChange {
+  amountMinor: number | null;
+  currency: string | null;
+  at: string;
 }
 
 /** Data access for listings. Every state change writes its event in the same transaction. */
@@ -84,6 +93,7 @@ export class ListingsRepository {
     return withTransaction(this.pool, async (client) => {
       const row = await this.insert(client, input);
       if (!row) return null;
+      await this.recordPrice(client, row);
       await this.outbox(client, row, 'no.raadi.listings.listing.published.v1', {
         listing: toSnapshot(row),
       });
@@ -99,6 +109,13 @@ export class ListingsRepository {
       for (const input of inputs) {
         const row = await this.insert(client, input);
         if (!row) continue;
+        if (input.priceDrop) {
+          await client.query(
+            'INSERT INTO price_history (listing_id, price_minor, currency, changed_at) VALUES ($1, $2, $3, $4)',
+            [row.id, input.priceDrop.previousMinor, row.currency, row.published_at],
+          );
+        }
+        await this.recordPrice(client, row, input.priceDrop?.at);
         await this.outbox(client, row, 'no.raadi.listings.listing.published.v1', {
           listing: toSnapshot(row),
         });
@@ -119,9 +136,19 @@ export class ListingsRepository {
   ): Promise<ListingRow> {
     return withTransaction(this.pool, async (client) => {
       const place = findPlace(next.placeId)!;
-      const { rows } = await client.query<ListingRow>(
+      // A lower price in the same currency is a drop (kept until the price goes up); any other change of
+      // price clears it (ADR-0044). In SET, the columns are the old values.
+      const { rows } = await client.query<ListingRow & { price_changed: boolean }>(
         `UPDATE listings
-            SET category = $3, subcategory = $4, title = $5, description = $6, price_minor = $7,
+            SET previous_price_minor = CASE
+                  WHEN $7::bigint < price_minor AND currency = $14 THEN price_minor
+                  WHEN $7::bigint IS DISTINCT FROM price_minor OR $14 IS DISTINCT FROM currency THEN NULL
+                  ELSE previous_price_minor END,
+                price_dropped_at = CASE
+                  WHEN $7::bigint < price_minor AND currency = $14 THEN now()
+                  WHEN $7::bigint IS DISTINCT FROM price_minor OR $14 IS DISTINCT FROM currency THEN NULL
+                  ELSE price_dropped_at END,
+                category = $3, subcategory = $4, title = $5, description = $6, price_minor = $7,
                 currency = $14, attributes = $8, place_id = $9, country = $15,
                 location = ST_SetSRID(ST_MakePoint($10, $11), 4326)::geography,
                 image_ids = $12, status = $13, version = version + 1, updated_at = now()
@@ -148,6 +175,7 @@ export class ListingsRepository {
       const row = rows[0];
       if (!row)
         throw new VersionConflictError(`listing ${id} changed since version ${expectedVersion}`);
+      await this.recordPrice(client, row);
       await this.outbox(client, row, 'no.raadi.listings.listing.updated.v1', {
         listing: toSnapshot(row),
       });
@@ -239,9 +267,9 @@ export class ListingsRepository {
     const { rows } = await client.query<ListingRow>(
       `INSERT INTO listings (id, owner_id, seller_name, category, subcategory, title, description, price_minor,
                              currency, country, attributes, place_id, location, image_ids, published_at,
-                             created_at, updated_at)
+                             created_at, updated_at, previous_price_minor, price_dropped_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $15, $16, $9, $10,
-               ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography, $13, $14, $14, $14)
+               ST_SetSRID(ST_MakePoint($11, $12), 4326)::geography, $13, $14, $14, $14, $17, $18)
        ON CONFLICT (id) DO NOTHING
        RETURNING ${COLUMNS}`,
       [
@@ -261,9 +289,42 @@ export class ListingsRepository {
         input.publishedAt ?? new Date(),
         input.price?.currency ?? null,
         place.country,
+        input.priceDrop?.previousMinor ?? null,
+        input.priceDrop?.at ?? null,
       ],
     );
     return rows[0] ?? null;
+  }
+
+  /** Appends the listing's price to its history when it differs from the last one recorded. */
+  private async recordPrice(client: pg.PoolClient, row: ListingRow, at?: Date): Promise<void> {
+    await client.query(
+      `INSERT INTO price_history (listing_id, price_minor, currency, changed_at)
+       SELECT $1, $2, $3, COALESCE($4, now())
+        WHERE NOT EXISTS (
+          SELECT 1 FROM (SELECT price_minor, currency FROM price_history WHERE listing_id = $1
+                          ORDER BY changed_at DESC LIMIT 1) last
+           WHERE last.price_minor IS NOT DISTINCT FROM $2 AND last.currency IS NOT DISTINCT FROM $3)`,
+      [row.id, row.price_minor, row.currency, at ?? null],
+    );
+  }
+
+  /** A listing's prices over time, newest first (ADR-0044). */
+  async priceHistory(id: string, limit = 20): Promise<PriceChange[]> {
+    const { rows } = await this.pool.query<{
+      price_minor: string | null;
+      currency: string | null;
+      changed_at: Date;
+    }>(
+      `SELECT price_minor, currency, changed_at FROM price_history
+        WHERE listing_id = $1 ORDER BY changed_at DESC LIMIT $2`,
+      [id, limit],
+    );
+    return rows.map((r) => ({
+      amountMinor: r.price_minor === null ? null : Number(r.price_minor),
+      currency: r.currency,
+      at: r.changed_at.toISOString(),
+    }));
   }
 
   private async outbox<T extends EventType>(

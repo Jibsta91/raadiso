@@ -69,6 +69,34 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ListingPage' }
         '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/listings/{id}/price-history:
+    get:
+      tags: [listings]
+      operationId: listingPriceHistory
+      summary: A listing's prices over time, newest first (ADR-0044)
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: The prices
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [amountMinor, currency, at]
+                      properties:
+                        amountMinor: { type: [integer, 'null'] }
+                        currency: { type: [string, 'null'] }
+                        at: { type: string, format: date-time }
+        '404': { $ref: '#/components/responses/Problem' }
   /api/v1/listings/{id}:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
@@ -790,6 +818,14 @@ components:
           type: [string, 'null']
           format: date-time
           description: End of a running paid promotion; null when not promoted (ADR-0020)
+        priceDrop:
+          type: object
+          additionalProperties: false
+          required: [previous, at]
+          description: The last price drop, until the price goes up again (ADR-0044)
+          properties:
+            previous: { $ref: '#/components/schemas/Money' }
+            at: { type: string, format: date-time }
         removal:
           type: object
           description: On the owner's own list only - a moderator removed the listing, and why

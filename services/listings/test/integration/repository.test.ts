@@ -209,4 +209,36 @@ describe('reports (ADR-0027)', () => {
       },
     );
   });
+
+  it('records price changes, and a drop until the price goes up again (ADR-0044)', async () => {
+    const repo = new ListingsRepository(pool);
+    const created = (await repo.create(input()))!;
+    const at = (amountMinor: number) => ({
+      ...input(created.id),
+      price: { amountMinor, currency: 'NOK' },
+    });
+    const lower = await repo.update(created.id, 1, { ...at(120000), status: 'active' });
+    assert.equal(lower.previous_price_minor, '150000');
+    assert.ok(lower.price_dropped_at);
+    const renamed = await repo.update(created.id, 2, {
+      ...at(120000),
+      title: 'Langrennsski, pent brukt',
+      status: 'active',
+    });
+    assert.equal(renamed.previous_price_minor, '150000', 'other edits keep the drop');
+    const higher = await repo.update(created.id, 3, { ...at(130000), status: 'active' });
+    assert.equal(higher.previous_price_minor, null, 'a higher price clears it');
+    assert.equal(higher.price_dropped_at, null);
+    const history = await repo.priceHistory(created.id);
+    assert.deepEqual(
+      history.map((h) => h.amountMinor),
+      [130000, 120000, 150000],
+      'one entry per change, newest first',
+    );
+    const [, dropEvent] = await events(created.id);
+    const snapshot = dropEvent!.payload.data.listing as {
+      priceDrop?: { previous: { amountMinor: number } };
+    };
+    assert.equal(snapshot.priceDrop?.previous.amountMinor, 150000);
+  });
 });
