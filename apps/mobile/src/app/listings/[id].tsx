@@ -20,7 +20,7 @@ import { NoPhoto } from '../../components/no-photo';
 import { ContactCompose } from '../../components/contact-compose';
 import { ReportListing } from '../../components/report-listing';
 import { Badge, Body, Button, Glass, liquidGlass, Status } from '../../components/ui';
-import { useI18n } from '../../i18n';
+import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { attributeRows } from '../../lib/attributes';
 import { useFavourite } from '../../lib/saved';
@@ -100,6 +100,28 @@ export default function ListingScreen() {
       ),
     [api, id],
   );
+
+  // How the price compares with similar listings (ADR-0043); quietly absent if search can't say.
+  const insight = useLoad(
+    async () =>
+      unwrap(
+        await api.search.GET('/api/v1/search/listings/{id}/price-insight', {
+          params: { path: { id } },
+        }),
+      )?.insight ?? null,
+    [api, id],
+  );
+
+  const perUnit = (
+    amountMinor: number,
+    i: { currency: string; stats: { unit: 'listing' | 'areaM2' | 'head' } },
+  ) =>
+    formatPrice({ amountMinor: Math.round(amountMinor), currency: i.currency }, locale, '') +
+    (i.stats.unit === 'areaM2'
+      ? ` ${m.market.perArea}`
+      : i.stats.unit === 'head'
+        ? ` ${m.market.perHead}`
+        : '');
 
   const favourite = useFavourite(id);
 
@@ -242,6 +264,46 @@ export default function ListingScreen() {
           <Text testID="listing-price" style={[styles.price, { color: theme.text }]}>
             {formatPrice(item.price, locale, m.common.noPrice)}
           </Text>
+          {item.priceDrop ? (
+            <Text testID="listing-reduced" style={[styles.reduced, { color: theme.accent }]}>
+              {fill(m.market.reducedFrom, {
+                price: formatPrice(item.priceDrop.previous, locale, ''),
+              })}
+            </Text>
+          ) : null}
+          {insight.data ? (
+            <View
+              testID="price-insight"
+              style={[styles.insight, { borderColor: theme.border }]}
+              accessible
+            >
+              <Text style={[styles.insightTitle, { color: theme.text }]}>
+                {m.market.insight}:{' '}
+                <Text
+                  style={{
+                    color:
+                      insight.data.rating === 'unusually_low'
+                        ? theme.danger
+                        : insight.data.rating === 'great' || insight.data.rating === 'good'
+                          ? theme.accent
+                          : theme.text,
+                  }}
+                >
+                  {m.market.rating[insight.data.rating]}
+                </Text>
+              </Text>
+              <Body muted style={styles.small}>
+                {fill(m.market.range, {
+                  count: insight.data.stats.comparables,
+                  from: perUnit(insight.data.stats.p25, insight.data),
+                  to: perUnit(insight.data.stats.p75, insight.data),
+                })}
+              </Body>
+              {insight.data.rating === 'unusually_low' ? (
+                <Body style={styles.small}>{m.market.warning}</Body>
+              ) : null}
+            </View>
+          ) : null}
           <View style={styles.place}>
             <Icon name="location-outline" size={16} color={theme.muted} />
             <Body muted style={styles.small}>
@@ -392,6 +454,9 @@ export default function ListingScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  reduced: { fontFamily: fonts.semibold, fontSize: 15 },
+  insight: { borderWidth: 1, borderRadius: radius.md, padding: space.md, gap: space.xs },
+  insightTitle: { fontFamily: fonts.semibold, fontSize: 15 },
   missing: { flex: 1, paddingHorizontal: space.lg },
   iconButton: {
     width: 44,

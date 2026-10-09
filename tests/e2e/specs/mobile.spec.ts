@@ -226,3 +226,19 @@ test('app: the buyer reviews the seller from the conversation after a sale', asy
   await buyer.close();
   await seller.close();
 });
+
+test('app: search reads the words into filters, and the exact words are one tap away', async ({
+  page,
+}) => {
+  // ADR-0041 in the app: "billig sykkel" becomes Sport, cheapest first, as the screen's own filters.
+  await page.goto('/m/search?q=billig%20sykkel');
+  await expect(page).toHaveURL(/subcategory=sport/);
+  await expect(page).toHaveURL(/understand=false/);
+  await expect(page.getByTestId('search-understood')).toBeVisible();
+  await expect(
+    page.getByTestId('search-results').getByTestId('listing-card').first(),
+  ).toBeVisible();
+  await page.getByTestId('search-exact-words').click();
+  await expect(page).not.toHaveURL(/subcategory=sport/);
+  await expect(page).toHaveURL(/q=billig(\+|%20)sykkel/);
+});
