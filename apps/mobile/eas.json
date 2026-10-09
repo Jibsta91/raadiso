@@ -17,6 +17,32 @@
       "ios": {
         "resourceClass": "default"
       }
+    },
+    "testflight": {
+      "node": "24.20.0",
+      "pnpm": "10.34.6",
+      "distribution": "store",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_OWNER": "jibstas-team",
+        "EXPO_SLUG": "jibsta",
+        "EAS_PROJECT_ID": "d70f34f3-837b-44e0-a917-1bcf8c1c0653",
+        "PUBLIC_BASE_URL": "https://dev.raadiso.com",
+        "AUTH_BASE_URL": "https://auth.dev.raadiso.com",
+        "GLITCHTIP_PUBLIC_KEY": "7b464e913d6a4e289474433ec1868a6d",
+        "GLITCHTIP_PROJECT_ID": "1",
+        "APNS_MODE": "production"
+      },
+      "ios": {
+        "resourceClass": "default"
+      }
+    }
+  },
+  "submit": {
+    "testflight": {
+      "ios": {
+        "appleTeamId": "9NE8R6TAR6"
+      }
     }
   }
 }

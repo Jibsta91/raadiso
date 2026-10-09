@@ -154,8 +154,33 @@ build is needed only when native modules or `app.config.ts` change.
   App Group `group.com.raadiso.app` with the app ([ADR-0029](adr/0029-ios-native-look.md)). After a
   change to its entitlements or a new device, run the credentials command again: it sets up both
   targets. Its code is SwiftUI in `apps/mobile/targets/widget`.
-- TestFlight needs a `production` profile, an App Store Connect app record and a public backend, so it
-  waits for the Phase 5 server.
+
+## TestFlight ([ADR-0049](adr/0049-testflight-over-the-tunnel.md))
+
+Until the Phase 5 server exists, the TestFlight build talks to the laptop's tunnel
+(`https://dev.raadiso.com`) and works on phones with the **Pangolin VPN** connected, while
+`./raadi tunnel` runs.
+
+1. Once, in App Store Connect: nothing is needed beforehand; the first submission creates the app record
+   "Raadiso" for `com.raadiso.app` (it asks for your Apple ID).
+2. Build and send it to TestFlight from your own terminal (Apple sign-in with two-factor
+   authentication; answer **Yes** to generating the App Store certificate and the provisioning profiles
+   for both targets, the app and the widget):
+
+   ```bash
+   LAN_IP=127.0.0.1 docker compose -f compose.yaml -f compose.phone.yaml run --rm --no-deps \
+     --entrypoint sh expo -c 'cd apps/mobile && npx -y eas-cli@24.10.0 build --platform ios \
+     --profile testflight --submit'
+   ```
+
+   The build runs in Expo's cloud (EAS build minutes, about 15–25 minutes), then EAS uploads it to App
+   Store Connect. Apple processes it for another 5–30 minutes.
+
+3. In App Store Connect → TestFlight: add yourself (and anyone else in the team) as an **internal
+   tester**. Internal testers get each build at once, without Apple's review. Install TestFlight on the
+   iPhone and accept the invitation.
+4. On the phone: connect the Pangolin VPN, then open Raadiso. Later builds: run step 2 again; the build
+   number goes up by itself.
 
 ## Selling from the app
 
