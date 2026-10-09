@@ -18,6 +18,7 @@ import {
   attributeSchema,
   attributesOf,
   BASE_SORTS,
+  navAttributeOf,
   compareRuleOf,
   SORTS,
   sortsOf,
@@ -317,5 +318,13 @@ describe('quality (ADR-0045)', () => {
       attributes: { condition: 'good' },
     });
     assert.deepEqual(noDetails.next, { kind: 'details', missing: ['brand', 'storageGb'] });
+  });
+});
+
+describe('third level (ADR-0046)', () => {
+  it('is the navigational attribute of a subcategory, if any', () => {
+    assert.equal(navAttributeOf('electronics', 'computers')?.key, 'itemType');
+    assert.equal(navAttributeOf('phones', 'mobile-phones')?.key, 'brand');
+    assert.equal(navAttributeOf('torget', 'sport'), undefined);
   });
 });

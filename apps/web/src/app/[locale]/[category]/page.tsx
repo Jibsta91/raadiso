@@ -50,12 +50,20 @@ export default async function CategoryPage({
     getFormatter(),
   ]);
   // The page still renders if search is down: tiles without counts, no listings.
+  // Recently reduced (ADR-0044, ADR-0046): a row of its own when there are any.
+  const reducedPromise = searchListings({
+    category,
+    priceDropped: 'true',
+    sort: 'price_drop',
+    pageSize: 4,
+  }).catch(() => null);
   const result = await searchListings({ category, sort: 'newest', pageSize: 8 }).catch(
     (error: unknown) => {
       logger.warn({ err: error }, 'category listings unavailable');
       return null;
     },
   );
+  const reduced = await reducedPromise;
   const counts = new Map(result?.facets.subcategory?.map((f) => [f.value, f.count]));
   const shortcuts = SHORTCUTS[category] ?? [];
   const hasMakes = facetsOf(category).some((f) => f.key === 'make');
@@ -216,6 +224,33 @@ export default async function CategoryPage({
               </ul>
             </div>
           ) : null}
+        </section>
+      ) : null}
+
+      {reduced?.items.length ? (
+        <section aria-labelledby="reduced" className="space-y-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 id="reduced" className="text-2xl font-bold">
+              {t('categoryPage.reducedTitle')}
+            </h2>
+            <Link
+              href={href({ category, priceDropped: 'true', sort: 'price_drop' })}
+              className="rounded font-semibold text-primary hover:underline"
+            >
+              {tHome('seeAll')} →
+            </Link>
+          </div>
+          <ul
+            className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 lg:grid-cols-4"
+            role="list"
+            data-testid="category-reduced"
+          >
+            {reduced.items.map((hit) => (
+              <li key={hit.id} className="flex">
+                <ListingCard hit={hit} />
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

@@ -1,6 +1,6 @@
 'use client';
 
-import type { Listing, Media, PriceGuide } from '@raadi/api-client';
+import type { Autocomplete, Listing, Media, PriceGuide } from '@raadi/api-client';
 import {
   attributePayload as toAttributes,
   attributesOf,
@@ -85,10 +85,34 @@ export function ListingForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   // Text fields stay uncontrolled; these follow them for the meter and the draft (ADR-0045).
-  const [seed, setSeed] = useState<Draft | null>(null);
+  const [seed, setSeed] = useState<Partial<Draft> | null>(null);
   const [formKey, setFormKey] = useState(0);
   const [descriptionLength, setDescriptionLength] = useState(listing?.description.length ?? 0);
   const [draft, setDraft] = useState<Draft | null>(null);
+
+  // "What are you selling?" (ADR-0046): the words suggest categories, from search's lexicon.
+  const [what, setWhat] = useState('');
+  const [guess, setGuess] = useState<Autocomplete['categories']>([]);
+  useEffect(() => {
+    const q = what.trim();
+    if (q.length < 2 || category) {
+      setGuess([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`/api/v1/search/autocomplete?${new URLSearchParams({ q: q.slice(0, 60), country })}`, {
+        signal: ctrl.signal,
+      })
+        .then((res) => (res.ok ? (res.json() as Promise<Autocomplete>) : null))
+        .then((body) => setGuess((body?.categories ?? []).filter((c) => c.subcategory)))
+        .catch(() => undefined);
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+  }, [what, country, category]);
 
   // A new listing's form offers to continue the last unfinished one (this browser only).
   useEffect(() => {
@@ -342,6 +366,40 @@ export function ListingForm({
       {!category ? (
         <fieldset data-testid="pick-category" className="space-y-4">
           <legend className="mb-4 text-xl font-semibold">{t('form.pickCategory')}</legend>
+          <label className="block space-y-1">
+            <span className="text-sm font-medium">{t('form.whatSelling')}</span>
+            <input
+              type="text"
+              value={what}
+              onChange={(e) => setWhat(e.target.value)}
+              placeholder={t('form.whatSellingHint')}
+              data-testid="what-selling"
+              className="field h-11 w-full border-input px-4"
+            />
+          </label>
+          {guess.length ? (
+            <ul className="flex flex-wrap gap-2" role="list" data-testid="category-guesses">
+              {guess.map((g) => (
+                <li key={g.subcategory}>
+                  <button
+                    type="button"
+                    data-testid={`guess-${g.subcategory}`}
+                    onClick={() => {
+                      setCategory(g.category);
+                      setSubcategory(g.subcategory!);
+                      setAttributes({});
+                      setSeed({ title: what.trim() });
+                      setFormKey((k) => k + 1);
+                    }}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full border bg-card px-4 text-sm font-medium hover:bg-accent"
+                  >
+                    {t(`taxonomy.categories.${g.category}` as never)} ›{' '}
+                    {t(`taxonomy.subcategories.${g.subcategory}` as never)}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {categoriesOf(country).map(({ id: c }) => {
               const Icon = CATEGORY_ICONS[c] ?? ImagePlus;

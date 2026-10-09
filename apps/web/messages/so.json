@@ -718,7 +718,9 @@
       "description": "Si faahfaahsan u qeex: xaaladda, cabbirka, waxa la socda.",
       "details": "Buuxi {fields}: iibsadayaashu way ku shaandheeyaan.",
       "complete": "Waa dhammaystiran yahay."
-    }
+    },
+    "whatSelling": "Maxaad iibinaysaa?",
+    "whatSellingHint": "Tusaale “iPhone 13” ama “fadhi”"
   },
   "my": {
     "title": "Xayeysiisyadayda",
@@ -995,7 +997,8 @@
         "ngo": "Shaqooyinka hay'adaha"
       }
     },
-    "newListing": "Xayeysiis ku dhig {category}"
+    "newListing": "Xayeysiis ku dhig {category}",
+    "reducedTitle": "Dhawaan la dhimay"
   },
   "favourites": {
     "title": "Kuwa aan jeclahay",
