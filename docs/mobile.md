@@ -155,11 +155,11 @@ build is needed only when native modules or `app.config.ts` change.
   change to its entitlements or a new device, run the credentials command again: it sets up both
   targets. Its code is SwiftUI in `apps/mobile/targets/widget`.
 
-## TestFlight ([ADR-0049](adr/0049-testflight-over-the-tunnel.md))
+## TestFlight ([ADR-0049](adr/0049-testflight-over-the-tunnel.md), [ADR-0051](adr/0051-production-on-one-server.md))
 
-Until the Phase 5 server exists, the TestFlight build talks to the laptop's tunnel
-(`https://dev.raadiso.com`) and works on phones with the **Pangolin VPN** connected, while
-`./raadi tunnel` runs.
+The TestFlight build talks to production: `https://raadiso.com` and `https://auth.raadiso.com`, built
+for Somaliland (English, then Somali; prices in US dollars). Testers need nothing but TestFlight: no
+VPN, and the laptop can be off. They sign in with a real account (production has no demo users).
 
 1. Once, in App Store Connect: nothing is needed beforehand; the first submission creates the app record
    "Raadiso" for `com.raadiso.app` (it asks for your Apple ID).
@@ -179,8 +179,8 @@ Until the Phase 5 server exists, the TestFlight build talks to the laptop's tunn
 3. In App Store Connect → TestFlight: add yourself (and anyone else in the team) as an **internal
    tester**. Internal testers get each build at once, without Apple's review. Install TestFlight on the
    iPhone and accept the invitation.
-4. On the phone: connect the Pangolin VPN, then open Raadiso. Later builds: run step 2 again; the build
-   number goes up by itself.
+4. On the phone: open Raadiso and sign in. Later builds: run step 2 again; the build number goes up by
+   itself.
 
 ## Selling from the app
 

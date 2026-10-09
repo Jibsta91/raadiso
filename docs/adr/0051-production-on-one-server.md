@@ -48,6 +48,11 @@ an identity provider for Somaliland.
   before DNS points at the server. The owner stores `godaddy_pat` on the server with
   `./raadi deploy secret-set godaddy_pat`. DNS is switched last, with `./raadi dns <server-ip>`.
 
+- **TestFlight builds use production.** The `testflight` EAS profile points at `https://raadiso.com`
+  and `https://auth.raadiso.com`, sends error reports to production's GlitchTip key and is built for
+  Somaliland (`EXPO_PUBLIC_COUNTRY=XS`). Testers no longer need the laptop's tunnel or the Pangolin
+  VPN ([ADR-0049](0049-testflight-over-the-tunnel.md) is superseded in that part).
+
 ## Alternatives considered
 
 - **Images built once and pulled from GHCR** (the Phase 5 target in the roadmap). This needs a

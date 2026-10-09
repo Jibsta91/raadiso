@@ -1,6 +1,7 @@
 # 0049 — TestFlight before production: the app built for the tunnel, used over the Pangolin VPN
 
-- Status: Accepted
+- Status: Superseded in part by [ADR-0051](0051-production-on-one-server.md): since 2026-10-09 the
+  `testflight` profile points at production (raadiso.com), without the VPN
 - Date: 2026-10-09
 - Builds on [ADR-0029](0029-ios-native-look.md) (development builds),
   [ADR-0034](0034-tunnel-mode-pangolin.md) (tunnel mode) and [ADR-0048](0048-app-2-home-cards-photos.md).
