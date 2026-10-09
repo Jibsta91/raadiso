@@ -4,7 +4,7 @@ import { Link, router } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Badge, Status } from '../components/ui';
 import { NoPhoto } from '../components/no-photo';
-import { useI18n } from '../i18n';
+import { fill, useI18n } from '../i18n';
 import { unwrap, useApi, usePaged, usePullToRefresh } from '../lib/api';
 import { confirm } from '../lib/confirm';
 import { SwipeRow } from '../components/swipe-row';
@@ -22,6 +22,13 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
   const theme = useTheme();
   const image = listing.images[0];
   const path = { params: { path: { id: listing.id } } };
+  // Renew (ADR-0045): once a week, so offered only when it can be done.
+  const renewable =
+    listing.status === 'active' &&
+    !!listing.stats &&
+    Date.parse(listing.stats.renewableAt) <= Date.now();
+  const renew = () =>
+    void api.listings.POST('/api/v1/listings/{id}/renew', path).then(onChanged, () => undefined);
   const markSold = () =>
     void api.listings
       .PATCH('/api/v1/listings/{id}', { ...path, body: { status: 'sold' } })
@@ -57,6 +64,17 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
                 color: theme.accent,
                 onPress: markSold,
               },
+              ...(renewable
+                ? [
+                    {
+                      key: 'renew',
+                      label: m.market.renew,
+                      icon: 'refresh-outline' as const,
+                      color: '#2f7d4f',
+                      onPress: renew,
+                    },
+                  ]
+                : []),
             ]
           : []),
         {
@@ -98,6 +116,11 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
             <Text style={[styles.price, { color: theme.muted }]}>
               {formatPrice(listing.price, locale, m.common.noPrice)}
             </Text>
+            {listing.stats ? (
+              <Text testID="my-listing-views" style={[styles.price, { color: theme.muted }]}>
+                {fill(m.market.views, { count: listing.stats.views })}
+              </Text>
+            ) : null}
             {listing.status === 'sold' ? <Badge label={m.listing.sold} tone="neutral" /> : null}
           </View>
         </Pressable>

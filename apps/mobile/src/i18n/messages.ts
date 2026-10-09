@@ -30,6 +30,9 @@ const en = {
     price_per_area_asc: 'Lowest price per m²',
   },
   market: {
+    renew: 'Renew',
+    views: 'Views: {count}',
+    similar: 'Similar listings',
     priceReduced: 'Price reduced',
     reducedFrom: 'Reduced from {price}',
     readAs: 'Showing results for “{q}”',
@@ -333,6 +336,9 @@ const nb: Messages = {
     price_per_area_asc: 'Lavest pris per m²',
   },
   market: {
+    renew: 'Forny',
+    views: 'Visninger: {count}',
+    similar: 'Lignende annonser',
     priceReduced: 'Satt ned i pris',
     reducedFrom: 'Satt ned fra {price}',
     readAs: 'Viser treff for «{q}»',
@@ -629,6 +635,9 @@ const so: Messages = {
     price_per_area_asc: 'Qiimaha ugu jaban m² kasta',
   },
   market: {
+    renew: 'Cusboonaysii',
+    views: 'Daawasho: {count}',
+    similar: 'Xayeysiisyo la mid ah',
     priceReduced: 'Qiimo la dhimay',
     reducedFrom: 'Laga dhimay {price}',
     readAs: 'Natiijooyinka “{q}”',

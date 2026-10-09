@@ -8,6 +8,9 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- The app catches up with seller tools and discovery (ADR-0045, ADR-0047): view counts and a renew
+  swipe action in My listings (when the listing can be renewed), and similar listings below a listing.
+
 - Discovery (ADR-0047): listing pages show similar listings (more-like-this in search, the same
   subcategory and a similar price first), and the front page shows what this browser viewed lately
   (kept in the browser only, clearable).

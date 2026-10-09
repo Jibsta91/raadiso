@@ -242,3 +242,13 @@ test('app: search reads the words into filters, and the exact words are one tap 
   await expect(page).not.toHaveURL(/subcategory=sport/);
   await expect(page).toHaveURL(/q=billig(\+|%20)sykkel/);
 });
+
+test('app: a listing shows similar ones below it', async ({ page }) => {
+  // ADR-0047 in the app.
+  await page.goto('/m/search?category=bil');
+  await page.getByTestId('search-results').getByTestId('listing-card').first().click();
+  await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
+  await expect(
+    page.getByTestId('similar-listings').getByTestId('listing-card').first(),
+  ).toBeVisible();
+});
