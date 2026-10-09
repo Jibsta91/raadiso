@@ -51,6 +51,8 @@ interface AttributeBase {
   required: boolean;
   /** A multi-value search filter with counts. Text facets match case-insensitively (lower-cased). */
   facet?: boolean;
+  /** A third level of navigation in its subcategory: shown as chips with counts (ADR-0046). */
+  nav?: boolean;
 }
 
 /** Whether a listing in the category has an asking price. */
@@ -133,6 +135,11 @@ const select = (
   required = true,
   facet = true,
 ): AttributeDef => ({ key, kind: 'select', options, required, facet });
+/** A select attribute that is also the subcategory's third level of navigation (ADR-0046). */
+const nav = (key: string, options: readonly string[]): AttributeDef => ({
+  ...select(key, options),
+  nav: true,
+});
 const make: AttributeDef = {
   key: 'make',
   kind: 'text',
@@ -309,7 +316,7 @@ const SOMALILAND: readonly CategoryNode[] = [
         id: 'mobile-phones',
         compare: { same: ['brand', 'storageGb'] },
         attributes: [
-          select('brand', PHONE_BRANDS),
+          nav('brand', PHONE_BRANDS),
           {
             key: 'storageGb',
             kind: 'number',
@@ -322,7 +329,7 @@ const SOMALILAND: readonly CategoryNode[] = [
           },
         ],
       },
-      { id: 'tablets', attributes: [select('brand', PHONE_BRANDS)] },
+      { id: 'tablets', attributes: [nav('brand', PHONE_BRANDS)] },
       { id: 'phone-accessories' },
     ],
   },
@@ -330,9 +337,9 @@ const SOMALILAND: readonly CategoryNode[] = [
     id: 'electronics',
     attributes: [condition],
     children: [
-      { id: 'computers', attributes: [select('itemType', COMPUTER_TYPES)] },
-      { id: 'solar-power', attributes: [select('itemType', SOLAR_TYPES)] },
-      { id: 'appliances', attributes: [select('itemType', APPLIANCE_TYPES)] },
+      { id: 'computers', attributes: [nav('itemType', COMPUTER_TYPES)] },
+      { id: 'solar-power', attributes: [nav('itemType', SOLAR_TYPES)] },
+      { id: 'appliances', attributes: [nav('itemType', APPLIANCE_TYPES)] },
       { id: 'tv-audio' },
     ],
   },
@@ -613,4 +620,12 @@ export function sortsOf(category: Category, subcategory?: Subcategory): string[]
 export function compareRuleOf(category: Category, subcategory: Subcategory): CompareRule {
   const sub = SUBCATEGORY_INDEX.get(subcategory)?.node;
   return sub?.compare ?? findCategory(category)?.compare ?? {};
+}
+
+/** The attribute that is a subcategory's third level of navigation, if it has one (ADR-0046). */
+export function navAttributeOf(
+  category: Category,
+  subcategory: Subcategory,
+): AttributeDef | undefined {
+  return attributesOf(category, subcategory).find((a) => a.nav);
 }

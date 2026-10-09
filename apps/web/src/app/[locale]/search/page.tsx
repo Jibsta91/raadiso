@@ -5,6 +5,7 @@ import {
   rangesOf,
   BASE_SORTS,
   sortsOf,
+  navAttributeOf,
 } from '@raadi/catalog/categories';
 import { currencySymbol } from '@raadi/catalog/money';
 import { findPlace, regionName } from '@raadi/catalog/places';
@@ -33,6 +34,7 @@ import {
   selected,
   withoutKey,
   withParams,
+  toggleValue,
 } from '@/lib/search-params';
 
 export const dynamic = 'force-dynamic';
@@ -115,6 +117,8 @@ export default async function SearchPage({
       : undefined;
   const subcategories = selected(current, 'subcategory');
   const sub = only && subcategories.length === 1 ? subcategories[0] : undefined;
+  // A subcategory's third level (laptops, solar panels, phone brands) as chips (ADR-0046).
+  const navKey = only && sub ? navAttributeOf(only, sub)?.key : undefined;
 
   const pages = Math.max(1, Math.ceil(Math.min(result.total, 200 * 24) / result.pageSize));
   const label = (facet: string) => (value: string) => {
@@ -324,6 +328,31 @@ export default async function SearchPage({
                   </>
                 ) : null}
               </ol>
+            </nav>
+          ) : null}
+          {navKey ? (
+            <nav aria-label={t(`taxonomy.attributes.${navKey}` as never)} data-testid="third-level">
+              <ul className="flex flex-wrap gap-2" role="list">
+                {(result.facets[navKey] ?? []).map((f) => {
+                  const on = selected(current, navKey).includes(f.value);
+                  return (
+                    <li key={f.value}>
+                      <Link
+                        href={href(toggleValue(current, navKey, f.value))}
+                        scroll={false}
+                        aria-current={on ? 'true' : undefined}
+                        data-testid={`third-level-${f.value}`}
+                        className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium ${on ? 'border-ink bg-ink text-ink-foreground' : 'bg-card hover:bg-accent'}`}
+                      >
+                        {label(navKey)(f.value)}
+                        <span className={on ? 'opacity-75' : 'text-muted-foreground'}>
+                          {f.count}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             </nav>
           ) : null}
           <SearchControls

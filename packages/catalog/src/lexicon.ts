@@ -411,6 +411,10 @@ export const HINT_WORDS: Readonly<Record<string, Words>> = {
   },
   motorcycles: { en: ['bajaj boxer', 'tvs'] },
   'trucks-buses': { en: ['isuzu', 'coaster', 'canter'] },
+  elektronikk: {
+    nb: ['iphone', 'samsung', 'macbook', 'playstation', 'xbox', 'airpods'],
+    en: ['iphone', 'samsung', 'macbook', 'playstation', 'xbox', 'airpods'],
+  },
   personbil: {
     nb: ['volvo', 'tesla', 'toyota', 'volkswagen', 'vw', 'golf', 'bmw', 'audi', 'skoda', 'corolla'],
   },

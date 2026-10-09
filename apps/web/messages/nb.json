@@ -718,7 +718,9 @@
       "description": "Beskriv mer: tilstand, størrelse, hva som følger med.",
       "details": "Fyll ut {fields}: kjøpere filtrerer på dem.",
       "complete": "Komplett. Den rangeres så høyt den kan."
-    }
+    },
+    "whatSelling": "Hva selger du?",
+    "whatSellingHint": "For eksempel «iPhone 13» eller «sofa»"
   },
   "my": {
     "title": "Mine annonser",
@@ -995,7 +997,8 @@
         "ngo": "NGO-jobber"
       }
     },
-    "newListing": "Legg ut annonse i {category}"
+    "newListing": "Legg ut annonse i {category}",
+    "reducedTitle": "Nylig satt ned"
   },
   "favourites": {
     "title": "Favoritter",

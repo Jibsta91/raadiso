@@ -718,7 +718,9 @@
       "description": "Describe it in more detail: condition, size, what is included.",
       "details": "Fill in {fields}: buyers filter on them.",
       "complete": "Complete. It ranks as high as it can."
-    }
+    },
+    "whatSelling": "What are you selling?",
+    "whatSellingHint": "For example “iPhone 13” or “sofa”"
   },
   "my": {
     "title": "My listings",
@@ -995,7 +997,8 @@
         "ngo": "NGO jobs"
       }
     },
-    "newListing": "Post a listing in {category}"
+    "newListing": "Post a listing in {category}",
+    "reducedTitle": "Recently reduced"
   },
   "favourites": {
     "title": "Favourites",

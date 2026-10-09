@@ -8,6 +8,11 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Smart categories (ADR-0046): a subcategory's third level (computers and solar power by type, phones
+  and tablets by brand) as chips with counts in search; "What are you selling?" at the start of a new
+  listing suggests the category from the words and starts the title; category pages show their
+  recently reduced listings.
+
 - Seller tools (ADR-0045). The listing form shows how complete the listing is (the score best match
   ranks by, now shared in the catalog) and the step that helps most; photos can be moved and one made
   the main photo with buttons; a new listing saves itself as a draft in the browser and is offered back

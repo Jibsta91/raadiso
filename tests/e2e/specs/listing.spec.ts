@@ -172,3 +172,19 @@ test('owners see views, and renew a listing only after a week', async ({ page, b
     await listing.remove();
   }
 });
+
+test('"what are you selling?" suggests the category and starts the title', async ({ page }) => {
+  // ADR-0046: the words go through search's lexicon.
+  await login(page, `kari.nordmann@${domain}`);
+  await page.goto('/en/listings/new');
+  const form = page.getByTestId('listing-form');
+  if (await form.getByTestId('draft-discard').isVisible())
+    await form.getByTestId('draft-discard').click();
+  await form.getByTestId('what-selling').fill('sofa');
+  await form.getByTestId('guess-mobler').click();
+  await expect(form.getByTestId('picked-category')).toContainText('Furniture');
+  await expect(form.getByTestId('field-title')).toHaveValue('sofa');
+  await page.goto('/en/listings/new');
+  if (await form.getByTestId('draft-discard').isVisible())
+    await form.getByTestId('draft-discard').click();
+});
