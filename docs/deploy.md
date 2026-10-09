@@ -58,6 +58,13 @@ Sign-up needs a verified e-mail address, so set up a mail provider (SMTP) before
 Uncomment the `SMTP_*` lines in `local.env`, run `./raadi deploy secret-set smtp_password`, then
 `./raadi deploy`. Keycloak and notifications pick it up.
 
+Raadiso uses Brevo (free plan, 300 mails a day): `smtp-relay.brevo.com`, port 587 (STARTTLS), the
+login `…@smtp-brevo.com`. The password is an **SMTP key** (`xsmtpsib-…`), not the API key
+(`xkeysib-…`). Brevo refuses unknown addresses for both, so authorise the server's IP (and yours, for
+API calls) under Security → Authorised IPs. The sender domain needs Brevo's two DKIM CNAMEs
+(`brevo1._domainkey`, `brevo2._domainkey`) and its `brevo-code` TXT on the apex; the GoDaddy helper
+in `deploy/init/scripts/godaddy.sh` can add them (`gd_set`, `gd_add`).
+
 ## Day to day
 
 Any other `./raadi` command runs on the server:
