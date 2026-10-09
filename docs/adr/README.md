@@ -56,3 +56,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0050](0050-price-insight-switched-off.md)                    | Price insight switched off (PRICE_INSIGHT=false)                                         | Accepted |
 | [0051](0051-production-on-one-server.md)                      | Production on one server: compose.prod.yaml and ./raadi deploy                           | Accepted |
 | [0052](0052-dockhand-on-its-own-host.md)                      | Dockhand on dockhand.raadiso.com, behind its own login                                   | Accepted |
+| [0053](0053-languages-per-country.md)                         | Each country's site offers its own languages: raadiso.com is English, then Somali        | Accepted |

@@ -6,10 +6,9 @@ import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/serve
 import { ListingCard } from '@/components/listings/listing-card';
 import { SearchBox } from '@/components/search/search-box';
 import { Link } from '@/i18n/navigation';
-import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
 import { makeLabel } from '@/lib/format';
-import { currentCountry } from '@/lib/host';
+import { currentCountry, currentLocales } from '@/lib/host';
 import { logger } from '@/lib/logger';
 import { href } from '@/lib/search-params';
 import { localeAlternates } from '@/lib/seo';
@@ -31,7 +30,7 @@ export async function generateMetadata({
   return {
     title: t(`categories.${category}.name`),
     description: t(`categories.${category}.description`),
-    alternates: localeAlternates(routing, locale, `/${category}`),
+    alternates: localeAlternates(await currentLocales(), locale, `/${category}`),
   };
 }
 

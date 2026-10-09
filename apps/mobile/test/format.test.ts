@@ -64,6 +64,11 @@ describe('pickLocale', () => {
     assert.equal(pickLocale(['fr-FR']), 'nb');
     assert.equal(pickLocale([]), 'nb');
   });
+  it("keeps to the country's languages, its default first (Somaliland: English, then Somali)", () => {
+    assert.equal(pickLocale(['nb-NO'], ['en', 'so']), 'en');
+    assert.equal(pickLocale(['so-SO', 'en-US'], ['en', 'so']), 'so');
+    assert.equal(pickLocale(['fr-FR'], ['en', 'so']), 'en');
+  });
 });
 
 describe('dropPercent', () => {

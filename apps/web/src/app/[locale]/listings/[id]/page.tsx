@@ -18,11 +18,11 @@ import { FavouriteButton } from '@/components/saved/favourite-button';
 import { nonceFrom } from '@/lib/csp';
 import { SellerTrust } from '@/components/trust/seller-trust';
 import { Link } from '@/i18n/navigation';
-import { routing } from '@/i18n/routing';
 import { favouriteIds, getListing, priceInsight, priceHistory, similarListings } from '@/lib/api';
 import { env } from '@/lib/env';
 import { PriceInsight } from '@/components/listings/price-insight';
 import { formatPrice } from '@/lib/format';
+import { currentLocales } from '@/lib/host';
 import { jsonLd, localeAlternates, summary } from '@/lib/seo';
 import { getSession } from '@/lib/session';
 
@@ -47,7 +47,7 @@ export async function generateMetadata({
   return {
     title: listing.title,
     description,
-    alternates: localeAlternates(routing, locale, `/listings/${listing.id}`),
+    alternates: localeAlternates(await currentLocales(), locale, `/listings/${listing.id}`),
     openGraph: {
       title: listing.title,
       description,

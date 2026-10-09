@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { currentLocales } from '@/lib/host';
 import { getSession } from '@/lib/session';
 import type { ThemePreference } from '@/lib/theme';
 import { LocaleSwitcher } from './locale-switcher';
@@ -8,10 +9,11 @@ import { ThemeSwitcher } from './theme-switcher';
 const link = 'rounded text-subtle-foreground hover:text-foreground hover:underline';
 
 export async function Footer({ theme }: { theme: ThemePreference }) {
-  const [t, tNav, session] = await Promise.all([
+  const [t, tNav, session, { locales }] = await Promise.all([
     getTranslations('footer'),
     getTranslations('nav'),
     getSession(),
+    currentLocales(),
   ]);
   return (
     <footer className="border-t">
@@ -35,7 +37,11 @@ export async function Footer({ theme }: { theme: ThemePreference }) {
           <span>{t('openSource')}</span>
         </nav>
         <div className="flex flex-wrap items-center gap-3">
-          <LocaleSwitcher label={tNav('language')} signedIn={session.authenticated} />
+          <LocaleSwitcher
+            label={tNav('language')}
+            signedIn={session.authenticated}
+            locales={locales}
+          />
           <ThemeSwitcher initial={theme} />
         </div>
       </div>

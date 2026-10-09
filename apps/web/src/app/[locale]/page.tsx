@@ -8,9 +8,8 @@ import { ListingCard } from '@/components/listings/listing-card';
 import { RecentlyViewed } from '@/components/listings/recently-viewed';
 import { SearchBox } from '@/components/search/search-box';
 import { Link } from '@/i18n/navigation';
-import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
-import { currentCountry } from '@/lib/host';
+import { currentCountry, currentLocales } from '@/lib/host';
 import { logger } from '@/lib/logger';
 import { localeAlternates } from '@/lib/seo';
 import { CATEGORY_ICONS } from '@/lib/taxonomy-icons';
@@ -42,7 +41,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  return { alternates: localeAlternates(routing, locale, '') };
+  return { alternates: localeAlternates(await currentLocales(), locale, '') };
 }
 
 export default async function HomePage({

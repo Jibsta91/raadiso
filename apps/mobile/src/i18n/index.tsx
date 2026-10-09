@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { APP_LOCALES } from '../lib/country';
 import { pickLocale, type Locale } from '../lib/format';
 import { getPreference, setPreference } from '../lib/storage';
 import { catalogues, type Messages } from './messages';
@@ -23,12 +24,16 @@ const LOCALE_KEY = 'raadi.locale';
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() =>
-    pickLocale(getLocales().map((l) => l.languageTag)),
+    pickLocale(
+      getLocales().map((l) => l.languageTag),
+      APP_LOCALES,
+    ),
   );
   // A language picked on the account screen is remembered across starts.
   useEffect(() => {
     void getPreference(LOCALE_KEY).then((saved) => {
-      if (saved === 'nb' || saved === 'en' || saved === 'so') setLocaleState(saved);
+      const offered = APP_LOCALES.find((l) => l === saved);
+      if (offered) setLocaleState(offered);
     });
   }, []);
   const setLocale = useCallback((next: Locale) => {

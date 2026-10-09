@@ -3,15 +3,22 @@
 import { useLocale } from 'next-intl';
 import { useTransition } from 'react';
 import { usePathname, useRouter } from '@/i18n/navigation';
-import { routing } from '@/i18n/routing';
 
 const NAMES: Record<string, string> = { nb: 'Norsk', en: 'English', so: 'Soomaali' };
 
 /**
- * Language picker. For signed-in users the choice is also saved to their profile, so e-mails and
- * pushes come in the same language.
+ * Language picker, among the languages the site's country offers (ADR-0053). For signed-in users the
+ * choice is also saved to their profile, so e-mails and pushes come in the same language.
  */
-export function LocaleSwitcher({ label, signedIn }: { label: string; signedIn: boolean }) {
+export function LocaleSwitcher({
+  label,
+  signedIn,
+  locales,
+}: {
+  label: string;
+  signedIn: boolean;
+  locales: readonly string[];
+}) {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
@@ -37,7 +44,7 @@ export function LocaleSwitcher({ label, signedIn }: { label: string; signedIn: b
           startTransition(() => router.replace(pathname, { locale: next }));
         }}
       >
-        {routing.locales.map((l) => (
+        {locales.map((l) => (
           <option key={l} value={l} lang={l}>
             {NAMES[l]}
           </option>

@@ -68,13 +68,19 @@ export function formatAge(iso: string, locale: Locale, now: Date = new Date()): 
   return new Intl.DateTimeFormat(intlLocale[locale], { dateStyle: 'medium' }).format(then);
 }
 
-/** Pick the app language from the device's preferred locales; Norwegian variants map to nb. */
-export function pickLocale(preferred: readonly string[]): Locale {
+/**
+ * Pick the app language from the device's preferred locales, among those the country offers (its
+ * default first, ADR-0053); Norwegian variants map to nb.
+ */
+export function pickLocale(
+  preferred: readonly string[],
+  offered: readonly Locale[] = ['nb', 'en', 'so'],
+): Locale {
   for (const tag of preferred) {
     const lang = tag.toLowerCase().split(/[-_]/)[0];
-    if (lang === 'nb' || lang === 'no' || lang === 'nn') return 'nb';
-    if (lang === 'en') return 'en';
-    if (lang === 'so') return 'so';
+    const locale = lang === 'no' || lang === 'nn' ? 'nb' : lang;
+    const match = offered.find((l) => l === locale);
+    if (match) return match;
   }
-  return 'nb';
+  return offered[0] ?? 'en';
 }

@@ -1,7 +1,8 @@
 import 'server-only';
-import { COUNTRIES, type Country, type CountryCode, isCountry } from '@raadi/catalog/countries';
+import { COUNTRIES, type Country, type CountryCode } from '@raadi/catalog/countries';
 import { headers } from 'next/headers';
 import { cache } from 'react';
+import { countryForHost, countryLocales } from './country-host';
 import { env } from './env';
 
 /**
@@ -12,23 +13,7 @@ export const isAdminHost = cache(async (): Promise<boolean> =>
   ((await headers()).get('host') ?? '').startsWith('admin.'),
 );
 
-/**
- * The country a host serves (ADR-0040): COUNTRY_HOSTS names hosts ("raadiso.com=XS"); a subdomain
- * (admin., dev.) belongs to its parent's country; anything else gets DEFAULT_COUNTRY.
- */
-export function countryForHost(host: string, hosts: string, fallback: string): CountryCode {
-  const name = host.toLowerCase().replace(/:\d+$/, '');
-  const pairs = hosts
-    .split(',')
-    .map((pair) => pair.split('=').map((s) => s.trim().toLowerCase()))
-    .filter((p): p is [string, string] => p.length === 2 && !!p[0])
-    .sort(([a], [b]) => b.length - a.length);
-  for (const [h, code] of pairs) {
-    const upper = code.toUpperCase();
-    if ((name === h || name.endsWith(`.${h}`)) && isCountry(upper)) return upper;
-  }
-  return isCountry(fallback) ? fallback : 'XS';
-}
+export { countryForHost } from './country-host';
 
 /** The country of this request. */
 export const currentCountry = cache(async (): Promise<CountryCode> =>
@@ -39,3 +24,6 @@ export const currentCountry = cache(async (): Promise<CountryCode> =>
 export const currentCountryConfig = cache(
   async (): Promise<Country> => COUNTRIES[await currentCountry()],
 );
+
+/** The languages this request's country offers, its default first (ADR-0053). */
+export const currentLocales = cache(async () => countryLocales(await currentCountry()));

@@ -9,7 +9,7 @@ import { languageNames } from '../../i18n/messages';
 import { unwrap, useApi, useLoad } from '../../lib/api';
 import { useAuth } from '../../lib/auth/context';
 import { config } from '../../lib/config';
-import type { Locale } from '../../lib/format';
+import { APP_LOCALES } from '../../lib/country';
 import {
   fonts,
   radius,
@@ -20,7 +20,6 @@ import {
   type ThemePreference,
 } from '../../theme';
 
-const LOCALES: Locale[] = ['nb', 'en', 'so'];
 const THEMES: ThemePreference[] = ['system', 'light', 'dark'];
 
 /** Push for new messages (ADR-0025). Other pushes follow the in-app notices and cannot be muted. */
@@ -195,7 +194,7 @@ export default function Account() {
                 .catch(() => undefined);
             }
           }}
-          options={LOCALES.map((l) => ({ value: l, label: languageNames[l] }))}
+          options={APP_LOCALES.map((l) => ({ value: l, label: languageNames[l] }))}
         />
       </View>
     </ScrollView>
