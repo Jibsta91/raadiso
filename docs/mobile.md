@@ -161,8 +161,8 @@ The TestFlight build talks to production: `https://raadiso.com` and `https://aut
 for Somaliland (English, then Somali; prices in US dollars). Testers need nothing but TestFlight: no
 VPN, and the laptop can be off. They sign in with a real account (production has no demo users).
 
-1. Once, in App Store Connect: nothing is needed beforehand; the first submission creates the app record
-   "Raadiso" for `com.raadiso.app` (it asks for your Apple ID).
+1. The app record exists in App Store Connect: "Raadiso", `com.raadiso.app`, Apple ID `6821144080`
+   (`submit.testflight.ios.ascAppId` in `apps/mobile/eas.json`), so `--submit` uploads to it without asking.
 2. Build and send it to TestFlight from your own terminal (Apple sign-in with two-factor
    authentication; answer **Yes** to generating the App Store certificate and the provisioning profiles
    for both targets, the app and the widget):
