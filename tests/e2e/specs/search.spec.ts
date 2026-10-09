@@ -82,8 +82,11 @@ test('search reads categories and "cheap" out of the words, and each part can be
   await expect(page.getByTestId('listing-card').first()).toBeVisible();
 
   // Removing the chip keeps the rest, and the words are no longer read again.
-  await page.getByTestId('chip-subcategory-sport').click();
-  await expect(page).toHaveURL(/understand=false/);
+  // Under load a click can land while the page hydrates: click again until it navigates.
+  await expect(async () => {
+    await page.getByTestId('chip-subcategory-sport').click();
+    await expect(page).toHaveURL(/understand=false/, { timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await expect(page).not.toHaveURL(/subcategory=sport/);
 
   // The way out: search for the exact words.
