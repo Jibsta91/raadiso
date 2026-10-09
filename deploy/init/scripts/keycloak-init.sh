@@ -143,14 +143,14 @@ done < <(jq -c '.[]
     elif .displayName == "Condition - user configured" and .requirement != "DISABLED" then .requirement = "DISABLED"
     else empty end' <<<"$executions")
 flow_id="$(api "$KC/admin/realms/$REALM/authentication/flows" | jq -r --arg a "$FLOW" '.[] | select(.alias == $a) | .id')"
-# Dockhand's sign-in (ADR-0052) is a staff sign-in too.
-for client_id in raadi-admin dockhand; do
+# Dockhand's (ADR-0052) and Grafana's sign-ins are staff sign-ins too.
+for client_id in raadi-admin dockhand grafana; do
   admin_client="$(api -G "$KC/admin/realms/$REALM/clients" --data-urlencode clientId="$client_id" | jq -r '.[0].id')"
   api "$KC/admin/realms/$REALM/clients/$admin_client" \
     | jq -c --arg f "$flow_id" '.authenticationFlowBindingOverrides = {browser: $f}' \
     | api -X PUT "$KC/admin/realms/$REALM/clients/$admin_client" --data-binary @- >/dev/null
 done
-info "admin console and Dockhand require a one-time code (flow ${FLOW})"
+info "admin console, Dockhand and Grafana require a one-time code (flow ${FLOW})"
 
 # Service accounts get their client roles here (the realm import cannot express them).
 grant_client_role() { # <service-account client> <resource client> <role>

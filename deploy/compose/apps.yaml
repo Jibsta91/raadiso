@@ -577,6 +577,7 @@ services:
       GLITCHTIP_PROJECT_ID: ${GLITCHTIP_PROJECT_ID}
       # The console's Tools page (which UIs the gateway routes in this mode, and GlitchTip's login).
       DEV_TOOLS_ROUTED: ${DEV_TOOLS_ROUTED}
+      GRAFANA_ROUTED: ${GRAFANA_ROUTED:-true}
       KEYCLOAK_ADMIN_PUBLIC: ${KEYCLOAK_ADMIN_PUBLIC}
       GLITCHTIP_ADMIN_EMAIL: ${GLITCHTIP_ADMIN_EMAIL}
       AUTH_BASE_URL: ${AUTH_BASE_URL}

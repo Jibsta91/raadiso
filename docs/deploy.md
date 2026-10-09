@@ -75,14 +75,15 @@ Any other `./raadi` command runs on the server:
 ./raadi deploy secret grafana_admin_password
 ```
 
-The admin console is at `https://admin.<domain>`: staff sign in with a staff role and their own
-one-time code. Grafana, Keycloak's admin console and the dev tools are not routed in production.
-Reach them through an SSH tunnel to the container's address on the server, for example Grafana
-(then open http://localhost:3001):
+The admin console (`https://admin.<domain>`) and Grafana (`https://grafana.<domain>`) are served:
+staff sign in through Keycloak with a staff role and their own one-time code. Keycloak's admin console
+and the dev tools are not routed in production.
+Reach those through an SSH tunnel to the container's address on the server, for example Prometheus
+(then open http://localhost:9090):
 
 ```bash
-ip=$(ssh prod@ovh "docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' raadi-grafana-1")
-ssh -N -L "3001:${ip}:3000" prod@ovh
+ip=$(ssh prod@ovh "docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' raadi-prometheus-1")
+ssh -N -L "9090:${ip}:9090" prod@ovh
 ```
 
 ## Not in production
