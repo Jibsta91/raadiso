@@ -8,6 +8,12 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- The app catches up with the website's search (ADR-0041 to ADR-0044): the query's categories,
+  places and prices become the search screen's own filters, with "search the exact words" one tap
+  away; suggestions while typing; a category's own sorts and "recently reduced"; a "price reduced"
+  filter; great and good prices and price drops on tiles; and a price check and the price drop on
+  the listing screen.
+
 - Price drops (ADR-0044). Listings records every price a listing has had and its last drop; events carry
   the drop, and search shows drops of the last 30 days on cards ("reduced from", the old price struck
   through), filters on them and sorts the most recently reduced first. The listing page says when and

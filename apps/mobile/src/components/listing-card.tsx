@@ -2,7 +2,7 @@ import type { SearchHit } from '@raadi/api-client';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useI18n } from '../i18n';
+import { fill, useI18n } from '../i18n';
 import { config } from '../lib/config';
 import { formatPrice } from '../lib/format';
 import { absoluteUrl } from '../lib/urls';
@@ -18,6 +18,10 @@ export type TileListing = Pick<SearchHit, 'id' | 'title' | 'price' | 'category' 
   location: { name: string };
   promoted?: boolean;
   sold?: boolean;
+  /** A good price against similar listings (ADR-0043). */
+  deal?: SearchHit['deal'];
+  /** A recent price drop (ADR-0044). */
+  priceDrop?: SearchHit['priceDrop'];
 };
 
 function Photo({ hit, style }: { hit: TileListing; style: object }) {
@@ -77,6 +81,21 @@ export function ListingTile({ hit }: { hit: TileListing }) {
         <Text numberOfLines={1} style={[styles.place, { color: theme.muted }]}>
           {hit.location.name}
         </Text>
+        {hit.priceDrop ? (
+          <Text
+            numberOfLines={1}
+            testID="tile-reduced"
+            style={[styles.note, { color: theme.accent }]}
+          >
+            {fill(m.market.reducedFrom, {
+              price: formatPrice(hit.priceDrop.previous, locale, ''),
+            })}
+          </Text>
+        ) : hit.deal ? (
+          <Text numberOfLines={1} testID="tile-deal" style={[styles.note, { color: theme.accent }]}>
+            {m.market[hit.deal]}
+          </Text>
+        ) : null}
       </Pressable>
     </Link>
   );
@@ -131,6 +150,7 @@ const styles = StyleSheet.create({
   price: { fontFamily: fonts.bold, fontSize: 14, fontVariant: ['tabular-nums'] },
   tileTitle: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 18 },
   place: { fontFamily: fonts.body, fontSize: 13, marginTop: -2 },
+  note: { fontFamily: fonts.semibold, fontSize: 13, marginTop: -2 },
   feature: { width: 270, height: 196, borderRadius: radius.xl - 4, overflow: 'hidden' },
   strip: {
     position: 'absolute',
