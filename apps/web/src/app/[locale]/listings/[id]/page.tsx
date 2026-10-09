@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
 import { ImageGallery } from '@/components/listings/image-gallery';
 import { ListingActions } from '@/components/listings/listing-actions';
+import { ViewBeacon } from '@/components/listings/view-beacon';
 import { ShareButton } from '@/components/listings/share-button';
 import { ContactSeller } from '@/components/messaging/contact-seller';
 import { ReportListing } from '@/components/moderation/report-listing';
@@ -263,6 +264,11 @@ export default async function ListingPage({
             </p>
           </div>
           <ListingActions listing={listing} />
+          {listing.stats ? (
+            <p className="text-sm text-muted-foreground" data-testid="listing-views">
+              {t('my.views', { count: listing.stats.views })}
+            </p>
+          ) : null}
           {canContact && session.authenticated ? <ContactSeller listingId={listing.id} /> : null}
           {canContact && !session.authenticated ? (
             <a
@@ -275,6 +281,9 @@ export default async function ListingPage({
           ) : null}
           {listing.status !== 'deleted' && !listing.viewer?.isOwner ? (
             <ReportListing listingId={listing.id} />
+          ) : null}
+          {listing.status === 'active' && !listing.viewer?.isOwner ? (
+            <ViewBeacon id={listing.id} />
           ) : null}
         </aside>
       </div>

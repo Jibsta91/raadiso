@@ -705,6 +705,19 @@
       "eiendom": "E.g. Bright 2-bedroom flat with balcony",
       "jobb": "E.g. Full-stack developer",
       "reise": "E.g. Cosy mountain cabin"
+    },
+    "draftFound": "You have an unfinished listing. Continue where you left off?",
+    "draftContinue": "Continue",
+    "draftDiscard": "Start over",
+    "photoEarlier": "Move photo {n} earlier",
+    "photoLater": "Move photo {n} later",
+    "photoMain": "Make photo {n} the main photo",
+    "quality": {
+      "title": "How complete is your listing?",
+      "photos": "{count, plural, one {Add # more photo} other {Add # more photos}}: listings with photos rank higher.",
+      "description": "Describe it in more detail: condition, size, what is included.",
+      "details": "Fill in {fields}: buyers filter on them.",
+      "complete": "Complete. It ranks as high as it can."
     }
   },
   "my": {
@@ -725,7 +738,12 @@
       "duplicate": "a duplicate listing",
       "spam": "spam",
       "other": "it broke our rules"
-    }
+    },
+    "views": "{count, plural, =0 {No views yet} one {# view} other {# views}}",
+    "renew": "Renew",
+    "renewed": "Renewed",
+    "renewFailed": "Try again",
+    "renewFrom": "Renew from {date}"
   },
   "messages": {
     "title": "Messages",

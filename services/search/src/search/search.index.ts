@@ -1,5 +1,5 @@
 import { Client, errors } from '@opensearch-project/opensearch';
-import { attributesOf } from '@raadi/catalog';
+import { qualityOf as quality } from '@raadi/catalog';
 import type { ListingSnapshot } from '@raadi/events';
 import { circuitBreaker, retry } from '@raadi/service-kit';
 import { INDEX_VERSION, indexBody, MIGRATE_SCRIPT } from './index-definition.js';
@@ -34,21 +34,17 @@ export interface ListingDocument {
   priceDroppedAt: string | null;
 }
 
-/**
- * How complete a listing is (ADR-0042): photos up to four (half), the description up to 400 characters
- * (a quarter) and the share of the category's details filled in (a quarter). Rounded to two decimals.
- */
+/** How complete a listing is (ADR-0042): the catalog's shared score. */
 export function qualityOf(
   l: Pick<ListingSnapshot, 'imageIds' | 'description' | 'category' | 'subcategory' | 'attributes'>,
 ): number {
-  const photos = Math.min(l.imageIds.length, 4) / 4;
-  const text = Math.min(l.description.trim().length, 400) / 400;
-  const defs = attributesOf(l.category, l.subcategory);
-  const details = defs.length
-    ? defs.filter((d) => l.attributes[d.key] !== undefined && l.attributes[d.key] !== '').length /
-      defs.length
-    : 1;
-  return Math.round((0.5 * photos + 0.25 * text + 0.25 * details) * 100) / 100;
+  return quality({
+    category: l.category,
+    subcategory: l.subcategory,
+    description: l.description,
+    imageCount: l.imageIds.length,
+    attributes: l.attributes,
+  }).score;
 }
 
 export function toDocument(l: ListingSnapshot): ListingDocument {

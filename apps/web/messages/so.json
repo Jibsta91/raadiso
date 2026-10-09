@@ -705,6 +705,19 @@
       "eiendom": "Tusaale: Abaartamaan 3 qol leh oo balakoon leh",
       "jobb": "Tusaale: Horumariye full-stack",
       "reise": "Tusaale: Aqal buur oo raaxo leh"
+    },
+    "draftFound": "Waxaad haysataa xayeysiis aadan dhammaystirin. Ma sii wadaysaa?",
+    "draftContinue": "Sii wad",
+    "draftDiscard": "Bilow mar kale",
+    "photoEarlier": "Sawirka {n} hore u dhaqaaji",
+    "photoLater": "Sawirka {n} dib u dhaqaaji",
+    "photoMain": "Sawirka {n} ka dhig sawirka ugu muhiimsan",
+    "quality": {
+      "title": "Xayeysiiskaagu intee buu dhammaystiran yahay?",
+      "photos": "{count, plural, one {Ku dar # sawir oo kale} other {Ku dar # sawir oo kale}}: xayeysiisyada sawirrada leh ayaa kor u kaca.",
+      "description": "Si faahfaahsan u qeex: xaaladda, cabbirka, waxa la socda.",
+      "details": "Buuxi {fields}: iibsadayaashu way ku shaandheeyaan.",
+      "complete": "Waa dhammaystiran yahay."
     }
   },
   "my": {
@@ -725,7 +738,12 @@
       "duplicate": "xayeysiis labanlaaban",
       "spam": "spam",
       "other": "jebinta xeerarkayaga"
-    }
+    },
+    "views": "{count, plural, =0 {Weli lama daawan} one {# daawasho} other {# daawasho}}",
+    "renew": "Cusboonaysii",
+    "renewed": "Waa la cusboonaysiiyay",
+    "renewFailed": "Isku day mar kale",
+    "renewFrom": "Cusboonaysii {date}"
   },
   "messages": {
     "title": "Fariimaha",

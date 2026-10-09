@@ -48,3 +48,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0042](0042-best-match-ranking-and-sorts.md)                  | Best match: quality and freshness in the ranking, sorts per category, a ranking lab      | Accepted |
 | [0043](0043-price-insight-and-guide.md)                       | Price insight: deal ratings against comparable listings, a price guide for sellers       | Accepted |
 | [0044](0044-price-history-and-drops.md)                       | Price history and drops: recorded by listings, carried by events, found in search        | Accepted |
+| [0045](0045-seller-tools.md)                                  | Seller tools: a completeness meter, photo order, drafts, renewing, view counts           | Accepted |

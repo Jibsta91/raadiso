@@ -69,6 +69,35 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ListingPage' }
         '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/listings/{id}/views:
+    post:
+      tags: [listings]
+      operationId: countListingView
+      summary: One anonymous view of the listing page (ADR-0045)
+      description: A counter only; the owner's own views are not counted.
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204': { description: Counted (or ignored) }
+        '429': { $ref: '#/components/responses/Problem' }
+  /api/v1/listings/{id}/renew:
+    post:
+      tags: [listings]
+      operationId: renewListing
+      summary: Move an active listing back to the top, at most once a week (ADR-0045)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '201':
+          description: Renewed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Listing' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
   /api/v1/listings/{id}/price-history:
     get:
       tags: [listings]
@@ -818,6 +847,14 @@ components:
           type: [string, 'null']
           format: date-time
           description: End of a running paid promotion; null when not promoted (ADR-0020)
+        stats:
+          type: object
+          additionalProperties: false
+          required: [views, renewableAt]
+          description: For the owner only (ADR-0045)
+          properties:
+            views: { type: integer, minimum: 0 }
+            renewableAt: { type: string, format: date-time }
         priceDrop:
           type: object
           additionalProperties: false

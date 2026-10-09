@@ -59,6 +59,8 @@ const row: ListingRow = {
   removal_reason: null,
   previous_price_minor: null,
   price_dropped_at: null,
+  views: 0,
+  renewed_at: null,
 };
 
 describe('OpenAPI contract', () => {
@@ -90,6 +92,20 @@ describe('OpenAPI contract', () => {
     assert.equal(event.listing.priceDrop?.previous.amountMinor, 20500000);
     assert.equal(toSnapshot(row).priceDrop, null);
     assert.equal(toListing(row, signer).priceDrop, undefined);
+  });
+
+  it('owners see views and when they can renew; the schema allows it (ADR-0045)', () => {
+    const validate = validator('Listing');
+    const owned = {
+      ...toListing({ ...row, views: 12 }, signer),
+      stats: { views: 12, renewableAt: new Date().toISOString() },
+    };
+    assert.ok(validate(owned), JSON.stringify(validate.errors));
+    assert.equal(
+      JSON.stringify(toSnapshot({ ...row, views: 12 })).includes('views'),
+      false,
+      'not in events',
+    );
   });
 
   it('a listing a moderator removed tells its owner why; one the owner deleted does not', () => {

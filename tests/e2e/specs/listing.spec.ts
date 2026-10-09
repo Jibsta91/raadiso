@@ -117,3 +117,58 @@ test('a lower price shows as reduced: on the listing, its history, and the reduc
     await listing.remove();
   }
 });
+
+test('the form shows how complete the listing is, and keeps an unfinished one as a draft', async ({
+  page,
+}) => {
+  // ADR-0045.
+  await login(page, `kari.nordmann@${domain}`);
+  await page.goto('/en/listings/new');
+  const form = page.getByTestId('listing-form');
+  if (await form.getByTestId('draft-discard').isVisible())
+    await form.getByTestId('draft-discard').click();
+  await form.getByTestId('pick-category-torget').click();
+  await form.getByTestId('pick-subcategory-sport').click();
+  const meter = form.getByTestId('quality-meter');
+  await expect(meter).toBeVisible();
+  await expect(form.getByTestId('quality-next')).toContainText(/photo/i);
+  const before = Number(await meter.getAttribute('data-score'));
+  await form.getByTestId('field-attr-condition').selectOption('good');
+  await form.getByTestId('field-title').fill('Utkast e2e');
+  await expect
+    .poll(async () => Number(await meter.getAttribute('data-score')))
+    .toBeGreaterThan(before);
+
+  // Come back later: the draft is offered, and continuing restores it.
+  await page.waitForTimeout(800);
+  await page.goto('/en/listings/new');
+  await expect(form.getByTestId('draft-banner')).toBeVisible();
+  await form.getByTestId('draft-continue').click();
+  await expect(form.getByTestId('field-title')).toHaveValue('Utkast e2e');
+  await expect(form.getByTestId('field-attr-condition')).toHaveValue('good');
+  await page.goto('/en/listings/new');
+  await form.getByTestId('draft-discard').click();
+  await expect(form.getByTestId('draft-banner')).toHaveCount(0);
+});
+
+test('owners see views, and renew a listing only after a week', async ({ page, browser }) => {
+  // ADR-0045. A fresh listing can't be renewed yet; a view by someone else counts.
+  await login(page, `kari.nordmann@${domain}`);
+  const listing = await createListing(page, `Visninger e2e ${Date.now().toString(36)}`);
+  try {
+    const visitor = await browser.newPage();
+    await visitor.goto(listing.href);
+    await expect(visitor.getByTestId('listing-title')).toBeVisible();
+    await visitor.close();
+
+    await page.goto('/en/my/listings');
+    const row = page.getByTestId('my-listings').locator('li').filter({ hasText: 'Visninger e2e' });
+    await expect(row.getByTestId('renew-later')).toBeVisible();
+    await expect(async () => {
+      await page.reload();
+      await expect(row.getByTestId('my-listing-views')).toContainText('1 view', { timeout: 1_000 });
+    }).toPass({ timeout: 20_000 });
+  } finally {
+    await listing.remove();
+  }
+});

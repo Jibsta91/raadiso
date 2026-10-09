@@ -38,6 +38,8 @@ const mineSchema = pageSchema.extend({
 });
 
 const WRITE_THROTTLE = { default: { limit: 30, ttl: 60_000 } };
+/** Views: one per listing page in a browser session, so a generous limit per client. */
+const VIEW_THROTTLE = { default: { limit: 120, ttl: 60_000 } };
 
 /** ETag carries the version so clients can send If-Match (optimistic concurrency). */
 const etag = (l: Listing) => `"${l.version}"`;
@@ -57,6 +59,29 @@ export class ListingsController {
     @Query(new ZodValidationPipe(mineSchema)) page: z.infer<typeof mineSchema>,
   ) {
     return this.listings.mine(req.principal!, page.limit, page.offset, page.removed === 'true');
+  }
+
+  /** One view of the listing page, anonymous (ADR-0045): a counter only. */
+  @Public()
+  @Post(':id/views')
+  @HttpCode(204)
+  @Throttle(VIEW_THROTTLE)
+  async view(
+    @Param('id', new ParseUUIDPipe({ version: undefined })) id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
+    await this.listings.view(id, req.principal);
+  }
+
+  /** The owner moves an active listing back to the top, at most once a week (ADR-0045). */
+  @Post(':id/renew')
+  @Roles('user')
+  @Throttle(WRITE_THROTTLE)
+  async renew(
+    @Param('id', new ParseUUIDPipe({ version: undefined })) id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Listing> {
+    return this.listings.renew(req.principal!, id);
   }
 
   /** A listing's prices over time, newest first (ADR-0044). Public, like the listing. */

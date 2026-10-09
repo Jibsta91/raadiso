@@ -38,6 +38,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/listings/{id}/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * One anonymous view of the listing page (ADR-0045)
+         * @description A counter only; the owner's own views are not counted.
+         */
+        post: operations["countListingView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/listings/{id}/renew": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move an active listing back to the top, at most once a week (ADR-0045) */
+        post: operations["renewListing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/listings/{id}/price-history": {
         parameters: {
             query?: never;
@@ -523,6 +560,12 @@ export interface components {
              * @description End of a running paid promotion; null when not promoted (ADR-0020)
              */
             promotedUntil: string | null;
+            /** @description For the owner only (ADR-0045) */
+            stats?: {
+                views: number;
+                /** Format: date-time */
+                renewableAt: string;
+            };
             /** @description The last price drop, until the price goes up again (ADR-0044) */
             priceDrop?: {
                 previous: components["schemas"]["Money"];
@@ -679,6 +722,53 @@ export interface operations {
                 };
             };
             401: components["responses"]["Problem"];
+        };
+    };
+    countListingView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counted (or ignored) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            429: components["responses"]["Problem"];
+        };
+    };
+    renewListing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Renewed */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Listing"];
+                };
+            };
+            401: components["responses"]["Problem"];
+            403: components["responses"]["Problem"];
+            404: components["responses"]["Problem"];
+            409: components["responses"]["Problem"];
         };
     };
     listingPriceHistory: {
