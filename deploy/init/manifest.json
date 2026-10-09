@@ -61,8 +61,8 @@
     "glitchtip_db_password",
     "glitchtip_secret_key",
     "glitchtip_admin_password",
-    "dockhand_oidc_client_secret",
-    "dockhand_cookie_secret"
+    "staff_gate_oidc_client_secret",
+    "staff_gate_cookie_secret"
   ],
   "fileConsumers": {
     "postgres": {
@@ -157,9 +157,9 @@
       "uid": 5000,
       "secrets": ["glitchtip_db_password", "glitchtip_secret_key", "glitchtip_admin_password"]
     },
-    "dockhand-proxy": {
+    "staff-gate": {
       "uid": 65532,
-      "secrets": ["dockhand_oidc_client_secret"]
+      "secrets": ["staff_gate_oidc_client_secret"]
     }
   },
   "templates": [
@@ -184,8 +184,8 @@
       "dest": "data.json"
     },
     {
-      "src": "dockhand-proxy/oauth2-proxy.cfg.tmpl",
-      "consumer": "dockhand-proxy",
+      "src": "staff-gate/oauth2-proxy.cfg.tmpl",
+      "consumer": "staff-gate",
       "dest": "oauth2-proxy.cfg"
     }
   ],
@@ -367,5 +367,5 @@
       "salt": "imgproxy_salt"
     }
   },
-  "cookie": ["dockhand_cookie_secret"]
+  "cookie": ["staff_gate_cookie_secret"]
 }

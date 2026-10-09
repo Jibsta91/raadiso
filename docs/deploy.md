@@ -76,9 +76,11 @@ Any other `./raadi` command runs on the server:
 ```
 
 The admin console (`https://admin.<domain>`) and Grafana (`https://grafana.<domain>`) are served:
-staff sign in through Keycloak with a staff role and their own one-time code. Keycloak's admin console
-and the dev tools are not routed in production.
-Reach those through an SSH tunnel to the container's address on the server, for example Prometheus
+staff sign in through Keycloak with a staff role and their own one-time code. GlitchTip
+(`errors.`), Prometheus, Traefik's dashboard (`traefik.…/dashboard/`), Keycloak's admin console
+(`auth.…/admin/`) and Dockhand are served behind the staff gate (ADR-0054): platform admins only,
+with a one-time code, then the tool's own login. OpenBao is never served.
+Reach it, or any tool, through an SSH tunnel to the container's address on the server, for example Prometheus
 (then open http://localhost:9090):
 
 ```bash
