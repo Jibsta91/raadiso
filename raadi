@@ -274,7 +274,7 @@ case "$cmd" in
     # Everyone on the Wi-Fi can reach the gateway, and the demo passwords and the staff one-time-code
     # secret are public in this repository. So the admin console, Keycloak's admin console and the dev
     # tools (Mailpit, OpenBao, Traefik, Prometheus) stay off the network; PHONE_TOOLS=1 keeps them.
-    if [[ "${PHONE_TOOLS:-}" != 1 ]]; then export DEV_TOOLS_ROUTED=false KEYCLOAK_ADMIN_PUBLIC=false; fi
+    if [[ "${PHONE_TOOLS:-}" != 1 ]]; then export DEV_TOOLS_ROUTED=false ADMIN_ROUTED=false KEYCLOAK_ADMIN_PUBLIC=false; fi
     "${DC[@]}" -f compose.yaml -f compose.phone.yaml up -d --wait --remove-orphans "$@"
     tools="off the network (PHONE_TOOLS=1 ./raadi phone serves them)"
     [[ "${PHONE_TOOLS:-}" == 1 ]] && tools="ON: anyone on this Wi-Fi can sign in to them with the demo logins"
