@@ -27,11 +27,12 @@
         "EXPO_OWNER": "jibstas-team",
         "EXPO_SLUG": "jibsta",
         "EAS_PROJECT_ID": "d70f34f3-837b-44e0-a917-1bcf8c1c0653",
-        "PUBLIC_BASE_URL": "https://dev.raadiso.com",
-        "AUTH_BASE_URL": "https://auth.dev.raadiso.com",
-        "GLITCHTIP_PUBLIC_KEY": "7b464e913d6a4e289474433ec1868a6d",
+        "PUBLIC_BASE_URL": "https://raadiso.com",
+        "AUTH_BASE_URL": "https://auth.raadiso.com",
+        "GLITCHTIP_PUBLIC_KEY": "9400caf5d0794c978e5b52b6da4d288c",
         "GLITCHTIP_PROJECT_ID": "1",
-        "APNS_MODE": "production"
+        "APNS_MODE": "production",
+        "EXPO_PUBLIC_COUNTRY": "XS"
       },
       "ios": {
         "resourceClass": "default"

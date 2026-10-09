@@ -1,0 +1,18 @@
+# Dockhand on dockhand.$RAADI_DOMAIN (ADR-0052), production only: the owner's Docker UI, which runs
+# next to the stack on the same server (not part of it). Off unless DOCKHAND_URL is set in
+# deploy/prod/local.env. Every request goes through dockhand-proxy: a Keycloak staff sign-in with a
+# one-time code and the platform-admin role, because Dockhand controls every container on the server.
+{{ $d := env "RAADI_DOMAIN" }}
+{{- if env "DOCKHAND_URL" }}
+http:
+  routers:
+    dockhand:
+      rule: Host(`dockhand.{{ $d }}`)
+      entryPoints: [websecure]
+      service: dockhand-proxy
+      middlewares: [security-headers, ratelimit-default]
+  services:
+    dockhand-proxy:
+      loadBalancer:
+        servers: [{ url: "http://dockhand-proxy:4180" }]
+{{- end }}

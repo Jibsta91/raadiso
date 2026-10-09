@@ -162,11 +162,14 @@ http:
       service: keycloak
       middlewares: [keycloak-headers, ratelimit-default]
 
+    {{- if ne (env "GRAFANA_ROUTED") "false" }}
+    # Off in production (GRAFANA_ROUTED=false, ADR-0051): Grafana is reached through an SSH tunnel.
     grafana:
       rule: Host(`grafana.{{ $d }}`)
       entryPoints: [web, websecure]
       service: grafana
       middlewares: [security-headers, ratelimit-default]
+    {{- end }}
 
   services:
     glitchtip:

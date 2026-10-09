@@ -29,12 +29,18 @@ x-init: &init
     ADMIN_BASE_URL: ${ADMIN_BASE_URL}
     AUTH_BASE_URL: ${AUTH_BASE_URL}
     GRAFANA_BASE_URL: ${GRAFANA_BASE_URL}
+    GRAFANA_ROUTED: ${GRAFANA_ROUTED:-true}
     KEYCLOAK_REALM: ${KEYCLOAK_REALM}
     SEED_DEMO_DATA: ${SEED_DEMO_DATA}
     DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD}
     DEMO_OTP_SECRET: ${DEMO_OTP_SECRET}
     KEYCLOAK_OTP_CODE_REUSABLE: ${KEYCLOAK_OTP_CODE_REUSABLE:-false}
     BANKID_MOCK: ${BANKID_MOCK}
+    # Keycloak's outgoing mail (keycloak-init); the password is the supplied secret smtp_password.
+    SMTP_HOST: ${SMTP_HOST:-mailpit}
+    SMTP_PORT: ${SMTP_PORT:-1025}
+    SMTP_SECURE: ${SMTP_SECURE:-false}
+    SMTP_USER: ${SMTP_USER:-}
     TZ: ${TZ}
 
 services:

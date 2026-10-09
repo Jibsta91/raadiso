@@ -901,6 +901,7 @@
     "sell": "Selg noe"
   },
   "payments": {
+    "unavailable": "Fremheving er ikke tilgjengelig ennå. Annonsen din vises fortsatt i søket som vanlig.",
     "title": "Fremhev annonsen din",
     "intro": "Fremhevede annonser vises først i søkeresultatene og er merket «Fremhevet». Du betaler én gang, uten abonnement.",
     "choose": "Velg fremheving",

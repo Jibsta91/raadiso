@@ -54,3 +54,6 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0048](0048-app-2-home-cards-photos.md)                       | App 2.0: a FINN-style front page, cards with a heart, full-screen photos, grid or list   | Accepted |
 | [0049](0049-testflight-over-the-tunnel.md)                    | TestFlight before production: the app built for the tunnel, used over the Pangolin VPN   | Accepted |
 | [0050](0050-price-insight-switched-off.md)                    | Price insight switched off (PRICE_INSIGHT=false)                                         | Accepted |
+| [0051](0051-production-on-one-server.md)                      | Production on one server: compose.prod.yaml and ./raadi deploy                           | Accepted |
+| [0052](0052-dockhand-on-its-own-host.md)                      | Dockhand on dockhand.raadiso.com, behind its own login                                   | Accepted |
+| [0053](0053-languages-per-country.md)                         | Each country's site offers its own languages: raadiso.com is English, then Somali        | Accepted |

@@ -901,6 +901,7 @@
     "sell": "Wax iibi"
   },
   "payments": {
+    "unavailable": "Horumarinta xayeysiiska weli lama heli karo. Xayeysiiskaagu wuxuu weli ka muuqanayaa raadinta sidii caadiga ahayd.",
     "title": "Horumari xayeysiiskaaga",
     "intro": "Xayeysiisyada la horumariyay ayaa ugu horreeya natiijooyinka raadinta waxaana lagu calaamadeeyay \"La horumariyay\". Hal mar ayaad bixinaysaa, rukun la'aan.",
     "choose": "Dooro horumarin",

@@ -13,11 +13,12 @@ REALM="${KEYCLOAK_REALM:-raadi}"
 BFF_CLIENT_SECRET="$(secret bff_oidc_client_secret)"
 ADMIN_CLIENT_SECRET="$(secret admin_oidc_client_secret)"
 GRAFANA_CLIENT_SECRET="$(secret grafana_oidc_client_secret)"
+DOCKHAND_CLIENT_SECRET="$(secret dockhand_oidc_client_secret)"
 REGISTRY_INIT_CLIENT_SECRET="$(secret registry_init_client_secret)"
 NOTIFICATIONS_CLIENT_SECRET="$(secret notifications_kc_client_secret)"
 ADMIN_KC_CLIENT_SECRET="$(secret admin_kc_client_secret)"
 DEMO_EMAIL_DOMAIN="${DEMO_EMAIL_DOMAIN:-$RAADI_DOMAIN}"
-export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL ADMIN_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLIENT_SECRET ADMIN_CLIENT_SECRET GRAFANA_CLIENT_SECRET \
+export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL ADMIN_BASE_URL AUTH_BASE_URL GRAFANA_BASE_URL RAADI_DOMAIN REALM BFF_CLIENT_SECRET ADMIN_CLIENT_SECRET GRAFANA_CLIENT_SECRET DOCKHAND_CLIENT_SECRET \
   REGISTRY_INIT_CLIENT_SECRET NOTIFICATIONS_CLIENT_SECRET ADMIN_KC_CLIENT_SECRET \
   SMTP_HOST="${SMTP_HOST:-mailpit}" SMTP_PORT="${SMTP_PORT:-1025}" \
   SMTP_FROM="${SMTP_FROM:-no-reply@${RAADI_DOMAIN}}" \
@@ -25,7 +26,7 @@ export DEMO_EMAIL_DOMAIN PUBLIC_BASE_URL ADMIN_BASE_URL AUTH_BASE_URL GRAFANA_BA
 
 # envsubst only replaces this explicit list (Keycloak's own ${...} keys stay intact).
 # shellcheck disable=SC2016
-vars='$DEMO_OTP_SECRET $PUBLIC_BASE_URL $ADMIN_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $ADMIN_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET $ADMIN_KC_CLIENT_SECRET'
+vars='$DEMO_OTP_SECRET $PUBLIC_BASE_URL $ADMIN_BASE_URL $AUTH_BASE_URL $GRAFANA_BASE_URL $RAADI_DOMAIN $DEMO_EMAIL_DOMAIN $REALM $SMTP_HOST $SMTP_PORT $SMTP_FROM $DEMO_USER_PASSWORD $BFF_CLIENT_SECRET $ADMIN_CLIENT_SECRET $GRAFANA_CLIENT_SECRET $DOCKHAND_CLIENT_SECRET $REGISTRY_INIT_CLIENT_SECRET $NOTIFICATIONS_CLIENT_SECRET $ADMIN_KC_CLIENT_SECRET'
 realm="$(envsubst "$vars" < /opt/raadi/keycloak/realm-raadi.json)"
 if [[ "${SEED_DEMO_DATA:-false}" != "true" ]]; then
   realm="$(jq 'del(.users)' <<<"$realm")"
@@ -36,6 +37,17 @@ fi
 reusable=false
 [[ "${KEYCLOAK_OTP_CODE_REUSABLE:-false}" == true ]] && reusable=true
 realm="$(jq --argjson r "$reusable" '.otpPolicyCodeReusable = $r' <<<"$realm")"
+# A real mail provider (production, ADR-0051) needs a login: SMTP_USER plus the supplied secret
+# smtp_password (./raadi secret-set smtp_password). Implicit TLS on SMTP_SECURE=true (465), else
+# STARTTLS. Mailpit in development takes neither.
+if [[ -n "${SMTP_USER:-}" ]]; then
+  [[ -s "${MASTER_DIR}/smtp_password" ]] || die "SMTP_USER is set but the secret smtp_password is missing"
+  secure=false
+  [[ "${SMTP_SECURE:-false}" == true ]] && secure=true
+  realm="$(jq --arg u "$SMTP_USER" --rawfile p "${MASTER_DIR}/smtp_password" --argjson s "$secure" \
+    '.smtpServer += {auth: "true", user: $u, password: $p,
+      ssl: ($s | tostring), starttls: ((($s | not)) | tostring)}' <<<"$realm")"
+fi
 
 token() {
   curl -fsS "$KC/realms/master/protocol/openid-connect/token" \
@@ -131,11 +143,14 @@ done < <(jq -c '.[]
     elif .displayName == "Condition - user configured" and .requirement != "DISABLED" then .requirement = "DISABLED"
     else empty end' <<<"$executions")
 flow_id="$(api "$KC/admin/realms/$REALM/authentication/flows" | jq -r --arg a "$FLOW" '.[] | select(.alias == $a) | .id')"
-admin_client="$(api -G "$KC/admin/realms/$REALM/clients" --data-urlencode clientId=raadi-admin | jq -r '.[0].id')"
-api "$KC/admin/realms/$REALM/clients/$admin_client" \
-  | jq -c --arg f "$flow_id" '.authenticationFlowBindingOverrides = {browser: $f}' \
-  | api -X PUT "$KC/admin/realms/$REALM/clients/$admin_client" --data-binary @- >/dev/null
-info "admin console requires a one-time code (flow ${FLOW})"
+# Dockhand's sign-in (ADR-0052) is a staff sign-in too.
+for client_id in raadi-admin dockhand; do
+  admin_client="$(api -G "$KC/admin/realms/$REALM/clients" --data-urlencode clientId="$client_id" | jq -r '.[0].id')"
+  api "$KC/admin/realms/$REALM/clients/$admin_client" \
+    | jq -c --arg f "$flow_id" '.authenticationFlowBindingOverrides = {browser: $f}' \
+    | api -X PUT "$KC/admin/realms/$REALM/clients/$admin_client" --data-binary @- >/dev/null
+done
+info "admin console and Dockhand require a one-time code (flow ${FLOW})"
 
 # Service accounts get their client roles here (the realm import cannot express them).
 grant_client_role() { # <service-account client> <resource client> <role>

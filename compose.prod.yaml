@@ -1,0 +1,148 @@
+# Production overlay (ADR-0051), on the server only:
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --wait
+# ./raadi deploy runs it with the server's .env, which is .env.example plus deploy/prod/prod.env.
+# No demo users, demo data, mocks or dev tools; Keycloak's admin console, the admin console host,
+# Grafana and the dev tools are not routed (reach them through an SSH tunnel); HTTP redirects to HTTPS.
+
+services:
+  # Development stand-ins never start here: real SMTP, a real push service, and payments either from
+  # a provider or switched off (PAYMENTS_PROVIDER=none).
+  mailpit:
+    profiles: [dev]
+  payments-mock:
+    profiles: [dev]
+  push-mock:
+    profiles: [dev]
+
+  # The readiness sentinel, without the stand-ins.
+  summary:
+    depends_on: !override
+      traefik: { condition: service_healthy }
+      web: { condition: service_healthy }
+      mobile-web: { condition: service_healthy }
+      identity-bff: { condition: service_healthy }
+      admin-bff: { condition: service_healthy }
+      keycloak-init: { condition: service_completed_successfully }
+      grafana: { condition: service_healthy }
+      prometheus: { condition: service_healthy }
+      alertmanager: { condition: service_healthy }
+      blackbox: { condition: service_healthy }
+      loki: { condition: service_healthy }
+      tempo: { condition: service_healthy }
+      otel-collector: { condition: service_healthy }
+      connect-init: { condition: service_completed_successfully }
+      authz-init: { condition: service_completed_successfully }
+      registry-init: { condition: service_completed_successfully }
+      listings: { condition: service_healthy }
+      listings-seed: { condition: service_completed_successfully }
+      media: { condition: service_healthy }
+      media-seed: { condition: service_completed_successfully }
+      search: { condition: service_healthy }
+      messaging: { condition: service_healthy }
+      messaging-seed: { condition: service_completed_successfully }
+      notifications: { condition: service_healthy }
+      trust: { condition: service_healthy }
+      saved: { condition: service_healthy }
+      audit: { condition: service_healthy }
+      payments: { condition: service_healthy }
+      apicurio: { condition: service_healthy }
+      opensearch: { condition: service_healthy }
+      imgproxy: { condition: service_healthy }
+      clamav: { condition: service_healthy }
+      opa: { condition: service_healthy }
+      glitchtip-init: { condition: service_completed_successfully }
+
+  # The gateway without the development routes, plus the production HTTPS redirect.
+  traefik:
+    environment:
+      # Dockhand's route (deploy/traefik/dynamic/prod/dockhand.yml, ADR-0052); empty means not routed.
+      DOCKHAND_URL: ${DOCKHAND_URL:-}
+    volumes: !override
+      - ./deploy/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./deploy/traefik/dynamic/common:/etc/traefik/dynamic/common:ro
+      - ./deploy/traefik/dynamic/prod:/etc/traefik/dynamic/prod:ro
+      - certs:/certs:ro
+
+  # Staff sign-in in front of Dockhand (ADR-0052), with the `dockhand` profile (COMPOSE_PROFILES in
+  # deploy/prod/local.env): Keycloak, a one-time code and the platform-admin role before Dockhand loads.
+  dockhand-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.12.0-alpine@sha256:1e04100f7b44290bc39bf52412153bb27edfc6141f3529b67ea543737a689ae2
+    profiles: [dockhand]
+    restart: unless-stopped
+    user: '65532:65532'
+    cap_drop: [ALL]
+    read_only: true
+    security_opt: ['no-new-privileges:true']
+    command: ['--config=/run/secrets/raadi/oauth2-proxy.cfg']
+    environment:
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_PROVIDER: keycloak-oidc
+      OAUTH2_PROXY_CLIENT_ID: dockhand
+      OAUTH2_PROXY_CODE_CHALLENGE_METHOD: S256
+      OAUTH2_PROXY_ALLOWED_ROLES: platform-admin
+      OAUTH2_PROXY_EMAIL_DOMAINS: '*'
+      OAUTH2_PROXY_REDIRECT_URL: https://dockhand.${RAADI_DOMAIN}/oauth2/callback
+      # The browser signs in on the public address; tokens and keys come from Keycloak directly.
+      OAUTH2_PROXY_OIDC_ISSUER_URL: ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM}
+      OAUTH2_PROXY_SKIP_OIDC_DISCOVERY: 'true'
+      OAUTH2_PROXY_LOGIN_URL: ${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/auth
+      OAUTH2_PROXY_REDEEM_URL: http://keycloak:8080/realms/${KEYCLOAK_REALM}/protocol/openid-connect/token
+      OAUTH2_PROXY_OIDC_JWKS_URL: http://keycloak:8080/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs
+      OAUTH2_PROXY_VALIDATE_URL: http://keycloak:8080/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo
+      OAUTH2_PROXY_UPSTREAMS: ${DOCKHAND_URL:-http://dockhand:3000}
+      OAUTH2_PROXY_REVERSE_PROXY: 'true'
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: 'true'
+      OAUTH2_PROXY_COOKIE_NAME: __Host-dockhand
+      OAUTH2_PROXY_COOKIE_SECURE: 'true'
+      OAUTH2_PROXY_COOKIE_SAMESITE: lax
+      OAUTH2_PROXY_COOKIE_EXPIRE: 12h
+      OAUTH2_PROXY_COOKIE_REFRESH: 5m
+      OAUTH2_PROXY_PASS_ACCESS_TOKEN: 'false'
+      OAUTH2_PROXY_SHOW_DEBUG_ON_ERROR: 'false'
+      OAUTH2_PROXY_BANNER: '-'
+      OAUTH2_PROXY_FOOTER: '-'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:4180/ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '0.25' }
+    volumes:
+      - type: volume
+        source: secrets
+        target: /run/secrets/raadi
+        read_only: true
+        volume: { subpath: dockhand-proxy }
+    depends_on:
+      secrets-init: { condition: service_completed_successfully }
+      keycloak-init: { condition: service_completed_successfully }
+
+  # Grafana sends no mail of its own (alerts go through Alertmanager).
+  grafana:
+    environment:
+      GF_SMTP_ENABLED: 'false'
+
+  # The server has 24 GB: the data services get more room than on a 16 GB laptop (ADR-0011).
+  postgres:
+    deploy:
+      resources:
+        limits: { memory: 1536M }
+  opensearch:
+    environment:
+      OPENSEARCH_JAVA_OPTS: -Xms1g -Xmx1g -XX:+UseG1GC
+    deploy:
+      resources:
+        limits: { memory: 2G }
+  kafka:
+    environment:
+      KAFKA_HEAP_OPTS: -Xms512m -Xmx512m
+    deploy:
+      resources:
+        limits: { memory: 1G }
+  keycloak:
+    deploy:
+      resources:
+        limits: { memory: 1536M }

@@ -901,6 +901,7 @@
     "sell": "Sell something"
   },
   "payments": {
+    "unavailable": "Promotions are not available yet. Your listing is still shown in search as usual.",
     "title": "Promote your listing",
     "intro": "Promoted listings are shown first in search results and marked \"Promoted\". Pay once, no subscription.",
     "choose": "Choose a promotion",

@@ -26,7 +26,8 @@ export const envSchema = baseEnvSchema
     /** Ownership and status of the listing being promoted (internal API). */
     LISTINGS_URL: z.url().default('http://listings:4000'),
     /** The active provider (ADR-0020). */
-    PAYMENTS_PROVIDER: z.enum(['vipps', 'stripe']).default('vipps'),
+    /** `none`: no provider yet; promotions are switched off (ADR-0051). */
+    PAYMENTS_PROVIDER: z.enum(['vipps', 'stripe', 'none']).default('vipps'),
     /** Vipps MobilePay ePayment API; payments-mock in development. */
     VIPPS_BASE_URL: z.url().default('http://payments-mock:4000'),
     VIPPS_CLIENT_ID: z.string().default('raadi-dev'),
@@ -60,7 +61,9 @@ export async function loadAppConfig(): Promise<AppConfig> {
   const needed =
     env.PAYMENTS_PROVIDER === 'vipps'
       ? (['vipps_client_secret', 'vipps_subscription_key', 'vipps_webhook_secret'] as const)
-      : (['stripe_secret_key', 'stripe_webhook_secret'] as const);
+      : env.PAYMENTS_PROVIDER === 'stripe'
+        ? (['stripe_secret_key', 'stripe_webhook_secret'] as const)
+        : ([] as const);
   const missing = needed.filter((k) => !secrets[k]);
   if (missing.length)
     throw new Error(`missing secrets for ${env.PAYMENTS_PROVIDER}: ${missing.join(', ')}`);

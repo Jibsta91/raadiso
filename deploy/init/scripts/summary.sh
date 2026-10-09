@@ -20,6 +20,8 @@ declare -A urls=(
   [grafana]="${GRAFANA_BASE_URL}/api/health"
   [search]="${PUBLIC_BASE_URL}/api/v1/search/listings?pageSize=1"
 )
+# Grafana is not routed in production (ADR-0051): it is reached through an SSH tunnel.
+[[ "${GRAFANA_ROUTED:-true}" == false ]] && unset 'urls[grafana]'
 for name in "${!urls[@]}"; do
   retry 20 up "${urls[$name]}" || warn "${name} did not answer through the gateway: ${urls[$name]}"
 done

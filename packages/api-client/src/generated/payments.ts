@@ -278,8 +278,11 @@ export interface components {
         };
         ProductList: {
             items: components["schemas"]["Product"][];
-            /** @enum {string} */
-            provider: "vipps" | "stripe";
+            /**
+             * @description `none`: no provider yet, so no products and no new orders (ADR-0051)
+             * @enum {string}
+             */
+            provider: "vipps" | "stripe" | "none";
         };
         OrderInput: {
             /** Format: uuid */

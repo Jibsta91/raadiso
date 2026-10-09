@@ -1,9 +1,8 @@
 import { categoriesOf } from '@raadi/catalog/categories';
 import type { MetadataRoute } from 'next';
-import { routing } from '@/i18n/routing';
 import { searchListings } from '@/lib/api';
 import { env } from '@/lib/env';
-import { currentCountry } from '@/lib/host';
+import { currentCountry, currentLocales } from '@/lib/host';
 
 // Per host: each country's domain lists its own categories and listings (ADR-0040).
 export const dynamic = 'force-dynamic';
@@ -14,6 +13,7 @@ const LISTING_PAGES = 10;
 /** Every public page in every language: the front page, categories, legal pages and active listings. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = env.publicBaseUrl;
+  const routing = await currentLocales();
   const page = (path: string, extra: Partial<MetadataRoute.Sitemap[number]> = {}) => ({
     url: `${base}/${routing.defaultLocale}${path}`,
     alternates: {

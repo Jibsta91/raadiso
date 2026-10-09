@@ -8,10 +8,24 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- Each country's site offers its own languages (ADR-0053): raadiso.com is English, then Somali,
+  without Norwegian; the app follows the country it is built for.
+- Debezium 3.7.0.Final is pinned to its current image digest (the old one was removed from quay.io).
+
 - Price insight is switched off (ADR-0050): no price check on listings, no "great/good price" on
   cards and no price guide for sellers, on the website and in the app. `PRICE_INSIGHT=true` turns it on.
 
 ### Added
+
+- Production (ADR-0051): Raadiso runs at https://raadiso.com on one OVHcloud server.
+  `./raadi deploy setup` prepares the server and `./raadi deploy` builds the current commit there and
+  starts it. `./raadi deploy cert` gets the Let's Encrypt wildcard, and `./raadi deploy <command>`
+  runs any other command on the server. `compose.prod.yaml` leaves out demo data, mocks and dev tools
+  and redirects HTTP to HTTPS. Mail goes through Brevo. Payments are off until a provider is chosen
+  (`PAYMENTS_PROVIDER=none`). See `docs/deploy.md`.
+- Dockhand at dockhand.raadiso.com behind the staff sign-in (ADR-0052): Keycloak, the platform-admin
+  role and a one-time code, through oauth2-proxy.
+- TestFlight builds use production (raadiso.com, Somaliland) and need no VPN.
 
 - App 2.0 (ADR-0048), measured against FINN's app. The front page starts from category tiles, saved
   searches with new matches, recently viewed listings (kept on the device) and recent price drops, and

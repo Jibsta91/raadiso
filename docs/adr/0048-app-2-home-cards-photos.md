@@ -29,7 +29,7 @@ the card itself that a price is good or was just cut, by how much, and what it w
   - **Price dropped**: the ten most recent drops, with "See all" opening search with the filter and
     the price-drop sort;
   - the newest listings as a feed that loads the next page while scrolling (it used to stop at 24).
-  Grey placeholder cards show while the first page loads, in place of a spinner.
+    Grey placeholder cards show while the first page loads, in place of a spinner.
 - **Cards:** the photo carries one corner badge (sold, promoted, the drop in percent, or a good
   price, in that order), a photo count and a heart. Below the photo: the price, with the price before a
   drop struck through, then the title, then "place · age". The heart saves the listing without opening
