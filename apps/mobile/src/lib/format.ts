@@ -43,6 +43,18 @@ function relative(locale: Locale): (value: number, unit: Unit) => string {
     unit === 'second' || value === 0 ? words.now : words.ago(Math.abs(value), unit);
 }
 
+/** How much a price drop took off, in whole percent, when it is worth saying (5% or more). */
+export function dropPercent(listing: {
+  price: Money | null;
+  priceDrop?: { previous: Money };
+}): number | undefined {
+  const before = listing.priceDrop?.previous.amountMinor;
+  const now = listing.price?.amountMinor;
+  if (!before || now === undefined || now >= before) return undefined;
+  const pct = Math.round(((before - now) / before) * 100);
+  return pct >= 5 ? pct : undefined;
+}
+
 /** Short relative time ("5 min", "3 t", "2 d") or a date for anything older than a week. */
 export function formatAge(iso: string, locale: Locale, now: Date = new Date()): string {
   const then = new Date(iso);

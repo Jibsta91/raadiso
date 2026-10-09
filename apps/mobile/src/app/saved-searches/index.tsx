@@ -1,6 +1,5 @@
 import { Icon } from '../../components/icon';
 import type { SavedSearch } from '@raadi/api-client';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Status } from '../../components/ui';
@@ -8,21 +7,8 @@ import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi, useLoad, usePullToRefresh } from '../../lib/api';
 import { SwipeRow } from '../../components/swipe-row';
 import { useAuth } from '../../lib/auth/context';
+import { openSavedSearch } from '../../lib/saved';
 import { fonts, radius, space, useTheme } from '../../theme';
-
-/** Opens a saved search: resets its "new" count and shows the results. */
-export function openSavedSearch(
-  api: ReturnType<typeof useApi>,
-  search: Pick<SavedSearch, 'id' | 'params'>,
-  replace = false,
-) {
-  void api.saved
-    .POST('/api/v1/saved/searches/{id}/seen', { params: { path: { id: search.id } } })
-    .catch(() => undefined);
-  const target = { pathname: '/search' as const, params: search.params };
-  if (replace) router.replace(target);
-  else router.push(target);
-}
 
 function Row({ search, onDeleted }: { search: SavedSearch; onDeleted: () => void }) {
   const { m } = useI18n();

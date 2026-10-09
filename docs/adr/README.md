@@ -51,3 +51,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0045](0045-seller-tools.md)                                  | Seller tools: a completeness meter, photo order, drafts, renewing, view counts           | Accepted |
 | [0046](0046-smart-categories.md)                              | Smart categories: a third level, categories from what is sold, reduced per category      | Accepted |
 | [0047](0047-similar-and-recently-viewed.md)                   | Discovery: similar listings from search, recently viewed in the browser                  | Accepted |
+| [0048](0048-app-2-home-cards-photos.md)                       | App 2.0: a FINN-style front page, cards with a heart, full-screen photos, grid or list    | Accepted |

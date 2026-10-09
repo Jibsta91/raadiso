@@ -252,3 +252,60 @@ test('app: a listing shows similar ones below it', async ({ page }) => {
     page.getByTestId('similar-listings').getByTestId('listing-card').first(),
   ).toBeVisible();
 });
+
+test('app: a heart on every card, recently viewed on the front page, results as a list', async ({
+  page,
+}) => {
+  // ADR-0048: one copy of the favourites behind every heart, and "Recently viewed" on this device.
+  await login(page, `amina.hassan@${domain}`);
+  await page.goto('/m/search?q=Kawasaki');
+  const results = page.getByTestId('search-results');
+  const heart = results.getByTestId('tile-favourite').first();
+  await expect(heart).not.toHaveAttribute('aria-pressed', 'true');
+  await heart.click();
+  await expect(heart).toHaveAttribute('aria-pressed', 'true');
+
+  // The listing's own heart is the same favourite; taking it away there shows on the card too.
+  await results.getByTestId('listing-card').first().click();
+  await expect(page).toHaveURL(/\/m\/listings\/[0-9a-f-]{36}$/);
+  const title = await page.getByTestId('listing-title').innerText();
+  const toggle = page.getByTestId('favourite-toggle');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await toggle.click();
+  await expect(toggle).not.toHaveAttribute('aria-pressed', 'true');
+
+  // The bottom bar carries the price beside the message button.
+  await expect(page.getByTestId('contact-open')).toBeVisible();
+
+  await page.goto('/m/');
+  const recent = page.getByTestId('recently-viewed');
+  await expect(recent.getByTestId('listing-card').first()).toHaveAttribute(
+    'aria-label',
+    new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')},`),
+  );
+  await page.getByTestId('recently-viewed-action').click();
+  await expect(page.getByTestId('recently-viewed')).toHaveCount(0);
+
+  // Grid or list, remembered on the device.
+  await page.goto('/m/search?q=Kawasaki');
+  await page.getByTestId('layout-list').click();
+  await expect(page.getByTestId('layout-list')).toHaveAttribute('aria-checked', 'true');
+  await expect(results.getByTestId('listing-card').first()).toBeVisible();
+  await page.reload();
+  await expect(page.getByTestId('layout-list')).toHaveAttribute('aria-checked', 'true');
+  await page.getByTestId('layout-grid').click();
+});
+
+test('app: photos open full screen and close where they were', async ({ page }) => {
+  await page.goto('/m/search?q=Kawasaki');
+  await page.getByTestId('search-results').getByTestId('listing-card').first().click();
+  const photo = page.getByTestId('listing-photo').first();
+  await expect(photo).toBeVisible();
+  await photo.click();
+  const viewer = page.getByTestId('photo-viewer');
+  await expect(viewer).toBeVisible();
+  await expect(page.getByTestId('photo-viewer-counter')).toHaveText(/^1 \/ \d+$/);
+  await page.getByTestId('photo-viewer-close').click();
+  await expect(viewer).toHaveCount(0);
+  await expect(page.getByTestId('listing-title')).toBeVisible();
+});

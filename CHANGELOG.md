@@ -8,6 +8,15 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- App 2.0 (ADR-0048), measured against FINN's app. The front page starts from category tiles, saved
+  searches with new matches, recently viewed listings (kept on the device) and recent price drops, and
+  the newest listings scroll on without end, with placeholder cards while they load. Every card has a
+  heart that saves the listing without opening it, and shows the price (the old one struck through
+  after a drop), a corner badge for the drop in percent or a good price, the photo count, the place
+  and the listing's age. Photos open full screen (swipe, pinch to zoom on iOS, thumbnails), the
+  bottom bar shows the price beside the message button, long descriptions fold, and search shows
+  results as a grid or a list.
+
 - The app catches up with seller tools and discovery (ADR-0045, ADR-0047): view counts and a renew
   swipe action in My listings (when the listing can be renewed), and similar listings below a listing.
 

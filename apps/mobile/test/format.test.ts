@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { formatAge, formatPrice, pickLocale } from '../src/lib/format.ts';
+import { dropPercent, formatAge, formatPrice, pickLocale } from '../src/lib/format.ts';
 
 describe('formatPrice', () => {
   it('formats kroner with a Norwegian thousands separator, dollars the English way', () => {
@@ -63,5 +63,20 @@ describe('pickLocale', () => {
   it('defaults to nb', () => {
     assert.equal(pickLocale(['fr-FR']), 'nb');
     assert.equal(pickLocale([]), 'nb');
+  });
+});
+
+describe('dropPercent', () => {
+  const nok = (amountMinor: number) => ({ amountMinor, currency: 'NOK' });
+  it('says how much a drop took off, rounded', () => {
+    assert.equal(dropPercent({ price: nok(8_000), priceDrop: { previous: nok(10_000) } }), 20);
+  });
+  it('stays quiet below 5% and without a drop or a price', () => {
+    assert.equal(
+      dropPercent({ price: nok(9_700), priceDrop: { previous: nok(10_000) } }),
+      undefined,
+    );
+    assert.equal(dropPercent({ price: nok(9_700) }), undefined);
+    assert.equal(dropPercent({ price: null, priceDrop: { previous: nok(10_000) } }), undefined);
   });
 });

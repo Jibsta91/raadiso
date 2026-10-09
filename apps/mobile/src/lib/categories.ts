@@ -36,6 +36,20 @@ export const CATEGORY_ICONS: Partial<Record<CategoryId, IconName>> = {
   eiendom: 'home-outline',
   jobb: 'briefcase-outline',
   reise: 'airplane-outline',
+  // Somaliland (ADR-0040)
+  vehicles: 'car-outline',
+  property: 'home-outline',
+  phones: 'phone-portrait-outline',
+  electronics: 'laptop-outline',
+  home: 'bed-outline',
+  fashion: 'shirt-outline',
+  livestock: 'paw-outline',
+  agriculture: 'leaf-outline',
+  jobs: 'briefcase-outline',
+  services: 'construct-outline',
+  business: 'business-outline',
+  kids: 'happy-outline',
+  'sports-hobbies': 'bicycle-outline',
 };
 
 export const SUBCATEGORY_ICONS: Partial<Record<SubcategoryId, IconName>> = {

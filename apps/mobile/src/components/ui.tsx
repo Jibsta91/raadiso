@@ -297,20 +297,20 @@ export function Badge({
   testID,
 }: {
   label: string;
-  tone?: 'promoted' | 'neutral';
+  /** promoted: lime; neutral: grey (sold); accent: blue (a price drop); deal: green (a good price). */
+  tone?: 'promoted' | 'neutral' | 'accent' | 'deal';
   testID?: string;
 }) {
   const theme = useTheme();
-  const neutral = tone === 'neutral';
+  const colours = {
+    promoted: { bg: theme.badge, fg: theme.badgeText },
+    neutral: { bg: theme.surfaceAlt, fg: theme.subtle },
+    accent: { bg: theme.accent, fg: theme.accentText },
+    deal: { bg: theme.success, fg: theme.successText },
+  }[tone];
   return (
-    <View
-      testID={testID}
-      style={[styles.badge, { backgroundColor: neutral ? theme.surfaceAlt : theme.badge }]}
-    >
-      <Text
-        maxFontSizeMultiplier={1.5}
-        style={[styles.badgeText, { color: neutral ? theme.subtle : theme.badgeText }]}
-      >
+    <View testID={testID} style={[styles.badge, { backgroundColor: colours.bg }]}>
+      <Text maxFontSizeMultiplier={1.5} style={[styles.badgeText, { color: colours.fg }]}>
         {label}
       </Text>
     </View>
