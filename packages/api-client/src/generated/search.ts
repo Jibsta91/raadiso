@@ -41,6 +41,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search/listings/{id}/similar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listings like this one (ADR-0047) */
+        get: operations["similarListings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search/listings/{id}/price-insight": {
         parameters: {
             query?: never;
@@ -464,6 +481,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Autocomplete"];
+                };
+            };
+            400: components["responses"]["Problem"];
+        };
+    };
+    similarListings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Up to eight similar active listings; empty for an unknown listing */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["SearchHit"][];
+                    };
                 };
             };
             400: components["responses"]["Problem"];

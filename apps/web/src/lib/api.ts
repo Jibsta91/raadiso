@@ -25,6 +25,7 @@ import {
   type TrustProfile,
   type TrustSummary,
   type PriceInsight,
+  type SearchHit,
 } from '@raadi/api-client';
 import { COUNTRIES } from '@raadi/catalog/countries';
 import { cache } from 'react';
@@ -64,6 +65,19 @@ export async function searchListings(query: SearchQuery): Promise<SearchResult> 
   }
   logger.warn({ status: response.status, error }, 'search failed');
   throw new ServiceUnavailableError('search unavailable');
+}
+
+/** Listings like this one (ADR-0047); empty on failure. */
+export async function similarListings(id: string): Promise<SearchHit[]> {
+  const client = createSearchClient({ baseUrl: env.searchUrl });
+  const { data } = await client
+    .GET('/api/v1/search/listings/{id}/similar', {
+      params: { path: { id } },
+      signal: AbortSignal.timeout(3000),
+      cache: 'no-store',
+    })
+    .catch(() => ({ data: undefined }));
+  return data?.items ?? [];
 }
 
 /** A listing's prices over time, newest first (ADR-0044); empty on failure. */

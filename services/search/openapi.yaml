@@ -179,6 +179,24 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Autocomplete' }
         '400': { $ref: '#/components/responses/Problem' }
+  /api/v1/search/listings/{id}/similar:
+    get:
+      tags: [search]
+      operationId: similarListings
+      summary: Listings like this one (ADR-0047)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Up to eight similar active listings; empty for an unknown listing
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/SearchHit' } }
+        '400': { $ref: '#/components/responses/Problem' }
   /api/v1/search/listings/{id}/price-insight:
     get:
       tags: [search]

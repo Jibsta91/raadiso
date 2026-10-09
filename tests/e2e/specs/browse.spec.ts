@@ -76,3 +76,21 @@ test('a price check against similar listings, and good deals marked in the resul
   await expect(insight).toHaveAttribute('data-rating', /^(unusually_low|great|good|fair|high)$/);
   await expect(insight).toContainText(/similar listing/);
 });
+
+test('a listing shows similar ones, and the front page remembers what was viewed', async ({
+  page,
+}) => {
+  // ADR-0047. Similar listings come from search; recently viewed stays in this browser.
+  await page.goto('/en/search?category=bil&subcategory=personbil');
+  const card = page.getByTestId('listing-card').first();
+  const title = (await card.getByTestId('listing-card-title').innerText()).trim();
+  await card.click();
+  await expect(
+    page.getByTestId('similar-listings').getByTestId('listing-card').first(),
+  ).toBeVisible();
+  await page.goto('/en');
+  const recent = page.getByTestId('recently-viewed');
+  await expect(recent.getByTestId('recent-card').first()).toContainText(title);
+  await recent.getByRole('button').click();
+  await expect(recent).toHaveCount(0);
+});

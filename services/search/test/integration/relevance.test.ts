@@ -271,3 +271,19 @@ describe('price insight (ADR-0043)', () => {
     assert.equal(guide?.currency, 'USD');
   });
 });
+
+describe('similar listings (ADR-0047)', () => {
+  it('finds listings like a car among cars, never the car itself, and tops up to the size', async () => {
+    const car = demoListings().find(
+      (l) => l.subcategory === 'cars' && l.title.startsWith('Toyota'),
+    )!;
+    const similar = await service.similar(car.id);
+    assert.equal(similar.length, 8);
+    assert.ok(!similar.some((h) => h.id === car.id));
+    assert.ok(
+      similar.slice(0, 4).every((h) => h.category === 'vehicles'),
+      JSON.stringify(similar.map((h) => h.title)),
+    );
+    assert.deepEqual(await service.similar('00000000-0000-4000-8000-000000000000'), []);
+  });
+});

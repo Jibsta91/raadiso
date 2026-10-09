@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { AuthErrorBanner } from '@/components/auth-error-banner';
 import { ListingCard } from '@/components/listings/listing-card';
+import { RecentlyViewed } from '@/components/listings/recently-viewed';
 import { SearchBox } from '@/components/search/search-box';
 import { Link } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
@@ -143,6 +144,8 @@ export default async function HomePage({
           ))}
         </div>
       </section>
+
+      <RecentlyViewed />
 
       {latest?.items.length ? (
         <section aria-labelledby="latest" className="space-y-5">

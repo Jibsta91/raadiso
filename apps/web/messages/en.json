@@ -123,7 +123,9 @@
     "latestTitle": "Latest listings",
     "seeAll": "See all",
     "searchPlaceholder": "What are you looking for?",
-    "searchSubmit": "Search"
+    "searchSubmit": "Search",
+    "recentTitle": "Recently viewed",
+    "recentClear": "Clear"
   },
   "account": {
     "title": "My account",
@@ -633,7 +635,8 @@
     "per": {
       "month": "per month",
       "night": "per night"
-    }
+    },
+    "similarTitle": "Similar listings"
   },
   "form": {
     "newTitle": "New listing",
