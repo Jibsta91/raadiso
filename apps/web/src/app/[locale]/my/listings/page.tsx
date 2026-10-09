@@ -3,6 +3,7 @@ import { Image as ImageIcon } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
+import { RenewButton } from '@/components/listings/renew-button';
 import { Link } from '@/i18n/navigation';
 import { myListings } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
@@ -48,6 +49,11 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
           {l.price === null ? t('listing.noPrice') : formatPrice(l.price, current)} ·{' '}
           {l.location.name}
         </p>
+        {l.stats && !l.removal ? (
+          <p className="text-xs text-muted-foreground" data-testid="my-listing-views">
+            {t('my.views', { count: l.stats.views })}
+          </p>
+        ) : null}
         {l.removal ? (
           <p className="text-sm" data-testid="my-listing-removal">
             {t('my.removedBecause', {
@@ -90,18 +96,22 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
           data-testid="my-listings"
         >
           {items.map((l) => (
-            <li key={l.id}>
+            <li key={l.id} className="flex items-center gap-2 pe-3">
               {/* A removed listing has no page any more: it shows here, with why, but links nowhere. */}
               {l.removal ? (
-                <div className="flex items-center gap-4 p-3 opacity-90">{content(l)}</div>
+                <div className="flex flex-1 items-center gap-4 p-3 opacity-90">{content(l)}</div>
               ) : (
                 <Link
                   href={`/listings/${l.id}`}
-                  className="flex items-center gap-4 p-3 hover:bg-accent"
+                  className="flex flex-1 items-center gap-4 p-3 hover:bg-accent"
                 >
                   {content(l)}
                 </Link>
               )}
+              {/* Beside the link, never inside it (no buttons inside links). */}
+              {l.status === 'active' && !l.removal && l.stats ? (
+                <RenewButton id={l.id} renewableAt={l.stats.renewableAt} />
+              ) : null}
             </li>
           ))}
         </ul>

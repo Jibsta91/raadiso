@@ -40,6 +40,10 @@
     "./places": {
       "types": "./dist/places.d.ts",
       "default": "./dist/places.js"
+    },
+    "./quality": {
+      "types": "./dist/quality.d.ts",
+      "default": "./dist/quality.js"
     }
   },
   "scripts": {

@@ -10,9 +10,10 @@ import {
 import { categoriesOf, subcategoriesOf, type Category } from '@raadi/catalog/categories';
 import { COUNTRIES, type CountryCode } from '@raadi/catalog/countries';
 import { currencySymbol, formatMoney, parseMajor, toMajor } from '@raadi/catalog/money';
+import { qualityOf } from '@raadi/catalog/quality';
 import { placeName, placesOf } from '@raadi/catalog/places';
 import { Button } from '@raadi/ui';
-import { Check, ImagePlus, Loader2, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, ImagePlus, Loader2, Star, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
@@ -83,15 +84,60 @@ export function ListingForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Text fields stay uncontrolled; these follow them for the meter and the draft (ADR-0045).
+  const [seed, setSeed] = useState<Draft | null>(null);
+  const [formKey, setFormKey] = useState(0);
+  const [descriptionLength, setDescriptionLength] = useState(listing?.description.length ?? 0);
+  const [draft, setDraft] = useState<Draft | null>(null);
+
+  // A new listing's form offers to continue the last unfinished one (this browser only).
+  useEffect(() => {
+    if (!listing) setDraft(readDraft());
+  }, [listing]);
+
+  /** Saves what is filled in, debounced, for a new listing only. */
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const saveDraft = () => {
+    if (listing || !category) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const form = formRef.current ? new FormData(formRef.current) : undefined;
+      writeDraft({
+        category,
+        subcategory,
+        attributes,
+        images,
+        title: String(form?.get('title') ?? ''),
+        description: String(form?.get('description') ?? ''),
+        price: String(form?.get('price') ?? ''),
+        placeId: String(form?.get('placeId') ?? ''),
+        savedAt: new Date().toISOString(),
+      });
+    }, 500);
+  };
 
   const priceRule = category ? priceRuleOf(category, subcategory || undefined) : 'required';
   const priceUnit = category ? priceUnitOf(category, subcategory || undefined) : undefined;
   const fields = category && subcategory ? attributesOf(category, subcategory) : [];
 
+  // Category, details and photos change outside the form's input events: save on those too.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(saveDraft, [category, subcategory, JSON.stringify(attributes), images]);
+  const quality =
+    category && subcategory
+      ? qualityOf({
+          category,
+          subcategory,
+          description: 'x'.repeat(descriptionLength),
+          imageCount: images.length,
+          attributes,
+        })
+      : null;
+
   // What comparable listings cost, while the seller fills in the details (ADR-0043).
   const [placeId, setPlaceId] = useState(listing?.location.placeId ?? '');
   const [guide, setGuide] = useState<PriceGuide | null>(null);
-  const draft = JSON.stringify(attributes);
+  const details = JSON.stringify(attributes);
   useEffect(() => {
     if (!category || !subcategory || priceRule === 'none') {
       setGuide(null);
@@ -99,7 +145,7 @@ export function ListingForm({
     }
     const params = new URLSearchParams({ country, category, subcategory });
     if (placeId) params.set('placeId', placeId);
-    for (const [k, v] of Object.entries(JSON.parse(draft) as Record<string, string>))
+    for (const [k, v] of Object.entries(JSON.parse(details) as Record<string, string>))
       if (v.trim() && fields.some((f) => f.key === k)) params.set(k, v.trim());
     const ctrl = new AbortController();
     const timer = setTimeout(() => {
@@ -114,7 +160,7 @@ export function ListingForm({
     };
     // `fields` follows category and subcategory.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [country, category, subcategory, placeId, draft, priceRule]);
+  }, [country, category, subcategory, placeId, details, priceRule]);
   const perUnit = (amountMinor: number) =>
     formatMoney({ amountMinor: Math.round(amountMinor), currency }, locale) +
     (guide && guide.unit !== 'listing' ? ` ${t(`price.per.${guide.unit}`)}` : '');
@@ -186,6 +232,7 @@ export function ListingForm({
       });
       if (res.ok) {
         const saved = (await res.json()) as Listing;
+        if (!listing) clearDraft();
         router.push(`/listings/${saved.id}`);
         router.refresh();
         return;
@@ -246,12 +293,52 @@ export function ListingForm({
 
   return (
     <form
+      key={formKey}
       ref={formRef}
       onSubmit={submit}
+      onInput={saveDraft}
       className="space-y-6"
       noValidate
       data-testid="listing-form"
     >
+      {draft && !listing ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-3 rounded-2xl border bg-soft p-4 text-sm"
+          data-testid="draft-banner"
+        >
+          <span className="flex-1">{t('form.draftFound')}</span>
+          <button
+            type="button"
+            data-testid="draft-continue"
+            className="h-9 rounded-full bg-primary px-4 font-semibold text-primary-foreground"
+            onClick={() => {
+              setCategory(draft.category);
+              setSubcategory(draft.subcategory);
+              setAttributes(draft.attributes);
+              setImages(draft.images);
+              setSeed(draft);
+              setPlaceId(draft.placeId);
+              setDescriptionLength(draft.description.length);
+              setFormKey((k) => k + 1);
+              setDraft(null);
+            }}
+          >
+            {t('form.draftContinue')}
+          </button>
+          <button
+            type="button"
+            data-testid="draft-discard"
+            className="h-9 rounded-full px-4 font-semibold text-primary hover:bg-accent"
+            onClick={() => {
+              clearDraft();
+              setDraft(null);
+            }}
+          >
+            {t('form.draftDiscard')}
+          </button>
+        </div>
+      ) : null}
       {!category ? (
         <fieldset data-testid="pick-category" className="space-y-4">
           <legend className="mb-4 text-xl font-semibold">{t('form.pickCategory')}</legend>
@@ -382,6 +469,43 @@ export function ListingForm({
                   >
                     <X aria-hidden className="size-3" />
                   </button>
+                  {/* Photo order (ADR-0045): buttons, so it works by keyboard and screen reader. */}
+                  {images.length > 1 ? (
+                    <div
+                      className="mt-1.5 flex justify-center gap-1"
+                      data-testid={`photo-order-${n}`}
+                    >
+                      <button
+                        type="button"
+                        disabled={n === 0}
+                        aria-label={t('form.photoEarlier', { n: n + 1 })}
+                        onClick={() => setImages((prev) => move(prev, n, n - 1))}
+                        className={orderButton}
+                      >
+                        <ChevronLeft aria-hidden className="size-4 rtl:rotate-180" />
+                      </button>
+                      {n > 0 ? (
+                        <button
+                          type="button"
+                          aria-label={t('form.photoMain', { n: n + 1 })}
+                          data-testid={`photo-main-${n}`}
+                          onClick={() => setImages((prev) => move(prev, n, 0))}
+                          className={orderButton}
+                        >
+                          <Star aria-hidden className="size-4" />
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        disabled={n === images.length - 1}
+                        aria-label={t('form.photoLater', { n: n + 1 })}
+                        onClick={() => setImages((prev) => move(prev, n, n + 1))}
+                        className={orderButton}
+                      >
+                        <ChevronRight aria-hidden className="size-4 rtl:rotate-180" />
+                      </button>
+                    </div>
+                  ) : null}
                 </li>
               ))}
               {images.length < 10 ? (
@@ -425,7 +549,7 @@ export function ListingForm({
                 required
                 minLength={3}
                 maxLength={120}
-                defaultValue={listing?.title}
+                defaultValue={listing?.title ?? seed?.title}
                 placeholder={
                   t.has(`form.titlePlaceholder.${category}` as never)
                     ? t(`form.titlePlaceholder.${category}` as never)
@@ -447,7 +571,8 @@ export function ListingForm({
                 required
                 maxLength={5000}
                 rows={6}
-                defaultValue={listing?.description}
+                defaultValue={listing?.description ?? seed?.description}
+                onChange={(e) => setDescriptionLength(e.target.value.length)}
                 data-testid="field-description"
                 {...invalid('description')}
                 className={`field w-full p-4 ${errors.description ? 'border-destructive' : 'border-input'}`}
@@ -543,7 +668,7 @@ export function ListingForm({
                       defaultValue={
                         listing?.price
                           ? String(toMajor(listing.price.amountMinor, listing.price.currency))
-                          : undefined
+                          : seed?.price || undefined
                       }
                       data-testid="field-price"
                       {...invalid('price')}
@@ -568,7 +693,7 @@ export function ListingForm({
                 <select
                   name="placeId"
                   required
-                  defaultValue={listing?.location.placeId ?? ''}
+                  defaultValue={listing?.location.placeId ?? seed?.placeId ?? ''}
                   onChange={(e) => setPlaceId(e.target.value)}
                   data-testid="field-place"
                   {...invalid('placeId')}
@@ -596,6 +721,50 @@ export function ListingForm({
             </div>
           ) : null}
 
+          {quality ? (
+            <section
+              aria-labelledby={`${id}-quality`}
+              className="space-y-2 rounded-2xl border p-4"
+              data-testid="quality-meter"
+              data-score={quality.score}
+            >
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <h2 id={`${id}-quality`} className="font-semibold">
+                  {t('form.quality.title')}
+                </h2>
+                <span className="font-semibold tabular-nums">
+                  {Math.round(quality.score * 100)} %
+                </span>
+              </div>
+              <div
+                role="meter"
+                aria-labelledby={`${id}-quality`}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(quality.score * 100)}
+                className="h-2 overflow-hidden rounded-full bg-muted"
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-[width]"
+                  style={{ width: `${quality.score * 100}%` }}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground" data-testid="quality-next">
+                {quality.next?.kind === 'photos'
+                  ? t('form.quality.photos', { count: quality.next.more })
+                  : quality.next?.kind === 'description'
+                    ? t('form.quality.description')
+                    : quality.next?.kind === 'details'
+                      ? t('form.quality.details', {
+                          fields: quality.next.missing
+                            .map((k) => t(`taxonomy.attributes.${k}` as never))
+                            .join(', '),
+                        })
+                      : t('form.quality.complete')}
+              </p>
+            </section>
+          ) : null}
+
           <Button
             type="submit"
             size="lg"
@@ -611,6 +780,58 @@ export function ListingForm({
     </form>
   );
 }
+
+/** An unfinished new listing, kept in this browser only (ADR-0045). */
+interface Draft {
+  category: string;
+  subcategory: string;
+  attributes: Record<string, string>;
+  images: UploadedImage[];
+  title: string;
+  description: string;
+  price: string;
+  placeId: string;
+  savedAt: string;
+}
+
+const DRAFT_KEY = 'raadi.listingDraft';
+
+function readDraft(): Draft | null {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? 'null') as Draft | null;
+    return d && typeof d.category === 'string' && d.category ? d : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(d: Draft): void {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+  } catch {
+    // Private windows and blocked storage: no draft, nothing else changes.
+  }
+}
+
+function clearDraft(): void {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // As above.
+  }
+}
+
+/** The list with the item at `from` moved to `to`. */
+function move<T>(list: T[], from: number, to: number): T[] {
+  if (to < 0 || to >= list.length) return list;
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item!);
+  return next;
+}
+
+const orderButton =
+  'inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-accent disabled:opacity-40';
 
 const tile =
   'flex min-h-32 flex-col items-start justify-between gap-4 rounded-[1.6rem] border bg-card p-5 text-start transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';

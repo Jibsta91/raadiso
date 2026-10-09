@@ -153,6 +153,9 @@ export interface ListingRow {
   /** The last drop (ADR-0044): the price before it, and when; null once the price goes up again. */
   previous_price_minor: string | null;
   price_dropped_at: Date | null;
+  /** Seller tools (ADR-0045): views counted, and when the owner last renewed it. */
+  views: number;
+  renewed_at: Date | null;
 }
 
 export interface ListingImage {
@@ -180,6 +183,8 @@ export interface Listing {
   promotedUntil: string | null;
   /** The listing's last price drop, until the price goes up again (ADR-0044). */
   priceDrop?: { previous: Money; at: string };
+  /** For the owner only (ADR-0045): views, and from when it can be renewed. */
+  stats?: { views: number; renewableAt: string };
   /** Present when the caller is authenticated. */
   viewer?: { isOwner: boolean; canEdit: boolean; canDelete: boolean };
   /** Only on the owner's list of their listings: a moderator removed it (and why). */
@@ -226,6 +231,14 @@ export function toListing(row: ListingRow, signer: ImgproxySigner): Listing {
     ...(row.status === 'deleted' && row.removed_by === 'moderation'
       ? { removal: { reason: row.removal_reason } }
       : {}),
+  };
+}
+
+/** The owner's numbers (ADR-0045): views, and from when the listing can be renewed. */
+export function ownerStats(row: ListingRow, renewAfterDays: number) {
+  return {
+    views: row.views,
+    renewableAt: new Date(row.published_at.getTime() + renewAfterDays * 86_400_000).toISOString(),
   };
 }
 

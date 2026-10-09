@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -22,6 +23,7 @@ import {
   type Listing,
   type ListingRow,
   mergedListingSchema,
+  ownerStats,
   priceOf,
   toListing,
   type UpdateListing,
@@ -29,6 +31,7 @@ import {
 import {
   ListingsRepository,
   type PriceChange,
+  RENEW_AFTER_DAYS,
   VersionConflictError,
 } from './listings.repository.js';
 
@@ -79,7 +82,43 @@ export class ListingsService {
     const viewer = principal ? await this.viewerFor(row, principal) : undefined;
     if (row.status === 'deleted' && !viewer?.canDelete)
       throw new NotFoundException('Listing not found');
-    return { ...toListing(row, this.signer), ...(viewer ? { viewer } : {}) };
+    return {
+      ...toListing(row, this.signer),
+      ...(viewer ? { viewer } : {}),
+      ...(viewer?.isOwner ? { stats: ownerStats(row, RENEW_AFTER_DAYS) } : {}),
+    };
+  }
+
+  /** One anonymous view (ADR-0045); the owner's own views don't count. */
+  async view(id: string, principal?: Principal): Promise<void> {
+    if (principal) {
+      const row = await this.repo.findById(id);
+      if (row?.owner_id === principal.sub) return;
+    }
+    await this.repo.countView(id);
+  }
+
+  /** Moves the owner's active listing back to the top, at most once a week (ADR-0045). */
+  async renew(principal: Principal, id: string): Promise<Listing> {
+    const current = await this.repo.findById(id);
+    if (!current || current.status === 'deleted') throw new NotFoundException('Listing not found');
+    if (!(await this.can(principal, 'can_edit', id)))
+      throw new ForbiddenException('You cannot renew this listing');
+    if (current.status !== 'active')
+      throw new ConflictException('Only active listings can be renewed');
+    const row = await this.repo.renew(id);
+    if (!row) {
+      throw new ConflictException({
+        message: 'Renewed or published less than a week ago',
+        renewableAt: ownerStats(current, RENEW_AFTER_DAYS).renewableAt,
+      });
+    }
+    listingsWritten.add(1, { action: 'renew', category: row.category });
+    return {
+      ...toListing(row, this.signer),
+      viewer: await this.viewerFor(row, principal),
+      stats: ownerStats(row, RENEW_AFTER_DAYS),
+    };
   }
 
   /** Internal: the seller to contact about a listing. Deleted listings are not found. */
@@ -98,7 +137,15 @@ export class ListingsService {
 
   async mine(principal: Principal, limit: number, offset: number, withRemoved = false) {
     const { rows, total } = await this.repo.listByOwner(principal.sub, limit, offset, withRemoved);
-    return { total, limit, offset, items: rows.map((r) => toListing(r, this.signer)) };
+    return {
+      total,
+      limit,
+      offset,
+      items: rows.map((r) => ({
+        ...toListing(r, this.signer),
+        stats: ownerStats(r, RENEW_AFTER_DAYS),
+      })),
+    };
   }
 
   async create(principal: Principal, input: CreateListing): Promise<Listing> {

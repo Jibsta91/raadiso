@@ -705,6 +705,19 @@
       "eiendom": "F.eks. Lys 3-roms med balkong",
       "jobb": "F.eks. Fullstack-utvikler",
       "reise": "F.eks. Koselig hytte i fjellet"
+    },
+    "draftFound": "Du har en annonse du ikke ble ferdig med. Vil du fortsette?",
+    "draftContinue": "Fortsett",
+    "draftDiscard": "Start på nytt",
+    "photoEarlier": "Flytt bilde {n} fremover",
+    "photoLater": "Flytt bilde {n} bakover",
+    "photoMain": "Gjør bilde {n} til hovedbilde",
+    "quality": {
+      "title": "Hvor komplett er annonsen?",
+      "photos": "{count, plural, one {Legg til # bilde til} other {Legg til # bilder til}}: annonser med bilder rangeres høyere.",
+      "description": "Beskriv mer: tilstand, størrelse, hva som følger med.",
+      "details": "Fyll ut {fields}: kjøpere filtrerer på dem.",
+      "complete": "Komplett. Den rangeres så høyt den kan."
     }
   },
   "my": {
@@ -725,7 +738,12 @@
       "duplicate": "en dobbel annonse",
       "spam": "spam",
       "other": "brudd på reglene våre"
-    }
+    },
+    "views": "{count, plural, =0 {Ingen visninger ennå} one {# visning} other {# visninger}}",
+    "renew": "Forny",
+    "renewed": "Fornyet",
+    "renewFailed": "Prøv igjen",
+    "renewFrom": "Kan fornyes {date}"
   },
   "messages": {
     "title": "Meldinger",

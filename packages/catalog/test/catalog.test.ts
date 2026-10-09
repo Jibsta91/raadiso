@@ -10,6 +10,7 @@ import {
   demoUuid,
 } from '../src/demo.js';
 import { distanceKm, findPlace, PLACES, placesOf, REGIONS } from '../src/places.js';
+import { qualityOf } from '../src/quality.js';
 import { searchParamsSchema } from '../src/search-params.js';
 import {
   ALL_ATTRIBUTES,
@@ -286,5 +287,35 @@ describe('price comparison rules (ADR-0043)', () => {
           ])
             assert.ok(keys.includes(k), `${sub.id}: ${k}`);
         }
+  });
+});
+
+describe('quality (ADR-0045)', () => {
+  it('scores photos, description and details, and names the step that helps most', () => {
+    const empty = qualityOf({
+      category: 'phones',
+      subcategory: 'mobile-phones',
+      description: 'ok',
+      imageCount: 0,
+      attributes: {},
+    });
+    assert.equal(empty.next?.kind, 'photos');
+    const full = qualityOf({
+      category: 'phones',
+      subcategory: 'mobile-phones',
+      description: 'x'.repeat(400),
+      imageCount: 4,
+      attributes: { condition: 'good', brand: 'apple', storageGb: 128 },
+    });
+    assert.equal(full.score, 1);
+    assert.equal(full.next, undefined);
+    const noDetails = qualityOf({
+      category: 'phones',
+      subcategory: 'mobile-phones',
+      description: 'x'.repeat(400),
+      imageCount: 4,
+      attributes: { condition: 'good' },
+    });
+    assert.deepEqual(noDetails.next, { kind: 'details', missing: ['brand', 'storageGb'] });
   });
 });

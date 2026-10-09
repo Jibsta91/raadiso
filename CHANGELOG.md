@@ -8,6 +8,13 @@ Each release also has generated notes on GitHub.
 
 ### Added
 
+- Seller tools (ADR-0045). The listing form shows how complete the listing is (the score best match
+  ranks by, now shared in the catalog) and the step that helps most; photos can be moved and one made
+  the main photo with buttons; a new listing saves itself as a draft in the browser and is offered back
+  next time. Owners see how often each listing was viewed (an anonymous counter, once per browser
+  session, owners' own views not counted) and can renew an active listing once a week, which moves it
+  back to the top.
+
 - The app catches up with the website's search (ADR-0041 to ADR-0044): the query's categories,
   places and prices become the search screen's own filters, with "search the exact words" one tap
   away; suggestions while typing; a category's own sorts and "recently reduced"; a "price reduced"

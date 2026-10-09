@@ -241,4 +241,24 @@ describe('reports (ADR-0027)', () => {
     };
     assert.equal(snapshot.priceDrop?.previous.amountMinor, 150000);
   });
+
+  it('counts views without an event, and renews only listings older than a week (ADR-0045)', async () => {
+    const repo = new ListingsRepository(pool);
+    const fresh = (await repo.create(input()))!;
+    assert.equal(await repo.countView(fresh.id), true);
+    assert.equal(await repo.countView(fresh.id), true);
+    assert.equal((await repo.findById(fresh.id))!.views, 2);
+    assert.equal((await events(fresh.id)).length, 1, 'views make no events');
+    assert.equal(await repo.renew(fresh.id), null, 'too new to renew');
+
+    const old = (await repo.create({
+      ...input(),
+      publishedAt: new Date(Date.now() - 10 * 86_400_000),
+    }))!;
+    const renewed = await repo.renew(old.id);
+    assert.ok(renewed && renewed.published_at.getTime() > Date.now() - 60_000);
+    assert.ok(renewed.renewed_at);
+    assert.equal(renewed.version, 2);
+    assert.equal(await repo.renew(old.id), null, 'once a week');
+  });
 });

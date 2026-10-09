@@ -15,9 +15,12 @@ import {
 const COLUMNS = `id, owner_id, seller_name, country, category, subcategory, title, description, price_minor, currency,
   attributes, place_id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lon,
   image_ids, status, version, created_at, updated_at, published_at, promoted_until, removed_by,
-  removal_reason, previous_price_minor, price_dropped_at`;
+  removal_reason, previous_price_minor, price_dropped_at, views, renewed_at`;
 
 export class VersionConflictError extends Error {}
+
+/** How long a listing must have been up before its owner can renew it (ADR-0045). */
+export const RENEW_AFTER_DAYS = 7;
 
 export interface NewListing extends CreateListing {
   id: string;
@@ -307,6 +310,40 @@ export class ListingsRepository {
            WHERE last.price_minor IS NOT DISTINCT FROM $2 AND last.currency IS NOT DISTINCT FROM $3)`,
       [row.id, row.price_minor, row.currency, at ?? null],
     );
+  }
+
+  /**
+   * Counts a view of an active listing (ADR-0045): a counter only, no version bump and no event, since
+   * views are not part of the listing's public state.
+   */
+  async countView(id: string): Promise<boolean> {
+    const { rowCount } = await this.pool.query(
+      `UPDATE listings SET views = views + 1 WHERE id = $1 AND status = 'active'`,
+      [id],
+    );
+    return (rowCount ?? 0) > 0;
+  }
+
+  /**
+   * Moves an active listing's publication time to now, if it was published (or renewed) more than a
+   * week ago (ADR-0045), and emits `listing.updated`. Null when it can't be renewed yet.
+   */
+  async renew(id: string): Promise<ListingRow | null> {
+    return withTransaction(this.pool, async (client) => {
+      const { rows } = await client.query<ListingRow>(
+        `UPDATE listings
+            SET published_at = now(), renewed_at = now(), version = version + 1
+          WHERE id = $1 AND status = 'active' AND published_at < now() - interval '${RENEW_AFTER_DAYS} days'
+          RETURNING ${COLUMNS}`,
+        [id],
+      );
+      const row = rows[0];
+      if (!row) return null;
+      await this.outbox(client, row, 'no.raadi.listings.listing.updated.v1', {
+        listing: toSnapshot(row),
+      });
+      return row;
+    });
   }
 
   /** A listing's prices over time, newest first (ADR-0044). */
