@@ -1,9 +1,9 @@
 # Production overlay (ADR-0051), on the server only:
 #   docker compose -f compose.yaml -f compose.prod.yaml up -d --wait
 # ./raadi deploy runs it with the server's .env, which is .env.example plus deploy/prod/prod.env.
-# No demo users, demo data, mocks or dev tools; Keycloak's admin console, Grafana and the dev tools
-# are not routed (reach them through an SSH tunnel); the admin console is, on admin.$RAADI_DOMAIN
-# (staff role and one-time code); HTTP redirects to HTTPS.
+# No demo users, demo data, mocks or dev tools; Keycloak's admin console and the dev tools are not
+# routed (reach them through an SSH tunnel); the admin console and Grafana are, behind Keycloak with a
+# staff role and a one-time code; HTTP redirects to HTTPS.
 
 services:
   # Development stand-ins never start here: real SMTP, a real push service, and payments either from
@@ -121,10 +121,13 @@ services:
       secrets-init: { condition: service_completed_successfully }
       keycloak-init: { condition: service_completed_successfully }
 
-  # Grafana sends no mail of its own (alerts go through Alertmanager).
+  # Grafana sends no mail of its own (alerts go through Alertmanager), and staff sign in only through
+  # Keycloak (staff role and one-time code): no password form, straight to the sign-in.
   grafana:
     environment:
       GF_SMTP_ENABLED: 'false'
+      GF_AUTH_DISABLE_LOGIN_FORM: 'true'
+      GF_AUTH_OAUTH_AUTO_LOGIN: 'true'
 
   # The server has 24 GB: the data services get more room than on a 16 GB laptop (ADR-0011).
   postgres:

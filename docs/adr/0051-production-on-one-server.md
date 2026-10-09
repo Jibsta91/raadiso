@@ -25,11 +25,12 @@ an identity provider for Somaliland.
   `COMPOSE_FILE=compose.yaml:compose.prod.yaml`, so plain `docker compose` and `./raadi` on the server
   use the overlay.
 - **What is off in production:** demo users, listings and one-time codes (`SEED_DEMO_DATA=false`);
-  routes to Keycloak's admin console, the dev tools and Grafana (reached through an SSH tunnel
-  instead); the BankID mock; Grafana's own mail.
+  routes to Keycloak's admin console and the dev tools (reached through an SSH tunnel instead); the BankID mock; Grafana's own mail.
 - **The admin console is served** on `admin.$RAADI_DOMAIN` (`ADMIN_ROUTED=true`), as ADR-0028 planned:
   with no demo users, every staff member signs in with a staff role and their own one-time code.
-  Phone mode still hides it, because its demo staff logins are public.
+  Phone mode still hides it, because its demo staff logins are public. Grafana is served too, on
+  `grafana.$RAADI_DOMAIN`, with Keycloak as its only sign-in (no password form) and the same
+  one-time code; the admin console links to it.
 - **Payments provider `none`.** No provider serves Somaliland yet. With `PAYMENTS_PROVIDER=none` the
   payments service starts without provider secrets, offers no products and refuses new orders, and the
   promote page says promotions are unavailable.

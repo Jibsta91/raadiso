@@ -55,7 +55,7 @@ export function tools(locale: string): Tool[] {
       url: at('grafana'),
       signIn: { kind: 'sso' },
       health: 'http://grafana:3000/api/health',
-      routed: true,
+      routed: process.env.GRAFANA_ROUTED !== 'false',
     },
     {
       id: 'errors',
