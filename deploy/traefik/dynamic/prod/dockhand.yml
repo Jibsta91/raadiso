@@ -1,0 +1,18 @@
+# Dockhand on dockhand.$RAADI_DOMAIN (ADR-0052), production only: the owner's Docker UI, which runs
+# next to the stack on the same server (not part of it). Off unless DOCKHAND_URL is set in
+# deploy/prod/local.env, and set it only after Dockhand's own login is switched on: Dockhand controls
+# every container on the server.
+{{ $d := env "RAADI_DOMAIN" }}
+{{- if env "DOCKHAND_URL" }}
+http:
+  routers:
+    dockhand:
+      rule: Host(`dockhand.{{ $d }}`)
+      entryPoints: [websecure]
+      service: dockhand
+      middlewares: [security-headers, ratelimit-default]
+  services:
+    dockhand:
+      loadBalancer:
+        servers: [{ url: "{{ env "DOCKHAND_URL" }}" }]
+{{- end }}

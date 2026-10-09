@@ -54,6 +54,9 @@ services:
 
   # The gateway without the development routes, plus the production HTTPS redirect.
   traefik:
+    environment:
+      # Dockhand's route (deploy/traefik/dynamic/prod/dockhand.yml, ADR-0052); empty means not routed.
+      DOCKHAND_URL: ${DOCKHAND_URL:-}
     volumes: !override
       - ./deploy/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./deploy/traefik/dynamic/common:/etc/traefik/dynamic/common:ro
