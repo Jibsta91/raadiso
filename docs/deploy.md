@@ -95,13 +95,31 @@ and is served on `arcane.<domain>` behind the staff gate. On the server, as the 
 `/home/prod/raadi`, after a deploy has copied `deploy/arcane/compose.yaml`:
 
 ```bash
-umask 077 && printf 'ENCRYPTION_KEY=%s\n' "$(openssl rand -hex 16)" > deploy/arcane/arcane.env
-docker compose -f deploy/arcane/compose.yaml up -d --wait
+umask 077 && printf 'ENCRYPTION_KEY=%s\nJWT_SECRET=%s\n' "$(openssl rand -hex 16)" "$(openssl rand -hex 32)" \
+  > deploy/arcane/arcane.env
+docker compose -p arcane --env-file .env -f deploy/arcane/compose.yaml up -d --wait
 ```
 
+`--env-file .env` gives the compose file the stack's `RAADI_DOMAIN` (for `APP_URL`); `-p arcane` keeps it
+its own project, as `.env` also sets the stack's `COMPOSE_PROJECT_NAME`. Keep a copy of
+`ENCRYPTION_KEY` in the owner's password manager: it decrypts what Arcane stores. `JWT_SECRET` only signs
+sessions; a new one signs everyone out. The first deploy that ships `arcane.env` in `.gitignore` can still
+delete the file (rsync reads the server's old `.gitignore`): write it after that deploy.
+
 Then add `ARCANE_URL=http://arcane:3552` to `deploy/prod/local.env` on your laptop and run
-`./raadi deploy`. Open `https://arcane.<domain>`: first the staff gate, then Arcane's own login (create
-its admin account at the first visit). Upgrade by changing the pinned image in the compose file.
+`./raadi deploy`. Open `https://arcane.<domain>`: first the staff gate, then Arcane's own login. Its first
+login is `arcane` / `arcane-admin`: change it at once (at least 12 characters with a symbol) and store it
+in the password manager. Upgrade by changing the pinned image in the compose file.
+
+Settings made in Arcane (Settings, or `PUT /api/environments/0/settings`), as set on 2026-10-11:
+
+- Base server URL `https://arcane.<domain>`; Gravatar off; sessions end after 240 minutes; activity kept
+  90 days.
+- Auto-update, auto-heal and image auto-patch **off**: the stack's images are pinned by digest and change
+  only through a deploy, and Docker's restart policies already restart containers.
+- Vulnerability scan (Trivy) daily at 04:30 UTC, 1 CPU and 1 GiB, unfixed findings hidden.
+- Scheduled prune on Sundays at 04:00 UTC: dangling images and build cache older than 7 days only; never
+  containers, networks or volumes (the stack's init containers and data live there).
 
 Moving from Dockhand: stop and remove it with its own compose file, then do the above. Its old
 `dockhand.<domain>` route went away with `DOCKHAND_URL`.
