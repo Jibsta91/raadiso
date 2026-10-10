@@ -15,7 +15,12 @@ import { Throttle } from '@nestjs/throttler';
 import { type AuthenticatedRequest, Public, Roles, ZodValidationPipe } from '@raadi/service-kit';
 import type { FastifyReply } from 'fastify';
 import type { z } from 'zod';
-import { eligibilityQuerySchema, pageQuerySchema, reviewBodySchema } from './model.js';
+import {
+  eligibilityQuerySchema,
+  myReviewsQuerySchema,
+  pageQuerySchema,
+  reviewBodySchema,
+} from './model.js';
 import { TrustService } from './trust.service.js';
 
 const uuidPipe = new ParseUUIDPipe({ version: undefined });
@@ -47,6 +52,21 @@ export class TrustController {
   @Get('me')
   me(@Req() req: AuthenticatedRequest) {
     return this.trust.me(req.principal!);
+  }
+
+  /** The caller's reviews, received or given (ADR-0055). */
+  @Get('me/reviews')
+  myReviews(
+    @Req() req: AuthenticatedRequest,
+    @Query(new ZodValidationPipe(myReviewsQuerySchema)) q: z.infer<typeof myReviewsQuerySchema>,
+  ) {
+    return this.trust.myReviews(req.principal!, q.direction, q.limit, q.offset);
+  }
+
+  /** Finished deals the caller may still review, closest deadline first (ADR-0055). */
+  @Get('me/pending-reviews')
+  pendingReviews(@Req() req: AuthenticatedRequest) {
+    return this.trust.pendingReviews(req.principal!);
   }
 
   @Get('eligibility')

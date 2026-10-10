@@ -4,7 +4,14 @@ import { buildEvent, type ListingSnapshot } from '@raadi/events';
 import { appendToOutbox, audit, type Principal, withTransaction } from '@raadi/service-kit';
 import type pg from 'pg';
 import { PG_POOL } from '../tokens.js';
-import type { DealFacts, ListingRow, ReviewRow, Role, VerificationRow } from './model.js';
+import type {
+  DealFacts,
+  ListingRow,
+  PendingRow,
+  ReviewRow,
+  Role,
+  VerificationRow,
+} from './model.js';
 
 type Db = pg.Pool | pg.PoolClient;
 
@@ -276,6 +283,57 @@ export class TrustRepository {
       this.ratingCounts(subjectId),
     ]);
     return { rows: page.rows, counts };
+  }
+
+  /** Reviews the user wrote (visible ones), with the reviewed person's name when known. */
+  async reviewsBy(
+    reviewerId: string,
+    limit: number,
+    offset: number,
+  ): Promise<{ rows: Array<ReviewRow & { subject_name: string | null }>; total: number }> {
+    const [page, count] = await Promise.all([
+      this.pool.query<ReviewRow & { subject_name: string | null }>(
+        `SELECT r.*, p.display_name AS subject_name
+           FROM reviews r LEFT JOIN people p ON p.user_id = r.subject_id
+          WHERE r.reviewer_id = $1 AND r.removed_at IS NULL
+          ORDER BY r.created_at DESC, r.id DESC LIMIT $2 OFFSET $3`,
+        [reviewerId, limit, offset],
+      ),
+      this.pool.query<{ n: string }>(
+        'SELECT count(*) AS n FROM reviews WHERE reviewer_id = $1 AND removed_at IS NULL',
+        [reviewerId],
+      ),
+    ]);
+    return { rows: page.rows, total: Number(count.rows[0]?.n ?? 0) };
+  }
+
+  /**
+   * Deals the user may still review, closest deadline first. The same rules as decideEligibility:
+   * the listing is sold within the window, exactly one of the two owns it, both wrote to the other
+   * about it, and the user has not reviewed that person for it (withdrawn and removed reviews count).
+   */
+  async pendingReviews(userId: string, windowDays: number): Promise<PendingRow[]> {
+    const { rows } = await this.pool.query<PendingRow>(
+      `SELECT l.id AS listing_id, l.title AS listing_title, l.sold_at,
+              mine.recipient_id AS other_id, p.display_name AS other_name,
+              l.owner_id = mine.recipient_id AS other_is_seller
+         FROM listings l
+         JOIN contacts mine ON mine.listing_id = l.id AND mine.sender_id = $1
+         JOIN contacts theirs ON theirs.listing_id = l.id
+                             AND theirs.sender_id = mine.recipient_id AND theirs.recipient_id = $1
+         LEFT JOIN people p ON p.user_id = mine.recipient_id
+        WHERE l.sold_at IS NOT NULL
+          AND l.sold_at > now() - make_interval(days => $2)
+          AND mine.recipient_id <> $1
+          AND (l.owner_id = $1) <> (l.owner_id = mine.recipient_id)
+          AND NOT EXISTS (SELECT 1 FROM reviews r
+                           WHERE r.listing_id = l.id AND r.reviewer_id = $1
+                             AND r.subject_id = mine.recipient_id)
+        ORDER BY l.sold_at ASC
+        LIMIT 50`,
+      [userId, windowDays],
+    );
+    return rows;
   }
 
   async ratingCounts(subjectId: string): Promise<Array<{ rating: number; n: number }>> {

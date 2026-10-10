@@ -23,6 +23,7 @@
     "categories": "Qaybaha",
     "favourites": "Kuwa aan jeclahay",
     "savedSearches": "Raadinta la keydiyay",
+    "reviews": "Qiimaynta",
     "moderation": "Maamul",
     "admin": "Maamul",
     "newAlerts": "{count, plural, one {# ogeysiis cusub} other {# ogeysiisyo cusub}}"
@@ -2022,5 +2023,28 @@
     "history": "Taariikhda qiimaha",
     "historyCaption": "Qiimaha xayeysiiskan muddo ka dib",
     "noPrice": "Qiimo ma leh"
+  },
+  "myReviews": {
+    "nav": "Qiimaynta",
+    "title": "Qiimaynta",
+    "received": "La helay",
+    "given": "La bixiyay",
+    "waiting": "{count} sugaya",
+    "askSeller": "Sidee ahayd iibsashada {name}?",
+    "askBuyer": "Sidee ahayd iibinta {name}?",
+    "theSeller": "iibiyaha",
+    "theBuyer": "iibsadaha",
+    "daysLeft": "Waxaad haysaa {count, plural, one {# maalin} other {# maalmood}} si aad u qiimayso.",
+    "lastDay": "Maanta waa maalinta ugu dambaysa ee qiimaynta.",
+    "give": "Qiimee",
+    "boughtFrom": "Waxaad ka iibsatay {name}",
+    "soldTo": "Waxaad u iibisay {name}",
+    "fromBuyer": "{name} ayaa kaa iibsaday",
+    "fromSeller": "{name} ayaa kuu iibiyay",
+    "stars": "{count} ka mid ah 5 xiddigood",
+    "emptyReceived": "Weli qiimayn ma jirto. Ganacsi kadib, qofka kale ayaa ku qiimayn kara.",
+    "emptyGiven": "Weli qof ma aadan qiimayn. Ganacsi kadib, halkan ayaad ku qiimayn kartaa qofka kale.",
+    "unavailable": "Qiimaynta hadda lama heli karo. Fadlan dib u isku day.",
+    "more": "Muuji wax badan"
   }
 }

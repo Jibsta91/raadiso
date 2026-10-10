@@ -23,6 +23,7 @@
     "categories": "Kategorier",
     "favourites": "Favoritter",
     "savedSearches": "Lagrede søk",
+    "reviews": "Vurderinger",
     "moderation": "Moderering",
     "admin": "Admin",
     "newAlerts": "{count, plural, one {# nytt varsel} other {# nye varsler}}"
@@ -2022,5 +2023,28 @@
     "history": "Prishistorikk",
     "historyCaption": "Prisene på denne annonsen over tid",
     "noPrice": "Ingen pris"
+  },
+  "myReviews": {
+    "nav": "Vurderinger",
+    "title": "Vurderinger",
+    "received": "Fått",
+    "given": "Gitt",
+    "waiting": "{count} venter",
+    "askSeller": "Hvordan var det å kjøpe fra {name}?",
+    "askBuyer": "Hvordan var det å selge til {name}?",
+    "theSeller": "selgeren",
+    "theBuyer": "kjøperen",
+    "daysLeft": "Du har {count, plural, one {# dag} other {# dager}} på å gi en vurdering.",
+    "lastDay": "Siste dag for å gi en vurdering.",
+    "give": "Gi vurdering",
+    "boughtFrom": "Du kjøpte fra {name}",
+    "soldTo": "Du solgte til {name}",
+    "fromBuyer": "{name} kjøpte fra deg",
+    "fromSeller": "{name} solgte til deg",
+    "stars": "{count} av 5 stjerner",
+    "emptyReceived": "Ingen vurderinger ennå. Etter en handel kan den andre vurdere deg.",
+    "emptyGiven": "Du har ikke vurdert noen ennå. Etter en handel kan du vurdere den andre her.",
+    "unavailable": "Vurderinger er ikke tilgjengelige akkurat nå. Prøv igjen om litt.",
+    "more": "Vis flere"
   }
 }

@@ -23,6 +23,7 @@
     "categories": "Categories",
     "favourites": "Favourites",
     "savedSearches": "Saved searches",
+    "reviews": "Reviews",
     "moderation": "Moderation",
     "admin": "Admin",
     "newAlerts": "{count, plural, one {# new notification} other {# new notifications}}"
@@ -2022,5 +2023,28 @@
     "history": "Price history",
     "historyCaption": "Prices of this listing over time",
     "noPrice": "No price"
+  },
+  "myReviews": {
+    "nav": "Reviews",
+    "title": "Reviews",
+    "received": "Received",
+    "given": "Given",
+    "waiting": "{count} waiting",
+    "askSeller": "How was it to buy from {name}?",
+    "askBuyer": "How was it to sell to {name}?",
+    "theSeller": "the seller",
+    "theBuyer": "the buyer",
+    "daysLeft": "{count, plural, one {# day} other {# days}} left to give a review.",
+    "lastDay": "Last day to give a review.",
+    "give": "Give review",
+    "boughtFrom": "You bought from {name}",
+    "soldTo": "You sold to {name}",
+    "fromBuyer": "{name} bought from you",
+    "fromSeller": "{name} sold to you",
+    "stars": "{count} of 5 stars",
+    "emptyReceived": "No reviews yet. After a deal, the other person can review you.",
+    "emptyGiven": "You have not reviewed anyone yet. After a deal you can review the other person here.",
+    "unavailable": "Reviews are not available right now. Please try again shortly.",
+    "more": "Show more"
   }
 }

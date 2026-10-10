@@ -17,15 +17,21 @@ export function ReviewPrompt({
   listingId,
   subjectId,
   subjectName,
+  initiallyOpen = false,
+  onDone,
 }: {
   listingId: string;
   subjectId: string;
   subjectName: string;
+  /** Open the form at once (the reviews page's "Give review"), not the one-line prompt. */
+  initiallyOpen?: boolean;
+  /** Called once the review is published. */
+  onDone?: () => void;
 }) {
   const { m } = useI18n();
   const api = useApi();
   const theme = useTheme();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initiallyOpen);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [sending, setSending] = useState(false);
@@ -74,6 +80,7 @@ export function ReviewPrompt({
     if (response.ok || response.status === 409) {
       haptics.success();
       setDone(true);
+      onDone?.();
       return;
     }
     setError(response.status === 429 ? m.review.rateLimited : m.review.error);

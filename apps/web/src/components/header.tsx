@@ -10,6 +10,7 @@ import {
   Plus,
   Search,
   ShieldCheck,
+  Star,
   UserRound,
 } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -170,6 +171,15 @@ export async function Header({ locale }: { locale: string }) {
               >
                 <Bookmark aria-hidden />
                 {t('savedSearches')}
+              </Link>
+              <Link
+                href="/my/reviews"
+                prefetch={false}
+                data-testid="nav-reviews"
+                className={menuItem}
+              >
+                <Star aria-hidden />
+                {t('reviews')}
               </Link>
               {isStaff(session.user.roles) ? (
                 // The admin console lives on its own host with its own sign-in (ADR-0028).
