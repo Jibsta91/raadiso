@@ -224,7 +224,7 @@ export default async function AdminOverview({ params }: { params: Promise<{ loca
                     <Link
                       href={a.href}
                       prefetch={false}
-                      className="flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm hover:bg-accent"
+                      className="flex items-center gap-3 rounded-card border px-3 py-2.5 text-sm hover:bg-accent"
                     >
                       <AlertTriangle
                         aria-hidden
@@ -234,7 +234,7 @@ export default async function AdminOverview({ params }: { params: Promise<{ loca
                       <ArrowUpRight aria-hidden className="size-4 text-muted-foreground" />
                     </Link>
                   ) : (
-                    <p className="flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm">
+                    <p className="flex items-center gap-3 rounded-card border px-3 py-2.5 text-sm">
                       <AlertTriangle aria-hidden className="size-4 shrink-0" />
                       {a.text}
                     </p>

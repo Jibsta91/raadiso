@@ -100,7 +100,7 @@ export function EmailPreferences({ initial }: { initial: NotificationPreferences
   );
 
   return (
-    <section aria-labelledby="email-settings" className="space-y-3 rounded-lg border p-4">
+    <section aria-labelledby="email-settings" className="space-y-3 rounded-card border p-4">
       <h2 id="email-settings" className="font-semibold">
         {t('title')}
       </h2>

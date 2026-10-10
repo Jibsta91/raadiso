@@ -1,7 +1,7 @@
 'use client';
 
 import type { PaymentOrder, PaymentProduct } from '@raadi/api-client';
-import { Button, cn } from '@raadi/ui';
+import { Alert, Button, cn } from '@raadi/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, useState } from 'react';
 import { formatPrice } from '@/lib/format';
@@ -63,7 +63,7 @@ export function PromoteForm({
           <label
             key={p.id}
             className={cn(
-              'cursor-pointer rounded-lg border p-4 transition-colors',
+              'cursor-pointer rounded-card border p-4 transition-colors',
               product === p.id ? 'border-primary ring-2 ring-primary' : 'hover:bg-accent',
             )}
           >
@@ -77,7 +77,7 @@ export function PromoteForm({
               data-testid={`product-${p.id}`}
             />
             <span className="block font-semibold">{t('days', { count: p.days })}</span>
-            <span className="block text-2xl font-bold">
+            <span className="block text-xl font-bold">
               {formatPrice({ amountMinor: p.amountOre, currency: 'NOK' }, locale)}
             </span>
             <span className="block text-xs text-muted-foreground">{t('vatIncluded')}</span>
@@ -85,9 +85,9 @@ export function PromoteForm({
         ))}
       </fieldset>
       {error ? (
-        <p role="alert" className="text-sm text-destructive" data-testid="promote-error">
+        <Alert variant="danger" className="w-full p-3" data-testid="promote-error">
           {error}
-        </p>
+        </Alert>
       ) : null}
       <Button type="submit" disabled={sending || !product} data-testid="promote-pay">
         {t('pay')}

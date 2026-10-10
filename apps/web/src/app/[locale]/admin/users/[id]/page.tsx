@@ -1,3 +1,4 @@
+import { Select } from '@raadi/ui';
 import {
   BadgeCheck,
   Ban,
@@ -164,7 +165,7 @@ export default async function UserPage({
                 {t('back')}
               </Link>
             </p>
-            <h1 className="truncate text-2xl font-bold sm:text-3xl" data-testid="admin-title">
+            <h1 className="truncate text-xl font-bold sm:text-2xl" data-testid="admin-title">
               {name}
             </h1>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
@@ -235,13 +236,13 @@ export default async function UserPage({
             >
               <label className="flex flex-col gap-1.5 text-sm font-semibold">
                 {t('suspend.duration')}
-                <select name="hours" className="field h-10 border-input px-3 font-normal">
+                <Select name="hours" className="h-10 px-3 font-normal w-auto">
                   <option value="">{t('suspend.untilLifted')}</option>
                   <option value="24">{t('suspend.hours', { count: 24 })}</option>
                   <option value="72">{t('suspend.hours', { count: 72 })}</option>
                   <option value="168">{t('suspend.days', { count: 7 })}</option>
                   <option value="720">{t('suspend.days', { count: 30 })}</option>
-                </select>
+                </Select>
               </label>
             </ActionDialog>
           ) : null}
@@ -321,7 +322,7 @@ export default async function UserPage({
                 {STAFF_ROLES.map((r) => (
                   <label
                     key={r}
-                    className="flex cursor-pointer items-start gap-2 rounded-xl border p-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-soft"
+                    className="flex cursor-pointer items-start gap-2 rounded-card border p-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-soft"
                   >
                     <input
                       type="checkbox"
@@ -367,7 +368,7 @@ export default async function UserPage({
       {user.suspension ? (
         <div
           role="status"
-          className="flex flex-col gap-1 rounded-2xl border border-destructive/30 bg-destructive/8 p-4 text-sm"
+          className="flex flex-col gap-1 rounded-card border border-destructive/30 bg-destructive/8 p-4 text-sm"
           data-testid="suspension-banner"
         >
           <p className="flex items-center gap-2 font-semibold text-destructive">
@@ -709,9 +710,9 @@ async function UserListings({ id }: { id: string }) {
               className="flex items-center gap-3"
             >
               {l.image ? (
-                <img src={l.image.thumb} alt="" className="size-10 rounded-lg object-cover" />
+                <img src={l.image.thumb} alt="" className="size-10 rounded-card object-cover" />
               ) : (
-                <span className="size-10 rounded-lg bg-placeholder" />
+                <span className="size-10 rounded-card bg-placeholder" />
               )}
               <span className="font-medium hover:underline">{l.title}</span>
             </Link>
@@ -792,7 +793,7 @@ async function UserReviews({ id }: { id: string }) {
   return (
     <ul className="space-y-2">
       {page.items.map((r) => (
-        <li key={r.id} className="rounded-2xl border bg-card p-4 text-sm">
+        <li key={r.id} className="rounded-card border bg-card p-4 text-sm">
           <p className="flex flex-wrap items-center gap-2">
             <span className="font-semibold tabular-nums">
               {'★'.repeat(r.rating)}

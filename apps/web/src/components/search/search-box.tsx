@@ -214,7 +214,7 @@ export function SearchBox({
         aria-label={t('search.suggestions.title')}
         hidden={!shown}
         data-testid="search-suggestions"
-        className="absolute inset-x-0 top-full z-50 mt-2 max-h-[60vh] overflow-y-auto rounded-2xl border bg-card p-1.5 text-start shadow-float"
+        className="absolute inset-x-0 top-full z-50 mt-2 max-h-[60vh] overflow-y-auto rounded-card border bg-card p-1.5 text-start shadow-float"
       >
         {groups.map((g) => (
           <li key={g.kind} role="presentation">
@@ -241,7 +241,7 @@ export function SearchBox({
                       choose(o);
                     }}
                     onMouseEnter={() => setActive(i)}
-                    className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 ${i === active ? 'bg-accent' : ''}`}
+                    className={`flex cursor-pointer items-center gap-3 rounded-card px-3 py-2 ${i === active ? 'bg-accent' : ''}`}
                   >
                     <I aria-hidden className="size-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate font-medium">{o.label}</span>

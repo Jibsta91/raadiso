@@ -77,7 +77,7 @@ export default async function ListingPage({
             {' · '}
             {tx(`categories.${l.category}` as never)}
           </p>
-          <h1 className="text-2xl font-bold sm:text-3xl" data-testid="admin-title">
+          <h1 className="text-xl font-bold sm:text-2xl" data-testid="admin-title">
             {l.title}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -168,7 +168,7 @@ export default async function ListingPage({
                     <img
                       src={i === 0 ? img.large : img.card}
                       alt=""
-                      className="aspect-[4/3] size-full rounded-xl object-cover"
+                      className="aspect-[4/3] size-full rounded-card object-cover"
                     />
                   </a>
                 ))}
@@ -215,9 +215,9 @@ export default async function ListingPage({
                   [t('sellerStats.sold'), l.seller.sold],
                   [t('sellerStats.removed'), l.seller.removedByModeration],
                 ].map(([k, v]) => (
-                  <div key={String(k)} className="rounded-xl bg-muted p-2">
+                  <div key={String(k)} className="rounded-card bg-muted p-2">
                     <p className="text-lg font-bold tabular-nums">{v}</p>
-                    <p className="text-[11px] text-muted-foreground">{k}</p>
+                    <p className="text-xs text-muted-foreground">{k}</p>
                   </div>
                 ))}
               </div>
@@ -246,10 +246,10 @@ export default async function ListingPage({
                           <img
                             src={o.image.thumb}
                             alt=""
-                            className="size-7 rounded-md object-cover"
+                            className="size-7 rounded-field object-cover"
                           />
                         ) : (
-                          <span className="size-7 rounded-md bg-placeholder" />
+                          <span className="size-7 rounded-field bg-placeholder" />
                         )}
                         <span className="truncate">{o.title}</span>
                         <Pill tone={o.status === 'active' ? 'good' : 'neutral'} className="ms-auto">

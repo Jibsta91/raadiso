@@ -30,7 +30,7 @@ export default async function InboxPage({ params }: { params: Promise<{ locale: 
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-3xl font-bold">{t('title')}</h1>
+      <h1 className="text-2xl font-bold">{t('title')}</h1>
       {items.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
           <MessageCircle aria-hidden className="size-10" />
@@ -38,7 +38,7 @@ export default async function InboxPage({ params }: { params: Promise<{ locale: 
         </div>
       ) : (
         <ul
-          className="divide-y overflow-hidden rounded-3xl border bg-card"
+          className="divide-y overflow-hidden rounded-card border bg-card"
           role="list"
           data-testid="conversation-list"
         >
@@ -53,10 +53,10 @@ export default async function InboxPage({ params }: { params: Promise<{ locale: 
                   <img
                     src={c.listing.image.thumb}
                     alt=""
-                    className="h-14 w-16 rounded-xl object-cover"
+                    className="h-14 w-16 rounded-card object-cover"
                   />
                 ) : (
-                  <div className="flex h-14 w-16 items-center justify-center rounded-xl bg-placeholder">
+                  <div className="flex h-14 w-16 items-center justify-center rounded-card bg-placeholder">
                     <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
                   </div>
                 )}

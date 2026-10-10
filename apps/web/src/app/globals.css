@@ -1,45 +1,63 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/geist';
-@import '@fontsource-variable/bricolage-grotesque';
 @source "../../../../packages/ui/src";
 
 /*
  * "Fjord Glass" design tokens (ADR-0021), shared with the app (apps/mobile/src/theme.tsx), in the
  * shadcn/ui naming convention. Each colour is light-dark(light, dark): the OS picks unless the user
  * chose Light or Dark, in which case the `theme` cookie sets <html data-theme> on the server, so the
- * first paint is already right. Fonts are bundled (OFL-1.1); nothing is fetched at runtime (ADR-0009).
+ * first paint is already right. Fonts are self-hosted through next/font/local (app/fonts.ts, OFL-1.1);
+ * nothing is fetched at runtime (ADR-0009).
+ *
+ * Components use only these tokens, never Tailwind's raw palette (test/palette-classes.test.ts).
  */
 :root {
   color-scheme: light dark;
-  --radius: 1rem;
   --background: light-dark(#f3f4f7, #0b0d12);
   --foreground: light-dark(#0e1116, #eef0f3);
-  --card: light-dark(#ffffff, #151821);
+  /* Dark cards sit clearly above the page: a lighter surface and a stronger border. */
+  --card: light-dark(#ffffff, #161a24);
   --card-foreground: var(--foreground);
   --primary: light-dark(#3b5bff, #7b93ff);
   --primary-foreground: light-dark(#ffffff, #0b1230);
-  --secondary: light-dark(#e8eaef, #1f2430);
+  --secondary: light-dark(#e8eaef, #232937);
   --secondary-foreground: light-dark(#0e1116, #eef0f3);
-  --muted: light-dark(#e8eaef, #1f2430);
+  --muted: light-dark(#e8eaef, #232937);
   --muted-foreground: light-dark(#5b6170, #9aa3ae);
   --subtle-foreground: light-dark(#474d5a, #c3c8d2);
-  --accent: light-dark(#e8eaef, #1f2430);
+  --accent: light-dark(#e8eaef, #232937);
   --accent-foreground: light-dark(#0e1116, #eef0f3);
+  /* Strong contrast for small selected states (chips, toggles): near-black, near-white in dark mode. */
   --ink: light-dark(#0e1116, #eef0f3);
   --ink-foreground: light-dark(#ffffff, #0b0d12);
+  /* Large dark surfaces (a feature tile, the "New listing" pill): they stay dark and elevated in dark
+     mode instead of turning into near-white slabs. */
+  --inverse: light-dark(#0e1116, #252b39);
+  --inverse-foreground: light-dark(#ffffff, #eef0f3);
   --highlight: #d4f55a;
   --highlight-foreground: #1a2200;
   --soft: light-dark(#dfe6ff, #1c2546);
   --soft-foreground: light-dark(#13205a, #dfe6ff);
   --destructive: light-dark(#c2261f, #ff7b72);
   --destructive-foreground: light-dark(#ffffff, #0b0d12);
+  /* A good price, a price drop, a done step: green. */
   --success: light-dark(#1f7a3f, #56d364);
   --success-foreground: light-dark(#ffffff, #0b0d12);
-  --placeholder: light-dark(#dfe3ec, #1f2430);
-  --border: light-dark(rgb(14 17 22 / 0.08), rgb(255 255 255 / 0.1));
-  --input: light-dark(rgb(14 17 22 / 0.14), rgb(255 255 255 / 0.16));
+  --warning: light-dark(#8a5a00, #f2c14e);
+  --warning-foreground: light-dark(#ffffff, #0b0d12);
+  /* Review stars, the favourite heart and the verified mark. */
+  --rating: light-dark(#c27c0e, #fbbf24);
+  --favourite: light-dark(#e11d48, #fb7185);
+  --verified: light-dark(#046c4e, #6ee7b7);
+  --verified-soft: light-dark(#e3f5ec, #0d2c21);
+  /* Behind photos and dialogs (the gallery, modal backdrops), with light text on top. */
+  --scrim: #05070a;
+  --scrim-foreground: #ffffff;
+  --placeholder: light-dark(#dfe3ec, #232937);
+  --border: light-dark(rgb(14 17 22 / 0.09), rgb(255 255 255 / 0.13));
+  --input: light-dark(rgb(14 17 22 / 0.18), rgb(255 255 255 / 0.2));
   --ring: light-dark(#3b5bff, #7b93ff);
-  --glass: light-dark(rgb(255 255 255 / 0.72), rgb(21 24 33 / 0.72));
+  /* Glass is for floating chrome only (header, menus, chips over photos). */
+  --glass: light-dark(rgb(255 255 255 / 0.72), rgb(22 26 36 / 0.72));
   --glass-border: light-dark(rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.08));
   --glass-header: light-dark(rgb(243 244 247 / 0.72), rgb(11 13 18 / 0.72));
   --shadow-color: light-dark(rgb(30 45 110 / 0.25), rgb(0 0 0 / 0.6));
@@ -81,6 +99,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
   --color-highlight: var(--highlight);
   --color-highlight-foreground: var(--highlight-foreground);
   --color-soft: var(--soft);
@@ -89,6 +109,14 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-rating: var(--rating);
+  --color-favourite: var(--favourite);
+  --color-verified: var(--verified);
+  --color-verified-soft: var(--verified-soft);
+  --color-scrim: var(--scrim);
+  --color-scrim-foreground: var(--scrim-foreground);
   --color-placeholder: var(--placeholder);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -96,15 +124,56 @@
   --color-glass: var(--glass);
   --color-glass-border: var(--glass-border);
   --color-glass-header: var(--glass-header);
-  --radius-sm: calc(var(--radius) - 8px);
-  --radius-md: calc(var(--radius) - 4px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Bricolage Grotesque Variable', 'Geist Variable', ui-sans-serif, sans-serif;
-  --shadow-float: 0 24px 60px -20px var(--shadow-color);
+
+  /* Geist for text, Bricolage only for display headings and the wordmark (app/fonts.ts). */
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-geist), ui-sans-serif, sans-serif;
+
+  /* Elevation: cards are flat with a 1px border; shadows lift what floats or is hovered. */
+  --shadow-1: 0 1px 2px 0 var(--shadow-color);
+  --shadow-2: 0 6px 20px -8px var(--shadow-color);
+  --shadow-3: 0 24px 60px -20px var(--shadow-color);
+  --shadow-float: var(--shadow-3);
+}
+
+@theme {
+  /* Type scale: 12 / 13 / 14 / 15 (body) / 18 / 22 / 28 / 40, and one clamped display size. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.35;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.4;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.55;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.45;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.2;
+  --text-3xl: 2.5rem;
+  --text-3xl--line-height: 1.1;
+  --text-display: clamp(2.25rem, 5vw, 3.5rem);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.04em;
+
+  /* Radius: fields and small chips 8px, cards, photos and panels 14px, sheets and dialogs 20px;
+     only buttons and filter chips are fully round. The t-shirt sizes land on the same steps. */
+  --radius-field: 0.5rem;
+  --radius-card: 0.875rem;
+  --radius-sheet: 1.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 0.875rem;
+  --radius-3xl: 1.25rem;
+
+  /* Motion: short and ease-out; anything that moves is wrapped in motion-safe:. */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --default-transition-duration: 180ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @layer base {
@@ -112,7 +181,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background font-sans text-foreground antialiased;
+    @apply bg-background font-sans text-base text-foreground antialiased;
   }
   h1,
   h2 {
@@ -127,15 +196,38 @@
   backdrop-filter: blur(16px) saturate(180%);
 }
 
-/* Text inputs, selects and textareas. Border colour comes from the caller (border-input, or
-   border-destructive on a validation error). */
+/* One visible focus ring for links, buttons and tiles. */
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* A price: figures line up, semibold. */
+@utility price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Text inputs, selects and textareas (packages/ui Input, Select, Textarea). Border colour comes from
+   the caller (border-input, or border-destructive on a validation error). */
 @utility field {
   border-width: 1px;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius-field);
   background-color: var(--card);
   color: var(--foreground);
   &:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 1px;
+  }
+}
+
+/* Phones zoom into a focused field whose text is under 16px. Unlayered, so it wins over text-sm. */
+@media (hover: none) and (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
   }
 }

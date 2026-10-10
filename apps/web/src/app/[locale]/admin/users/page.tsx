@@ -1,3 +1,4 @@
+import { Input, Select } from '@raadi/ui';
 import { UserX, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -90,7 +91,7 @@ export default async function UsersPage({
 
       <FilterBar testId="user-filters">
         <Field label={t('filters.q')}>
-          <input
+          <Input
             name="q"
             defaultValue={query.q}
             placeholder={t('filters.qPlaceholder')}
@@ -100,21 +101,21 @@ export default async function UsersPage({
           />
         </Field>
         <Field label={t('filters.role')}>
-          <select name="role" defaultValue={query.role ?? ''} className={inputCls}>
+          <Select name="role" defaultValue={query.role ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             {STAFF_ROLES.map((r) => (
               <option key={r} value={r}>
                 {tr(r)}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <Field label={t('filters.status')}>
-          <select name="status" defaultValue={query.status ?? ''} className={inputCls}>
+          <Select name="status" defaultValue={query.status ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             <option value="active">{t('status.active')}</option>
             <option value="suspended">{t('status.suspended')}</option>
-          </select>
+          </Select>
         </Field>
         <button
           type="submit"

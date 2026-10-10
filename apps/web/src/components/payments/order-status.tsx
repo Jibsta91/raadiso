@@ -31,7 +31,7 @@ export function OrderStatus({ initial }: { initial: PaymentOrder }) {
   const done = order.status === 'captured';
   return (
     <div className="space-y-4" data-testid="order-status" data-status={order.status}>
-      <h1 className="text-2xl font-bold">{t(`status.${order.status}`)}</h1>
+      <h1 className="text-xl font-bold">{t(`status.${order.status}`)}</h1>
       {done && order.promotedUntil ? (
         <p data-testid="order-promoted-until">
           {t('promotedUntil', {

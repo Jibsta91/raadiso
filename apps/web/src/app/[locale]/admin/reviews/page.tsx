@@ -1,3 +1,4 @@
+import { Input, Select } from '@raadi/ui';
 import { Star } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -74,24 +75,24 @@ export default async function ReviewsPage({
       <PageHeader title={t('title')} intro={t('intro')} />
       <FilterBar testId="review-filters">
         <Field label={t('filters.rating')}>
-          <select name="rating" defaultValue={query.rating ?? ''} className={inputCls}>
+          <Select name="rating" defaultValue={query.rating ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             {[1, 2, 3, 4, 5].map((r) => (
               <option key={r} value={r}>
                 {'★'.repeat(r)}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <Field label={t('filters.state')}>
-          <select name="removed" defaultValue={query.removed ?? ''} className={inputCls}>
+          <Select name="removed" defaultValue={query.removed ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             <option value="false">{t('filters.visible')}</option>
             <option value="true">{t('filters.removed')}</option>
-          </select>
+          </Select>
         </Field>
         <Field label={t('filters.user')}>
-          <input
+          <Input
             name="user"
             defaultValue={query.user}
             placeholder="uuid"
@@ -117,13 +118,13 @@ export default async function ReviewsPage({
             {page.items.map((r) => (
               <li
                 key={r.id}
-                className="flex flex-col gap-3 rounded-2xl border bg-card p-4"
+                className="flex flex-col gap-3 rounded-card border bg-card p-4"
                 data-testid="review-card"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1 text-sm">
                     <p
-                      className="text-lg leading-none tracking-wider text-amber-500"
+                      className="text-lg leading-none tracking-wider text-rating"
                       aria-label={t('stars', { count: r.rating })}
                     >
                       {'★'.repeat(r.rating)}

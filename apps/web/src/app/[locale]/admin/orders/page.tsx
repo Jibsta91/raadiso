@@ -1,3 +1,4 @@
+import { Input, Select } from '@raadi/ui';
 import { Receipt } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -111,7 +112,7 @@ export default async function OrdersPage({
       ) : null}
       <FilterBar testId="order-filters">
         <Field label={t('filters.q')}>
-          <input
+          <Input
             name="q"
             defaultValue={query.q}
             placeholder={t('filters.qPlaceholder')}
@@ -119,14 +120,14 @@ export default async function OrdersPage({
           />
         </Field>
         <Field label={t('filters.status')}>
-          <select name="status" defaultValue={query.status ?? ''} className={inputCls}>
+          <Select name="status" defaultValue={query.status ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
                 {t(`status.${s}`)}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         {query.user ? <input type="hidden" name="user" value={query.user} /> : null}
         <button

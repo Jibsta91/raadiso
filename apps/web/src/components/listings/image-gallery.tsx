@@ -76,7 +76,7 @@ export function ImageGallery({ images, title }: { images: Listing['images']; tit
       onKeyDown={onKey}
     >
       <div
-        className="relative touch-pan-y overflow-hidden rounded-lg bg-muted"
+        className="relative touch-pan-y overflow-hidden rounded-card bg-muted"
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
       >
@@ -123,7 +123,7 @@ export function ImageGallery({ images, title }: { images: Listing['images']; tit
                 onClick={() => setIndex(i)}
                 aria-label={alt(i)}
                 aria-current={i === index}
-                className={`overflow-hidden rounded-md border-2 ${i === index ? 'border-primary' : 'border-transparent'}`}
+                className={`overflow-hidden rounded-field border-2 ${i === index ? 'border-primary' : 'border-transparent'}`}
               >
                 <img
                   src={img.urls.thumb}
@@ -140,7 +140,7 @@ export function ImageGallery({ images, title }: { images: Listing['images']; tit
       <dialog
         ref={dialog}
         aria-label={title}
-        className="m-0 h-dvh max-h-none w-screen max-w-none bg-black/95 p-0 text-white backdrop:bg-black/80"
+        className="m-0 h-dvh max-h-none w-screen max-w-none bg-scrim/95 p-0 text-scrim-foreground backdrop:bg-scrim/80"
         onClose={() => setOpen(false)}
         onKeyDown={onKey}
         onClick={(e) => {

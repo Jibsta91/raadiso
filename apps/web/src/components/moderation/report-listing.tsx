@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@raadi/ui';
+import { Alert, Button, Textarea } from '@raadi/ui';
 import { Flag } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useState } from 'react';
@@ -40,7 +40,7 @@ export function ReportListing({ listingId }: { listingId: string }) {
   return (
     <form
       data-testid="report-form"
-      className="space-y-3 rounded-3xl border bg-card p-4"
+      className="space-y-3 rounded-card border bg-card p-4"
       onSubmit={async (e) => {
         e.preventDefault();
         if (!reason) return;
@@ -76,19 +76,19 @@ export function ReportListing({ listingId }: { listingId: string }) {
       </fieldset>
       <label className="block space-y-1">
         <span className="text-sm font-medium">{t('comment')}</span>
-        <textarea
+        <Textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           maxLength={500}
           rows={3}
           data-testid="report-comment"
-          className="field w-full border-input p-3 text-sm"
+          className="p-3"
         />
       </label>
       {state === 'error' ? (
-        <p role="alert" className="text-sm text-destructive">
+        <Alert variant="danger" className="w-full p-3">
           {t('error')}
-        </p>
+        </Alert>
       ) : null}
       <div className="flex gap-2">
         <Button

@@ -1,7 +1,7 @@
 'use client';
 
 import type { Listing } from '@raadi/api-client';
-import { Button } from '@raadi/ui';
+import { Alert, Button } from '@raadi/ui';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -36,7 +36,7 @@ export function ListingActions({ listing }: { listing: Listing }) {
     });
 
   return (
-    <div className="space-y-2 rounded-lg border p-4" data-testid="listing-actions">
+    <div className="space-y-2 rounded-card border p-4" data-testid="listing-actions">
       {viewer.isOwner ? <p className="text-sm font-medium">{t('yours')}</p> : null}
       <div className="flex flex-wrap gap-2">
         {viewer.canEdit ? (
@@ -80,9 +80,9 @@ export function ListingActions({ listing }: { listing: Listing }) {
         ) : null}
       </div>
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <Alert variant="danger" className="w-full p-3">
           {t('actionFailed')}
-        </p>
+        </Alert>
       ) : null}
     </div>
   );

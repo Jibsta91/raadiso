@@ -67,7 +67,7 @@ export default async function OrderPage({
               {t('back')}
             </Link>
           </p>
-          <h1 className="text-2xl font-bold sm:text-3xl" data-testid="admin-title">
+          <h1 className="text-xl font-bold sm:text-2xl" data-testid="admin-title">
             {t(`products.${o.product}` as never)} · <span className="tabular-nums">{amount}</span>
           </h1>
           <p className="flex flex-wrap items-center gap-2">

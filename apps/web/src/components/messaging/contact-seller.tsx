@@ -1,7 +1,7 @@
 'use client';
 
 import type { StartedConversation } from '@raadi/api-client';
-import { Button } from '@raadi/ui';
+import { Alert, Button, Textarea } from '@raadi/ui';
 import { MessageCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type FormEvent, useState } from 'react';
@@ -51,7 +51,7 @@ export function ContactSeller({ listingId }: { listingId: string }) {
   return (
     <form
       onSubmit={submit}
-      className="space-y-2 rounded-lg border p-4"
+      className="space-y-2 rounded-card border p-4"
       data-testid="contact-seller"
     >
       <label className="block space-y-1">
@@ -59,20 +59,20 @@ export function ContactSeller({ listingId }: { listingId: string }) {
           <MessageCircle aria-hidden className="size-4" />
           {t('contact.title')}
         </span>
-        <textarea
+        <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           required
           maxLength={2000}
           rows={3}
           data-testid="contact-message"
-          className="w-full field border-input p-2 text-sm"
+          className="p-2"
         />
       </label>
       {error ? (
-        <p role="alert" className="text-sm text-destructive" data-testid="contact-error">
+        <Alert variant="danger" className="w-full p-3" data-testid="contact-error">
           {error}
-        </p>
+        </Alert>
       ) : null}
       <Button
         type="submit"

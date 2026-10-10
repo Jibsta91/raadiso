@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@raadi/ui';
+import { Alert, cn, Input, Textarea } from '@raadi/ui';
 import {
   Ban,
   CircleCheck,
@@ -158,7 +158,7 @@ export function ActionDialog({
         type="button"
         onClick={() => ref.current?.showModal()}
         className={cn(
-          'inline-flex shrink-0 items-center gap-1.5 rounded-full border font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
+          'inline-flex shrink-0 items-center gap-1.5 rounded-full border font-semibold motion-safe:transition-colors focus-ring disabled:opacity-50',
           size === 'sm' ? 'h-8 px-3 text-xs' : 'h-9 px-4 text-sm',
           TRIGGER[tone],
         )}
@@ -171,7 +171,7 @@ export function ActionDialog({
       <dialog
         ref={ref}
         aria-labelledby={titleId}
-        className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-3xl border bg-card p-0 text-card-foreground shadow-float backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+        className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-card border bg-card p-0 text-card-foreground shadow-float backdrop:bg-scrim/40 backdrop:backdrop-blur-sm"
         data-testid={testId ? `${testId}-dialog` : undefined}
       >
         <form action={formAction} className="flex flex-col gap-4 p-6">
@@ -194,7 +194,7 @@ export function ActionDialog({
             </button>
           </div>
           {stepUp ? (
-            <p className="flex items-center gap-2 rounded-xl bg-soft px-3 py-2 text-xs text-soft-foreground">
+            <p className="flex items-center gap-2 rounded-card bg-soft px-3 py-2 text-xs text-soft-foreground">
               <ShieldAlert aria-hidden className="size-4 shrink-0" />
               {t('stepUpNote')}
             </p>
@@ -211,7 +211,7 @@ export function ActionDialog({
                 {reasons.options.map((o) => (
                   <label
                     key={o.value}
-                    className="cursor-pointer rounded-full border px-3 py-1.5 text-sm transition-colors has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-ink-foreground has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring hover:bg-accent"
+                    className="cursor-pointer rounded-full border px-3 py-1.5 text-sm motion-safe:transition-colors has-[:checked]:border-ink has-[:checked]:bg-ink has-[:checked]:text-ink-foreground has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring hover:bg-accent"
                   >
                     <input
                       type="radio"
@@ -232,7 +232,7 @@ export function ActionDialog({
           {note ? (
             <label className="flex flex-col gap-1.5 text-sm font-semibold">
               {note.label}
-              <textarea
+              <Textarea
                 name="note"
                 rows={3}
                 maxLength={500}
@@ -240,7 +240,7 @@ export function ActionDialog({
                 placeholder={note.placeholder}
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
-                className="field border-input px-3 py-2 text-sm font-normal"
+                className="px-3 py-2 font-normal w-auto"
               />
               {note.templates?.length ? (
                 <span className="flex flex-wrap gap-1">
@@ -266,11 +266,11 @@ export function ActionDialog({
                   b: (c) => <strong className="font-mono">{c}</strong>,
                 })}
               </span>
-              <input
+              <Input
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 autoComplete="off"
-                className="field h-10 border-input px-3 font-mono"
+                className="h-10 px-3 font-mono w-auto"
                 data-testid={testId ? `${testId}-confirm` : undefined}
               />
             </label>
@@ -278,7 +278,7 @@ export function ActionDialog({
           {state && !state.ok && state.error === 'step_up' ? (
             <div
               role="alert"
-              className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-soft p-4 text-sm text-soft-foreground sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-3 rounded-card border border-primary/30 bg-soft p-4 text-sm text-soft-foreground sm:flex-row sm:items-center sm:justify-between"
             >
               <span className="flex items-center gap-2">
                 <ShieldAlert aria-hidden className="size-4 shrink-0" />
@@ -294,9 +294,9 @@ export function ActionDialog({
               </button>
             </div>
           ) : state && !state.ok ? (
-            <p role="alert" className="text-sm text-destructive">
+            <Alert variant="danger" className="w-full p-3">
               {state.message}
-            </p>
+            </Alert>
           ) : null}
           <div className="flex justify-end gap-2 pt-2">
             <button
@@ -310,7 +310,7 @@ export function ActionDialog({
               type="submit"
               disabled={blocked}
               className={cn(
-                'h-10 rounded-full px-5 text-sm font-semibold transition-opacity disabled:opacity-40',
+                'h-10 rounded-full px-5 text-sm font-semibold motion-safe:transition-opacity disabled:opacity-40',
                 tone === 'danger'
                   ? 'bg-destructive text-destructive-foreground'
                   : 'bg-ink text-ink-foreground',

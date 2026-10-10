@@ -55,7 +55,7 @@ export function FavouriteButton({
       title={saved ? t('remove') : t('add')}
       data-testid="favourite-toggle"
       className={cn(
-        'flex items-center justify-center rounded-full transition-[transform,background-color] active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'flex items-center justify-center rounded-full motion-safe:transition-[transform,background-color] motion-safe:active:scale-90 focus-ring',
         variant === 'overlay'
           ? 'glass absolute end-2.5 top-2.5 z-10 size-9 sm:end-3 sm:top-3'
           : 'size-11 border bg-card hover:bg-accent',
@@ -63,7 +63,7 @@ export function FavouriteButton({
     >
       <Heart
         aria-hidden
-        className={cn('size-[18px]', saved ? 'fill-rose-500 text-rose-500' : 'text-foreground')}
+        className={cn('size-[18px]', saved ? 'fill-favourite text-favourite' : 'text-foreground')}
         strokeWidth={2}
       />
     </button>

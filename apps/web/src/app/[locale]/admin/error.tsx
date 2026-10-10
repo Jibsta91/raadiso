@@ -15,7 +15,7 @@ export default function AdminPageError({
   const t = useTranslations('errors');
   return (
     <div className="py-24 text-center" role="alert" data-testid="page-error">
-      <h1 className="text-3xl font-bold">{t('title')}</h1>
+      <h1 className="text-2xl font-bold">{t('title')}</h1>
       <p className="mt-2 text-muted-foreground">{t('body')}</p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
         <button

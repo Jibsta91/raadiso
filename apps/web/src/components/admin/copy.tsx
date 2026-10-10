@@ -17,7 +17,7 @@ export function CopyButton({ value, label }: { value: string; label?: string }) 
           setTimeout(() => setDone(false), 1500);
         })
       }
-      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+      className="inline-flex items-center gap-1 rounded-field px-1.5 py-0.5 font-mono text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
       title={t('copy')}
       aria-label={`${t('copy')} ${label ?? value}`}
     >

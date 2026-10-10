@@ -89,13 +89,13 @@ function ToolCard({
   const off = tool.status === 'off';
   return (
     <li
-      className="flex flex-col gap-3 rounded-xl border bg-card p-4"
+      className="flex flex-col gap-3 rounded-card border bg-card p-4"
       data-testid={`tool-${tool.id}`}
       data-status={tool.status}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <span className="grid size-9 place-items-center rounded-lg bg-accent">
+          <span className="grid size-9 place-items-center rounded-card bg-accent">
             <Icon aria-hidden className="size-4.5" />
           </span>
           <div>

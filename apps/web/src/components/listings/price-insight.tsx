@@ -40,7 +40,7 @@ export async function PriceInsight({ insight }: { insight: Insight }) {
   return (
     <section
       aria-labelledby="price-insight"
-      className="space-y-3 rounded-2xl border p-4"
+      className="space-y-3 rounded-card border p-4"
       data-testid="price-insight"
       data-rating={rating}
     >

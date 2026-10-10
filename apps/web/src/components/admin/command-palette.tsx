@@ -238,7 +238,7 @@ export function CommandPalette({ nav, canSearch }: { nav: PaletteNav[]; canSearc
     <dialog
       ref={dialog}
       aria-label={t('label')}
-      className="mx-auto mt-[12vh] w-[min(40rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border bg-card p-0 text-card-foreground shadow-float backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+      className="mx-auto mt-[12vh] w-[min(40rem,calc(100vw-2rem))] overflow-hidden rounded-card border bg-card p-0 text-card-foreground shadow-float backdrop:bg-scrim/40 backdrop:backdrop-blur-sm"
       onClick={(e) => e.target === dialog.current && close()}
       data-testid="command-palette"
       lang={locale}
@@ -273,7 +273,7 @@ export function CommandPalette({ nav, canSearch }: { nav: PaletteNav[]; canSearc
           return (
             <li key={item.id} role="presentation">
               {header ? (
-                <p className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {header}
                 </p>
               ) : null}
@@ -284,7 +284,7 @@ export function CommandPalette({ nav, canSearch }: { nav: PaletteNav[]; canSearc
                 onMouseMove={() => setActive(i)}
                 onClick={() => item.run()}
                 className={cn(
-                  'flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2',
+                  'flex cursor-pointer items-center gap-3 rounded-card px-3 py-2',
                   i === active && 'bg-accent',
                 )}
                 data-testid="palette-item"
@@ -299,7 +299,7 @@ export function CommandPalette({ nav, canSearch }: { nav: PaletteNav[]; canSearc
                   ) : null}
                 </span>
                 {item.hint ? (
-                  <span className="font-mono text-[11px] text-muted-foreground">{item.hint}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{item.hint}</span>
                 ) : null}
                 {i === active ? (
                   <CornerDownLeft aria-hidden className="size-3.5 text-muted-foreground" />
@@ -311,7 +311,7 @@ export function CommandPalette({ nav, canSearch }: { nav: PaletteNav[]; canSearc
           );
         })}
       </ul>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 border-t px-4 py-2 text-[11px] text-muted-foreground">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 border-t px-4 py-2 text-xs text-muted-foreground">
         <span>↑↓ {t('move')}</span>
         <span>↵ {t('open')}</span>
         <span>esc {t('close')}</span>

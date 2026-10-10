@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
@@ -7,16 +7,26 @@ import type { ReactNode } from 'react';
 import { ErrorReporting } from '@/components/error-reporting';
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
+import { bricolage, geist } from '@/app/fonts';
 import { routing } from '@/i18n/routing';
 import { env } from '@/lib/env';
+import { GLOBAL, pickMessages } from '@/lib/client-messages';
 import { isAdminHost } from '@/lib/host';
 import { parseTheme, THEME_COOKIE, themeAttribute } from '@/lib/theme';
-
-const SERVER_ONLY = new Set(['admin', 'terms', 'privacy']);
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
+
+// Browser chrome follows the page (light and dark backgrounds); content reaches under the notch, and
+// the header and bottom bars pad themselves with the safe-area insets.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f3f4f7' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b0d12' },
+  ],
+  viewportFit: 'cover',
+};
 
 export async function generateMetadata({
   params,
@@ -51,18 +61,20 @@ export default async function LocaleLayout({
     getMessages(),
   ]);
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
-  // Client components get the text they may need. On the website that leaves out the admin console's
-  // strings (about half of all text) and the legal pages, which render on the server only.
-  const clientMessages = admin
-    ? messages
-    : Object.fromEntries(Object.entries(messages).filter(([ns]) => !SERVER_ONLY.has(ns)));
+  // Client components get only the text they use: the frame's here, a page's own through
+  // <ClientMessages> (lib/client-messages.ts). Server components need none in the page.
+  const clientMessages = pickMessages(messages as never, GLOBAL);
 
   return (
-    <html lang={locale} data-theme={themeAttribute(theme)}>
+    <html
+      lang={locale}
+      data-theme={themeAttribute(theme)}
+      className={`${geist.variable} ${bricolage.variable}`}
+    >
       <body className="flex min-h-screen flex-col">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-ink-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-inverse focus:px-4 focus:py-2 focus:text-inverse-foreground"
         >
           {t('skip')}
         </a>

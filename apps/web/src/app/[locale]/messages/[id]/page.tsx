@@ -6,6 +6,7 @@ import { ReviewForm } from '@/components/trust/review-form';
 import { Link } from '@/i18n/navigation';
 import { conversation, reviewEligibility } from '@/lib/api';
 import { getSession } from '@/lib/session';
+import { ClientMessages } from '@/components/client-messages';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,50 +40,52 @@ export default async function ConversationPage({
   const eligibility = await reviewEligibility(detail.listing.id, detail.counterpart.id);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <Link href="/messages" className="text-sm text-primary hover:underline">
-        ← {t('title')}
-      </Link>
-      <header className="flex items-center gap-4 rounded-3xl border bg-card p-3">
-        {detail.listing.image ? (
-          <img
-            src={detail.listing.image.thumb}
-            alt=""
-            className="h-16 w-20 rounded-2xl object-cover"
+    <ClientMessages set="thread">
+      <div className="mx-auto max-w-3xl space-y-4">
+        <Link href="/messages" className="text-sm text-primary hover:underline">
+          ← {t('title')}
+        </Link>
+        <header className="flex items-center gap-4 rounded-card border bg-card p-3">
+          {detail.listing.image ? (
+            <img
+              src={detail.listing.image.thumb}
+              alt=""
+              className="h-16 w-20 rounded-card object-cover"
+            />
+          ) : null}
+          <div>
+            <h1 className="text-xl font-bold" data-testid="thread-counterpart">
+              {detail.counterpart.name}
+            </h1>
+            <Link
+              href={`/listings/${detail.listing.id}`}
+              className="text-sm text-muted-foreground hover:underline"
+            >
+              {detail.listing.title}
+            </Link>
+            <p className="text-xs text-muted-foreground">
+              {t(detail.role === 'buyer' ? 'roleBuyer' : 'roleSeller')}
+            </p>
+          </div>
+        </header>
+        {eligibility?.canReview ? (
+          <ReviewForm
+            listingId={detail.listing.id}
+            subjectId={detail.counterpart.id}
+            subjectName={detail.counterpart.name}
+            subjectRole={eligibility.subjectRole}
           />
         ) : null}
-        <div>
-          <h1 className="text-xl font-bold" data-testid="thread-counterpart">
-            {detail.counterpart.name}
-          </h1>
-          <Link
-            href={`/listings/${detail.listing.id}`}
-            className="text-sm text-muted-foreground hover:underline"
-          >
-            {detail.listing.title}
-          </Link>
-          <p className="text-xs text-muted-foreground">
-            {t(detail.role === 'buyer' ? 'roleBuyer' : 'roleSeller')}
+        {eligibility && !eligibility.canReview && eligibility.reason === 'already_reviewed' ? (
+          <p className="rounded-card border bg-card p-4 text-sm" data-testid="review-done">
+            {tt('reviewed', { name: detail.counterpart.name })}{' '}
+            <Link href={`/users/${detail.counterpart.id}`} className="text-primary hover:underline">
+              {tt('seeProfile')}
+            </Link>
           </p>
-        </div>
-      </header>
-      {eligibility?.canReview ? (
-        <ReviewForm
-          listingId={detail.listing.id}
-          subjectId={detail.counterpart.id}
-          subjectName={detail.counterpart.name}
-          subjectRole={eligibility.subjectRole}
-        />
-      ) : null}
-      {eligibility && !eligibility.canReview && eligibility.reason === 'already_reviewed' ? (
-        <p className="rounded-2xl border bg-card p-4 text-sm" data-testid="review-done">
-          {tt('reviewed', { name: detail.counterpart.name })}{' '}
-          <Link href={`/users/${detail.counterpart.id}`} className="text-primary hover:underline">
-            {tt('seeProfile')}
-          </Link>
-        </p>
-      ) : null}
-      <Thread initial={detail} />
-    </div>
+        ) : null}
+        <Thread initial={detail} />
+      </div>
+    </ClientMessages>
   );
 }

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Raadiso — buy and sell locally",
-    "description": "Raadiso is an open-source marketplace for buying and selling in Norway: goods, cars, property, jobs and travel."
+    "description": "Buy and sell locally on Raadiso: goods, vehicles, property, jobs and more."
   },
   "nav": {
     "main": "Main navigation",
@@ -47,7 +47,7 @@
       },
       "jobb": {
         "name": "Jobs",
-        "description": "Positions from employers across Norway."
+        "description": "Positions from employers across the country."
       },
       "reise": {
         "name": "Travel",
@@ -188,7 +188,8 @@
     "objective": "goal {value}",
     "budget": "{value} of the error budget left",
     "noTraffic": "No traffic yet",
-    "componentsTitle": "Components"
+    "componentsTitle": "Components",
+    "licence": "Raadiso is open-source software, published under the Apache-2.0 licence."
   },
   "privacy": {
     "title": "Privacy",
@@ -223,12 +224,17 @@
     }
   },
   "footer": {
-    "tagline": "Raadiso — open-source classifieds",
+    "tagline": "Buy and sell near you.",
     "privacy": "Privacy",
-    "status": "Status",
-    "openSource": "Apache-2.0",
+    "status": "Service status",
     "terms": "Terms",
-    "links": "About Raadiso"
+    "links": "About Raadiso",
+    "about": "Raadiso",
+    "howItWorks": "How it works",
+    "safety": "Safety tips",
+    "help": "Help",
+    "copyright": "© {year} Horumar Group",
+    "settings": "Language and appearance"
   },
   "errors": {
     "title": "Something went wrong",
@@ -520,11 +526,11 @@
     "filters": "Filters",
     "clearFilters": "Clear filters",
     "price": "Price",
-    "priceMin": "From (kr)",
-    "priceMax": "To (kr)",
+    "priceMin": "From",
+    "priceMax": "To",
     "location": "Location",
     "near": "Near",
-    "anywhere": "All of Norway",
+    "anywhere": "Everywhere",
     "radius": "Within",
     "radiusKm": "{km} km",
     "sortLabel": "Sort by",
@@ -558,14 +564,16 @@
       "bodyType": "Body type",
       "drivetrain": "Drivetrain",
       "ownership": "Ownership",
-      "make": "Make"
-    },
-    "priceRanges": {
-      "0-999": "Under 1,000 kr",
-      "1000-9999": "1,000–9,999 kr",
-      "10000-99999": "10,000–99,999 kr",
-      "100000-999999": "100,000–999,999 kr",
-      "1000000+": "1 million kr or more"
+      "make": "Make",
+      "region": "Region",
+      "usage": "Usage",
+      "steering": "Steering",
+      "furnishing": "Furnishing",
+      "landUse": "Land use",
+      "dealType": "Rent or sale",
+      "brand": "Brand",
+      "itemType": "Type",
+      "sex": "Sex"
     },
     "distance": "{km} km away",
     "unavailable": "Search is temporarily unavailable. Please try again shortly.",
@@ -893,7 +901,7 @@
     "greeting": "Welcome to Raadiso, {name}!",
     "intro": "Your account is ready. Three things that help, all optional:",
     "languageTitle": "Language",
-    "languageHint": "Raadiso is available in Norsk, English and Soomaali. Change it any time with the language menu at the top.",
+    "languageHint": "Raadiso is available in {languages}. Change it any time with the language menu at the bottom of the page.",
     "verifyTitle": "Verify with BankID",
     "verifyHint": "Buyers and sellers trust verified people more. Raadiso only stores that you are verified, never your national identity number.",
     "passkeyTitle": "Add a passkey",
@@ -1004,7 +1012,10 @@
       }
     },
     "newListing": "Post a listing in {category}",
-    "reducedTitle": "Recently reduced"
+    "reducedTitle": "Recently reduced",
+    "emptyTitle": "Be the first to post in {category}",
+    "emptyBody": "Nothing is listed here yet. Your listing will be the first one people see.",
+    "emptyAction": "Post a listing"
   },
   "favourites": {
     "title": "Favourites",

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, cn } from '@raadi/ui';
+import { Alert, Button, cn, Textarea } from '@raadi/ui';
 import { Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type FormEvent, useState } from 'react';
@@ -49,7 +49,7 @@ export function ReviewForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 rounded-lg border p-4" data-testid="review-form">
+    <form onSubmit={submit} className="space-y-3 rounded-card border p-4" data-testid="review-form">
       <h2 className="font-semibold">
         {t(subjectRole === 'seller' ? 'form.titleSeller' : 'form.titleBuyer', {
           name: subjectName,
@@ -66,13 +66,13 @@ export function ReviewForm({
               aria-label={t('stars', { count: n })}
               data-testid={`review-star-${n}`}
               onClick={() => setRating(n)}
-              className="rounded p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="rounded p-1 focus-ring"
             >
               <Star
                 aria-hidden
                 className={cn(
                   'size-7',
-                  n <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/50',
+                  n <= rating ? 'fill-rating text-rating' : 'text-muted-foreground/50',
                 )}
               />
             </button>
@@ -81,20 +81,20 @@ export function ReviewForm({
       </fieldset>
       <label className="block space-y-1">
         <span className="text-sm font-medium">{t('form.comment')}</span>
-        <textarea
+        <Textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           maxLength={1000}
           rows={3}
           data-testid="review-comment"
-          className="w-full field border-input p-2 text-sm"
+          className="p-2"
         />
       </label>
       <p className="text-xs text-muted-foreground">{t('form.public')}</p>
       {error ? (
-        <p role="alert" className="text-sm text-destructive" data-testid="review-error">
+        <Alert variant="danger" className="w-full p-3" data-testid="review-error">
           {error}
-        </p>
+        </Alert>
       ) : null}
       <Button type="submit" disabled={sending} data-testid="review-submit">
         {t('form.submit')}

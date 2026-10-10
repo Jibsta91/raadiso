@@ -10,11 +10,11 @@ import {
 import { currencySymbol } from '@raadi/catalog/money';
 import { findPlace, regionName } from '@raadi/catalog/places';
 import type { SearchQuery } from '@raadi/api-client';
-import { Button } from '@raadi/ui';
+import { Alert, Button, Input } from '@raadi/ui';
 import { ChevronRight, SearchX } from 'lucide-react';
 import type { Metadata } from 'next';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
-import { ListingCard } from '@/components/listings/listing-card';
+import { ListingGrid } from '@/components/listings/listing-card';
 import { ActiveFilters, facetChips, paramChip } from '@/components/search/active-filters';
 import { FacetGroup } from '@/components/search/facet-group';
 import { FilterPanel } from '@/components/search/filter-panel';
@@ -36,6 +36,7 @@ import {
   withParams,
   toggleValue,
 } from '@/lib/search-params';
+import { ClientMessages } from '@/components/client-messages';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,11 +92,7 @@ export default async function SearchPage({
     result = await searchListings({ ...requested, pageSize: 24 } as unknown as SearchQuery);
   } catch (error) {
     if (!(error instanceof ServiceUnavailableError)) throw error;
-    return (
-      <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-4">
-        {t('search.unavailable')}
-      </div>
-    );
+    return <Alert variant="danger">{t('search.unavailable')}</Alert>;
   }
 
   // What the query said (ADR-0041) becomes ordinary filters: the sidebar, the chips (each removable)
@@ -198,303 +195,304 @@ export default async function SearchPage({
   ];
 
   return (
-    <div className="space-y-6">
-      <form action={`/${locale}/search`} method="get" role="search" className="flex gap-2">
-        {Object.entries(current)
-          .filter(([k]) => k !== 'q' && k !== 'page')
-          .map(([k, v]) => (
-            <input key={k} type="hidden" name={k} value={v} />
-          ))}
-        <SearchBox
-          country={country}
-          defaultValue={requested.q ?? ''}
-          placeholder={t('search.placeholder')}
-          label={t('search.placeholder')}
-          testId="search-input"
-          className="flex-1"
-          inputClassName="h-12 w-full rounded-full border border-input bg-card px-5 text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
-        />
-        <Button type="submit" size="lg" data-testid="search-submit">
-          {t('search.submit')}
-        </Button>
-      </form>
-
-      <div className="grid gap-4 md:grid-cols-[16rem_1fr] md:gap-8">
-        <FilterPanel
-          title={t('search.filters')}
-          showResults={t('search.showResults', { total: result.total })}
-          active={chips.length}
-          closeLabel={t('search.closeFilters')}
-          clear={
-            filtered ? (
-              <Link
-                href={href(current.q ? { q: current.q } : {})}
-                className="px-2 text-sm text-primary hover:underline"
-              >
-                {t('search.clearFilters')}
-              </Link>
-            ) : null
-          }
-        >
-          {facets.map((facet) => (
-            <FacetGroup
-              key={facet}
-              name={facet}
-              title={t(`search.facets.${facet}`)}
-              values={result.facets[facet] ?? []}
-              params={current}
-              label={label(facet)}
-              showAll={(count) => t('search.showAll', { count })}
-            />
-          ))}
-          {/* Reduced in the last 30 days (ADR-0044): a link, so it works without JavaScript. */}
-          <Link
-            href={href(
-              withParams(current, { priceDropped: current.priceDropped ? undefined : 'true' }),
-            )}
-            scroll={false}
-            data-testid="filter-price-dropped"
-            aria-current={current.priceDropped ? 'true' : undefined}
-            className="flex items-center gap-2 rounded-lg py-1.5 text-sm hover:underline"
-          >
-            <span
-              aria-hidden
-              className={`flex size-4 items-center justify-center rounded border ${current.priceDropped ? 'border-primary bg-primary text-primary-foreground' : 'border-input'}`}
-            >
-              {current.priceDropped ? '✓' : ''}
-            </span>
-            {t('search.priceDropped')}
-          </Link>
-          <form
-            action={`/${locale}/search`}
-            method="get"
-            className="space-y-4 pt-2"
-            data-testid="price-filter"
-          >
-            {Object.entries(current)
-              .filter(([k]) => !RANGE_KEYS.includes(k) && k !== 'page')
-              .map(([k, v]) => (
-                <input key={k} type="hidden" name={k} value={v} />
-              ))}
-            {ranges.map((r) => (
-              <fieldset key={r.param} data-testid={`range-${r.param}`}>
-                <legend className="mb-2 text-sm font-semibold">
-                  {rangeTitle(r.param)}
-                  {r.unit ? (
-                    <span className="font-normal text-muted-foreground"> ({r.unit})</span>
-                  ) : null}
-                </legend>
-                <div className="flex gap-2">
-                  {(['Min', 'Max'] as const).map((which) => (
-                    <input
-                      key={which}
-                      name={`${r.param}${which}`}
-                      type="number"
-                      min={0}
-                      step={r.param === 'price' ? 'any' : 1}
-                      inputMode={r.param === 'price' ? 'decimal' : 'numeric'}
-                      aria-label={`${rangeTitle(r.param)} ${t(`search.price${which}`)}`}
-                      placeholder={t(`search.price${which}`)}
-                      defaultValue={current[`${r.param}${which}`]}
-                      className="h-10 w-full field border-input px-3 text-sm"
-                    />
-                  ))}
-                </div>
-              </fieldset>
+    <ClientMessages set="search">
+      <div className="space-y-6">
+        <form action={`/${locale}/search`} method="get" role="search" className="flex gap-2">
+          {Object.entries(current)
+            .filter(([k]) => k !== 'q' && k !== 'page')
+            .map(([k, v]) => (
+              <input key={k} type="hidden" name={k} value={v} />
             ))}
-            <Button type="submit" variant="outline" size="sm" className="w-full">
-              {t('search.apply')}
-            </Button>
-          </form>
-        </FilterPanel>
-
-        <section aria-labelledby="results-heading" className="space-y-4">
-          {only ? (
-            <nav aria-label={t('nav.breadcrumb')} className="text-sm text-muted-foreground">
-              <ol className="flex flex-wrap items-center gap-1">
-                <li>
-                  <Link href={`/${only}`} className="hover:underline" data-testid="crumb-category">
-                    {t(`taxonomy.categories.${only}` as never)}
-                  </Link>
-                </li>
-                {subcategories.length === 1 ? (
-                  <>
-                    <li aria-hidden>
-                      <ChevronRight className="size-3.5" />
-                    </li>
-                    <li aria-current="page" className="text-foreground">
-                      {t(`taxonomy.subcategories.${subcategories[0]}` as never)}
-                    </li>
-                  </>
-                ) : null}
-              </ol>
-            </nav>
-          ) : null}
-          {navKey ? (
-            <nav aria-label={t(`taxonomy.attributes.${navKey}` as never)} data-testid="third-level">
-              <ul className="flex flex-wrap gap-2" role="list">
-                {(result.facets[navKey] ?? []).map((f) => {
-                  const on = selected(current, navKey).includes(f.value);
-                  return (
-                    <li key={f.value}>
-                      <Link
-                        href={href(toggleValue(current, navKey, f.value))}
-                        scroll={false}
-                        aria-current={on ? 'true' : undefined}
-                        data-testid={`third-level-${f.value}`}
-                        className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium ${on ? 'border-ink bg-ink text-ink-foreground' : 'bg-card hover:bg-accent'}`}
-                      >
-                        {label(navKey)(f.value)}
-                        <span className={on ? 'opacity-75' : 'text-muted-foreground'}>
-                          {f.count}
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-          ) : null}
-          <SearchControls
-            params={current}
+          <SearchBox
             country={country}
-            sorts={only ? sortsOf(only, sub) : BASE_SORTS}
+            defaultValue={requested.q ?? ''}
+            placeholder={t('search.placeholder')}
+            label={t('search.placeholder')}
+            testId="search-input"
+            className="flex-1"
+            inputClassName="h-12 w-full rounded-full border border-input bg-card px-5 text-foreground focus-ring"
           />
-          {understood.length && requested.q ? (
-            <p className="text-sm text-muted-foreground" data-testid="search-understood">
-              {t('search.understoodAs', { q: requested.q })} {understood.map(describe).join(' · ')}.{' '}
-              <Link
-                href={href({ q: requested.q, understand: 'false' })}
-                className="font-medium text-primary underline-offset-4 hover:underline"
-                data-testid="search-exact-words"
-              >
-                {t('search.exactWords')}
-              </Link>
-            </p>
-          ) : null}
-          {result.relaxed ? (
-            <p
-              role="status"
-              className="rounded-xl bg-soft p-3 text-sm"
-              data-testid="search-relaxed"
-            >
-              {t('search.relaxed')}
-            </p>
-          ) : null}
-          {result.suggestion ? (
-            <p className="text-sm" data-testid="search-did-you-mean">
-              {t.rich('search.didYouMean', {
-                suggestion: () => (
-                  <Link
-                    href={href({ ...withoutKey(requested, 'page'), q: result.suggestion! })}
-                    className="font-semibold text-primary underline-offset-4 hover:underline"
-                  >
-                    {result.suggestion}
-                  </Link>
-                ),
-              })}
-            </p>
-          ) : null}
-          <ActiveFilters
-            chips={chips}
-            clear={current.q ? { q: current.q } : {}}
-            clearLabel={t('search.clearFilters')}
-            removeLabel={(filter) => t('search.removeFilter', { filter })}
-          />
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 id="results-heading" className="text-xl font-semibold" data-testid="result-count">
-              {t('search.results', { total: result.total })}
-            </h1>
-            {canSave ? (
-              <SaveSearchButton name={saveName} params={toSave} initialSaved={alreadySaved} />
-            ) : null}
-          </div>
-          {result.items.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
-              <SearchX aria-hidden className="size-10" />
-              <p className="font-medium text-foreground">{t('search.noResults')}</p>
-              <p>{t('search.noResultsHint')}</p>
-              {current.q && filtered ? (
+          <Button type="submit" size="lg" data-testid="search-submit">
+            {t('search.submit')}
+          </Button>
+        </form>
+
+        <div className="grid gap-4 md:grid-cols-[16rem_1fr] md:gap-8">
+          <FilterPanel
+            title={t('search.filters')}
+            showResults={t('search.showResults', { total: result.total })}
+            active={chips.length}
+            closeLabel={t('search.closeFilters')}
+            clear={
+              filtered ? (
                 <Link
-                  href={href({ q: current.q })}
-                  prefetch={false}
-                  className="font-medium text-primary underline-offset-4 hover:underline"
-                  data-testid="search-everywhere"
+                  href={href(current.q ? { q: current.q } : {})}
+                  className="px-2 text-sm text-primary hover:underline"
                 >
-                  {t('search.searchEverywhere', { q: current.q })}
+                  {t('search.clearFilters')}
                 </Link>
-              ) : null}
-              <nav aria-label={t('search.browseCategories')} className="mt-4 space-y-3">
-                <p className="text-sm">{t('search.browseCategories')}</p>
-                <ul className="flex flex-wrap justify-center gap-2" role="list">
-                  {categoriesOf(country).map(({ id: key }) => {
-                    const Icon = CATEGORY_ICONS[key] ?? SearchX;
+              ) : null
+            }
+          >
+            {facets.map((facet) => (
+              <FacetGroup
+                key={facet}
+                name={facet}
+                title={t(`search.facets.${facet}`)}
+                values={result.facets[facet] ?? []}
+                params={current}
+                label={label(facet)}
+                showAll={(count) => t('search.showAll', { count })}
+              />
+            ))}
+            {/* Reduced in the last 30 days (ADR-0044): a link, so it works without JavaScript. */}
+            <Link
+              href={href(
+                withParams(current, { priceDropped: current.priceDropped ? undefined : 'true' }),
+              )}
+              scroll={false}
+              data-testid="filter-price-dropped"
+              aria-current={current.priceDropped ? 'true' : undefined}
+              className="flex items-center gap-2 rounded-card py-1.5 text-sm hover:underline"
+            >
+              <span
+                aria-hidden
+                className={`flex size-4 items-center justify-center rounded border ${current.priceDropped ? 'border-primary bg-primary text-primary-foreground' : 'border-input'}`}
+              >
+                {current.priceDropped ? '✓' : ''}
+              </span>
+              {t('search.priceDropped')}
+            </Link>
+            <form
+              action={`/${locale}/search`}
+              method="get"
+              className="space-y-4 pt-2"
+              data-testid="price-filter"
+            >
+              {Object.entries(current)
+                .filter(([k]) => !RANGE_KEYS.includes(k) && k !== 'page')
+                .map(([k, v]) => (
+                  <input key={k} type="hidden" name={k} value={v} />
+                ))}
+              {ranges.map((r) => (
+                <fieldset key={r.param} data-testid={`range-${r.param}`}>
+                  <legend className="mb-2 text-sm font-semibold">
+                    {rangeTitle(r.param)}
+                    {r.unit ? (
+                      <span className="font-normal text-muted-foreground"> ({r.unit})</span>
+                    ) : null}
+                  </legend>
+                  <div className="flex gap-2">
+                    {(['Min', 'Max'] as const).map((which) => (
+                      <Input
+                        key={which}
+                        name={`${r.param}${which}`}
+                        type="number"
+                        min={0}
+                        step={r.param === 'price' ? 'any' : 1}
+                        inputMode={r.param === 'price' ? 'decimal' : 'numeric'}
+                        aria-label={`${rangeTitle(r.param)} ${t(`search.price${which}`)}`}
+                        placeholder={t(`search.price${which}`)}
+                        defaultValue={current[`${r.param}${which}`]}
+                        className="h-10 px-3"
+                      />
+                    ))}
+                  </div>
+                </fieldset>
+              ))}
+              <Button type="submit" variant="outline" size="sm" className="w-full">
+                {t('search.apply')}
+              </Button>
+            </form>
+          </FilterPanel>
+
+          <section aria-labelledby="results-heading" className="space-y-4">
+            {only ? (
+              <nav aria-label={t('nav.breadcrumb')} className="text-sm text-muted-foreground">
+                <ol className="flex flex-wrap items-center gap-1">
+                  <li>
+                    <Link
+                      href={`/${only}`}
+                      className="hover:underline"
+                      data-testid="crumb-category"
+                    >
+                      {t(`taxonomy.categories.${only}` as never)}
+                    </Link>
+                  </li>
+                  {subcategories.length === 1 ? (
+                    <>
+                      <li aria-hidden>
+                        <ChevronRight className="size-3.5" />
+                      </li>
+                      <li aria-current="page" className="text-foreground">
+                        {t(`taxonomy.subcategories.${subcategories[0]}` as never)}
+                      </li>
+                    </>
+                  ) : null}
+                </ol>
+              </nav>
+            ) : null}
+            {navKey ? (
+              <nav
+                aria-label={t(`taxonomy.attributes.${navKey}` as never)}
+                data-testid="third-level"
+              >
+                <ul className="flex flex-wrap gap-2" role="list">
+                  {(result.facets[navKey] ?? []).map((f) => {
+                    const on = selected(current, navKey).includes(f.value);
                     return (
-                      <li key={key}>
+                      <li key={f.value}>
                         <Link
-                          href={href({ category: key })}
-                          prefetch={false}
-                          className="inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm text-foreground hover:bg-muted"
+                          href={href(toggleValue(current, navKey, f.value))}
+                          scroll={false}
+                          aria-current={on ? 'true' : undefined}
+                          data-testid={`third-level-${f.value}`}
+                          className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium ${on ? 'border-ink bg-ink text-ink-foreground' : 'bg-card hover:bg-accent'}`}
                         >
-                          <Icon aria-hidden className="size-4" />
-                          {t(`taxonomy.categories.${key}` as never)}
+                          {label(navKey)(f.value)}
+                          <span className={on ? 'opacity-75' : 'text-muted-foreground'}>
+                            {f.count}
+                          </span>
                         </Link>
                       </li>
                     );
                   })}
                 </ul>
               </nav>
+            ) : null}
+            <SearchControls
+              params={current}
+              country={country}
+              sorts={only ? sortsOf(only, sub) : BASE_SORTS}
+            />
+            {understood.length && requested.q ? (
+              <p className="text-sm text-muted-foreground" data-testid="search-understood">
+                {t('search.understoodAs', { q: requested.q })}{' '}
+                {understood.map(describe).join(' · ')}.{' '}
+                <Link
+                  href={href({ q: requested.q, understand: 'false' })}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                  data-testid="search-exact-words"
+                >
+                  {t('search.exactWords')}
+                </Link>
+              </p>
+            ) : null}
+            {result.relaxed ? (
+              <p
+                role="status"
+                className="rounded-card bg-soft p-3 text-sm"
+                data-testid="search-relaxed"
+              >
+                {t('search.relaxed')}
+              </p>
+            ) : null}
+            {result.suggestion ? (
+              <p className="text-sm" data-testid="search-did-you-mean">
+                {t.rich('search.didYouMean', {
+                  suggestion: () => (
+                    <Link
+                      href={href({ ...withoutKey(requested, 'page'), q: result.suggestion! })}
+                      className="font-semibold text-primary underline-offset-4 hover:underline"
+                    >
+                      {result.suggestion}
+                    </Link>
+                  ),
+                })}
+              </p>
+            ) : null}
+            <ActiveFilters
+              chips={chips}
+              clear={current.q ? { q: current.q } : {}}
+              clearLabel={t('search.clearFilters')}
+              removeLabel={(filter) => t('search.removeFilter', { filter })}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h1 id="results-heading" className="text-xl font-semibold" data-testid="result-count">
+                {t('search.results', { total: result.total })}
+              </h1>
+              {canSave ? (
+                <SaveSearchButton name={saveName} params={toSave} initialSaved={alreadySaved} />
+              ) : null}
             </div>
-          ) : (
-            <ul
-              className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8 xl:grid-cols-3"
-              role="list"
-            >
-              {result.items.map((hit) => (
-                <li key={hit.id} className="flex">
-                  <ListingCard hit={hit} />
-                </li>
-              ))}
-            </ul>
-          )}
-          {pages > 1 ? (
-            <nav
-              aria-label={t('search.pageOf', { page: result.page, pages })}
-              className="flex items-center justify-between pt-4"
-            >
-              {result.page > 1 ? (
-                <Link
-                  href={href({
-                    ...withParams(current, {}),
-                    ...(result.page > 2 ? { page: String(result.page - 1) } : {}),
-                  })}
-                  rel="prev"
-                  className="text-primary hover:underline"
-                >
-                  ← {t('search.previous')}
-                </Link>
-              ) : (
-                <span />
-              )}
-              <span className="text-sm text-muted-foreground">
-                {t('search.pageOf', { page: result.page, pages })}
-              </span>
-              {result.page < pages ? (
-                <Link
-                  href={href({ ...withParams(current, {}), page: String(result.page + 1) })}
-                  rel="next"
-                  className="text-primary hover:underline"
-                  data-testid="next-page"
-                >
-                  {t('search.next')} →
-                </Link>
-              ) : (
-                <span />
-              )}
-            </nav>
-          ) : null}
-        </section>
+            {result.items.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
+                <SearchX aria-hidden className="size-10" />
+                <p className="font-medium text-foreground">{t('search.noResults')}</p>
+                <p>{t('search.noResultsHint')}</p>
+                {current.q && filtered ? (
+                  <Link
+                    href={href({ q: current.q })}
+                    prefetch={false}
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    data-testid="search-everywhere"
+                  >
+                    {t('search.searchEverywhere', { q: current.q })}
+                  </Link>
+                ) : null}
+                <nav aria-label={t('search.browseCategories')} className="mt-4 space-y-3">
+                  <p className="text-sm">{t('search.browseCategories')}</p>
+                  <ul className="flex flex-wrap justify-center gap-2" role="list">
+                    {categoriesOf(country).map(({ id: key }) => {
+                      const Icon = CATEGORY_ICONS[key] ?? SearchX;
+                      return (
+                        <li key={key}>
+                          <Link
+                            href={href({ category: key })}
+                            prefetch={false}
+                            className="inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm text-foreground hover:bg-muted"
+                          >
+                            <Icon aria-hidden className="size-4" />
+                            {t(`taxonomy.categories.${key}` as never)}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </nav>
+              </div>
+            ) : (
+              <ListingGrid items={result.items} layout="sidebar" priority />
+            )}
+            {pages > 1 ? (
+              <nav
+                aria-label={t('search.pageOf', { page: result.page, pages })}
+                className="flex items-center justify-between pt-4"
+              >
+                {result.page > 1 ? (
+                  <Link
+                    href={href({
+                      ...withParams(current, {}),
+                      ...(result.page > 2 ? { page: String(result.page - 1) } : {}),
+                    })}
+                    rel="prev"
+                    className="text-primary hover:underline"
+                  >
+                    ← {t('search.previous')}
+                  </Link>
+                ) : (
+                  <span />
+                )}
+                <span className="text-sm text-muted-foreground">
+                  {t('search.pageOf', { page: result.page, pages })}
+                </span>
+                {result.page < pages ? (
+                  <Link
+                    href={href({ ...withParams(current, {}), page: String(result.page + 1) })}
+                    rel="next"
+                    className="text-primary hover:underline"
+                    data-testid="next-page"
+                  >
+                    {t('search.next')} →
+                  </Link>
+                ) : (
+                  <span />
+                )}
+              </nav>
+            ) : null}
+          </section>
+        </div>
       </div>
-    </div>
+    </ClientMessages>
   );
 }

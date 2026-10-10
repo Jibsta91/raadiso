@@ -55,7 +55,7 @@ export function RecentlyViewed() {
   return (
     <section aria-labelledby="recently-viewed" className="space-y-5" data-testid="recently-viewed">
       <div className="flex flex-wrap items-baseline justify-between gap-4">
-        <h2 id="recently-viewed" className="flex items-center gap-2 text-3xl font-bold">
+        <h2 id="recently-viewed" className="flex items-center gap-2 text-2xl font-bold">
           <History aria-hidden className="size-7" />
           {t('recentTitle')}
         </h2>
@@ -82,7 +82,7 @@ export function RecentlyViewed() {
               className="group block space-y-2"
               data-testid="recent-card"
             >
-              <div className="relative aspect-square overflow-hidden rounded-2xl bg-placeholder">
+              <div className="relative aspect-square overflow-hidden rounded-card bg-placeholder">
                 {x.image ? (
                   <img src={x.image} alt="" className="size-full object-cover" loading="lazy" />
                 ) : (
@@ -96,7 +96,9 @@ export function RecentlyViewed() {
                 {x.title}
               </p>
               {x.price ? (
-                <p className="text-sm text-muted-foreground">{formatMoney(x.price, locale)}</p>
+                <p className="price text-sm text-muted-foreground">
+                  {formatMoney(x.price, locale)}
+                </p>
               ) : null}
             </Link>
           </li>

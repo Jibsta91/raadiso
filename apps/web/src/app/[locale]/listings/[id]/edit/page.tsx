@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ListingForm } from '@/components/listings/listing-form';
 import { getListing } from '@/lib/api';
 import { getSession } from '@/lib/session';
+import { ClientMessages } from '@/components/client-messages';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,9 +32,11 @@ export default async function EditListingPage({
   if (!listing?.viewer?.canEdit) notFound();
   const t = await getTranslations('form');
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-3xl font-bold">{t('editTitle')}</h1>
-      <ListingForm country={listing.country} listing={listing} />
-    </div>
+    <ClientMessages set="listingForm">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <h1 className="text-2xl font-bold">{t('editTitle')}</h1>
+        <ListingForm country={listing.country} listing={listing} />
+      </div>
+    </ClientMessages>
   );
 }

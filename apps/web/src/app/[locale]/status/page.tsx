@@ -51,7 +51,7 @@ export default async function StatusPage({ params }: { params: Promise<{ locale:
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">{t('title')}</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <p className="mt-1 text-muted-foreground">{t('subtitle')}</p>
       </div>
       <div
@@ -59,7 +59,7 @@ export default async function StatusPage({ params }: { params: Promise<{ locale:
         data-testid="overall-status"
         data-state={state}
         className={cn(
-          'flex items-center gap-3 rounded-2xl p-4 font-semibold',
+          'flex items-center gap-3 rounded-card p-4 font-semibold',
           state === 'ok' && 'bg-success text-success-foreground',
           state === 'partial' && 'bg-highlight text-highlight-foreground',
           state === 'down' && 'bg-destructive text-destructive-foreground',
@@ -80,7 +80,7 @@ export default async function StatusPage({ params }: { params: Promise<{ locale:
         {!journeys ? (
           <p className="text-sm text-muted-foreground">{t('noHistory')}</p>
         ) : (
-          <ul className="divide-y rounded-3xl border bg-card">
+          <ul className="divide-y rounded-card border bg-card">
             {journeys.map((j) => (
               <li key={j.journey} className="space-y-2 p-4" data-testid="status-journey">
                 <div className="flex items-center justify-between gap-3 text-sm">
@@ -106,13 +106,13 @@ export default async function StatusPage({ params }: { params: Promise<{ locale:
                       key={i}
                       title={`${hourLabel(i)} · ${v === null ? t('noData') : pct(v)}`}
                       className={cn(
-                        'flex-1 rounded-[2px] first:rounded-s-md last:rounded-e-md',
+                        'flex-1 rounded-xs first:rounded-s-field last:rounded-e-field',
                         hourTone(v),
                       )}
                     />
                   ))}
                 </div>
-                <div className="flex justify-between text-[11px] text-muted-foreground">
+                <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{t('daysAgo')}</span>
                   <span>{t('now')}</span>
                 </div>
@@ -135,12 +135,12 @@ export default async function StatusPage({ params }: { params: Promise<{ locale:
               return (
                 <div
                   key={s.slo}
-                  className="space-y-2 rounded-2xl border bg-card p-4"
+                  className="space-y-2 rounded-card border bg-card p-4"
                   data-testid="status-slo"
                 >
                   <p className="text-sm font-semibold">{t(`slos.${s.slo}` as never)}</p>
                   <p className="flex items-baseline gap-2">
-                    <span className="font-display text-2xl font-bold tabular-nums">
+                    <span className="text-xl font-bold tabular-nums">
                       {s.attained === null ? '–' : pct(s.attained)}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -205,6 +205,9 @@ export default async function StatusPage({ params }: { params: Promise<{ locale:
           ))}
         </div>
       </section>
+      <p className="text-sm text-muted-foreground" data-testid="status-licence">
+        {t('licence')}
+      </p>
     </div>
   );
 }

@@ -22,9 +22,9 @@ export function Stars({
           className={cn(
             'size-4',
             n <= rounded
-              ? 'fill-amber-400 text-amber-400'
+              ? 'fill-rating text-rating'
               : n - 0.5 === rounded
-                ? 'fill-amber-200 text-amber-400'
+                ? 'fill-rating/35 text-rating'
                 : 'text-muted-foreground/40',
           )}
         />

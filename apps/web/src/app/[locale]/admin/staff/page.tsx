@@ -1,3 +1,4 @@
+import { Input } from '@raadi/ui';
 import { Check, UserPlus } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -111,7 +112,7 @@ export default async function StaffPage({
         <Panel title={t('add')} icon={UserPlus}>
           <FilterBar testId="staff-add">
             <Field label={t('find')}>
-              <input
+              <Input
                 name="q"
                 defaultValue={q}
                 placeholder={t('findPlaceholder')}
@@ -133,7 +134,7 @@ export default async function StaffPage({
                     <Link
                       href={`/admin/users/${u.id}`}
                       prefetch={false}
-                      className="flex items-center gap-3 rounded-xl border p-2 text-sm hover:bg-accent"
+                      className="flex items-center gap-3 rounded-card border p-2 text-sm hover:bg-accent"
                     >
                       <Avatar name={u.name ?? u.email ?? '?'} id={u.id} size="sm" />
                       <span className="flex-1">{u.email}</span>

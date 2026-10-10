@@ -1,5 +1,6 @@
 'use client';
 
+import { Textarea } from '@raadi/ui';
 import { Pin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -25,13 +26,13 @@ export function NoteForm({ userId }: { userId: string }) {
   return (
     <form ref={form} action={action} className="space-y-2" data-testid="note-form">
       <input type="hidden" name="id" value={userId} />
-      <textarea
+      <Textarea
         name="body"
         required
         maxLength={2000}
         rows={3}
         placeholder={t('placeholder')}
-        className="field w-full border-input px-3 py-2 text-sm"
+        className="px-3 py-2"
         data-testid="note-body"
       />
       <div className="flex items-center justify-between gap-3">

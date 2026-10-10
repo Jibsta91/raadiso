@@ -32,7 +32,7 @@ export function ActiveFilters({
             scroll={false}
             aria-label={removeLabel(c.label)}
             data-testid={`chip-${c.id}`}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink ps-3.5 pe-2.5 text-sm font-medium text-ink-foreground transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink ps-3.5 pe-2.5 text-sm font-medium text-ink-foreground motion-safe:transition-opacity hover:opacity-85 focus-ring"
           >
             {c.label}
             <X aria-hidden className="size-3.5" />

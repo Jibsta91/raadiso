@@ -221,7 +221,7 @@ export default async function OperationsPage({ params }: { params: Promise<{ loc
                       <span
                         key={c.name}
                         title={c.detail ?? c.name}
-                        className={`rounded-md px-1.5 py-0.5 font-mono text-[10px] ${c.ok ? 'bg-success/12 text-success' : 'bg-destructive/12 text-destructive'}`}
+                        className={`rounded-field px-1.5 py-0.5 font-mono text-xs ${c.ok ? 'bg-success/12 text-success' : 'bg-destructive/12 text-destructive'}`}
                       >
                         {c.name}
                       </span>
@@ -287,7 +287,7 @@ export default async function OperationsPage({ params }: { params: Promise<{ loc
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 {queues.channels.map((c) => (
-                  <div key={c.channel} className="space-y-1 rounded-xl bg-muted p-3 text-sm">
+                  <div key={c.channel} className="space-y-1 rounded-card bg-muted p-3 text-sm">
                     <p className="font-semibold">{t(`channels.${c.channel}`)}</p>
                     <p className="text-xs text-muted-foreground">
                       {t('queue', { pending: c.pending, sent: c.sent24h, failed: c.failed24h })}

@@ -1,4 +1,4 @@
-import { cn } from '@raadi/ui';
+import { Alert, cn, Tab, Tabs as UiTabs } from '@raadi/ui';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from '@/i18n/navigation';
@@ -29,7 +29,7 @@ export function PageHeader({
             {eyebrow}
           </div>
         ) : null}
-        <h1 className="truncate text-2xl font-bold sm:text-3xl" data-testid="admin-title">
+        <h1 className="truncate text-xl font-bold sm:text-2xl" data-testid="admin-title">
           {title}
         </h1>
         {intro ? <p className="max-w-2xl text-sm text-muted-foreground">{intro}</p> : null}
@@ -59,7 +59,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={cn('flex min-w-0 flex-col rounded-2xl border bg-card', className)}
+      className={cn('flex min-w-0 flex-col rounded-card border bg-card', className)}
       data-testid={testId}
     >
       {title ? (
@@ -233,13 +233,13 @@ export function Stat({
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         {Icon ? <Icon aria-hidden className="size-4 text-muted-foreground" /> : null}
       </div>
-      <p className="font-display text-3xl font-bold tabular-nums tracking-tight">{value}</p>
+      <p className="text-2xl font-bold tabular-nums tracking-tight">{value}</p>
       {trend ? <Sparkline values={trend} tone={tone} /> : null}
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </>
   );
   const cls =
-    'flex min-w-0 flex-col gap-1.5 rounded-2xl border bg-card p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+    'flex min-w-0 flex-col gap-1.5 rounded-card border bg-card p-4 motion-safe:transition-colors focus-ring';
   return href ? (
     <Link href={href} prefetch={false} className={cn(cls, 'hover:bg-accent')} data-testid={testId}>
       {body}
@@ -295,12 +295,9 @@ export function Empty({
 
 export function Unavailable({ children }: { children: ReactNode }) {
   return (
-    <div
-      role="alert"
-      className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-    >
+    <Alert variant="danger" className="px-3 py-2">
       {children}
-    </div>
+    </Alert>
   );
 }
 
@@ -332,38 +329,8 @@ export function Id({
   );
 }
 
-/** Initials in a circle, coloured by the id (stable per person). */
-export function Avatar({
-  name,
-  id,
-  size = 'md',
-}: {
-  name: string;
-  id: string;
-  size?: 'sm' | 'md' | 'lg';
-}) {
-  const initials =
-    name
-      .split(/[\s@.]+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]!.toUpperCase())
-      .join('') || '?';
-  const hue = [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white',
-        { sm: 'size-7 text-[11px]', md: 'size-9 text-xs', lg: 'size-14 text-lg' }[size],
-      )}
-      // L 0.45 keeps white initials above 4.5:1 contrast for every hue (WCAG AA).
-      style={{ background: `oklch(0.45 0.13 ${hue})` }}
-    >
-      {initials}
-    </span>
-  );
-}
+// Generic pieces live in packages/ui; the console uses them as they are.
+export { Avatar, Kbd } from '@raadi/ui';
 
 /** Link-based tabs (state lives in the URL, so tabs are shareable and work without JS). */
 export function Tabs({
@@ -376,37 +343,18 @@ export function Tabs({
   label: string;
 }) {
   return (
-    <nav aria-label={label} className="flex gap-1 overflow-x-auto border-b">
+    <UiTabs label={label}>
       {tabs.map((tab) => (
-        <Link
-          key={tab.key}
-          href={tab.href}
-          prefetch={false}
-          scroll={false}
-          aria-current={tab.key === current ? 'page' : undefined}
-          data-testid={`tab-${tab.key}`}
-          className={cn(
-            'flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors',
-            tab.key === current
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground',
-          )}
-        >
-          {tab.label}
-          {tab.count !== undefined ? (
-            <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums">{tab.count}</span>
-          ) : null}
-        </Link>
+        <Tab key={tab.key} asChild active={tab.key === current}>
+          <Link href={tab.href} prefetch={false} scroll={false} data-testid={`tab-${tab.key}`}>
+            {tab.label}
+            {tab.count !== undefined ? (
+              <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums">{tab.count}</span>
+            ) : null}
+          </Link>
+        </Tab>
       ))}
-    </nav>
-  );
-}
-
-export function Kbd({ children }: { children: ReactNode }) {
-  return (
-    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-b-2 bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
-      {children}
-    </kbd>
+    </UiTabs>
   );
 }
 
@@ -428,7 +376,7 @@ export function Field({ label, children }: { label: ReactNode; children: ReactNo
   );
 }
 
-export const inputCls = 'field h-9 border-input px-3 text-sm text-foreground';
+export const inputCls = 'h-9 w-auto';
 
 /** A table with the console's styling; rows come from the caller. */
 export function Table({
@@ -441,7 +389,7 @@ export function Table({
   testId?: string;
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border bg-card">
+    <div className="overflow-x-auto rounded-card border bg-card">
       <table className="w-full text-start text-sm" data-testid={testId}>
         <thead className="sticky top-0 border-b bg-card text-xs uppercase tracking-wider text-muted-foreground">
           <tr>

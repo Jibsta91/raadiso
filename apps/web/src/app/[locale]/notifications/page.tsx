@@ -10,6 +10,7 @@ import {
 } from '@/components/notifications/notification-controls';
 import { notifications } from '@/lib/api';
 import { getSession } from '@/lib/session';
+import { ClientMessages } from '@/components/client-messages';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,49 +40,51 @@ export default async function NotificationsPage({
   const items = data?.list.items ?? [];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t('title')}</h1>
-        {data?.list.unread ? <MarkAllRead /> : null}
-      </div>
-      {items.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
-          <Bell aria-hidden className="size-10" />
-          <p>{t('empty')}</p>
+    <ClientMessages set="notifications">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          {data?.list.unread ? <MarkAllRead /> : null}
         </div>
-      ) : (
-        <ul
-          className="divide-y overflow-hidden rounded-3xl border bg-card"
-          role="list"
-          data-testid="notification-list"
-        >
-          {items.map((n) => (
-            <li key={n.id} data-read={n.read}>
-              <NotificationLink id={n.id} link={n.link} href={`/${locale}${n.link}`}>
-                <p className={n.read ? '' : 'flex items-start gap-2 font-semibold'}>
-                  {n.read ? null : (
-                    <span aria-hidden className="mt-2 size-2 shrink-0 rounded-full bg-primary" />
-                  )}
-                  {t(
-                    `kinds.${n.kind}` as never,
-                    {
-                      ...n.params,
-                      ...noticePrices(n.params, locale),
-                    } as never,
-                  )}
-                </p>
-                <time
-                  dateTime={n.createdAt}
-                  className={`text-xs text-muted-foreground ${n.read ? '' : 'ps-4'}`}
-                >
-                  {format.relativeTime(new Date(n.createdAt))}
-                </time>
-              </NotificationLink>
-            </li>
-          ))}
-        </ul>
-      )}
-      {data ? <EmailPreferences initial={data.preferences} /> : null}
-    </div>
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
+            <Bell aria-hidden className="size-10" />
+            <p>{t('empty')}</p>
+          </div>
+        ) : (
+          <ul
+            className="divide-y overflow-hidden rounded-card border bg-card"
+            role="list"
+            data-testid="notification-list"
+          >
+            {items.map((n) => (
+              <li key={n.id} data-read={n.read}>
+                <NotificationLink id={n.id} link={n.link} href={`/${locale}${n.link}`}>
+                  <p className={n.read ? '' : 'flex items-start gap-2 font-semibold'}>
+                    {n.read ? null : (
+                      <span aria-hidden className="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+                    )}
+                    {t(
+                      `kinds.${n.kind}` as never,
+                      {
+                        ...n.params,
+                        ...noticePrices(n.params, locale),
+                      } as never,
+                    )}
+                  </p>
+                  <time
+                    dateTime={n.createdAt}
+                    className={`text-xs text-muted-foreground ${n.read ? '' : 'ps-4'}`}
+                  >
+                    {format.relativeTime(new Date(n.createdAt))}
+                  </time>
+                </NotificationLink>
+              </li>
+            ))}
+          </ul>
+        )}
+        {data ? <EmailPreferences initial={data.preferences} /> : null}
+      </div>
+    </ClientMessages>
   );
 }

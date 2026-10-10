@@ -58,7 +58,7 @@ export function ThemeSwitcher({
             data-testid={`theme-${option}`}
             onClick={() => choose(option)}
             className={cn(
-              'inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium motion-safe:transition-colors focus-ring',
               selected
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',

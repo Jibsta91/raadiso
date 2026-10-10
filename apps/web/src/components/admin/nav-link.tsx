@@ -25,7 +25,7 @@ export function AdminNavLink({
       prefetch={false}
       aria-current={active ? 'page' : undefined}
       data-testid={testId}
-      className={`group flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? 'bg-ink text-ink-foreground' : 'text-subtle-foreground hover:bg-accent hover:text-foreground'}`}
+      className={`group flex shrink-0 items-center gap-2.5 rounded-card px-3 py-1.5 text-sm font-medium motion-safe:transition-colors focus-ring ${active ? 'bg-ink text-ink-foreground' : 'text-subtle-foreground hover:bg-accent hover:text-foreground'}`}
     >
       {children}
       {count ? (
@@ -36,7 +36,7 @@ export function AdminNavLink({
           {count}
         </span>
       ) : hotkey ? (
-        <span className="ms-auto hidden font-mono text-[10px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 md:inline">
+        <span className="ms-auto hidden font-mono text-xs text-muted-foreground opacity-0 motion-safe:transition-opacity group-hover:opacity-100 md:inline">
           g {hotkey}
         </span>
       ) : null}

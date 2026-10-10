@@ -5,6 +5,7 @@ import { PromoteForm } from '@/components/payments/promote-form';
 import { Link } from '@/i18n/navigation';
 import { getListing, paymentProducts } from '@/lib/api';
 import { getSession } from '@/lib/session';
+import { ClientMessages } from '@/components/client-messages';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,32 +40,34 @@ export default async function PromotePage({
   if (!listing || !listing.viewer?.isOwner || listing.status !== 'active') notFound();
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <Link href={`/listings/${id}`} className="text-sm text-primary hover:underline">
-        ← {listing.title}
-      </Link>
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">{t('title')}</h1>
-        <p className="text-muted-foreground">{t('intro')}</p>
-        {listing.promotedUntil ? (
-          <p className="text-sm" data-testid="promote-current">
-            {t('currentlyUntil', {
-              date: format.dateTime(new Date(listing.promotedUntil), { dateStyle: 'long' }),
-            })}
+    <ClientMessages set="promote">
+      <div className="mx-auto max-w-2xl space-y-6">
+        <Link href={`/listings/${id}`} className="text-sm text-primary hover:underline">
+          ← {listing.title}
+        </Link>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground">{t('intro')}</p>
+          {listing.promotedUntil ? (
+            <p className="text-sm" data-testid="promote-current">
+              {t('currentlyUntil', {
+                date: format.dateTime(new Date(listing.promotedUntil), { dateStyle: 'long' }),
+              })}
+            </p>
+          ) : null}
+        </div>
+        {products.length ? (
+          <PromoteForm listingId={id} products={products} />
+        ) : (
+          // No payment provider yet (PAYMENTS_PROVIDER=none, ADR-0051).
+          <p
+            className="rounded-card border p-4 text-muted-foreground"
+            data-testid="promote-unavailable"
+          >
+            {t('unavailable')}
           </p>
-        ) : null}
+        )}
       </div>
-      {products.length ? (
-        <PromoteForm listingId={id} products={products} />
-      ) : (
-        // No payment provider yet (PAYMENTS_PROVIDER=none, ADR-0051).
-        <p
-          className="rounded-lg border p-4 text-muted-foreground"
-          data-testid="promote-unavailable"
-        >
-          {t('unavailable')}
-        </p>
-      )}
-    </div>
+    </ClientMessages>
   );
 }
