@@ -855,6 +855,12 @@ components:
           properties:
             views: { type: integer, minimum: 0 }
             renewableAt: { type: string, format: date-time }
+            favourites:
+              type: integer
+              minimum: 0
+              description: >-
+                How many people saved the listing (My listings only; left out when the saved
+                service did not answer)
         priceDrop:
           type: object
           additionalProperties: false

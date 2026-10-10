@@ -168,6 +168,36 @@ paths:
         '204': { description: Reset }
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /internal/v1/saved/favourites/counts:
+    get:
+      tags: [internal]
+      operationId: favouriteCounts
+      summary: How many people saved each listing (internal network only; listings' My listings)
+      description: >-
+        Not routed by the gateway. Callers forward the user's bearer token, and listings asks only
+        about the caller's own listings. Counts only, never who; listings nobody saved are left out.
+      security: [{ bearer: [] }]
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          description: Comma-separated listing ids, at most 100
+          schema: { type: string }
+      responses:
+        '200':
+          description: Counts by listing id
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [counts]
+                properties:
+                  counts:
+                    type: object
+                    additionalProperties: { type: integer, minimum: 1 }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
   /healthz:
     get:
       operationId: liveness

@@ -52,6 +52,12 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
         {l.stats && !l.removal ? (
           <p className="text-xs text-muted-foreground" data-testid="my-listing-views">
             {t('my.views', { count: l.stats.views })}
+            {l.stats.favourites !== undefined ? (
+              <span data-testid="my-listing-favourites">
+                {' · '}
+                {t('my.favourites', { count: l.stats.favourites })}
+              </span>
+            ) : null}
           </p>
         ) : null}
         {l.removal ? (

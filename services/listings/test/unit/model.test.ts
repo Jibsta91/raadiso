@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   createListingSchema,
   mergedListingSchema,
+  ownerStats,
   updateListingSchema,
 } from '../../src/listings/listing.model.js';
 
@@ -97,5 +98,25 @@ describe('listing validation', () => {
     assert.ok(!updateListingSchema.safeParse({ status: 'deleted' }).success);
     const merged = mergedListingSchema.safeParse({ ...valid, imageIds: [], category: 'bil' });
     assert.ok(!merged.success, 'switching category without matching attributes fails');
+  });
+});
+
+describe('owner stats', () => {
+  // ownerStats reads only these fields of a row.
+  const row = {
+    id: '6e0f5f1a-0000-4000-8000-000000000001',
+    views: 12,
+    published_at: new Date('2026-10-01T00:00:00Z'),
+  } as unknown as Parameters<typeof ownerStats>[0];
+
+  it('adds hearts when the saved service answered, 0 for a listing nobody saved', () => {
+    assert.equal(ownerStats(row, 7, { [row.id]: 3 }).favourites, 3);
+    assert.equal(ownerStats(row, 7, {}).favourites, 0);
+  });
+  it('leaves hearts out when the saved service did not answer', () => {
+    const stats = ownerStats(row, 7);
+    assert.equal(stats.views, 12);
+    assert.equal(stats.renewableAt, '2026-10-08T00:00:00.000Z');
+    assert.ok(!('favourites' in stats));
   });
 });

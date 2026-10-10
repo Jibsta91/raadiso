@@ -149,6 +149,18 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
                   </Text>
                 </View>
               ) : null}
+              {listing.stats?.favourites !== undefined ? (
+                <View
+                  style={styles.stat}
+                  testID="my-listing-favourites"
+                  aria-label={fill(m.myListings.favourites, { count: listing.stats.favourites })}
+                >
+                  <Icon name="heart-outline" size={15} color={theme.muted} />
+                  <Text style={[styles.statText, { color: theme.text }]}>
+                    {listing.stats.favourites}
+                  </Text>
+                </View>
+              ) : null}
               <Text style={[styles.changed, { color: theme.muted }]}>{changed}</Text>
             </View>
           </View>

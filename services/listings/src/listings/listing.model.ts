@@ -184,7 +184,7 @@ export interface Listing {
   /** The listing's last price drop, until the price goes up again (ADR-0044). */
   priceDrop?: { previous: Money; at: string };
   /** For the owner only (ADR-0045): views, and from when it can be renewed. */
-  stats?: { views: number; renewableAt: string };
+  stats?: { views: number; renewableAt: string; favourites?: number };
   /** Present when the caller is authenticated. */
   viewer?: { isOwner: boolean; canEdit: boolean; canDelete: boolean };
   /** Only on the owner's list of their listings: a moderator removed it (and why). */
@@ -234,11 +234,19 @@ export function toListing(row: ListingRow, signer: ImgproxySigner): Listing {
   };
 }
 
-/** The owner's numbers (ADR-0045): views, and from when the listing can be renewed. */
-export function ownerStats(row: ListingRow, renewAfterDays: number) {
+/**
+ * The owner's numbers (ADR-0045): views, from when the listing can be renewed, and how many people
+ * saved it when the saved service answered (`hearts`; a listing nobody saved counts 0).
+ */
+export function ownerStats(
+  row: ListingRow,
+  renewAfterDays: number,
+  hearts?: Readonly<Record<string, number>>,
+) {
   return {
     views: row.views,
     renewableAt: new Date(row.published_at.getTime() + renewAfterDays * 86_400_000).toISOString(),
+    ...(hearts ? { favourites: hearts[row.id] ?? 0 } : {}),
   };
 }
 

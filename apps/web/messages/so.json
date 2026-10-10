@@ -745,6 +745,7 @@
       "other": "jebinta xeerarkayaga"
     },
     "views": "{count, plural, =0 {Weli lama daawan} one {# daawasho} other {# daawasho}}",
+    "favourites": "{count, plural, =0 {Weli lama kaydin} one {# qof ayaa kaydiyay} other {# qof ayaa kaydiyay}}",
     "renew": "Cusboonaysii",
     "renewed": "Waa la cusboonaysiiyay",
     "renewFailed": "Isku day mar kale",

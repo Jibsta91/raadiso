@@ -745,6 +745,7 @@
       "other": "it broke our rules"
     },
     "views": "{count, plural, =0 {No views yet} one {# view} other {# views}}",
+    "favourites": "{count, plural, =0 {Not saved yet} one {Saved by # person} other {Saved by # people}}",
     "renew": "Renew",
     "renewed": "Renewed",
     "renewFailed": "Try again",
