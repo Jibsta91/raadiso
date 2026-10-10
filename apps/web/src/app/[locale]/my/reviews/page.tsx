@@ -1,5 +1,5 @@
 import type { MyReview, PendingReview } from '@raadi/api-client';
-import { cn } from '@raadi/ui';
+import { Alert, cn } from '@raadi/ui';
 import { Star } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
@@ -8,6 +8,7 @@ import { ReviewForm } from '@/components/trust/review-form';
 import { Link } from '@/i18n/navigation';
 import { myReviews, pendingReviews, ServiceUnavailableError } from '@/lib/api';
 import { getSession } from '@/lib/session';
+import { ClientMessages } from '@/components/client-messages';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,7 @@ function Stars({ rating, label }: { rating: number; label: string }) {
         <Star
           key={n}
           aria-hidden
-          className={cn('size-4', n <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted')}
+          className={cn('size-4', n <= rating ? 'fill-rating text-rating' : 'text-muted')}
         />
       ))}
     </span>
@@ -43,7 +44,7 @@ function Pending({ pending, t }: { pending: PendingReview; t: T }) {
   const name = nameOf(t, pending.other);
   const days = Math.max(0, Math.ceil((Date.parse(pending.deadline) - Date.now()) / DAY));
   return (
-    <li className="space-y-3 rounded-xl border bg-card p-4" data-testid="pending-review">
+    <li className="space-y-3 rounded-card border bg-card p-4" data-testid="pending-review">
       <p className="text-lg font-semibold">{t(seller ? 'askSeller' : 'askBuyer', { name })}</p>
       <p>
         <Link
@@ -85,7 +86,7 @@ function Review({ review, tab, t, date }: { review: MyReview; tab: Tab; t: T; da
       ? t(seller ? 'boughtFrom' : 'soldTo', { name })
       : t(seller ? 'fromSeller' : 'fromBuyer', { name });
   return (
-    <li className="space-y-1.5 rounded-xl border bg-card p-4" data-testid="my-review">
+    <li className="space-y-1.5 rounded-card border bg-card p-4" data-testid="my-review">
       <Link
         href={`/users/${review.other.id}`}
         prefetch={false}
@@ -128,11 +129,7 @@ export default async function MyReviewsPage({
     pending = await pendingReviews();
   } catch (error) {
     if (!(error instanceof ServiceUnavailableError)) throw error;
-    return (
-      <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-4">
-        {t('unavailable')}
-      </div>
-    );
+    return <Alert variant="danger">{t('unavailable')}</Alert>;
   }
   const tab: Tab =
     query.tab === 'given' || query.tab === 'received'
@@ -159,50 +156,52 @@ export default async function MyReviewsPage({
   );
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6" data-testid="my-reviews">
-      <h1 className="text-3xl font-bold">{t('title')}</h1>
-      <nav className="flex gap-1 rounded-full bg-muted p-1" aria-label={t('title')}>
-        {tabLink('received', t('received'))}
-        {tabLink(
-          'given',
-          pending.length
-            ? `${t('given')} · ${t('waiting', { count: pending.length })}`
-            : t('given'),
+    <ClientMessages set="trust">
+      <div className="mx-auto max-w-3xl space-y-6" data-testid="my-reviews">
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <nav className="flex gap-1 rounded-full bg-muted p-1" aria-label={t('title')}>
+          {tabLink('received', t('received'))}
+          {tabLink(
+            'given',
+            pending.length
+              ? `${t('given')} · ${t('waiting', { count: pending.length })}`
+              : t('given'),
+          )}
+        </nav>
+        {tab === 'given' && pending.length ? (
+          <ul className="space-y-3">
+            {pending.map((p) => (
+              <Pending key={`${p.listing.id}:${p.other.id}`} pending={p} t={t} />
+            ))}
+          </ul>
+        ) : null}
+        {page.items.length ? (
+          <ul className="space-y-3">
+            {page.items.map((r) => (
+              <Review
+                key={r.id}
+                review={r}
+                tab={tab}
+                t={t}
+                date={format.dateTime(new Date(r.createdAt), { dateStyle: 'medium' })}
+              />
+            ))}
+          </ul>
+        ) : tab === 'given' && pending.length ? null : (
+          <p className="text-muted-foreground" data-testid="my-reviews-empty">
+            {t(tab === 'given' ? 'emptyGiven' : 'emptyReceived')}
+          </p>
         )}
-      </nav>
-      {tab === 'given' && pending.length ? (
-        <ul className="space-y-3">
-          {pending.map((p) => (
-            <Pending key={`${p.listing.id}:${p.other.id}`} pending={p} t={t} />
-          ))}
-        </ul>
-      ) : null}
-      {page.items.length ? (
-        <ul className="space-y-3">
-          {page.items.map((r) => (
-            <Review
-              key={r.id}
-              review={r}
-              tab={tab}
-              t={t}
-              date={format.dateTime(new Date(r.createdAt), { dateStyle: 'medium' })}
-            />
-          ))}
-        </ul>
-      ) : tab === 'given' && pending.length ? null : (
-        <p className="text-muted-foreground" data-testid="my-reviews-empty">
-          {t(tab === 'given' ? 'emptyGiven' : 'emptyReceived')}
-        </p>
-      )}
-      {offset + page.items.length < page.total ? (
-        <Link
-          href={`/my/reviews?tab=${tab}&offset=${offset + page.items.length}`}
-          prefetch={false}
-          className="inline-block font-semibold text-primary hover:underline"
-        >
-          {t('more')}
-        </Link>
-      ) : null}
-    </div>
+        {offset + page.items.length < page.total ? (
+          <Link
+            href={`/my/reviews?tab=${tab}&offset=${offset + page.items.length}`}
+            prefetch={false}
+            className="inline-block font-semibold text-primary hover:underline"
+          >
+            {t('more')}
+          </Link>
+        ) : null}
+      </div>
+    </ClientMessages>
   );
 }

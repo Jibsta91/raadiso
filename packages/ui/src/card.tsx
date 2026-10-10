@@ -3,7 +3,7 @@ import { cn } from './cn';
 
 export function Card({ className, ...props }: ComponentProps<'div'>) {
   return (
-    <div className={cn('rounded-3xl border bg-card text-card-foreground', className)} {...props} />
+    <div className={cn('rounded-card border bg-card text-card-foreground', className)} {...props} />
   );
 }
 

@@ -14,7 +14,7 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
   const t = await getTranslations('privacy');
   return (
     <article className="prose mx-auto max-w-3xl space-y-6">
-      <h1 className="text-3xl font-bold">{t('title')}</h1>
+      <h1 className="text-2xl font-bold">{t('title')}</h1>
       <p className="text-muted-foreground">{t('intro')}</p>
       {SECTIONS.map((s) => (
         <section key={s}>

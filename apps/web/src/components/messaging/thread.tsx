@@ -1,7 +1,7 @@
 'use client';
 
 import type { ConversationDetail, Message } from '@raadi/api-client';
-import { Button } from '@raadi/ui';
+import { Alert, Button } from '@raadi/ui';
 import { Send } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import {
@@ -185,7 +185,7 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
               key={m.id}
               data-testid="thread-message"
               data-from={m.fromMe ? 'me' : 'them'}
-              className={`max-w-[80%] rounded-3xl px-4 py-2.5 ${m.fromMe ? 'self-end rounded-ee-lg bg-primary text-primary-foreground' : 'self-start rounded-es-lg border bg-card'}`}
+              className={`max-w-[80%] rounded-card px-4 py-2.5 ${m.fromMe ? 'self-end rounded-ee-lg bg-primary text-primary-foreground' : 'self-start rounded-es-lg border bg-card'}`}
             >
               <p className="whitespace-pre-line break-words">{m.body}</p>
               <p className="mt-1 text-end text-xs opacity-70">
@@ -200,7 +200,7 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
       </div>
       {closed ? (
         <div
-          className="flex flex-wrap items-center justify-between gap-3 rounded-[1.75rem] border bg-card p-4 text-sm"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-card border bg-card p-4 text-sm"
           data-testid="thread-closed"
         >
           <span>
@@ -223,7 +223,7 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
       ) : (
         <form
           onSubmit={send}
-          className="flex items-end gap-2 rounded-[1.75rem] border bg-card p-2 shadow-float focus-within:border-primary"
+          className="flex items-end gap-2 rounded-sheet border bg-card p-2 shadow-2 focus-within:border-primary"
         >
           <label className="sr-only" htmlFor="compose">
             {t('compose')}
@@ -262,9 +262,9 @@ export function Thread({ initial }: { initial: ConversationDetail }) {
         </button>
       )}
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
+        <Alert variant="danger" className="w-full p-3">
           {error}
-        </p>
+        </Alert>
       ) : null}
     </div>
   );

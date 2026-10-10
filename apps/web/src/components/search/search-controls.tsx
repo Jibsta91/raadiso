@@ -1,5 +1,6 @@
 'use client';
 
+import { Alert, Select } from '@raadi/ui';
 import type { CountryCode } from '@raadi/catalog/countries';
 import { placeName, placesOf } from '@raadi/catalog/places';
 import { useLocale, useTranslations } from 'next-intl';
@@ -78,11 +79,11 @@ export function SearchControls({
       </p>
       <label className="flex flex-col gap-1 text-sm">
         <span className="font-medium">{t('near')}</span>
-        <select
+        <Select
           name="near"
           aria-describedby="search-controls-hint"
           data-testid="filter-near"
-          className="h-10 field border-input px-3"
+          className="h-10 px-3 w-auto"
           value={params.near ?? (params.lat ? '__me' : '')}
           onChange={(e) => {
             const v = e.target.value;
@@ -103,16 +104,16 @@ export function SearchControls({
               {placeName(p, locale as never)}
             </option>
           ))}
-        </select>
+        </Select>
       </label>
       {hasCentre ? (
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">{t('radius')}</span>
-          <select
+          <Select
             name="radiusKm"
             aria-describedby="search-controls-hint"
             data-testid="filter-radius"
-            className="h-10 field border-input px-3"
+            className="h-10 px-3 w-auto"
             value={params.radiusKm ?? '50'}
             onChange={(e) => go({ radiusKm: e.target.value })}
           >
@@ -121,16 +122,16 @@ export function SearchControls({
                 {t('radiusKm', { km: r })}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       ) : null}
       <label className="ms-auto flex flex-col gap-1 text-sm">
         <span className="font-medium">{t('sortLabel')}</span>
-        <select
+        <Select
           name="sort"
           aria-describedby="search-controls-hint"
           data-testid="sort"
-          className="h-10 field border-input px-3"
+          className="h-10 px-3 w-auto"
           value={params.sort ?? 'relevance'}
           onChange={(e) =>
             go({ sort: e.target.value === 'relevance' ? undefined : e.target.value })
@@ -143,7 +144,7 @@ export function SearchControls({
                 {t(`sort.${s}` as never)}
               </option>
             ))}
-        </select>
+        </Select>
       </label>
       {hydrated ? null : (
         <button type="submit" className="h-10 rounded-full border px-4 text-sm font-medium">
@@ -151,9 +152,9 @@ export function SearchControls({
         </button>
       )}
       {positionFailed ? (
-        <p role="alert" className="w-full text-sm text-destructive" data-testid="near-me-failed">
+        <Alert variant="danger" className="w-full p-3" data-testid="near-me-failed">
           {t('nearMeFailed')}
-        </p>
+        </Alert>
       ) : null}
     </form>
   );

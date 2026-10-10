@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { OrderStatus } from '@/components/payments/order-status';
 import { paymentOrder } from '@/lib/api';
 import { getSession } from '@/lib/session';
+import { ClientMessages } from '@/components/client-messages';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,8 +33,10 @@ export default async function PaymentPage({
   const order = await paymentOrder(id);
   if (!order) notFound();
   return (
-    <div className="mx-auto max-w-2xl">
-      <OrderStatus initial={order} />
-    </div>
+    <ClientMessages set="payment">
+      <div className="mx-auto max-w-2xl">
+        <OrderStatus initial={order} />
+      </div>
+    </ClientMessages>
   );
 }

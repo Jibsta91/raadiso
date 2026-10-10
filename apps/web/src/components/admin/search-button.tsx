@@ -9,12 +9,12 @@ export function SearchButton({ label }: { label: string }) {
     <button
       type="button"
       onClick={openPalette}
-      className="flex h-9 w-full items-center gap-2 rounded-xl border bg-background px-3 text-sm text-muted-foreground hover:bg-accent"
+      className="flex h-9 w-full items-center gap-2 rounded-card border bg-background px-3 text-sm text-muted-foreground hover:bg-accent"
       data-testid="open-palette"
     >
       <Search aria-hidden className="size-4" />
       <span className="flex-1 text-start">{label}</span>
-      <kbd className="rounded border bg-card px-1 font-mono text-[10px]">⌘K</kbd>
+      <kbd className="rounded border bg-card px-1 font-mono text-xs">⌘K</kbd>
     </button>
   );
 }

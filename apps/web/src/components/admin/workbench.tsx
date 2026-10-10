@@ -94,7 +94,7 @@ export function Workbench({
     <div className="grid gap-4 lg:grid-cols-[22rem_1fr]" data-testid="moderation-queue">
       <div className="space-y-2">
         {selected.size ? (
-          <div className="flex items-center justify-between gap-2 rounded-2xl bg-ink px-3 py-2 text-sm text-ink-foreground">
+          <div className="flex items-center justify-between gap-2 rounded-card bg-ink px-3 py-2 text-sm text-ink-foreground">
             <span>{t('selected', { count: selected.size })}</span>
             <ActionDialog
               action={dismissAction}
@@ -119,7 +119,7 @@ export function Workbench({
               data-wb-index={i}
               data-testid="moderation-item"
               className={cn(
-                'flex items-center gap-3 rounded-2xl border p-2.5 transition-colors',
+                'flex items-center gap-3 rounded-card border p-2.5 transition-colors',
                 i === index
                   ? 'border-ink bg-card shadow-sm ring-1 ring-ink'
                   : 'bg-card/60 hover:bg-card',
@@ -143,16 +143,16 @@ export function Workbench({
                 type="button"
                 onClick={() => setIndex(i)}
                 aria-current={i === index ? 'true' : undefined}
-                className="flex min-w-0 flex-1 items-center gap-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex min-w-0 flex-1 items-center gap-3 text-start focus-ring"
               >
                 {item.listing.image ? (
                   <img
                     src={item.listing.image.thumb}
                     alt=""
-                    className="size-11 shrink-0 rounded-xl object-cover"
+                    className="size-11 shrink-0 rounded-card object-cover"
                   />
                 ) : (
-                  <span className="size-11 shrink-0 rounded-xl bg-placeholder" />
+                  <span className="size-11 shrink-0 rounded-card bg-placeholder" />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{item.listing.title}</span>
@@ -163,7 +163,7 @@ export function Workbench({
                 </span>
                 <span
                   className={cn(
-                    'rounded-lg px-1.5 py-0.5 text-xs font-bold tabular-nums',
+                    'rounded-card px-1.5 py-0.5 text-xs font-bold tabular-nums',
                     riskTone(item.risk),
                   )}
                   title={t('risk')}
@@ -174,17 +174,17 @@ export function Workbench({
             </li>
           ))}
         </ul>
-        <p className="px-1 text-[11px] text-muted-foreground">{t('keys')}</p>
+        <p className="px-1 text-xs text-muted-foreground">{t('keys')}</p>
       </div>
 
       <article
-        className="min-w-0 space-y-4 rounded-3xl border bg-card p-5"
+        className="min-w-0 space-y-4 rounded-card border bg-card p-5"
         data-testid="moderation-detail"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-1">
             <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span className={cn('rounded-md px-1.5 py-0.5 font-bold', riskTone(current.risk))}>
+              <span className={cn('rounded-field px-1.5 py-0.5 font-bold', riskTone(current.risk))}>
                 {t('riskLabel', { risk: current.risk })}
               </span>
               <span>{l.sellerName}</span>
@@ -243,11 +243,11 @@ export function Workbench({
                 aria-label={t('image', { n: n + 1 })}
                 className="shrink-0"
               >
-                <img src={img.card} alt="" className="h-36 w-48 rounded-2xl object-cover" />
+                <img src={img.card} alt="" className="h-36 w-48 rounded-card object-cover" />
               </a>
             ))
           ) : (
-            <div className="flex h-36 w-48 items-center justify-center rounded-2xl bg-placeholder">
+            <div className="flex h-36 w-48 items-center justify-center rounded-card bg-placeholder">
               <ImageOff aria-hidden className="size-6 text-muted-foreground" />
             </div>
           )}
@@ -301,9 +301,9 @@ export function Workbench({
                     : '–',
                 ],
               ].map(([k, v]) => (
-                <div key={String(k)} className="rounded-xl bg-muted p-2">
+                <div key={String(k)} className="rounded-card bg-muted p-2">
                   <dd className="text-base font-bold tabular-nums">{v}</dd>
-                  <dt className="text-[11px] text-muted-foreground">{k}</dt>
+                  <dt className="text-xs text-muted-foreground">{k}</dt>
                 </div>
               ))}
             </dl>

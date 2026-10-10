@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Raadiso — iibso oo iibi meel kuu dhow",
-    "description": "Raadiso waa suuq furan oo lagu iibsado laguna iibiyo Noorweey: alaab, baabuur, guryo, shaqo iyo safar."
+    "description": "Wax ku iibso oo ku iibi meel kuu dhow Raadiso: alaab, gaadiid, guryo, shaqo iyo wax kale."
   },
   "nav": {
     "main": "Liiska ugu muhiimsan",
@@ -47,7 +47,7 @@
       },
       "jobb": {
         "name": "Shaqo",
-        "description": "Shaqooyin ka socda loo-shaqeeyayaal Noorweey oo dhan."
+        "description": "Shaqooyin ka socda loo-shaqeeyayaal dalka oo dhan."
       },
       "reise": {
         "name": "Safar",
@@ -188,7 +188,8 @@
     "objective": "hadaf {value}",
     "budget": "{value} miisaaniyadda khaladka ayaa haray",
     "noTraffic": "Weli taraafik ma jiro",
-    "componentsTitle": "Qaybaha"
+    "componentsTitle": "Qaybaha",
+    "licence": "Raadiso waa barnaamij il-furan oo lagu daabacay shatiga Apache-2.0."
   },
   "privacy": {
     "title": "Asturnaanta",
@@ -223,12 +224,17 @@
     }
   },
   "footer": {
-    "tagline": "Raadiso — suuq il-furan",
+    "tagline": "Iibso oo iibi meel kuu dhow.",
     "privacy": "Asturnaanta",
-    "status": "Xaaladda",
-    "openSource": "Apache-2.0",
+    "status": "Xaaladda adeegga",
     "terms": "Shuruudaha",
-    "links": "Ku saabsan Raadiso"
+    "links": "Ku saabsan Raadiso",
+    "about": "Raadiso",
+    "howItWorks": "Sida ay u shaqeyso",
+    "safety": "Talooyinka badbaadada",
+    "help": "Caawimaad",
+    "copyright": "© {year} Horumar Group",
+    "settings": "Luqadda iyo muuqaalka"
   },
   "errors": {
     "title": "Wax baa khaldamay",
@@ -520,11 +526,11 @@
     "filters": "Shaandhooyin",
     "clearFilters": "Tirtir shaandhooyinka",
     "price": "Qiimaha",
-    "priceMin": "Laga bilaabo (kr)",
-    "priceMax": "Ilaa (kr)",
+    "priceMin": "Laga bilaabo",
+    "priceMax": "Ilaa",
     "location": "Goobta",
     "near": "Meel u dhow",
-    "anywhere": "Noorweey oo dhan",
+    "anywhere": "Meel kasta",
     "radius": "Gudaha",
     "radiusKm": "{km} km",
     "sortLabel": "U kala saar",
@@ -558,14 +564,16 @@
       "bodyType": "Qaabka jirka",
       "drivetrain": "Wadista taayirada",
       "ownership": "Nooca lahaanshaha",
-      "make": "Sumadda"
-    },
-    "priceRanges": {
-      "0-999": "Ka yar 1 000 kr",
-      "1000-9999": "1 000–9 999 kr",
-      "10000-99999": "10 000–99 999 kr",
-      "100000-999999": "100 000–999 999 kr",
-      "1000000+": "1 milyan kr ama ka badan"
+      "make": "Sumadda",
+      "region": "Gobolka",
+      "usage": "Isticmaalka",
+      "steering": "Shukaanka",
+      "furnishing": "Alaabta",
+      "landUse": "Ujeedada dhulka",
+      "dealType": "Kiro ama iib",
+      "brand": "Nooca",
+      "itemType": "Nooca alaabta",
+      "sex": "Lab ama dhedig"
     },
     "distance": "{km} km u jira",
     "unavailable": "Raadintu hadda ma shaqaynayso. Fadlan dib isku day dhowaan.",
@@ -893,7 +901,7 @@
     "greeting": "Ku soo dhowow Raadiso, {name}!",
     "intro": "Akoonkaagu waa diyaar. Saddex shay oo caawiya, dhammaantood ikhtiyaari:",
     "languageTitle": "Luqadda",
-    "languageHint": "Raadiso waxay ku jirtaa Norwiiji, Ingiriisi iyo Soomaali. Ku beddel goor kasta liiska luqadda ee sare.",
+    "languageHint": "Raadiso waxay ku jirtaa {languages}. Ku beddel goor kasta liiska luqadda ee bogga hoostiisa.",
     "verifyTitle": "Ku xaqiiji BankID",
     "verifyHint": "Iibsadayaasha iyo iibiyayaashu waxay aad ugu kalsoon yihiin dadka la xaqiijiyay. Raadiso waxay kaliya kaydisaa inaad xaqiijisan tahay, marnaba lambarkaaga aqoonsiga.",
     "passkeyTitle": "Ku dar fure-gal (passkey)",
@@ -1004,7 +1012,10 @@
       }
     },
     "newListing": "Xayeysiis ku dhig {category}",
-    "reducedTitle": "Dhawaan la dhimay"
+    "reducedTitle": "Dhawaan la dhimay",
+    "emptyTitle": "Noqo qofka ugu horreeya ee xayeysiis ku dhiga {category}",
+    "emptyBody": "Weli halkan wax xayeysiis ah lama dhigin. Xayeysiiskaagu wuxuu noqonayaa kan ugu horreeya ee dadku arkaan.",
+    "emptyAction": "Xayeysiis dhig"
   },
   "favourites": {
     "title": "Kuwa aan jeclahay",

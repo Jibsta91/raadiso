@@ -23,11 +23,11 @@ import { isStaff } from '@/lib/staff';
 import { AccountMenu } from './account-menu';
 
 const iconButton =
-  'relative flex size-11 items-center justify-center rounded-full border bg-card text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-5';
+  'relative flex size-11 items-center justify-center rounded-full border bg-card text-foreground motion-safe:transition-colors hover:bg-accent focus-ring [&_svg]:size-5';
 const countBadge =
-  'absolute -end-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground';
+  'absolute -end-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground';
 const menuItem =
-  'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4 [&_svg]:text-muted-foreground';
+  'flex w-full items-center gap-3 rounded-field px-3 py-2.5 text-start text-sm font-medium motion-safe:transition-colors hover:bg-accent focus-ring [&_svg]:size-4 [&_svg]:text-muted-foreground';
 
 // The header and footer appear on every page, and their targets are dynamic,
 // per-user pages. Prefetching them would cost about ten full server renders per
@@ -54,12 +54,12 @@ export async function Header({ locale }: { locale: string }) {
   const signupHref = `/auth/login?signup=1&returnTo=${encodeURIComponent(`/${locale}`)}&locale=${locale}`;
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-glass-header backdrop-blur-xl backdrop-saturate-150">
+    <header className="sticky top-0 z-40 border-b pt-[env(safe-area-inset-top)] bg-glass-header backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 sm:px-8 lg:gap-6">
         <Link
           prefetch={false}
           href="/"
-          className="rounded-lg font-display text-[28px] font-extrabold leading-none tracking-[-0.04em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="focus-ring rounded-field font-display text-2xl font-extrabold leading-none tracking-[-0.04em]"
           aria-label="Raadiso"
         >
           raadiso<span className="text-primary">.</span>
@@ -70,7 +70,7 @@ export async function Header({ locale }: { locale: string }) {
               key={key}
               href={`/${key}`}
               prefetch={false}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-subtle-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="rounded-full px-3.5 py-2 text-sm font-medium text-subtle-foreground motion-safe:transition-colors hover:bg-accent hover:text-foreground focus-ring"
             >
               {tHome(`categories.${key}.name`)}
             </Link>
@@ -125,7 +125,7 @@ export async function Header({ locale }: { locale: string }) {
               </Link>
             </>
           ) : null}
-          <Button asChild variant="ink" className="max-sm:size-11 max-sm:px-0">
+          <Button asChild variant="inverse" className="max-sm:size-11 max-sm:px-0">
             <Link
               href="/listings/new"
               prefetch={false}

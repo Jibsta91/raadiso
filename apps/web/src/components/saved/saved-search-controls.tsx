@@ -53,7 +53,7 @@ export function SaveSearchButton({
         if (res?.status === 401) return loginRedirect(locale);
         setState(res?.ok ? 'saved' : 'error');
       }}
-      className="inline-flex h-10 items-center gap-2 rounded-full border bg-card px-4 text-sm font-semibold transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+      className="inline-flex h-10 items-center gap-2 rounded-full border bg-card px-4 text-sm font-semibold motion-safe:transition-colors hover:bg-accent focus-ring disabled:opacity-60"
     >
       <Bookmark aria-hidden className="size-4" />
       {state === 'error' ? t('error') : t('save')}
@@ -96,7 +96,7 @@ export function SavedSearchActions({ id, notify }: { id: string; notify: boolean
         disabled={busy}
         aria-pressed={on}
         data-testid="saved-search-notify"
-        className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium hover:bg-accent focus-ring"
       >
         {on ? <Bell aria-hidden className="size-4" /> : <BellOff aria-hidden className="size-4" />}
         {on ? t('alertsOn') : t('alertsOff')}
@@ -108,7 +108,7 @@ export function SavedSearchActions({ id, notify }: { id: string; notify: boolean
         aria-label={t('delete')}
         title={t('delete')}
         data-testid="saved-search-delete"
-        className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-destructive focus-ring"
       >
         <Trash2 aria-hidden className="size-4" />
       </button>

@@ -1,3 +1,4 @@
+import { Input, Select } from '@raadi/ui';
 import { Download, ScrollText } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -137,34 +138,34 @@ export default async function AuditPage({
 
       <FilterBar testId="audit-filters">
         <Field label={t('filters.action')}>
-          <select name="action" defaultValue={filters.action ?? ''} className={inputCls}>
+          <Select name="action" defaultValue={filters.action ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             {AUDIT_ACTIONS.map((a) => (
               <option key={a} value={a}>
                 {t(nameKey(a) as never)}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <Field label={t('filters.targetType')}>
-          <select name="targetType" defaultValue={filters.targetType ?? ''} className={inputCls}>
+          <Select name="targetType" defaultValue={filters.targetType ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             {AUDIT_TARGETS.map((x) => (
               <option key={x} value={x}>
                 {t(`targets.${x}`)}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <Field label={t('filters.targetId')}>
-          <input
+          <Input
             name="targetId"
             defaultValue={filters.targetId}
             className={`${inputCls} w-72 font-mono`}
           />
         </Field>
         <Field label={t('filters.actor')}>
-          <input
+          <Input
             name="actor"
             defaultValue={filters.actor}
             className={`${inputCls} w-72 font-mono`}
@@ -200,7 +201,7 @@ export default async function AuditPage({
               <h2 className="sticky top-0 z-10 bg-background/90 py-1 font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground backdrop-blur">
                 {format.dateTime(new Date(`${day}T12:00:00Z`), { dateStyle: 'full' })}
               </h2>
-              <ol className="divide-y rounded-2xl border bg-card">
+              <ol className="divide-y rounded-card border bg-card">
                 {entries.map((e) => {
                   const who = names.get(e.actor.id);
                   const href = targetHref(e.target.type, e.target.id);

@@ -8,6 +8,7 @@ import { Link } from '@/i18n/navigation';
 import { myListings } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
 import { getSession } from '@/lib/session';
+import { ClientMessages } from '@/components/client-messages';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,9 +38,9 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
     <>
       {/* A removed listing's photos are deleted soon after, so it shows the placeholder. */}
       {l.images[0] && !l.removal ? (
-        <img src={l.images[0].urls.thumb} alt="" className="h-16 w-20 rounded-xl object-cover" />
+        <img src={l.images[0].urls.thumb} alt="" className="h-16 w-20 rounded-card object-cover" />
       ) : (
-        <div className="flex h-16 w-20 items-center justify-center rounded-xl bg-placeholder">
+        <div className="flex h-16 w-20 items-center justify-center rounded-card bg-placeholder">
           <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
         </div>
       )}
@@ -81,47 +82,49 @@ export default async function MyListingsPage({ params }: { params: Promise<{ loc
   );
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t('my.title')}</h1>
-        <Button asChild>
-          <Link href="/listings/new">{t('nav.newListing')}</Link>
-        </Button>
-      </div>
-      {items.length === 0 ? (
-        <div className="space-y-3 py-12 text-center">
-          <p className="text-muted-foreground">{t('my.empty')}</p>
-          <Button asChild variant="outline">
-            <Link href="/listings/new">{t('my.create')}</Link>
+    <ClientMessages set="myListings">
+      <div className="mx-auto max-w-4xl space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{t('my.title')}</h1>
+          <Button asChild>
+            <Link href="/listings/new">{t('nav.newListing')}</Link>
           </Button>
         </div>
-      ) : (
-        <ul
-          className="divide-y overflow-hidden rounded-3xl border bg-card"
-          role="list"
-          data-testid="my-listings"
-        >
-          {items.map((l) => (
-            <li key={l.id} className="flex items-center gap-2 pe-3">
-              {/* A removed listing has no page any more: it shows here, with why, but links nowhere. */}
-              {l.removal ? (
-                <div className="flex flex-1 items-center gap-4 p-3 opacity-90">{content(l)}</div>
-              ) : (
-                <Link
-                  href={`/listings/${l.id}`}
-                  className="flex flex-1 items-center gap-4 p-3 hover:bg-accent"
-                >
-                  {content(l)}
-                </Link>
-              )}
-              {/* Beside the link, never inside it (no buttons inside links). */}
-              {l.status === 'active' && !l.removal && l.stats ? (
-                <RenewButton id={l.id} renewableAt={l.stats.renewableAt} />
-              ) : null}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+        {items.length === 0 ? (
+          <div className="space-y-3 py-12 text-center">
+            <p className="text-muted-foreground">{t('my.empty')}</p>
+            <Button asChild variant="outline">
+              <Link href="/listings/new">{t('my.create')}</Link>
+            </Button>
+          </div>
+        ) : (
+          <ul
+            className="divide-y overflow-hidden rounded-card border bg-card"
+            role="list"
+            data-testid="my-listings"
+          >
+            {items.map((l) => (
+              <li key={l.id} className="flex items-center gap-2 pe-3">
+                {/* A removed listing has no page any more: it shows here, with why, but links nowhere. */}
+                {l.removal ? (
+                  <div className="flex flex-1 items-center gap-4 p-3 opacity-90">{content(l)}</div>
+                ) : (
+                  <Link
+                    href={`/listings/${l.id}`}
+                    className="flex flex-1 items-center gap-4 p-3 hover:bg-accent"
+                  >
+                    {content(l)}
+                  </Link>
+                )}
+                {/* Beside the link, never inside it (no buttons inside links). */}
+                {l.status === 'active' && !l.removal && l.stats ? (
+                  <RenewButton id={l.id} renewableAt={l.stats.renewableAt} />
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </ClientMessages>
   );
 }

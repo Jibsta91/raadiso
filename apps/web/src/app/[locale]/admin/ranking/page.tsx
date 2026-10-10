@@ -1,3 +1,4 @@
+import { Alert, Input, Select } from '@raadi/ui';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations, setRequestLocale } from 'next-intl/server';
@@ -52,7 +53,7 @@ export default async function RankingLabPage({
     if (error instanceof AdminApiError) return null;
     throw error;
   });
-  const input = 'h-10 field border-input px-3 text-sm';
+  const input = 'h-10 w-auto';
   const num = (n: number, digits = 2) =>
     format.number(n, { minimumFractionDigits: digits, maximumFractionDigits: digits });
   const age = (iso: string) => Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 86_400_000));
@@ -63,19 +64,19 @@ export default async function RankingLabPage({
       <form method="get" className="flex flex-wrap items-end gap-3" data-testid="ranking-form">
         <label className="flex min-w-56 flex-1 flex-col gap-1 text-sm">
           <span className="font-medium">{t('query')}</span>
-          <input name="q" defaultValue={query.q ?? ''} className={input} placeholder="toyota" />
+          <Input name="q" defaultValue={query.q ?? ''} className={input} placeholder="toyota" />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">{t('country')}</span>
-          <select name="country" defaultValue={country} className={input}>
+          <Select name="country" defaultValue={country} className={input}>
             <option value="XS">Somaliland (XS)</option>
             <option value="NO">Norway (NO)</option>
-          </select>
+          </Select>
         </label>
         {(['quality', 'freshness'] as const).map((w) => (
           <label key={w} className="flex w-32 flex-col gap-1 text-sm">
             <span className="font-medium">{t(`weights.${w}`)}</span>
-            <input
+            <Input
               name={w}
               type="number"
               min={0}
@@ -96,9 +97,9 @@ export default async function RankingLabPage({
       </form>
 
       {!lab ? (
-        <p role="alert" className="text-sm text-destructive">
+        <Alert variant="danger" className="w-full p-3">
           {t('unavailable')}
-        </p>
+        </Alert>
       ) : (
         <Panel
           title={t('results', { total: lab.total })}

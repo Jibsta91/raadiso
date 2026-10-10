@@ -12,7 +12,7 @@ import { COUNTRIES, type CountryCode } from '@raadi/catalog/countries';
 import { currencySymbol, formatMoney, parseMajor, toMajor } from '@raadi/catalog/money';
 import { qualityOf } from '@raadi/catalog/quality';
 import { placeName, placesOf } from '@raadi/catalog/places';
-import { Button } from '@raadi/ui';
+import { Alert, Button, Input, Select, Textarea } from '@raadi/ui';
 import { Check, ChevronLeft, ChevronRight, ImagePlus, Loader2, Star, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, type ReactNode, useEffect, useId, useRef, useState } from 'react';
@@ -328,7 +328,7 @@ export function ListingForm({
       {draft && !listing ? (
         <div
           role="status"
-          className="flex flex-wrap items-center gap-3 rounded-2xl border bg-soft p-4 text-sm"
+          className="flex flex-wrap items-center gap-3 rounded-card border bg-soft p-4 text-sm"
           data-testid="draft-banner"
         >
           <span className="flex-1">{t('form.draftFound')}</span>
@@ -368,13 +368,13 @@ export function ListingForm({
           <legend className="mb-4 text-xl font-semibold">{t('form.pickCategory')}</legend>
           <label className="block space-y-1">
             <span className="text-sm font-medium">{t('form.whatSelling')}</span>
-            <input
+            <Input
               type="text"
               value={what}
               onChange={(e) => setWhat(e.target.value)}
               placeholder={t('form.whatSellingHint')}
               data-testid="what-selling"
-              className="field h-11 w-full border-input px-4"
+              className="h-11 px-4"
             />
           </label>
           {guess.length ? (
@@ -434,13 +434,13 @@ export function ListingForm({
         </fieldset>
       ) : (
         <div
-          className="flex flex-wrap items-center gap-3 rounded-[1.5rem] border bg-card p-3 ps-4"
+          className="flex flex-wrap items-center gap-3 rounded-card border bg-card p-3 ps-4"
           data-testid="picked-category"
         >
           {(() => {
             const Icon = CATEGORY_ICONS[category] ?? ImagePlus;
             return (
-              <span className="flex size-10 items-center justify-center rounded-xl bg-ink text-ink-foreground">
+              <span className="flex size-10 items-center justify-center rounded-card bg-inverse text-inverse-foreground">
                 <Icon aria-hidden strokeWidth={1.7} className="size-5" />
               </span>
             );
@@ -462,7 +462,7 @@ export function ListingForm({
               setSubcategory('');
               setAttributes({});
             }}
-            className="h-9 rounded-full px-4 text-sm font-semibold text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-9 rounded-full px-4 text-sm font-semibold text-primary hover:bg-accent focus-ring"
           >
             {t('form.change')}
           </button>
@@ -512,10 +512,10 @@ export function ListingForm({
                   <img
                     src={img.thumb}
                     alt=""
-                    className="aspect-[4/3] w-full rounded-2xl object-cover"
+                    className="aspect-[4/3] w-full rounded-card object-cover"
                   />
                   {n === 0 ? (
-                    <span className="absolute bottom-2 start-2 rounded-full bg-ink/85 px-2 py-0.5 text-[11px] font-semibold text-ink-foreground">
+                    <span className="absolute bottom-2 start-2 rounded-full bg-scrim/80 px-2 py-0.5 text-xs font-semibold text-scrim-foreground">
                       {t('form.mainImage')}
                     </span>
                   ) : null}
@@ -569,7 +569,7 @@ export function ListingForm({
               {images.length < 10 ? (
                 <li className={images.length === 0 ? 'col-span-3 sm:col-span-4' : ''}>
                   <label
-                    className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed text-sm font-medium text-subtle-foreground transition-colors hover:bg-accent ${images.length === 0 ? 'h-36' : 'aspect-[4/3]'}`}
+                    className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-card border-2 border-dashed text-sm font-medium text-subtle-foreground motion-safe:transition-colors hover:bg-accent ${images.length === 0 ? 'h-36' : 'aspect-[4/3]'}`}
                   >
                     {uploading > 0 ? (
                       <Loader2 aria-hidden className="size-6 animate-spin" />
@@ -593,16 +593,16 @@ export function ListingForm({
               ) : null}
             </ul>
             {imageError ? (
-              <p role="alert" className="text-sm text-destructive" data-testid="image-error">
+              <Alert variant="danger" className="w-full p-3" data-testid="image-error">
                 {imageError}
-              </p>
+              </Alert>
             ) : null}
           </Section>
 
           <Section n={2} title={t('form.sections.about')}>
             <label className="block space-y-1">
               <span className="text-sm font-medium">{t('form.title')}</span>
-              <input
+              <Input
                 name="title"
                 required
                 minLength={3}
@@ -624,7 +624,7 @@ export function ListingForm({
             </label>
             <label className="block space-y-1">
               <span className="text-sm font-medium">{t('form.description')}</span>
-              <textarea
+              <Textarea
                 name="description"
                 required
                 maxLength={5000}
@@ -633,7 +633,7 @@ export function ListingForm({
                 onChange={(e) => setDescriptionLength(e.target.value.length)}
                 data-testid="field-description"
                 {...invalid('description')}
-                className={`field w-full p-4 ${errors.description ? 'border-destructive' : 'border-input'}`}
+                className={`p-4 ${errors.description ? 'border-destructive' : 'border-input'}`}
               />
               {hint('description')}
             </label>
@@ -654,7 +654,7 @@ export function ListingForm({
                       )}
                     </span>
                     {f.kind === 'select' ? (
-                      <select
+                      <Select
                         required={f.required}
                         value={attributes[f.key] ?? ''}
                         data-testid={`field-attr-${f.key}`}
@@ -668,10 +668,10 @@ export function ListingForm({
                             {t(`taxonomy.values.${f.key}.${o}` as never)}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     ) : (
                       <span className="relative block">
-                        <input
+                        <Input
                           type={f.kind}
                           required={f.required}
                           inputMode={f.kind === 'number' ? 'numeric' : undefined}
@@ -717,7 +717,7 @@ export function ListingForm({
                     ) : null}
                   </span>
                   <span className="relative block">
-                    <input
+                    <Input
                       name="price"
                       type="text"
                       inputMode="decimal"
@@ -748,7 +748,7 @@ export function ListingForm({
               ) : null}
               <label className="space-y-1">
                 <span className="text-sm font-medium">{t('form.place')}</span>
-                <select
+                <Select
                   name="placeId"
                   required
                   defaultValue={listing?.location.placeId ?? seed?.placeId ?? ''}
@@ -763,26 +763,22 @@ export function ListingForm({
                       {placeName(p, locale as never)}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {hint('placeId')}
               </label>
             </div>
           </Section>
 
           {formError ? (
-            <div
-              role="alert"
-              className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm"
-              data-testid="form-error"
-            >
+            <Alert variant="danger" className="p-3" data-testid="form-error">
               {formError}
-            </div>
+            </Alert>
           ) : null}
 
           {quality ? (
             <section
               aria-labelledby={`${id}-quality`}
-              className="space-y-2 rounded-2xl border p-4"
+              className="space-y-2 rounded-card border p-4"
               data-testid="quality-meter"
               data-score={quality.score}
             >
@@ -892,9 +888,9 @@ const orderButton =
   'inline-flex size-8 items-center justify-center rounded-full border bg-background hover:bg-accent disabled:opacity-40';
 
 const tile =
-  'flex min-h-32 flex-col items-start justify-between gap-4 rounded-[1.6rem] border bg-card p-5 text-start transition-[transform,background-color] hover:-translate-y-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+  'flex min-h-32 flex-col items-start justify-between gap-4 rounded-card border bg-card p-5 text-start motion-safe:transition-[transform,background-color] motion-safe:hover:-translate-y-0.5 hover:bg-accent focus-ring';
 const tileIcon =
-  'flex size-11 items-center justify-center rounded-2xl bg-soft text-soft-foreground';
+  'flex size-11 items-center justify-center rounded-card bg-soft text-soft-foreground';
 const unitClass =
   'pointer-events-none absolute inset-y-0 end-4 flex items-center text-sm text-muted-foreground';
 
@@ -914,12 +910,12 @@ function Section({
   return (
     <fieldset
       aria-labelledby={headingId}
-      className="space-y-4 rounded-[1.75rem] border bg-card p-5 sm:p-7"
+      className="space-y-4 rounded-card border bg-card p-5 sm:p-7"
     >
       <div className="flex items-start gap-3">
         <span
           aria-hidden
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-bold text-ink-foreground"
+          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-inverse text-sm font-bold text-inverse-foreground"
         >
           {n}
         </span>

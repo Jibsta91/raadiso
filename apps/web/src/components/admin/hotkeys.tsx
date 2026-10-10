@@ -93,7 +93,7 @@ export function Hotkeys({
       <dialog
         ref={dialog}
         aria-label={t('title')}
-        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-3xl border bg-card p-6 text-card-foreground shadow-float backdrop:bg-black/40"
+        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-card border bg-card p-6 text-card-foreground shadow-float backdrop:bg-scrim/40"
         onClick={(e) => e.target === dialog.current && dialog.current?.close()}
         data-testid="shortcuts-dialog"
       >
@@ -115,7 +115,7 @@ export function Hotkeys({
                 {r.keys.split(' ').map((k) => (
                   <kbd
                     key={k}
-                    className="inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-b-2 bg-card px-1.5 font-mono text-xs font-semibold"
+                    className="inline-flex h-6 min-w-6 items-center justify-center rounded-field border border-b-2 bg-card px-1.5 font-mono text-xs font-semibold"
                   >
                     {k}
                   </kbd>

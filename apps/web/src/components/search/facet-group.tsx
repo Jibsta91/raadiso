@@ -40,12 +40,12 @@ export function FacetGroup({
           href={href(toggleValue(params, name, v.value))}
           role="checkbox"
           aria-checked={on}
-          className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 text-sm hover:bg-accent"
+          className="flex items-center gap-2.5 rounded-card px-1.5 py-1 text-sm hover:bg-accent"
           data-testid={`facet-${name}-${v.value}`}
           scroll={false}
         >
           <span
-            className={`flex size-[18px] shrink-0 items-center justify-center rounded-md border ${on ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-card'}`}
+            className={`flex size-[18px] shrink-0 items-center justify-center rounded-field border ${on ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-card'}`}
           >
             {on ? <Check aria-hidden className="size-3" /> : null}
           </span>
@@ -62,14 +62,14 @@ export function FacetGroup({
         <span>
           {title}
           {active.length ? (
-            <span className="ms-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[11px] text-primary-foreground">
+            <span className="ms-1.5 rounded-full bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">
               {active.length}
             </span>
           ) : null}
         </span>
         <ChevronDown
           aria-hidden
-          className="size-4 text-muted-foreground transition-transform group-open:rotate-180"
+          className="size-4 text-muted-foreground motion-safe:transition-transform group-open:rotate-180"
         />
       </summary>
       <ul className="space-y-0.5">{first.map(item)}</ul>

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Raadiso — kjøp og selg lokalt",
-    "description": "Raadiso er en åpen markedsplass for kjøp og salg i Norge: torget, bil, eiendom, jobb og reise."
+    "description": "Kjøp og selg lokalt på Raadiso: ting, kjøretøy, eiendom, jobb og mer."
   },
   "nav": {
     "main": "Hovedmeny",
@@ -47,7 +47,7 @@
       },
       "jobb": {
         "name": "Jobb",
-        "description": "Stillinger fra arbeidsgivere i hele Norge."
+        "description": "Stillinger fra arbeidsgivere i hele landet."
       },
       "reise": {
         "name": "Reise",
@@ -188,7 +188,8 @@
     "objective": "mål {value}",
     "budget": "{value} av feilbudsjettet igjen",
     "noTraffic": "Ingen trafikk ennå",
-    "componentsTitle": "Komponenter"
+    "componentsTitle": "Komponenter",
+    "licence": "Raadiso er åpen kildekode, publisert under Apache-2.0-lisensen."
   },
   "privacy": {
     "title": "Personvern",
@@ -223,12 +224,17 @@
     }
   },
   "footer": {
-    "tagline": "Raadiso — åpen kildekode-markedsplass",
+    "tagline": "Kjøp og selg der du bor.",
     "privacy": "Personvern",
-    "status": "Status",
-    "openSource": "Apache-2.0",
+    "status": "Driftsstatus",
     "terms": "Vilkår",
-    "links": "Om Raadiso"
+    "links": "Om Raadiso",
+    "about": "Raadiso",
+    "howItWorks": "Slik fungerer det",
+    "safety": "Trygghetstips",
+    "help": "Hjelp",
+    "copyright": "© {year} Horumar Group",
+    "settings": "Språk og utseende"
   },
   "errors": {
     "title": "Noe gikk galt",
@@ -520,11 +526,11 @@
     "filters": "Filtre",
     "clearFilters": "Fjern filtre",
     "price": "Pris",
-    "priceMin": "Fra (kr)",
-    "priceMax": "Til (kr)",
+    "priceMin": "Fra",
+    "priceMax": "Til",
     "location": "Sted",
     "near": "I nærheten av",
-    "anywhere": "Hele Norge",
+    "anywhere": "Overalt",
     "radius": "Innenfor",
     "radiusKm": "{km} km",
     "sortLabel": "Sorter etter",
@@ -558,14 +564,16 @@
       "bodyType": "Karosseri",
       "drivetrain": "Hjuldrift",
       "ownership": "Eierform",
-      "make": "Merke"
-    },
-    "priceRanges": {
-      "0-999": "Under 1 000 kr",
-      "1000-9999": "1 000–9 999 kr",
-      "10000-99999": "10 000–99 999 kr",
-      "100000-999999": "100 000–999 999 kr",
-      "1000000+": "1 million kr eller mer"
+      "make": "Merke",
+      "region": "Region",
+      "usage": "Bruk",
+      "steering": "Ratt",
+      "furnishing": "Møblering",
+      "landUse": "Formål",
+      "dealType": "Leie eller salg",
+      "brand": "Merke",
+      "itemType": "Type",
+      "sex": "Kjønn"
     },
     "distance": "{km} km unna",
     "unavailable": "Søket er midlertidig utilgjengelig. Prøv igjen om litt.",
@@ -893,7 +901,7 @@
     "greeting": "Velkommen til Raadiso, {name}!",
     "intro": "Kontoen din er klar. Tre ting som hjelper, alle valgfrie:",
     "languageTitle": "Språk",
-    "languageHint": "Raadiso finnes på norsk, engelsk og somali. Bytt når du vil med språkmenyen øverst.",
+    "languageHint": "Raadiso finnes på {languages}. Bytt når du vil med språkmenyen nederst på siden.",
     "verifyTitle": "Verifiser med BankID",
     "verifyHint": "Kjøpere og selgere stoler mer på verifiserte personer. Raadiso lagrer bare at du er verifisert, aldri fødselsnummeret ditt.",
     "passkeyTitle": "Legg til en passnøkkel",
@@ -1004,7 +1012,10 @@
       }
     },
     "newListing": "Legg ut annonse i {category}",
-    "reducedTitle": "Nylig satt ned"
+    "reducedTitle": "Nylig satt ned",
+    "emptyTitle": "Bli den første som legger ut i {category}",
+    "emptyBody": "Det ligger ingen annonser her ennå. Din blir den første folk ser.",
+    "emptyAction": "Legg ut en annonse"
   },
   "favourites": {
     "title": "Favoritter",

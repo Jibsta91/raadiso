@@ -1,3 +1,4 @@
+import { Input, Select } from '@raadi/ui';
 import { CATEGORY_KEYS } from '@raadi/catalog';
 import { Flag, Package } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -96,7 +97,7 @@ export default async function ListingsPage({
       ) : null}
       <FilterBar testId="listing-filters">
         <Field label={t('filters.q')}>
-          <input
+          <Input
             name="q"
             defaultValue={query.q}
             placeholder={t('filters.qPlaceholder')}
@@ -104,24 +105,24 @@ export default async function ListingsPage({
           />
         </Field>
         <Field label={t('filters.status')}>
-          <select name="status" defaultValue={query.status ?? ''} className={inputCls}>
+          <Select name="status" defaultValue={query.status ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
                 {t(`status.${s}`)}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <Field label={t('filters.category')}>
-          <select name="category" defaultValue={query.category ?? ''} className={inputCls}>
+          <Select name="category" defaultValue={query.category ?? ''} className={inputCls}>
             <option value="">{t('filters.any')}</option>
             {CATEGORY_KEYS.map((c) => (
               <option key={c} value={c}>
                 {tx(`categories.${c}` as never)}
               </option>
             ))}
-          </select>
+          </Select>
         </Field>
         <label className="flex h-9 items-center gap-2 text-sm">
           <input
@@ -170,10 +171,10 @@ export default async function ListingsPage({
                       <img
                         src={l.image.thumb}
                         alt=""
-                        className="size-10 shrink-0 rounded-lg object-cover"
+                        className="size-10 shrink-0 rounded-card object-cover"
                       />
                     ) : (
-                      <span className="size-10 shrink-0 rounded-lg bg-placeholder" />
+                      <span className="size-10 shrink-0 rounded-card bg-placeholder" />
                     )}
                     <span className="line-clamp-2 font-medium hover:underline">{l.title}</span>
                   </Link>
