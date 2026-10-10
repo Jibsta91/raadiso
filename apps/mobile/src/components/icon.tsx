@@ -40,6 +40,7 @@ const SF_SYMBOLS: Partial<Record<IconName, SFSymbol>> = {
   'happy-outline': 'face.smiling',
   heart: 'heart.fill',
   'heart-outline': 'heart',
+  'eye-outline': 'eye',
   home: 'house.fill',
   'home-outline': 'house',
   'image-outline': 'photo',

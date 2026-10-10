@@ -31,6 +31,11 @@ export interface Country {
   phonePrefix: string;
   /** The price facet's buckets, in major units. */
   priceBuckets: readonly PriceBucket[];
+  /**
+   * How people prove their identity here (ADR-0018), or null where no provider exists yet: the
+   * website and the app then offer no verification and show no "not verified".
+   */
+  identityVerification: 'bankid' | null;
 }
 
 export const COUNTRIES: Readonly<Record<CountryCode, Country>> = {
@@ -41,6 +46,7 @@ export const COUNTRIES: Readonly<Record<CountryCode, Country>> = {
     locales: ['en', 'so'],
     timeZone: 'Africa/Hargeisa',
     phonePrefix: '+252',
+    identityVerification: null,
     priceBuckets: [
       { key: '0-49', to: 50 },
       { key: '50-199', from: 50, to: 200 },
@@ -56,6 +62,7 @@ export const COUNTRIES: Readonly<Record<CountryCode, Country>> = {
     locales: ['nb', 'en', 'so'],
     timeZone: 'Europe/Oslo',
     phonePrefix: '+47',
+    identityVerification: 'bankid',
     priceBuckets: [
       { key: '0-999', to: 1000 },
       { key: '1000-9999', from: 1000, to: 10_000 },

@@ -1,4 +1,5 @@
 import type { Review } from '@raadi/api-client';
+import { COUNTRIES } from '@raadi/catalog/countries';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -7,6 +8,7 @@ import { Body, Status, Title } from '../../components/ui';
 import { fill, useI18n } from '../../i18n';
 import { unwrap, useApi, usePaged, usePullToRefresh } from '../../lib/api';
 import { useAuth } from '../../lib/auth/context';
+import { APP_COUNTRY } from '../../lib/country';
 import { confirm } from '../../lib/confirm';
 import { formatAge, intlLocale } from '../../lib/format';
 import { fonts, radius, space, useTheme } from '../../theme';
@@ -140,20 +142,23 @@ export default function Profile() {
         </View>
         <View style={styles.grow}>
           <Title testID="profile-name">{profile.name}</Title>
-          <View style={styles.inline}>
-            <Icon
-              name={profile.verifiedAt ? 'shield-checkmark' : 'shield-outline'}
-              size={14}
-              color={profile.verifiedAt ? theme.accent : theme.muted}
-            />
-            <Text style={[styles.small, { color: theme.muted }]} testID="profile-verification">
-              {profile.verifiedAt
-                ? fill(m.profile.verifiedSince, {
-                    date: new Date(profile.verifiedAt).toLocaleDateString(intlLocale[locale]),
-                  })
-                : m.profile.notVerified}
-            </Text>
-          </View>
+          {/* Verification only where the country has a provider (none in Somaliland yet). */}
+          {profile.verifiedAt || COUNTRIES[APP_COUNTRY].identityVerification ? (
+            <View style={styles.inline}>
+              <Icon
+                name={profile.verifiedAt ? 'shield-checkmark' : 'shield-outline'}
+                size={14}
+                color={profile.verifiedAt ? theme.accent : theme.muted}
+              />
+              <Text style={[styles.small, { color: theme.muted }]} testID="profile-verification">
+                {profile.verifiedAt
+                  ? fill(m.profile.verifiedSince, {
+                      date: new Date(profile.verifiedAt).toLocaleDateString(intlLocale[locale]),
+                    })
+                  : m.profile.notVerified}
+              </Text>
+            </View>
+          ) : null}
         </View>
       </View>
 

@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "node --test --test-reporter=spec 'test/**/*.test.ts'",
-    "eas-build-post-install": "pnpm --filter @raadi/catalog build"
+    "eas-build-post-install": "pnpm --filter @raadi/catalog build",
+    "generate": "node scripts/sync-taxonomy.mjs && prettier --write src/i18n/taxonomy.ts"
   },
   "dependencies": {
     "@bacons/apple-targets": "5.0.0",
