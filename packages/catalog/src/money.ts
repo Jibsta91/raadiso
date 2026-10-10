@@ -75,15 +75,17 @@ export function intlLocale(locale: string): string {
 
 /** The currency's symbol as the locale writes it: "$", "kr". */
 export function currencySymbol(currency: string, locale: string): string {
-  return (
-    new Intl.NumberFormat(intlLocale(locale), {
-      style: 'currency',
-      currency,
-      currencyDisplay: 'narrowSymbol',
-    })
-      .formatToParts(0)
-      .find((p) => p.type === 'currency')?.value ?? currency
-  );
+  const format = new Intl.NumberFormat(intlLocale(locale), {
+    style: 'currency',
+    currency,
+    currencyDisplay: 'narrowSymbol',
+  });
+  // Hermes (the app's engine on iOS) has no formatToParts: there, format zero and keep what isn't the
+  // number ("$0.00" → "$", "kr 0,00" → "kr").
+  if (typeof format.formatToParts !== 'function') {
+    return format.format(0).replace(/[\d\s.,'\u00a0\u202f\u2019-]/gu, '') || currency;
+  }
+  return format.formatToParts(0).find((p) => p.type === 'currency')?.value ?? currency;
 }
 
 /**
