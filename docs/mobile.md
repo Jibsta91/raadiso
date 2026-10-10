@@ -163,18 +163,30 @@ VPN, and the laptop can be off. They sign in with a real account (production has
 
 1. The app record exists in App Store Connect: "Raadiso", `com.raadiso.app`, Apple ID `6821144080`
    (`submit.testflight.ios.ascAppId` in `apps/mobile/eas.json`), so `--submit` uploads to it without asking.
-2. Build and send it to TestFlight from your own terminal (Apple sign-in with two-factor
-   authentication; answer **Yes** to generating the App Store certificate and the provisioning profiles
-   for both targets, the app and the widget):
+2. Build and send it to TestFlight. The App Store credentials (the distribution certificate and the
+   App Store profiles for the app and the widget) are stored at Expo since 2026-10-10, so the build runs
+   in Expo's cloud from GitHub `main`, through the Expo MCP (`build_run`, profile `testflight`,
+   base directory `apps/mobile`, auto-submit) or on expo.dev. EAS compiles `@raadi/catalog` after
+   installing (`eas-build-post-install` in `apps/mobile/package.json`), because the app imports its
+   `dist/`.
+
+   To set the credentials up again (a new certificate or a new target), run EAS from the laptop with
+   the App Store Connect API key (`AuthKey_YD5M9PU7A3.p8`): the expo container has no git
+   (`EAS_NO_VCS=1`, `EAS_PROJECT_ROOT=/workspace`), and Expo's capability sync fails against Apple's
+   API (`EXPO_NO_CAPABILITY_SYNC=1`; push and App Groups are already enabled):
 
    ```bash
    LAN_IP=127.0.0.1 docker compose -f compose.yaml -f compose.phone.yaml run --rm --no-deps \
-     --entrypoint sh expo -c 'cd apps/mobile && npx -y eas-cli@24.10.0 build --platform ios \
-     --profile testflight --submit'
+     -v ~/Downloads/AuthKey_YD5M9PU7A3.p8:/tmp/asc-key.p8:ro \
+     -e EXPO_ASC_API_KEY_PATH=/tmp/asc-key.p8 -e EXPO_ASC_KEY_ID=YD5M9PU7A3 \
+     -e EXPO_ASC_ISSUER_ID=69e94a07-17f0-4a38-b286-c65659d331be -e EXPO_APPLE_TEAM_ID=9NE8R6TAR6 \
+     -e EXPO_APPLE_TEAM_TYPE=INDIVIDUAL -e EAS_NO_VCS=1 -e EAS_PROJECT_ROOT=/workspace \
+     -e EXPO_NO_CAPABILITY_SYNC=1 --entrypoint sh expo -c \
+     'cd apps/mobile && npx -y eas-cli@24.10.0 credentials --platform ios'
    ```
 
-   The build runs in Expo's cloud (EAS build minutes, about 15–25 minutes), then EAS uploads it to App
-   Store Connect. Apple processes it for another 5–30 minutes.
+   The build runs in Expo's cloud (about 15–25 minutes), then EAS uploads it to App Store Connect.
+   Apple processes it for another 5–30 minutes.
 
 3. In App Store Connect → TestFlight: add yourself (and anyone else in the team) as an **internal
    tester**. Internal testers get each build at once, without Apple's review. Install TestFlight on the
