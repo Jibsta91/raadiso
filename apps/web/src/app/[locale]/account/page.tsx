@@ -16,6 +16,7 @@ import { RemoveVerification, VerifyButton } from '@/components/trust/verificatio
 import { VerifiedBadge } from '@/components/trust/verified-badge';
 import { Link } from '@/i18n/navigation';
 import { myTrust } from '@/lib/api';
+import { currentCountryConfig } from '@/lib/host';
 import { getMe, getSession } from '@/lib/session';
 import { parseTheme, THEME_COOKIE } from '@/lib/theme';
 
@@ -41,6 +42,8 @@ export default async function AccountPage({
   if (!session.authenticated) {
     redirect(`/auth/login?returnTo=${encodeURIComponent(`/${locale}/account`)}&locale=${locale}`);
   }
+  // Verification only where the country has a provider (BankID in Norway; none in Somaliland yet).
+  const verification = (await currentCountryConfig()).identityVerification !== null;
   const [t, tt, tTheme, format, me, trust, jar] = await Promise.all([
     getTranslations('account'),
     getTranslations('trust'),
@@ -91,49 +94,51 @@ export default async function AccountPage({
         </CardContent>
       </Card>
 
-      <Card data-testid="verification-card">
-        <CardHeader>
-          <CardTitle>{tt('verificationTitle')}</CardTitle>
-          <CardDescription>{tt('verificationHint')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {outcome ? (
-            <p
-              role="status"
-              data-testid="verification-outcome"
-              data-outcome={outcome}
-              className={outcome === 'ok' ? 'text-sm text-success' : 'text-sm text-destructive'}
-            >
-              {tt(`outcomes.${outcome}`)}
-            </p>
-          ) : null}
-          {trust === null ? (
-            <p className="text-sm text-muted-foreground">{tt('unavailable')}</p>
-          ) : trust.verification ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <VerifiedBadge
-                label={tt('verifiedSince', {
-                  date: format.dateTime(new Date(trust.verification.verifiedAt), {
-                    dateStyle: 'medium',
-                  }),
-                })}
-              />
-              <RemoveVerification />
-            </div>
-          ) : (
-            <VerifyButton locale={locale} />
-          )}
-          {trust ? (
-            <Link
-              href={`/users/${trust.userId}`}
-              className="block text-sm text-primary hover:underline"
-              data-testid="my-profile-link"
-            >
-              {tt('seeMyProfile')}
-            </Link>
-          ) : null}
-        </CardContent>
-      </Card>
+      {verification ? (
+        <Card data-testid="verification-card">
+          <CardHeader>
+            <CardTitle>{tt('verificationTitle')}</CardTitle>
+            <CardDescription>{tt('verificationHint')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {outcome ? (
+              <p
+                role="status"
+                data-testid="verification-outcome"
+                data-outcome={outcome}
+                className={outcome === 'ok' ? 'text-sm text-success' : 'text-sm text-destructive'}
+              >
+                {tt(`outcomes.${outcome}`)}
+              </p>
+            ) : null}
+            {trust === null ? (
+              <p className="text-sm text-muted-foreground">{tt('unavailable')}</p>
+            ) : trust.verification ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <VerifiedBadge
+                  label={tt('verifiedSince', {
+                    date: format.dateTime(new Date(trust.verification.verifiedAt), {
+                      dateStyle: 'medium',
+                    }),
+                  })}
+                />
+                <RemoveVerification />
+              </div>
+            ) : (
+              <VerifyButton locale={locale} />
+            )}
+            {trust ? (
+              <Link
+                href={`/users/${trust.userId}`}
+                className="block text-sm text-primary hover:underline"
+                data-testid="my-profile-link"
+              >
+                {tt('seeMyProfile')}
+              </Link>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

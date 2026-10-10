@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { VerifyButton } from '@/components/trust/verification';
 import { Link } from '@/i18n/navigation';
 import { safePath } from '@/lib/safe-path';
+import { currentCountryConfig } from '@/lib/host';
 import { getSession } from '@/lib/session';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,6 +29,8 @@ export default async function WelcomePage({
     redirect(`/auth/login?returnTo=${encodeURIComponent(`/${locale}/welcome`)}&locale=${locale}`);
   }
   const t = await getTranslations('welcome');
+  // Verification only where the country has a provider (BankID in Norway; none in Somaliland yet).
+  const verification = (await currentCountryConfig()).identityVerification !== null;
   const next = safePath((await searchParams).next, `/${locale}`);
   const firstName = session.user.name?.split(' ')[0];
 
@@ -50,18 +53,20 @@ export default async function WelcomePage({
         </CardHeader>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ShieldCheck aria-hidden className="size-5" />
-            {t('verifyTitle')}
-          </CardTitle>
-          <CardDescription>{t('verifyHint')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <VerifyButton locale={locale} />
-        </CardContent>
-      </Card>
+      {verification ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck aria-hidden className="size-5" />
+              {t('verifyTitle')}
+            </CardTitle>
+            <CardDescription>{t('verifyHint')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <VerifyButton locale={locale} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

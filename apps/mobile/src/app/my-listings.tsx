@@ -1,20 +1,32 @@
 import type { Listing } from '@raadi/api-client';
+import { priceUnitOf } from '@raadi/catalog/categories';
 import { Image } from 'expo-image';
-import { Link, router } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Badge, Status } from '../components/ui';
+import { Link, router, Stack } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Icon } from '../components/icon';
 import { NoPhoto } from '../components/no-photo';
+import { Segmented } from '../components/segmented';
+import { SwipeRow } from '../components/swipe-row';
+import { Badge, Status } from '../components/ui';
 import { fill, useI18n } from '../i18n';
 import { unwrap, useApi, usePaged, usePullToRefresh } from '../lib/api';
-import { confirm } from '../lib/confirm';
-import { SwipeRow } from '../components/swipe-row';
 import { useAuth } from '../lib/auth/context';
 import { config } from '../lib/config';
-import { formatPrice } from '../lib/format';
+import { confirm } from '../lib/confirm';
+import { formatPrice, intlLocale } from '../lib/format';
 import { absoluteUrl } from '../lib/urls';
 import { fonts, radius, space, useTheme } from '../theme';
 
 const PAGE_SIZE = 50;
+
+type Filter = 'all' | 'active' | 'finished';
+
+/** Sold, or rented for rentals and stays (the categories whose price is per month or night). */
+function finishedLabel(listing: Listing, m: ReturnType<typeof useI18n>['m']): string {
+  const rental = priceUnitOf(listing.category as never, listing.subcategory as never) !== undefined;
+  return rental ? m.myListings.rented : m.myListings.sold;
+}
 
 function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }) {
   const { m, locale } = useI18n();
@@ -44,6 +56,13 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
     await api.listings.DELETE('/api/v1/listings/{id}', path).catch(() => undefined);
     onChanged();
   };
+  const finished = listing.status === 'sold' ? finishedLabel(listing, m) : undefined;
+  const subcategory =
+    m.taxonomy.subcategories[listing.subcategory] ?? m.categories[listing.category];
+  const price = formatPrice(listing.price, locale, m.common.noPrice);
+  const changed = fill(m.myListings.changed, {
+    date: new Date(listing.updatedAt).toLocaleDateString(intlLocale[locale]),
+  });
   return (
     <SwipeRow
       actions={[
@@ -91,14 +110,10 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
         <Pressable
           testID="my-listing"
           role="link"
-          aria-label={[
-            listing.title,
-            formatPrice(listing.price, locale, m.common.noPrice),
-            listing.status === 'sold' ? m.listing.sold : undefined,
-          ]
+          aria-label={[listing.title, subcategory, price, finished, changed]
             .filter(Boolean)
             .join(', ')}
-          style={{ ...styles.row, backgroundColor: theme.surface, borderColor: theme.border }}
+          style={{ ...styles.row, borderColor: theme.border }}
         >
           {image ? (
             <Image
@@ -107,21 +122,35 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
               style={{ ...styles.thumb, backgroundColor: theme.placeholder }}
             />
           ) : (
-            <NoPhoto category={listing.category} size={24} style={styles.thumb} />
+            <NoPhoto category={listing.category} size={28} style={styles.thumb} />
           )}
           <View style={styles.text}>
-            <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>
-              {listing.title}
-            </Text>
-            <Text style={[styles.price, { color: theme.muted }]}>
-              {formatPrice(listing.price, locale, m.common.noPrice)}
-            </Text>
-            {listing.stats ? (
-              <Text testID="my-listing-views" style={[styles.price, { color: theme.muted }]}>
-                {fill(m.market.views, { count: listing.stats.views })}
+            <View style={styles.titleRow}>
+              <Text numberOfLines={2} style={[styles.title, { color: theme.text }]}>
+                {listing.title}
               </Text>
-            ) : null}
-            {listing.status === 'sold' ? <Badge label={m.listing.sold} tone="neutral" /> : null}
+              {finished ? (
+                <Badge label={finished} tone="neutral" testID="my-listing-status" />
+              ) : null}
+            </View>
+            <Text numberOfLines={1} style={[styles.meta, { color: theme.muted }]}>
+              {subcategory} · {price}
+            </Text>
+            <View style={styles.statsRow}>
+              {listing.stats ? (
+                <View
+                  style={styles.stat}
+                  testID="my-listing-views"
+                  aria-label={fill(m.myListings.views, { count: listing.stats.views })}
+                >
+                  <Icon name="eye-outline" size={15} color={theme.muted} />
+                  <Text style={[styles.statText, { color: theme.text }]}>
+                    {listing.stats.views}
+                  </Text>
+                </View>
+              ) : null}
+              <Text style={[styles.changed, { color: theme.muted }]}>{changed}</Text>
+            </View>
           </View>
         </Pressable>
       </Link>
@@ -129,10 +158,15 @@ function Row({ listing, onChanged }: { listing: Listing; onChanged: () => void }
   );
 }
 
+/** The signed-in user's listings: filter, search, status and statistics; swipe to edit or finish. */
 export default function MyListings() {
   const { m } = useI18n();
   const api = useApi();
   const auth = useAuth();
+  const theme = useTheme();
+  const [filter, setFilter] = useState<Filter>('all');
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
   const mine = usePaged(
     async (offset) =>
       auth.status === 'signedIn'
@@ -145,41 +179,127 @@ export default function MyListings() {
     [api, auth.status],
   );
 
+  const counts = useMemo(
+    () => ({
+      all: mine.items.length,
+      active: mine.items.filter((l) => l.status === 'active').length,
+      finished: mine.items.filter((l) => l.status === 'sold').length,
+    }),
+    [mine.items],
+  );
+  const shown = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase();
+    return mine.items.filter(
+      (l) =>
+        (filter === 'all' || (filter === 'active' ? l.status === 'active' : l.status === 'sold')) &&
+        (!needle || l.title.toLocaleLowerCase().includes(needle)),
+    );
+  }, [mine.items, filter, query]);
+
   const refresh = usePullToRefresh(mine.loading, mine.reload);
   return (
-    <FlatList
-      contentInsetAdjustmentBehavior="automatic"
-      {...refresh}
-      contentContainerStyle={styles.list}
-      data={mine.items}
-      keyExtractor={(l) => l.id}
-      renderItem={({ item }) => <Row listing={item} onChanged={mine.reload} />}
-      onEndReached={mine.more}
-      onEndReachedThreshold={0.5}
-      ListEmptyComponent={
-        <Status
-          loading={mine.loading && mine.items.length === 0}
-          error={mine.error}
-          empty={m.account.myListingsEmpty}
-          onRetry={mine.reload}
-        />
-      }
-    />
+    <>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable
+              role="button"
+              aria-label={m.myListings.searchOpen}
+              hitSlop={10}
+              testID="my-listings-search-toggle"
+              onPress={() => {
+                setSearching((open) => !open);
+                setQuery('');
+              }}
+            >
+              <Icon name="search" size={22} color={theme.text} />
+            </Pressable>
+          ),
+        }}
+      />
+      <FlatList
+        contentInsetAdjustmentBehavior="automatic"
+        {...refresh}
+        contentContainerStyle={styles.list}
+        data={shown}
+        keyExtractor={(l) => l.id}
+        renderItem={({ item }) => <Row listing={item} onChanged={mine.reload} />}
+        onEndReached={mine.more}
+        onEndReachedThreshold={0.5}
+        ListHeaderComponent={
+          mine.items.length ? (
+            <View style={styles.header}>
+              {searching ? (
+                <TextInput
+                  autoFocus
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder={m.myListings.search}
+                  placeholderTextColor={theme.muted}
+                  clearButtonMode="while-editing"
+                  returnKeyType="search"
+                  testID="my-listings-search"
+                  style={[
+                    styles.search,
+                    {
+                      color: theme.text,
+                      backgroundColor: theme.surface,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                />
+              ) : null}
+              <Segmented
+                testID="my-listings-filter"
+                label={m.account.myListings}
+                value={filter}
+                onChange={setFilter}
+                options={[
+                  { value: 'all', label: `${m.myListings.all} (${counts.all})` },
+                  { value: 'active', label: `${m.myListings.active} (${counts.active})` },
+                  { value: 'finished', label: `${m.myListings.finished} (${counts.finished})` },
+                ]}
+              />
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          <Status
+            loading={mine.loading && mine.items.length === 0}
+            error={mine.error}
+            empty={mine.items.length ? m.myListings.noMatch : m.account.myListingsEmpty}
+            onRetry={mine.reload}
+          />
+        }
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  list: { padding: space.lg, gap: space.sm + 2, flexGrow: 1 },
+  list: { paddingHorizontal: space.lg, paddingBottom: space.lg, flexGrow: 1 },
+  header: { gap: space.md, paddingTop: space.sm, paddingBottom: space.md },
+  search: {
+    height: 44,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingHorizontal: space.md,
+    fontFamily: fonts.medium,
+    fontSize: 16,
+  },
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: space.md,
-    padding: space.md,
-    borderRadius: radius.lg - 2,
-    borderWidth: 1,
+    paddingVertical: space.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  thumb: { width: 60, height: 60, borderRadius: radius.md - 4 },
-  text: { flex: 1, gap: 2 },
-  title: { fontFamily: fonts.semibold, fontSize: 16 },
-  price: { fontFamily: fonts.medium, fontSize: 14, fontVariant: ['tabular-nums'] },
+  thumb: { width: 88, height: 88, borderRadius: radius.md },
+  text: { flex: 1, gap: 4 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
+  title: { flex: 1, fontFamily: fonts.semibold, fontSize: 16, lineHeight: 21 },
+  meta: { fontFamily: fonts.medium, fontSize: 14, fontVariant: ['tabular-nums'] },
+  statsRow: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginTop: 'auto' },
+  stat: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statText: { fontFamily: fonts.semibold, fontSize: 14, fontVariant: ['tabular-nums'] },
+  changed: { marginLeft: 'auto', fontFamily: fonts.body, fontSize: 13 },
 });
