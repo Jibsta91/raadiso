@@ -226,7 +226,8 @@ reachable only on the internal Docker network.
 | media                                  | 2                    | 4000                                  | `/api/v1/media`                                                    |
 | kafka / apicurio / debezium            | 2                    | 9092 / 8080 / 8083                    | —                                                                  |
 | opensearch                             | 2                    | 9200                                  | —                                                                  |
-| seaweedfs (S3) / imgproxy              | 2                    | 8333, 9327 / 8080, 8081 (metrics)     | `/img/…` on the main host (signed)                                 |
+| seaweedfs (S3) / imgproxy              | 2                    | 8333, 9327 / 8080, 8081 (metrics)     | `/img/…` on the main host (signed), via img-cache                  |
+| img-cache (nginx, ADR-0059)            | 5                    | 8080                                  | `/img/…` (caches imgproxy's signed variants)                       |
 | openfga / opa                          | 2                    | 8080, 2112 (metrics) / 8181           | —                                                                  |
 | clamav                                 | 2                    | 3310                                  | —                                                                  |
 | messaging                              | 3                    | 4000                                  | `/api/v1/messaging/*`, WebSocket `/api/v1/messaging/ws`            |
@@ -264,5 +265,6 @@ flowchart LR
   baoinit & db & ainit & opa[opa] --> listings --> lseed[listings-seed]
   baoinit & db & ainit & kinit & clamav & imgproxy & seaweedfs --> media --> mseed[media-seed]
   baoinit & kinit & opensearch --> search
-  traefik & web & bff & obs[observability stack] & cinit & rinit & lseed & mseed & search --> summary[summary: URLs + logins]
+  imgproxy --> imgcache[img-cache]
+  traefik & web & bff & obs[observability stack] & cinit & rinit & lseed & mseed & search & imgcache --> summary[summary: URLs + logins]
 ```

@@ -3,6 +3,7 @@ export * from './authz.js';
 export * from './config.js';
 export * from './db.js';
 export * from './health.js';
+export * from './http-cache.js';
 export * from './imgproxy.js';
 export * from './jwt.js';
 export * from './logger.js';

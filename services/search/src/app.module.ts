@@ -1,4 +1,4 @@
-import { type DynamicModule, Module } from '@nestjs/common';
+import { type DynamicModule, Logger, Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import {
@@ -20,7 +20,14 @@ import { Lifecycle } from './lifecycle.js';
 import { SearchController } from './search/search.controller.js';
 import { SearchAdminController } from './search/admin.js';
 import { SearchIndex } from './search/search.index.js';
-import { DEFAULT_COUNTRY, PRICE_INSIGHT, SearchService, SIGNER } from './search/search.service.js';
+import { ResultCache } from './search/search.cache.js';
+import {
+  DEFAULT_COUNTRY,
+  PRICE_INSIGHT,
+  SEARCH_CACHE,
+  SearchService,
+  SIGNER,
+} from './search/search.service.js';
 import { APP_CONFIG } from './tokens.js';
 import { Indexer } from './workers.js';
 
@@ -56,6 +63,24 @@ export class AppModule {
         { provide: APP_CONFIG, useValue: cfg },
         { provide: DEFAULT_COUNTRY, useValue: env.DEFAULT_COUNTRY },
         { provide: PRICE_INSIGHT, useValue: env.PRICE_INSIGHT },
+        {
+          provide: SEARCH_CACHE,
+          useValue: new ResultCache(
+            {
+              ttlMs: env.SEARCH_CACHE_TTL_MS,
+              staleMs: env.SEARCH_CACHE_STALE_MS,
+              maxEntries: env.SEARCH_CACHE_MAX_ENTRIES,
+              // OpenSearch's refresh interval (1 s, index-definition.ts) and a margin.
+              settleMs: 1_500,
+            },
+            (error) =>
+              // The error's name only: OpenSearch errors can quote the query, which is what people typed.
+              new Logger('SearchCache').warn(
+                { error: error instanceof Error ? error.name : 'unknown' },
+                'background refresh failed',
+              ),
+          ),
+        },
         { provide: JwtVerifier, useValue: keycloakVerifier(env) },
         { provide: HealthRegistry, useValue: new HealthRegistry() },
         {

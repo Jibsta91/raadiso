@@ -338,8 +338,30 @@ expect_status 200 "public listing detail"
 [[ -n "$(header etag)" ]] && ok "listing has an ETag (optimistic concurrency)" || fail "ETag header"
 req GET "$PUBLIC$card"
 [[ "$status" == "200" && "$(header content-type)" == image/webp* ]] && ok "listing image served by imgproxy (WebP)" || fail "listing image" "HTTP $status"
+# The first request may have refreshed an expired copy in the background: ask until it settles.
+for _ in 1 2 3; do req GET "$PUBLIC$card"; [[ "$(header x-cache-status)" == HIT ]] && break; sleep 1; done
+[[ "$status" == "200" && "$(header x-cache-status)" == HIT \
+  && "$(header cache-control)" == "public, max-age=31536000, immutable" ]] \
+  && ok "a repeated image comes from the image cache (X-Cache-Status: HIT, immutable)" \
+  || fail "image cache" "HTTP $status, X-Cache-Status: $(header x-cache-status), Cache-Control: $(header cache-control)"
 req GET "$PUBLIC${card/pr:card/pr:large}"
 expect_status 403 "imgproxy refuses tampered URLs (signature)"
+[[ "$(header cache-control)" == no-store ]] && ok "refused images are never cached (Cache-Control: no-store)" \
+  || fail "cache-control on a refused image" "$(header cache-control)"
+# Conditional GETs on public answers (ADR-0059): anonymous, without the session cookie.
+anon() { curl -s --max-time 10 --connect-to "::${GW}" "$@"; }
+anon_etag() { anon -o /dev/null -D - "$1" | grep -i '^etag:' | head -1 | cut -d' ' -f2- | tr -d '\r'; }
+etag="$(anon_etag "$PUBLIC/api/v1/listings/$seeded")"
+code="$(anon -o /dev/null -w '%{http_code}' -H "If-None-Match: $etag" "$PUBLIC/api/v1/listings/$seeded")"
+[[ -n "$etag" && "$code" == 304 ]] && ok "an unchanged public listing answers 304 Not Modified (If-None-Match)" \
+  || fail "listing conditional GET" "ETag $etag, HTTP $code"
+search_url="$PUBLIC/api/v1/search/listings?pageSize=1"
+cc="$(anon -o /dev/null -D - "$search_url" | grep -i '^cache-control:' | cut -d' ' -f2- | tr -d '\r')"
+etag="$(anon_etag "$search_url")"
+code="$(anon -o /dev/null -w '%{http_code}' -H "If-None-Match: $etag" "$search_url")"
+[[ "$cc" == *stale-while-revalidate=60* && -n "$etag" && "$code" == 304 ]] \
+  && ok "search answers carry stale-while-revalidate and answer 304 when unchanged" \
+  || fail "search conditional GET" "Cache-Control: $cc, ETag $etag, HTTP $code"
 req POST "$PUBLIC/api/v1/listings" -H 'content-type: application/json' -H "origin: $ORIGIN" --data '{}'
 expect_status 401 "anonymous users cannot create listings"
 

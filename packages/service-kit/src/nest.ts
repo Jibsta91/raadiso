@@ -27,6 +27,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Observable } from 'rxjs';
 import type { z } from 'zod';
 import { AuthzUnavailableError } from './authz.js';
+import { conditionalGets } from './http-cache.js';
 import { HealthRegistry } from './health.js';
 import { JwtVerifier, type Principal } from './jwt.js';
 
@@ -234,11 +235,13 @@ export class RouteSpanInterceptor implements NestInterceptor {
 
 /**
  * Responses default to `Cache-Control: no-store`: most carry personal data, and no shared cache (a CDN
- * later) may keep them. Routes whose answers may be cached say so themselves (public search results,
- * listing pages for visitors). Call before `listen()`.
+ * later) may keep them. Routes whose answers may be cached say so themselves with `publicCache()`
+ * (public search results, listing pages for visitors), which also gives them an ETag and `304`s
+ * ({@link conditionalGets}). Call before `listen()`.
  */
 export function noStoreByDefault(app: INestApplication): void {
   const fastify = app.getHttpAdapter().getInstance() as FastifyInstance;
+  conditionalGets(fastify);
   fastify.addHook('onSend', async (_req: FastifyRequest, reply: FastifyReply, payload: unknown) => {
     if (!reply.hasHeader('cache-control')) void reply.header('cache-control', 'no-store');
     return payload;

@@ -138,11 +138,12 @@ http:
       middlewares: [security-headers, ratelimit-default, api-body-limit, strip-errors]
       priority: 110
 
-    # Listing images: signed imgproxy URLs only (anything else is refused upstream).
+    # Listing images: signed imgproxy URLs only (anything else is refused upstream), through the
+    # image cache in front of imgproxy (ADR-0059).
     images:
       rule: Host(`{{ $d }}`) && PathPrefix(`/img/`)
       entryPoints: [web, websecure]
-      service: imgproxy
+      service: img-cache
       middlewares: [security-headers, ratelimit-assets, strip-img]
       priority: 100
 
@@ -223,9 +224,10 @@ http:
       loadBalancer:
         servers: [{ url: "http://payments:4000" }]
         healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
-    imgproxy:
+    img-cache:
       loadBalancer:
-        servers: [{ url: "http://imgproxy:8080" }]
+        servers: [{ url: "http://img-cache:8080" }]
+        healthCheck: { path: /healthz, interval: 10s, timeout: 3s }
     keycloak:
       loadBalancer:
         servers: [{ url: "http://keycloak:8080" }]

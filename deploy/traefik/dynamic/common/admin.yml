@@ -21,11 +21,11 @@ http:
       service: web
       middlewares: [security-headers, ratelimit-assets, compress]
       priority: 100
-    # Listing images in the moderation queue: the same signed imgproxy URLs as the website.
+    # Listing images in the moderation queue: the same signed imgproxy URLs (and cache) as the website.
     admin-images:
       rule: Host(`admin.{{ $d }}`) && PathPrefix(`/img/`)
       entryPoints: [web, websecure]
-      service: imgproxy
+      service: img-cache
       middlewares: [security-headers, ratelimit-assets, strip-img]
       priority: 100
     admin-web:

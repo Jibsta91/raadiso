@@ -60,3 +60,4 @@ number; superseded ADRs stay in place with a link to their replacement.
 | [0054](0054-staff-gate-for-staff-tools.md)                    | One staff gate in front of every staff tool in production                                | Accepted           |
 | [0055](0055-reviews-hub.md)                                   | A reviews page: deals waiting for a review, and reviews received and given               | Accepted           |
 | [0058](0058-arcane-instead-of-dockhand.md)                    | Arcane instead of Dockhand as the owner's Docker UI                                      | Accepted           |
+| [0059](0059-caching-images-and-public-answers.md)             | Speed on the server: an image cache, conditional GETs, a short search cache              | Accepted           |

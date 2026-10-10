@@ -24,6 +24,7 @@ const CHECKS: Array<Omit<ComponentStatus, 'ok' | 'latencyMs'> & { url: string }>
   { name: 'OpenFGA', group: 'platform', url: 'http://openfga:8080/healthz' },
   { name: 'OPA', group: 'platform', url: 'http://opa:8181/health' },
   { name: 'imgproxy', group: 'platform', url: 'http://imgproxy:8080/health' },
+  { name: 'Image cache', group: 'platform', url: 'http://img-cache:8080/healthz' },
   { name: 'SeaweedFS', group: 'platform', url: 'http://seaweedfs:8333/healthz' },
   { name: 'Grafana', group: 'observability', url: 'http://grafana:3000/api/health' },
   { name: 'Prometheus', group: 'observability', url: 'http://prometheus:9090/-/ready' },

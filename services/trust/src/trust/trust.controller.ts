@@ -12,7 +12,13 @@ import {
   Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { type AuthenticatedRequest, Public, Roles, ZodValidationPipe } from '@raadi/service-kit';
+import {
+  type AuthenticatedRequest,
+  Public,
+  publicCache,
+  Roles,
+  ZodValidationPipe,
+} from '@raadi/service-kit';
 import type { FastifyReply } from 'fastify';
 import type { z } from 'zod';
 import {
@@ -32,18 +38,24 @@ export class TrustController {
 
   // ---------------------------------------------------------------- public
 
+  // A profile and a listing's seller are the same for every visitor: publicly cacheable for a minute,
+  // with an ETag and 304s (ADR-0059).
+
   @Public()
   @Get('users/:id')
   profile(
     @Param('id', uuidPipe) id: string,
     @Query(new ZodValidationPipe(pageQuerySchema)) q: z.infer<typeof pageQuerySchema>,
+    @Res({ passthrough: true }) reply: FastifyReply,
   ) {
+    publicCache(reply, 60);
     return this.trust.profile(id, q.limit, q.offset);
   }
 
   @Public()
   @Get('listings/:id/seller')
-  seller(@Param('id', uuidPipe) id: string) {
+  seller(@Param('id', uuidPipe) id: string, @Res({ passthrough: true }) reply: FastifyReply) {
+    publicCache(reply, 60);
     return this.trust.sellerOf(id);
   }
 

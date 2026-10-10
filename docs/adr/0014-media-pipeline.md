@@ -23,6 +23,8 @@ as uploaded:
 Images are served by imgproxy behind the gateway at `/img/…` in fixed presets (`thumb`, `card`, `large`, WebP).
 Every URL carries an **HMAC-SHA256 signature** (key and salt from OpenBao), so imgproxy cannot be made to fetch
 or resize anything the services did not sign. Signed URLs are stable, so CDNs and browsers can cache them.
+Since [ADR-0059](0059-caching-images-and-public-answers.md) an nginx cache (`img-cache`) sits between the
+gateway and imgproxy: each variant is rendered once, and browsers are told it is immutable.
 
 A listing references images by id. Listings check `can_attach` in OpenFGA (you can only attach your own
 images). Media learns which listing an image belongs to from `listing.*` events. Images still unattached after

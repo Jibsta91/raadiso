@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { metrics, trace } from '@opentelemetry/api';
 import {
   type CountryCode,
@@ -37,6 +37,7 @@ import {
   statsBody,
   unitPrice,
 } from './price.js';
+import { ResultCache, searchCacheKey } from './search.cache.js';
 import type { SearchResponse } from './search.index.js';
 import { SearchIndex, toDocument } from './search.index.js';
 
@@ -45,6 +46,8 @@ export const SIGNER = Symbol('IMGPROXY_SIGNER');
 export const DEFAULT_COUNTRY = Symbol('DEFAULT_COUNTRY');
 /** Whether price insight is on (PRICE_INSIGHT, ADR-0050). */
 export const PRICE_INSIGHT = Symbol('PRICE_INSIGHT');
+/** The short cache of anonymous searches (search.cache.ts); none in tests that build the service. */
+export const SEARCH_CACHE = Symbol('SEARCH_CACHE');
 
 const meter = metrics.getMeter('search');
 const indexed = meter.createCounter('raadi.search.indexed', {
@@ -57,6 +60,13 @@ const freshness = meter.createHistogram('raadi.search.index.lag', {
 const queries = meter.createHistogram('raadi.search.query.duration', {
   description: 'OpenSearch time per search request',
   unit: 's',
+});
+const cacheRequests = meter.createCounter('raadi.search.cache.requests', {
+  description:
+    'Listing searches by cache outcome: hit (fresh), stale (served while refreshed), miss, bypass (personal)',
+});
+const cacheEntries = meter.createObservableGauge('raadi.search.cache.entries', {
+  description: 'Answers held in the search cache',
 });
 
 export interface SearchHit {
@@ -195,7 +205,31 @@ export class SearchService {
     @Inject(SIGNER) private readonly signer: ImgproxySigner,
     @Inject(DEFAULT_COUNTRY) private readonly defaultCountry: CountryCode,
     @Inject(PRICE_INSIGHT) private readonly priceInsightOn: boolean = true,
-  ) {}
+    @Optional() @Inject(SEARCH_CACHE) private readonly cache?: ResultCache<SearchResult>,
+  ) {
+    if (cache?.enabled) cacheEntries.addCallback((r) => r.observe(cache.size));
+  }
+
+  /**
+   * {@link search} through the short cache when the request is anonymous and the parameters are not
+   * personal (search.cache.ts); `identified` is true when the request carries a user's token.
+   */
+  async searchCached(
+    params: SearchParams,
+    request: { identified: boolean },
+  ): Promise<SearchResult> {
+    const cache = this.cache;
+    if (!cache?.enabled) return this.search(params);
+    const key = searchCacheKey(params, countryOf(params, this.defaultCountry), request);
+    if (key === undefined) {
+      cacheRequests.add(1, { outcome: 'bypass' });
+      return this.search(params);
+    }
+    const { value, outcome } = await cache.get(key, () => this.search(params));
+    cacheRequests.add(1, { outcome });
+    trace.getActiveSpan()?.setAttribute('raadi.search.cache', outcome);
+    return value;
+  }
 
   async search(params: SearchParams): Promise<SearchResult> {
     const span = trace.getActiveSpan();
@@ -647,6 +681,8 @@ export class SearchService {
       default:
         return;
     }
+    // Cached answers may now be out of date: refreshed once the change is searchable.
+    this.cache?.invalidate();
     indexed.add(1, { outcome, type: parsed.type });
     freshness.record((Date.now() - Date.parse(parsed.time)) / 1000);
   }
