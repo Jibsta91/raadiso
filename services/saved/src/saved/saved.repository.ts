@@ -104,6 +104,17 @@ export class SavedRepository {
     return { items: items.rows, total: Number(total.rows[0]!.n) };
   }
 
+  /** How many people saved each of these listings; listings nobody saved are left out. */
+  async favouriteCounts(listingIds: readonly string[]): Promise<Record<string, number>> {
+    if (!listingIds.length) return {};
+    const { rows } = await this.pool.query<{ listing_id: string; n: string }>(
+      `SELECT listing_id, count(*) AS n FROM favourites WHERE listing_id = ANY($1::uuid[])
+       GROUP BY listing_id`,
+      [listingIds],
+    );
+    return Object.fromEntries(rows.map((r) => [r.listing_id, Number(r.n)]));
+  }
+
   async favouriteIds(userId: string): Promise<string[]> {
     const { rows } = await this.pool.query<{ listing_id: string }>(
       'SELECT listing_id FROM favourites WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1000',

@@ -25,6 +25,7 @@ import { InternalListingsController } from './listings/internal.controller.js';
 import { ListingsController } from './listings/listings.controller.js';
 import { ListingsRepository } from './listings/listings.repository.js';
 import { ListingsService, SIGNER } from './listings/listings.service.js';
+import { SavedClient } from './listings/saved.client.js';
 import { ReportsController, ReportsService } from './listings/reports.js';
 import { ListingsAdminController, ListingsAdminService } from './listings/admin.js';
 import { APP_CONFIG, PG_POOL } from './tokens.js';
@@ -77,6 +78,7 @@ export class AppModule {
           provide: OpaClient,
           useValue: new OpaClient({ url: env.OPA_URL, token: secrets.opa_token }),
         },
+        { provide: SavedClient, useValue: new SavedClient(env.SAVED_URL) },
         {
           provide: SIGNER,
           useValue: imgproxySigner(secrets['imgproxy.key'], secrets['imgproxy.salt']),

@@ -115,6 +115,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/internal/v1/saved/favourites/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How many people saved each listing (internal network only; listings' My listings)
+         * @description Not routed by the gateway. Callers forward the user's bearer token, and listings asks only about the caller's own listings. Counts only, never who; listings nobody saved are left out.
+         */
+        get: operations["favouriteCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -486,6 +506,35 @@ export interface operations {
             };
             401: components["responses"]["Problem"];
             404: components["responses"]["Problem"];
+        };
+    };
+    favouriteCounts: {
+        parameters: {
+            query: {
+                /** @description Comma-separated listing ids, at most 100 */
+                ids: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts by listing id */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        counts: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
         };
     };
     liveness: {

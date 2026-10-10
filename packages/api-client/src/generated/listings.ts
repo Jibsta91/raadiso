@@ -565,6 +565,8 @@ export interface components {
                 views: number;
                 /** Format: date-time */
                 renewableAt: string;
+                /** @description How many people saved the listing (My listings only; left out when the saved service did not answer) */
+                favourites?: number;
             };
             /** @description The last price drop, until the price goes up again (ADR-0044) */
             priceDrop?: {

@@ -745,6 +745,7 @@
       "other": "brudd på reglene våre"
     },
     "views": "{count, plural, =0 {Ingen visninger ennå} one {# visning} other {# visninger}}",
+    "favourites": "{count, plural, =0 {Ikke lagret ennå} one {Lagret av # person} other {Lagret av # personer}}",
     "renew": "Forny",
     "renewed": "Fornyet",
     "renewFailed": "Prøv igjen",

@@ -58,7 +58,14 @@ export class ListingsController {
     @Req() req: AuthenticatedRequest,
     @Query(new ZodValidationPipe(mineSchema)) page: z.infer<typeof mineSchema>,
   ) {
-    return this.listings.mine(req.principal!, page.limit, page.offset, page.removed === 'true');
+    const token = req.headers.authorization?.slice('Bearer '.length);
+    return this.listings.mine(
+      req.principal!,
+      page.limit,
+      page.offset,
+      page.removed === 'true',
+      token,
+    );
   }
 
   /** One view of the listing page, anonymous (ADR-0045): a counter only. */

@@ -34,6 +34,7 @@ import {
   RENEW_AFTER_DAYS,
   VersionConflictError,
 } from './listings.repository.js';
+import { SavedClient } from './saved.client.js';
 
 export interface ListingContact {
   listingId: string;
@@ -66,6 +67,7 @@ export class ListingsService {
     private readonly fga: FgaClient,
     private readonly opa: OpaClient,
     @Inject(SIGNER) private readonly signer: ImgproxySigner,
+    private readonly saved: SavedClient,
   ) {}
 
   /** Public view; owners and moderators also see sold-out and removed listings' details. */
@@ -135,15 +137,28 @@ export class ListingsService {
     };
   }
 
-  async mine(principal: Principal, limit: number, offset: number, withRemoved = false) {
+  async mine(
+    principal: Principal,
+    limit: number,
+    offset: number,
+    withRemoved = false,
+    token?: string,
+  ) {
     const { rows, total } = await this.repo.listByOwner(principal.sub, limit, offset, withRemoved);
+    // Hearts from the saved service, for the owner only: counts, never who (best effort).
+    const hearts = token
+      ? await this.saved.favouriteCounts(
+          rows.map((r) => r.id),
+          token,
+        )
+      : undefined;
     return {
       total,
       limit,
       offset,
       items: rows.map((r) => ({
         ...toListing(r, this.signer),
-        stats: ownerStats(r, RENEW_AFTER_DAYS),
+        stats: ownerStats(r, RENEW_AFTER_DAYS, hearts),
       })),
     };
   }
