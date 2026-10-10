@@ -9,6 +9,7 @@ import {
   demoListingsNorway,
   demoUuid,
 } from '../src/demo.js';
+import { currencySymbol } from '../src/money.js';
 import { distanceKm, findPlace, PLACES, placesOf, REGIONS } from '../src/places.js';
 import { qualityOf } from '../src/quality.js';
 import { searchParamsSchema } from '../src/search-params.js';
@@ -98,6 +99,21 @@ describe('money', () => {
     assert.equal(formatMoney({ amountMinor: 125000, currency: 'USD' }, 'en'), '$1,250');
     assert.equal(formatMoney({ amountMinor: 125050, currency: 'USD' }, 'en'), '$1,250.50');
     assert.match(formatMoney({ amountMinor: 135000, currency: 'NOK' }, 'nb'), /^1\s350\skr$/);
+  });
+
+  it('finds the currency symbol, also without formatToParts (Hermes on iOS)', () => {
+    assert.equal(currencySymbol('USD', 'en'), '$');
+    assert.equal(currencySymbol('NOK', 'nb'), 'kr');
+    const proto = Intl.NumberFormat.prototype as { formatToParts?: unknown };
+    const original = proto.formatToParts;
+    delete proto.formatToParts;
+    try {
+      assert.equal(currencySymbol('USD', 'en'), '$');
+      assert.equal(currencySymbol('NOK', 'nb'), 'kr');
+      assert.equal(currencySymbol('USD', 'so'), '$');
+    } finally {
+      proto.formatToParts = original;
+    }
   });
 });
 
