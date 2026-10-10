@@ -1,6 +1,11 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query, Res } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Query, Req, Res } from '@nestjs/common';
 import { ALL_ATTRIBUTES, COUNTRY_CODES, findPlace, isSubcategoryOf } from '@raadi/catalog';
-import { Public, ZodValidationPipe } from '@raadi/service-kit';
+import {
+  type AuthenticatedRequest,
+  Public,
+  publicCache,
+  ZodValidationPipe,
+} from '@raadi/service-kit';
 import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { type SearchParams, searchParamsSchema } from './query.js';
@@ -41,7 +46,10 @@ const guideSchema = z
         ctx.addIssue({ code: 'custom', path: [key], message: 'unknown parameter' });
   });
 
-/** Public search API: anonymous browsing is the core of a marketplace. */
+/**
+ * Public search API: anonymous browsing is the core of a marketplace. Every answer is the same for
+ * everyone, so it is publicly cacheable, with an ETag and 304s (publicCache, ADR-0059).
+ */
 @Public()
 @Controller('api/v1/search')
 export class SearchController {
@@ -50,10 +58,13 @@ export class SearchController {
   @Get('listings')
   async listings(
     @Query(new ZodValidationPipe(searchParamsSchema)) params: SearchParams,
+    @Req() req: AuthenticatedRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<SearchResult> {
-    void reply.header('cache-control', 'public, max-age=15');
-    return this.search.search(params);
+    publicCache(reply, 15);
+    // The answer is the same for everyone, but a caller with a token skips the short cache (ADR-0059).
+    const identified = Boolean(req.principal ?? req.headers.authorization);
+    return this.search.searchCached(params, { identified });
   }
 
   @Get('autocomplete')
@@ -62,7 +73,7 @@ export class SearchController {
     { q, country }: z.infer<typeof autocompleteSchema>,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<Autocomplete> {
-    void reply.header('cache-control', 'public, max-age=60');
+    publicCache(reply, 60);
     return this.search.autocomplete(q, country);
   }
 
@@ -72,7 +83,7 @@ export class SearchController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<{ items: SearchHit[] }> {
-    void reply.header('cache-control', 'public, max-age=120');
+    publicCache(reply, 120);
     return { items: await this.search.similar(id) };
   }
 
@@ -82,7 +93,7 @@ export class SearchController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<{ insight: PriceInsight | null }> {
-    void reply.header('cache-control', 'public, max-age=300');
+    publicCache(reply, 300);
     return { insight: await this.search.priceInsight(id) };
   }
 
@@ -92,7 +103,7 @@ export class SearchController {
     @Query(new ZodValidationPipe(guideSchema)) q: z.infer<typeof guideSchema>,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<{ guide: (PriceStats & { currency: string }) | null }> {
-    void reply.header('cache-control', 'public, max-age=300');
+    publicCache(reply, 300);
     const { country, category, subcategory, placeId, ...rest } = q;
     const attributes = Object.fromEntries(
       Object.entries(rest).map(([k, v]) => [
@@ -111,7 +122,7 @@ export class SearchController {
     @Query(new ZodValidationPipe(suggestSchema)) { q, country }: z.infer<typeof suggestSchema>,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<{ suggestions: string[] }> {
-    void reply.header('cache-control', 'public, max-age=60');
+    publicCache(reply, 60);
     return { suggestions: await this.search.suggest(q, country) };
   }
 }

@@ -29,6 +29,14 @@ export const envSchema = baseEnvSchema
       .enum(['true', 'false'])
       .default('false')
       .transform((v) => v === 'true'),
+    /**
+     * The short cache of anonymous searches (ADR-0059): how long an answer is fresh (0 switches it
+     * off), how long after that it is served stale while refreshed, and how many answers it keeps
+     * (about 100 KB each).
+     */
+    SEARCH_CACHE_TTL_MS: z.coerce.number().int().min(0).max(60_000).default(15_000),
+    SEARCH_CACHE_STALE_MS: z.coerce.number().int().min(0).max(300_000).default(30_000),
+    SEARCH_CACHE_MAX_ENTRIES: z.coerce.number().int().min(0).max(5_000).default(256),
   });
 
 export type Env = z.infer<typeof envSchema>;

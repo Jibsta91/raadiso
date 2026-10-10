@@ -49,6 +49,7 @@ services:
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }
+      img-cache: { condition: service_healthy }
       clamav: { condition: service_healthy }
       opa: { condition: service_healthy }
       glitchtip-init: { condition: service_completed_successfully }
@@ -156,3 +157,13 @@ services:
     deploy:
       resources:
         limits: { memory: 1536M }
+  # Images (ADR-0059): the cache in front answers repeats, so imgproxy renders only new variants and
+  # re-encodes uploads. Four workers on two of the server's eight cores keep a burst of new photos (a
+  # listing's photos in three presets, or a 2560 px upload holding a worker) from queueing behind each
+  # other; libvips needs about 100 MB per busy worker at most, hence 512M.
+  imgproxy:
+    environment:
+      IMGPROXY_WORKERS: '4'
+    deploy:
+      resources:
+        limits: { memory: 512M, cpus: '2.0' }

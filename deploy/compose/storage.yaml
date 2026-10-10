@@ -1,5 +1,6 @@
 # Media storage and processing (ADR-0014): SeaweedFS (S3 API), imgproxy
-# (on-the-fly resizing from S3, signed URLs only) and ClamAV (upload scanning).
+# (on-the-fly resizing from S3, signed URLs only) behind an nginx cache (ADR-0059),
+# and ClamAV (upload scanning).
 x-logging: &logging
   driver: json-file
   options: { max-size: '10m', max-file: '3' }
@@ -107,6 +108,34 @@ services:
       resources:
         limits: { memory: 320M, cpus: '1.0' }
 
+  # The image cache (ADR-0059): the gateway's /img/ route goes through nginx (BSD-2-Clause), which
+  # renders each signed variant once with imgproxy and then serves it from disk (bounded at 2 GB).
+  # The media service still calls imgproxy directly to re-encode uploads.
+  img-cache:
+    <<: *hardening
+    image: nginxinc/nginx-unprivileged:1.30.5-alpine-slim@sha256:3af0c10d960cc2502427fe1219c52989d309e7d65596869c60a34fd2fa2406f0
+    user: '101:101'
+    read_only: true
+    # nginx itself, without the image's entrypoint scripts (they rewrite files under /etc/nginx).
+    entrypoint: ['nginx']
+    command: ['-g', 'daemon off;']
+    tmpfs: [/tmp:mode=1777]
+    volumes:
+      - ./deploy/img-cache/nginx.conf:/etc/nginx/nginx.conf:ro
+      # The image's /var/cache/nginx belongs to nginx (101), so the new volume does too.
+      - img-cache:/var/cache/nginx
+    depends_on:
+      imgproxy: { condition: service_healthy }
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/healthz']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: '1.0' }
+
   clamav:
     <<: *hardening
     image: ${RAADI_IMAGE_PREFIX}/clamav:${RAADI_VERSION}
@@ -138,4 +167,5 @@ networks:
 volumes:
   seaweedfs-data: {}
   clamav-db: {}
+  img-cache: {}
   secrets: {}

@@ -19,6 +19,7 @@ declare -A urls=(
   [auth]="${AUTH_BASE_URL}/realms/${KEYCLOAK_REALM:-raadi}/.well-known/openid-configuration"
   [grafana]="${GRAFANA_BASE_URL}/api/health"
   [search]="${PUBLIC_BASE_URL}/api/v1/search/listings?pageSize=1"
+  [images]="${PUBLIC_BASE_URL}/img/healthz"
 )
 # Grafana is not routed in production (ADR-0051): it is reached through an SSH tunnel.
 [[ "${GRAFANA_ROUTED:-true}" == false ]] && unset 'urls[grafana]'
@@ -44,6 +45,8 @@ cat <<BANNER
     Verify with BankID . ${PUBLIC_BASE_URL}/en/account   (test person 01897000011, demo password)
     Promote a listing .. ${PUBLIC_BASE_URL}/en/my/listings   (test payments at pay.${RAADI_DOMAIN})
     Status page ........ ${PUBLIC_BASE_URL}/en/status
+    Images ............. ${PUBLIC_BASE_URL}/img/…   (signed imgproxy URLs through the img-cache,
+                         X-Cache-Status: HIT or MISS; ADR-0059)
     Mobile app (web) ... ${PUBLIC_BASE_URL}/m/   (phones: see docs/mobile.md)
 
   Operations

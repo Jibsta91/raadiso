@@ -14,7 +14,13 @@ import {
   Res,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { type AuthenticatedRequest, Public, Roles, ZodValidationPipe } from '@raadi/service-kit';
+import {
+  type AuthenticatedRequest,
+  Public,
+  publicCache,
+  Roles,
+  ZodValidationPipe,
+} from '@raadi/service-kit';
 import type { FastifyReply } from 'fastify';
 import { z } from 'zod';
 import {
@@ -98,7 +104,7 @@ export class ListingsController {
     @Param('id', new ParseUUIDPipe({ version: undefined })) id: string,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<{ items: PriceChange[] }> {
-    void reply.header('cache-control', 'public, max-age=60');
+    publicCache(reply, 60);
     return { items: await this.listings.priceHistory(id) };
   }
 
@@ -110,10 +116,17 @@ export class ListingsController {
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<Listing> {
     const listing = await this.listings.get(id, req.principal);
-    // Personalised responses (viewer permissions) must not be shared by caches.
-    void reply
-      .header('etag', etag(listing))
-      .header('cache-control', req.principal ? 'private, no-store' : 'public, max-age=30');
+    // Personalised responses (viewer permissions) must not be shared by caches. A visitor's answer is
+    // public, with an ETag over the body and 304s (ADR-0059); the owner's carries the version for If-Match.
+    if (req.principal) {
+      void reply
+        .header('etag', etag(listing))
+        .header('cache-control', 'private, no-store')
+        .header('vary', 'Authorization, Cookie');
+    } else {
+      void reply.header('etag', etag(listing));
+      publicCache(reply, 30, { vary: ['Authorization', 'Cookie'] });
+    }
     return listing;
   }
 

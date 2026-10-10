@@ -216,6 +216,7 @@ services:
       apicurio: { condition: service_healthy }
       opensearch: { condition: service_healthy }
       imgproxy: { condition: service_healthy }
+      img-cache: { condition: service_healthy }
       clamav: { condition: service_healthy }
       opa: { condition: service_healthy }
       glitchtip-init: { condition: service_completed_successfully }

@@ -21,6 +21,7 @@ an IDE and a browser on a 16 GB laptop (Docker Desktop with ~8–10 GB).
 | 3 (+ saved)                  | ≈ 6.7 GB across 36 containers (saved ≈ 180 MB of its 256 MB limit)                                                             |
 | 3 (+ admin console)          | ≈ 6.7 GB across 38 containers (admin-bff ≈ 120 MB and audit ≈ 130 MB, each of a 192 MB limit)                                  |
 | 3 (+ journey probes)         | ≈ 6.8 GB across 39 containers (blackbox exporter ≈ 25 MB of its 48 MB limit, ADR-0031)                                         |
+| 5 (+ image cache)            | ≈ 6.8 GB + 10 MB: img-cache (nginx) ≈ 6 MB of its 64 MB limit, search's answer cache ≤ 25 MB within its 256 MB (ADR-0059)      |
 
 Later phases add Kafka, OpenSearch and Ollama, the expensive ones. They get tight limits and small defaults (a
 3–4B instruct model, small JVM heaps). Heavy extras (OpenMetadata, full lakehouse) are under `--profile full`.

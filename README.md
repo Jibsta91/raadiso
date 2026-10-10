@@ -57,7 +57,7 @@ flowchart LR
   T --> W[web<br/>Next.js]
   T --> B[identity-bff<br/>token handler]
   T --> LS[listings] & SE[search] & ME[media] & MS[messaging<br/>REST + WebSocket] & TR
-  T -->|/img| IP[imgproxy<br/>signed URLs]
+  T -->|/img| IC[nginx image cache] --> IP[imgproxy<br/>signed URLs]
   T --> K[Keycloak<br/>OIDC · MFA · passkeys]
   T --> G[Grafana]
   W --> B & SE & LS
@@ -110,7 +110,7 @@ Compose network.
 | Admin console (web + admin-bff)    | 3000 · 4000             | http://admin.raadi.localhost (staff, one-time code)                     |
 | payments-mock · push-mock (dev)    | 4000 each               | http://pay.raadi.localhost/pay/… · http://push.raadi.localhost/messages |
 | Expo dev server (Metro)            | 8081                    | `./raadi phone` (Expo Go on the same Wi-Fi, docs/mobile.md)             |
-| imgproxy (listing images)          | 8080                    | http://raadi.localhost/img/… (signed URLs only)                         |
+| imgproxy behind img-cache (nginx)  | 8080 · 8080             | http://raadi.localhost/img/… (signed URLs only, `X-Cache-Status`)       |
 | Keycloak                           | 8080, 9000              | http://auth.raadi.localhost (admin console: `/admin/`)                  |
 | Grafana                            | 3000                    | http://grafana.raadi.localhost (SSO as `admin@raadi.localhost`)         |
 | Prometheus / Alertmanager          | 9090 / 9093             | http://prometheus.raadi.localhost                                       |
