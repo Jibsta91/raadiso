@@ -51,6 +51,11 @@ test('buyer and seller review each other after a sale', async ({ browser }) => {
     await buyer.goto(conversationPath);
     await expect(buyer.getByTestId('review-form')).toBeVisible({ timeout: 1_000 });
   }).toPass({ timeout: 60_000 });
+  // The buyer's reviews page has the deal waiting for a review (ADR-0055).
+  await buyer.goto('/en/my/reviews');
+  await expect(buyer.getByTestId('pending-review').filter({ hasText: title })).toBeVisible();
+  await buyer.goto(conversationPath);
+
   const comment = `Hyggelig og rask handel (${title})`;
   await buyer.getByTestId('review-star-5').click();
   await buyer.getByTestId('review-comment').fill(comment);
@@ -69,6 +74,18 @@ test('buyer and seller review each other after a sale', async ({ browser }) => {
   await seller.getByTestId('review-star-4').click();
   await seller.getByTestId('review-submit').click();
   await expect(seller.getByTestId('review-done')).toBeVisible();
+
+  // Both reviews pages show the deal from each side, and nothing waits any more.
+  await seller.goto('/en/my/reviews?tab=received');
+  await expect(seller.getByTestId('my-review').filter({ hasText: comment })).toContainText(
+    'Kari N.',
+  );
+  await seller.goto('/en/my/reviews?tab=given');
+  await expect(seller.getByTestId('my-review').filter({ hasText: title })).toContainText(
+    'You sold to',
+  );
+  await buyer.goto('/en/my/reviews');
+  await expect(buyer.getByTestId('pending-review').filter({ hasText: title })).toHaveCount(0);
 
   await buyer.close();
   await seller.close();

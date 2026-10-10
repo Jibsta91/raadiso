@@ -141,6 +141,12 @@ export default function Account() {
             onPress={() => router.push('/saved-searches')}
           />
           <Button
+            testID="reviews"
+            variant="secondary"
+            label={m.reviewsPage.title}
+            onPress={() => router.push('/reviews')}
+          />
+          <Button
             testID="open-my-profile"
             variant="secondary"
             label={m.profile.myProfile}

@@ -59,6 +59,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/trust/me/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The caller's reviews, received or given (ADR-0055) */
+        get: operations["myReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trust/me/pending-reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Finished deals the caller may still review, closest deadline first (ADR-0055)
+         * @description The same rules as eligibility: the listing is sold within the review window, the caller and the other person both wrote to each other about it, and the caller has not reviewed them for it. At most 50.
+         */
+        get: operations["pendingReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/trust/eligibility": {
         parameters: {
             query?: never;
@@ -331,6 +368,41 @@ export interface components {
             verification: components["schemas"]["Verification"];
             rating: components["schemas"]["RatingSummary"];
         };
+        /** @description A review from the caller's side of the deal: other is the person reviewed (given) or the reviewer (received) */
+        MyReview: {
+            /** Format: uuid */
+            id: string;
+            rating: number;
+            comment: string;
+            listing: components["schemas"]["DealListing"];
+            other: components["schemas"]["DealParty"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        PendingReview: {
+            listing: components["schemas"]["DealListing"];
+            other: components["schemas"]["DealParty"];
+            /** Format: date-time */
+            soldAt: string;
+            /**
+             * Format: date-time
+             * @description The end of the review window
+             */
+            deadline: string;
+        };
+        DealListing: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+        };
+        DealParty: {
+            /** Format: uuid */
+            id: string;
+            /** @description Display name, when trust knows it */
+            name: string | null;
+            /** @description What this person was in the deal */
+            role: components["schemas"]["Role"];
+        };
         Review: {
             /** Format: uuid */
             id: string;
@@ -486,6 +558,60 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrustSummary"];
+                };
+            };
+            401: components["responses"]["Problem"];
+        };
+    };
+    myReviews: {
+        parameters: {
+            query?: {
+                direction?: "received" | "given";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of reviews, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["MyReview"][];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            400: components["responses"]["Problem"];
+            401: components["responses"]["Problem"];
+        };
+    };
+    pendingReviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deals waiting for the caller's review */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["PendingReview"][];
+                    };
                 };
             };
             401: components["responses"]["Problem"];

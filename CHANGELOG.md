@@ -8,6 +8,11 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- The app's My listings (All / Active / Finished, search, views and hearts, Sold or Rented, changed
+  date) and Saved searches (grouped by category, alert status, a … menu, sorting) are redesigned.
+  Owners see how many people saved each listing, in the app and on the website.
+- BankID verification is offered only where a country has it (Norway), not on raadiso.com.
+
 - Each country's site offers its own languages (ADR-0053): raadiso.com is English, then Somali,
   without Norwegian; the app follows the country it is built for.
 - Debezium 3.7.0.Final is pinned to its current image digest (the old one was removed from quay.io).
@@ -16,6 +21,9 @@ Each release also has generated notes on GitHub.
   cards and no price guide for sellers, on the website and in the app. `PRICE_INSIGHT=true` turns it on.
 
 ### Added
+
+- A reviews page (ADR-0055), in the app and on the website: deals waiting for your review, with the
+  days left and the review form, and the reviews you received and gave.
 
 - Production (ADR-0051): Raadiso runs at https://raadiso.com on one OVHcloud server.
   `./raadi deploy setup` prepares the server and `./raadi deploy` builds the current commit there and

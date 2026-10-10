@@ -19,6 +19,11 @@ import { ListingsClient } from './listings.client.js';
 import {
   decideEligibility,
   type Eligibility,
+  givenReview,
+  type MyReview,
+  type PendingReview,
+  pendingReview,
+  receivedReview,
   type reviewBodySchema,
   safeReturnTo,
   summarise,
@@ -97,6 +102,29 @@ export class TrustService {
   }
 
   // ---------------------------------------------------------------- reviews
+
+  /** The caller's reviews, received or given (ADR-0055). */
+  async myReviews(
+    principal: Principal,
+    direction: 'received' | 'given',
+    limit: number,
+    offset: number,
+  ): Promise<{ items: MyReview[]; total: number; limit: number; offset: number }> {
+    if (direction === 'given') {
+      const { rows, total } = await this.repo.reviewsBy(principal.sub, limit, offset);
+      return { items: rows.map(givenReview), total, limit, offset };
+    }
+    const { rows, counts } = await this.repo.reviewsAbout(principal.sub, limit, offset);
+    const total = counts.reduce((sum, c) => sum + c.n, 0);
+    return { items: rows.map(receivedReview), total, limit, offset };
+  }
+
+  /** Deals the caller may still review, closest deadline first (ADR-0055). */
+  async pendingReviews(principal: Principal): Promise<{ items: PendingReview[] }> {
+    const window = this.cfg.env.REVIEW_WINDOW_DAYS;
+    const rows = await this.repo.pendingReviews(principal.sub, window);
+    return { items: rows.map((r) => pendingReview(r, window)) };
+  }
 
   async eligibility(
     principal: Principal,

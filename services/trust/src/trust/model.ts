@@ -124,6 +124,82 @@ export function toReview(row: ReviewRow): Review {
   };
 }
 
+/**
+ * A review on the caller's own reviews page (ADR-0055), from their side of the deal: `other` is the
+ * person reviewed (given) or the reviewer (received), with their role in the deal and their display
+ * name when trust knows it.
+ */
+export interface MyReview {
+  id: string;
+  rating: number;
+  comment: string;
+  listing: { id: string; title: string };
+  other: { id: string; name: string | null; role: Role };
+  createdAt: string;
+}
+
+/** A finished deal the caller may still review (the same rules as decideEligibility). */
+export interface PendingReview {
+  listing: { id: string; title: string };
+  other: { id: string; name: string | null; role: Role };
+  soldAt: string;
+  deadline: string;
+}
+
+const otherRole = (role: Role): Role => (role === 'buyer' ? 'seller' : 'buyer');
+
+/** A review the caller gave: the other person is the one reviewed. */
+export function givenReview(row: ReviewRow & { subject_name: string | null }): MyReview {
+  return {
+    id: row.id,
+    rating: row.rating,
+    comment: row.comment,
+    listing: { id: row.listing_id, title: row.listing_title },
+    other: { id: row.subject_id, name: row.subject_name, role: row.subject_role },
+    createdAt: row.created_at.toISOString(),
+  };
+}
+
+/** A review about the caller: the other person is the reviewer, on the other side of the deal. */
+export function receivedReview(row: ReviewRow): MyReview {
+  return {
+    id: row.id,
+    rating: row.rating,
+    comment: row.comment,
+    listing: { id: row.listing_id, title: row.listing_title },
+    other: { id: row.reviewer_id, name: row.reviewer_name, role: otherRole(row.subject_role) },
+    createdAt: row.created_at.toISOString(),
+  };
+}
+
+export interface PendingRow {
+  listing_id: string;
+  listing_title: string;
+  sold_at: Date;
+  other_id: string;
+  other_name: string | null;
+  other_is_seller: boolean;
+}
+
+export function pendingReview(row: PendingRow, windowDays: number): PendingReview {
+  return {
+    listing: { id: row.listing_id, title: row.listing_title },
+    other: {
+      id: row.other_id,
+      name: row.other_name,
+      role: row.other_is_seller ? 'seller' : 'buyer',
+    },
+    soldAt: row.sold_at.toISOString(),
+    deadline: new Date(row.sold_at.getTime() + windowDays * 86_400_000).toISOString(),
+  };
+}
+
+export const myReviewsQuerySchema = z.object({
+  direction: z.enum(['received', 'given']).default('received'),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  offset: z.coerce.number().int().min(0).max(10_000).default(0),
+});
+
 export interface Verification {
   method: 'bankid';
   verifiedAt: string;

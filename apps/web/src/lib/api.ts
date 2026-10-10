@@ -9,6 +9,8 @@ import {
   createPaymentsClient,
   createSavedClient,
   type FavouritePage,
+  type MyReview,
+  type PendingReview,
   type SavedSearch,
   type NotificationList,
   type NotificationPreferences,
@@ -272,6 +274,38 @@ export async function myTrust(): Promise<TrustSummary | null> {
     cache: 'no-store',
   });
   if (data) return data;
+  throw new ServiceUnavailableError(`trust returned ${response.status}`);
+}
+
+/** The signed-in user's reviews, received or given (ADR-0055); null when signed out. */
+export async function myReviews(
+  direction: 'received' | 'given',
+  offset = 0,
+): Promise<{ items: MyReview[]; total: number } | null> {
+  const token = await accessToken();
+  if (!token) return null;
+  const client = createTrustClient({ baseUrl: env.trustUrl });
+  const { data, response } = await client.GET('/api/v1/trust/me/reviews', {
+    params: { query: { direction, limit: 20, offset } },
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(5000),
+    cache: 'no-store',
+  });
+  if (data) return data;
+  throw new ServiceUnavailableError(`trust returned ${response.status}`);
+}
+
+/** Finished deals the signed-in user may still review (ADR-0055); [] when signed out. */
+export async function pendingReviews(): Promise<PendingReview[]> {
+  const token = await accessToken();
+  if (!token) return [];
+  const client = createTrustClient({ baseUrl: env.trustUrl });
+  const { data, response } = await client.GET('/api/v1/trust/me/pending-reviews', {
+    headers: { authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(5000),
+    cache: 'no-store',
+  });
+  if (data) return data.items;
   throw new ServiceUnavailableError(`trust returned ${response.status}`);
 }
 

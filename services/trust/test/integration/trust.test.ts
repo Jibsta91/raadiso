@@ -408,3 +408,60 @@ describe('BankID verification', () => {
     assert.equal(back, '/api/v1/trust/verification/start?returnTo=%2Fnb%2Faccount&locale=nb');
   });
 });
+
+describe('my reviews (ADR-0055)', () => {
+  it('lists the deals each side may still review, with the same rules as eligibility', async () => {
+    const seller = person('Kari');
+    const buyer = person('Ola');
+    const stranger = person('Per');
+    const soldAt = new Date(Date.now() - 2 * 86_400_000);
+    const listingId = await deal(seller, buyer, soldAt);
+    // A one-way contact (no answer), an unsold listing and an old sale never wait for a review.
+    await service.onEvent(received(message(listingId, stranger.sub, seller.sub)));
+    const unsold = randomUUID();
+    owners.set(unsold, seller.sub);
+    await service.onEvent(received(listingEvent(snapshot(unsold, seller.sub, 1, 'active'))));
+    await service.onEvent(received(message(unsold, buyer.sub, seller.sub)));
+    await service.onEvent(received(message(unsold, seller.sub, buyer.sub)));
+    await deal(seller, buyer, new Date(Date.now() - 40 * 86_400_000));
+
+    const forBuyer = (await service.pendingReviews(buyer)).items;
+    assert.deepEqual(
+      forBuyer.map((p) => [p.listing.id, p.other.id, p.other.role]),
+      [[listingId, seller.sub, 'seller']],
+    );
+    assert.equal(forBuyer[0]!.deadline, new Date(soldAt.getTime() + 30 * 86_400_000).toISOString());
+    const forSeller = (await service.pendingReviews(seller)).items;
+    assert.deepEqual(
+      forSeller.map((p) => [p.listing.id, p.other.id, p.other.role]),
+      [[listingId, buyer.sub, 'buyer']],
+    );
+    assert.deepEqual((await service.pendingReviews(stranger)).items, []);
+    // Each pending deal is one eligibility allows.
+    const e = await service.eligibility(buyer, listingId, seller.sub);
+    assert.ok(e.canReview);
+
+    await service.createReview(buyer, 'token', {
+      listingId,
+      subjectId: seller.sub,
+      rating: 4,
+      comment: 'Fin handel',
+    });
+    assert.deepEqual((await service.pendingReviews(buyer)).items, []);
+    assert.equal((await service.pendingReviews(seller)).items.length, 1);
+
+    const givenPage = await service.myReviews(buyer, 'given', 20, 0);
+    assert.equal(givenPage.total, 1);
+    const given = givenPage.items;
+    assert.deepEqual(
+      given.map((r) => [r.listing.title, r.other.id, r.other.role, r.rating]),
+      [['Racersykkel', seller.sub, 'seller', 4]],
+    );
+    const got = (await service.myReviews(seller, 'received', 20, 0)).items;
+    assert.deepEqual(
+      got.map((r) => [r.other.id, r.other.name, r.other.role, r.comment]),
+      [[buyer.sub, 'Ola N.', 'buyer', 'Fin handel']],
+    );
+    assert.deepEqual((await service.myReviews(seller, 'given', 20, 0)).items, []);
+  });
+});

@@ -87,6 +87,8 @@ export type TrustSummary = TrustComponents['schemas']['TrustSummary'];
 export type TrustProfile = TrustComponents['schemas']['Profile'];
 export type Review = TrustComponents['schemas']['Review'];
 export type ReviewInput = TrustComponents['schemas']['ReviewInput'];
+export type MyReview = TrustComponents['schemas']['MyReview'];
+export type PendingReview = TrustComponents['schemas']['PendingReview'];
 export type RatingSummary = TrustComponents['schemas']['RatingSummary'];
 export type Eligibility = TrustComponents['schemas']['Eligibility'];
 

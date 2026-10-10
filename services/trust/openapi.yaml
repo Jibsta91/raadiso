@@ -74,6 +74,66 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/TrustSummary' }
         '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/trust/me/reviews:
+    get:
+      tags: [reviews]
+      operationId: myReviews
+      summary: The caller's reviews, received or given (ADR-0055)
+      parameters:
+        - name: direction
+          in: query
+          schema: { type: string, enum: [received, given], default: received }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 50, default: 20 },
+          }
+        - {
+            name: offset,
+            in: query,
+            schema: { type: integer, minimum: 0, maximum: 10000, default: 0 },
+          }
+      responses:
+        '200':
+          description: A page of reviews, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items, total, limit, offset]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/MyReview' }
+                  total: { type: integer, minimum: 0 }
+                  limit: { type: integer }
+                  offset: { type: integer }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /api/v1/trust/me/pending-reviews:
+    get:
+      tags: [reviews]
+      operationId: pendingReviews
+      summary: Finished deals the caller may still review, closest deadline first (ADR-0055)
+      description: >-
+        The same rules as eligibility: the listing is sold within the review window, the caller and
+        the other person both wrote to each other about it, and the caller has not reviewed them for
+        it. At most 50.
+      responses:
+        '200':
+          description: Deals waiting for the caller's review
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/PendingReview' }
+        '401': { $ref: '#/components/responses/Problem' }
   /api/v1/trust/eligibility:
     get:
       tags: [reviews]
@@ -337,6 +397,51 @@ components:
         name: { type: string, description: Public display name ("Kari N.") }
         verification: { $ref: '#/components/schemas/Verification' }
         rating: { $ref: '#/components/schemas/RatingSummary' }
+    MyReview:
+      type: object
+      additionalProperties: false
+      required: [id, rating, comment, listing, other, createdAt]
+      description: >-
+        A review from the caller's side of the deal: other is the person reviewed (given) or the
+        reviewer (received)
+      properties:
+        id: { type: string, format: uuid }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 1000 }
+        listing: { $ref: '#/components/schemas/DealListing' }
+        other: { $ref: '#/components/schemas/DealParty' }
+        createdAt: { type: string, format: date-time }
+    PendingReview:
+      type: object
+      additionalProperties: false
+      required: [listing, other, soldAt, deadline]
+      properties:
+        listing: { $ref: '#/components/schemas/DealListing' }
+        other: { $ref: '#/components/schemas/DealParty' }
+        soldAt: { type: string, format: date-time }
+        deadline:
+          type: string
+          format: date-time
+          description: The end of the review window
+    DealListing:
+      type: object
+      additionalProperties: false
+      required: [id, title]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+    DealParty:
+      type: object
+      additionalProperties: false
+      required: [id, name, role]
+      properties:
+        id: { type: string, format: uuid }
+        name:
+          type: [string, 'null']
+          description: Display name, when trust knows it
+        role:
+          $ref: '#/components/schemas/Role'
+          description: What this person was in the deal
     Review:
       type: object
       additionalProperties: false
