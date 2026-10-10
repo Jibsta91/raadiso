@@ -282,7 +282,7 @@
       "directAccessGrantsEnabled": false,
       "rootUrl": "https://${RAADI_DOMAIN}",
       "redirectUris": [
-        "https://dockhand.${RAADI_DOMAIN}/oauth2/callback",
+        "https://arcane.${RAADI_DOMAIN}/oauth2/callback",
         "https://errors.${RAADI_DOMAIN}/oauth2/callback",
         "https://prometheus.${RAADI_DOMAIN}/oauth2/callback",
         "https://traefik.${RAADI_DOMAIN}/oauth2/callback",

@@ -8,6 +8,8 @@ Each release also has generated notes on GitHub.
 
 ### Changed
 
+- Arcane replaces Dockhand as the owner's Docker UI (ADR-0058): `arcane.` behind the staff gate when
+  `ARCANE_URL` is set, started from `deploy/arcane/compose.yaml`; `DOCKHAND_URL` is gone.
 - The app's My listings (All / Active / Finished, search, views and hearts, Sold or Rented, changed
   date) and Saved searches (grouped by category, alert status, a … menu, sorting) are redesigned.
   Owners see how many people saved each listing, in the app and on the website.

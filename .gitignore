@@ -25,3 +25,6 @@ deploy/certs/*.pem
 .build/
 *.tsbuildinfo
 deploy/prod/local.env
+
+# Arcane's encryption key, on the server only (ADR-0058).
+deploy/arcane/arcane.env

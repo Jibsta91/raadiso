@@ -1,0 +1,41 @@
+# Arcane, the owner's Docker UI (ADR-0058): not part of the stack, started on its own on the server,
+# as the prod user in DEPLOY_DIR:
+#   docker compose -f deploy/arcane/compose.yaml up -d
+# It holds the Docker socket, so whoever gets into it controls every container: it publishes no port
+# and is reached only through the staff gate on arcane.$RAADI_DOMAIN (set ARCANE_URL, docs/deploy.md).
+# Its encryption key lives in deploy/arcane/arcane.env on the server (Git ignores it, chmod 600).
+name: arcane
+
+services:
+  arcane:
+    image: ghcr.io/getarcaneapp/manager:v2.15.1@sha256:540c01198ca3e58dfd398d25c57c8dc241fa7e7f3d1d8d646c8268f19525b1a8
+    container_name: arcane
+    restart: unless-stopped
+    env_file: [arcane.env]
+    environment:
+      TZ: UTC
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - arcane-data:/app/data
+    security_opt: ['no-new-privileges:true']
+    # Lets Arcane recognise its own container (upstream's example).
+    cgroup: host
+    deploy:
+      resources:
+        limits: { memory: 256M }
+    healthcheck:
+      test: ['CMD', './arcane', 'health', '--timeout', '2s']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks: [raadi]
+
+networks:
+  # The stack's network, so Traefik reaches Arcane as http://arcane:3552.
+  raadi:
+    name: raadi_default
+    external: true
+
+volumes:
+  arcane-data:
