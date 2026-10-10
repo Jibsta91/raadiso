@@ -17,7 +17,7 @@ http:
     staff-gate:
       rule: >-
         (Host(`errors.{{ $d }}`) || Host(`prometheus.{{ $d }}`) || Host(`traefik.{{ $d }}`)
-        || Host(`auth.{{ $d }}`) || Host(`dockhand.{{ $d }}`)) && PathPrefix(`/oauth2/`)
+        || Host(`auth.{{ $d }}`) || Host(`arcane.{{ $d }}`)) && PathPrefix(`/oauth2/`)
       entryPoints: [websecure]
       service: staff-gate
       middlewares: [security-headers, ratelimit-auth]
@@ -44,12 +44,12 @@ http:
       entryPoints: [websecure]
       service: keycloak
       middlewares: [keycloak-headers, ratelimit-default, staff-gate]
-    {{- if env "DOCKHAND_URL" }}
-    # The owner's Docker UI, next to the stack on the same server.
-    staff-dockhand:
-      rule: Host(`dockhand.{{ $d }}`)
+    {{- if env "ARCANE_URL" }}
+    # The owner's Docker UI (Arcane, ADR-0058), next to the stack on the same server.
+    staff-arcane:
+      rule: Host(`arcane.{{ $d }}`)
       entryPoints: [websecure]
-      service: staff-dockhand
+      service: staff-arcane
       middlewares: [security-headers, ratelimit-default, staff-gate]
     {{- end }}
 
@@ -60,9 +60,9 @@ http:
     staff-prometheus:
       loadBalancer:
         servers: [{ url: "http://prometheus:9090" }]
-    {{- if env "DOCKHAND_URL" }}
-    staff-dockhand:
+    {{- if env "ARCANE_URL" }}
+    staff-arcane:
       loadBalancer:
-        servers: [{ url: "{{ env "DOCKHAND_URL" }}" }]
+        servers: [{ url: "{{ env "ARCANE_URL" }}" }]
     {{- end }}
 {{- end }}

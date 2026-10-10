@@ -58,16 +58,16 @@ services:
   traefik:
     environment:
       # Staff tools behind the staff gate (deploy/traefik/dynamic/prod/staff-tools.yml, ADR-0054);
-      # Dockhand only when DOCKHAND_URL is set.
+      # Arcane only when ARCANE_URL is set.
       STAFF_TOOLS_ROUTED: ${STAFF_TOOLS_ROUTED:-false}
-      DOCKHAND_URL: ${DOCKHAND_URL:-}
+      ARCANE_URL: ${ARCANE_URL:-}
     volumes: !override
       - ./deploy/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./deploy/traefik/dynamic/common:/etc/traefik/dynamic/common:ro
       - ./deploy/traefik/dynamic/prod:/etc/traefik/dynamic/prod:ro
       - certs:/certs:ro
 
-  # The staff gate (ADR-0054): Traefik asks it about every request to a staff tool (Dockhand, GlitchTip,
+  # The staff gate (ADR-0054): Traefik asks it about every request to a staff tool (Arcane, GlitchTip,
   # Prometheus, Traefik's dashboard, Keycloak's admin console). Only a Keycloak session with the
   # platform-admin role, signed in with a one-time code, gets through; the tools' own logins stay on top.
   staff-gate:

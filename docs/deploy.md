@@ -78,7 +78,7 @@ Any other `./raadi` command runs on the server:
 The admin console (`https://admin.<domain>`) and Grafana (`https://grafana.<domain>`) are served:
 staff sign in through Keycloak with a staff role and their own one-time code. GlitchTip
 (`errors.`), Prometheus, Traefik's dashboard (`traefik.…/dashboard/`), Keycloak's admin console
-(`auth.…/admin/`) and Dockhand are served behind the staff gate (ADR-0054): platform admins only,
+(`auth.…/admin/`) and Arcane (`arcane.`, when it runs) are served behind the staff gate (ADR-0054): platform admins only,
 with a one-time code, then the tool's own login. OpenBao is never served.
 Reach it, or any tool, through an SSH tunnel to the container's address on the server, for example Prometheus
 (then open http://localhost:9090):
@@ -87,6 +87,24 @@ Reach it, or any tool, through an SSH tunnel to the container's address on the s
 ip=$(ssh prod@ovh "docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' raadi-prometheus-1")
 ssh -N -L "9090:${ip}:9090" prod@ovh
 ```
+
+## Arcane (the Docker UI)
+
+Arcane ([ADR-0058](adr/0058-arcane-instead-of-dockhand.md)) runs next to the stack, started on its own,
+and is served on `arcane.<domain>` behind the staff gate. On the server, as the `prod` user in
+`/home/prod/raadi`, after a deploy has copied `deploy/arcane/compose.yaml`:
+
+```bash
+umask 077 && printf 'ENCRYPTION_KEY=%s\n' "$(openssl rand -hex 16)" > deploy/arcane/arcane.env
+docker compose -f deploy/arcane/compose.yaml up -d --wait
+```
+
+Then add `ARCANE_URL=http://arcane:3552` to `deploy/prod/local.env` on your laptop and run
+`./raadi deploy`. Open `https://arcane.<domain>`: first the staff gate, then Arcane's own login (create
+its admin account at the first visit). Upgrade by changing the pinned image in the compose file.
+
+Moving from Dockhand: stop and remove it with its own compose file, then do the above. Its old
+`dockhand.<domain>` route went away with `DOCKHAND_URL`.
 
 ## Not in production
 
