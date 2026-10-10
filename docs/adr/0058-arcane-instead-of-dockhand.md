@@ -38,3 +38,6 @@ the staff gate when `DOCKHAND_URL` was set. The owner wants Arcane instead.
   means control of every container. The gate stays the outer lock.
 - The wildcard certificate and DNS record already cover `arcane.`; nothing changes there.
 - An operator who set `DOCKHAND_URL` must switch to `ARCANE_URL`; the old variable is ignored.
+- Hardened on 2026-10-11 (docs/deploy.md): no analytics heartbeat, `APP_URL` and trusted proxies set, a
+  fixed `JWT_SECRET`, and in-app auto-update, auto-heal and image auto-patch off, so Arcane never changes
+  the stack's pinned images on its own.
